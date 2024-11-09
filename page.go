@@ -245,6 +245,15 @@ func (o *page) SetName(name string) PageInterface {
 	return o
 }
 
+func (o *page) SiteID() string {
+	return o.Get(COLUMN_SITE_ID)
+}
+
+func (o *page) SetSiteID(siteID string) PageInterface {
+	o.Set(COLUMN_SITE_ID, siteID)
+	return o
+}
+
 func (o *page) SoftDeletedAt() string {
 	return o.Get(COLUMN_SOFT_DELETED_AT)
 }

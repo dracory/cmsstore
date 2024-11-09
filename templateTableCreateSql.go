@@ -5,9 +5,9 @@ import (
 )
 
 // SQLCreateTable returns a SQL string for creating the country table
-func (st *store) sqlPageTableCreate() string {
+func (st *store) templateTableCreateSql() string {
 	sql := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
-		Table(st.pageTableName).
+		Table(st.templateTableName).
 		Column(sb.Column{
 			Name:       COLUMN_ID,
 			Type:       sb.COLUMN_TYPE_STRING,
@@ -15,22 +15,17 @@ func (st *store) sqlPageTableCreate() string {
 			Length:     40,
 		}).
 		Column(sb.Column{
+			Name:   COLUMN_SITE_ID,
+			Type:   sb.COLUMN_TYPE_STRING,
+			Length: 40,
+		}).
+		Column(sb.Column{
 			Name:   COLUMN_STATUS,
 			Type:   sb.COLUMN_TYPE_STRING,
 			Length: 40,
 		}).
 		Column(sb.Column{
-			Name:   COLUMN_ALIAS,
-			Type:   sb.COLUMN_TYPE_STRING,
-			Length: 255,
-		}).
-		Column(sb.Column{
 			Name:   COLUMN_NAME,
-			Type:   sb.COLUMN_TYPE_STRING,
-			Length: 255,
-		}).
-		Column(sb.Column{
-			Name:   COLUMN_TITLE,
 			Type:   sb.COLUMN_TYPE_STRING,
 			Length: 255,
 		}).
@@ -42,31 +37,6 @@ func (st *store) sqlPageTableCreate() string {
 			Name:   COLUMN_EDITOR,
 			Type:   sb.COLUMN_TYPE_STRING,
 			Length: 40,
-		}).
-		Column(sb.Column{
-			Name:   COLUMN_TEMPLATE_ID,
-			Type:   sb.COLUMN_TYPE_STRING,
-			Length: 40,
-		}).
-		Column(sb.Column{
-			Name:   COLUMN_CANONICAL_URL,
-			Type:   sb.COLUMN_TYPE_STRING,
-			Length: 255,
-		}).
-		Column(sb.Column{
-			Name:   COLUMN_META_KEYWORDS,
-			Type:   sb.COLUMN_TYPE_STRING,
-			Length: 255,
-		}).
-		Column(sb.Column{
-			Name:   COLUMN_META_DESCRIPTION,
-			Type:   sb.COLUMN_TYPE_STRING,
-			Length: 255,
-		}).
-		Column(sb.Column{
-			Name:   COLUMN_META_ROBOTS,
-			Type:   sb.COLUMN_TYPE_STRING,
-			Length: 255,
 		}).
 		Column(sb.Column{
 			Name:   COLUMN_HANDLE,

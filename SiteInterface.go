@@ -2,29 +2,26 @@ package cmsstore
 
 import "github.com/golang-module/carbon/v2"
 
-type TemplateInterface interface {
+type SiteInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
 	MarkAsNotDirty()
 
 	ID() string
-	SetID(id string) TemplateInterface
+	SetID(id string) SiteInterface
 
 	CreatedAt() string
-	SetCreatedAt(createdAt string) TemplateInterface
+	SetCreatedAt(createdAt string) SiteInterface
 	CreatedAtCarbon() carbon.Carbon
 
-	Content() string
-	SetContent(content string) TemplateInterface
-
-	Editor() string
-	SetEditor(editor string) TemplateInterface
+	DomainNames() ([]string, error)
+	SetDomainNames(domainNames []string) (SiteInterface, error)
 
 	Handle() string
-	SetHandle(handle string) TemplateInterface
+	SetHandle(handle string) SiteInterface
 
 	Memo() string
-	SetMemo(memo string) TemplateInterface
+	SetMemo(memo string) SiteInterface
 
 	Meta(key string) string
 	SetMeta(key, value string) error
@@ -33,20 +30,17 @@ type TemplateInterface interface {
 	UpsertMetas(metas map[string]string) error
 
 	Name() string
-	SetName(name string) TemplateInterface
-
-	SiteID() string
-	SetSiteID(siteID string) TemplateInterface
+	SetName(name string) SiteInterface
 
 	SoftDeletedAt() string
-	SetSoftDeletedAt(softDeletedAt string) TemplateInterface
+	SetSoftDeletedAt(softDeletedAt string) SiteInterface
 	SoftDeletedAtCarbon() carbon.Carbon
 
 	Status() string
-	SetStatus(status string) TemplateInterface
+	SetStatus(status string) SiteInterface
 
 	UpdatedAt() string
-	SetUpdatedAt(updatedAt string) TemplateInterface
+	SetUpdatedAt(updatedAt string) SiteInterface
 	UpdatedAtCarbon() carbon.Carbon
 
 	IsActive() bool

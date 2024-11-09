@@ -11,21 +11,20 @@ import (
 
 // == TYPE ===================================================================
 
-type template struct {
+type site struct {
 	dataobject.DataObject
 }
 
 // == INTERFACES =============================================================
 
-// var _ dataobject.DataObjectInterface = (*template)(nil)
-var _ TemplateInterface = (*template)(nil)
+// var _ dataobject.DataObjectInterface = (*site)(nil)
+var _ SiteInterface = (*site)(nil)
 
 // == CONSTRUCTORS ==========================================================
 
-func NewTemplate() TemplateInterface {
-	o := &template{}
-	o.SetContent("")
-	o.SetEditor("")
+func NewSite() SiteInterface {
+	o := &site{}
+	o.SetDomainNames([]string{})
 	o.SetHandle("")
 	o.SetID(uid.HumanUid())
 	o.SetMemo("")
@@ -38,93 +37,99 @@ func NewTemplate() TemplateInterface {
 	return o
 }
 
-func NewTemplateFromExistingData(data map[string]string) *template {
-	o := &template{}
+func NewSiteFromExistingData(data map[string]string) *site {
+	o := &site{}
 	o.Hydrate(data)
 	return o
 }
 
 // == METHODS ===============================================================
 
-func (o *template) IsActive() bool {
+func (o *site) IsActive() bool {
 	return o.Status() == PAGE_STATUS_ACTIVE
 }
 
-func (o *template) IsInactive() bool {
+func (o *site) IsInactive() bool {
 	return o.Status() == PAGE_STATUS_INACTIVE
 }
 
-func (o *template) IsSoftDeleted() bool {
+func (o *site) IsSoftDeleted() bool {
 	return o.SoftDeletedAtCarbon().Compare("<", carbon.Now(carbon.UTC))
 }
 
 // == SETTERS AND GETTERS =====================================================
 
-func (o *template) CreatedAt() string {
+func (o *site) CreatedAt() string {
 	return o.Get(COLUMN_CREATED_AT)
 }
 
-func (o *template) SetCreatedAt(createdAt string) TemplateInterface {
+func (o *site) SetCreatedAt(createdAt string) SiteInterface {
 	o.Set(COLUMN_CREATED_AT, createdAt)
 	return o
 }
 
-func (o *template) CreatedAtCarbon() carbon.Carbon {
+func (o *site) CreatedAtCarbon() carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
-func (o *template) Content() string {
-	return o.Get(COLUMN_CONTENT)
+func (o *site) DomainNames() ([]string, error) {
+	domainNamesStr := o.Get(COLUMN_DOMAIN_NAMES)
+
+	if domainNamesStr == "" {
+		domainNamesStr = "[]"
+	}
+
+	domainNamesJson, errJson := utils.FromJSON(domainNamesStr, []string{})
+	if errJson != nil {
+		return []string{}, errJson
+	}
+
+	return domainNamesJson.([]string), nil
 }
 
-func (o *template) SetContent(content string) TemplateInterface {
-	o.Set(COLUMN_CONTENT, content)
-	return o
+func (o *site) SetDomainNames(domainNames []string) (SiteInterface, error) {
+	domainNamesJson, errJson := utils.ToJSON(domainNames)
+	if errJson != nil {
+		return o, errJson
+	}
+	o.Set(COLUMN_DOMAIN_NAMES, domainNamesJson)
+	return o, nil
 }
 
-func (o *template) Editor() string {
-	return o.Get(COLUMN_EDITOR)
-}
-
-func (o *template) SetEditor(editor string) TemplateInterface {
-	o.Set(COLUMN_EDITOR, editor)
-	return o
-}
-
-func (o *template) ID() string {
+func (o *site) ID() string {
 	return o.Get(COLUMN_ID)
 }
 
-func (o *template) SetID(id string) TemplateInterface {
+func (o *site) SetID(id string) SiteInterface {
 	o.Set(COLUMN_ID, id)
 	return o
 }
 
-// Handle returns the handle of the template
+// Handle returns the handle of the site
 //
-// A handle is a human friendly unique identifier for the template, unlike the ID
-func (o *template) Handle() string {
+// A handle is a human friendly unique identifier for the site, unlike the ID
+func (o *site) Handle() string {
 	return o.Get(COLUMN_HANDLE)
 }
 
-// SetHandle sets the handle of the template
+// SetHandle sets the handle of the site
 //
-// A handle is a human friendly unique identifier for the template, unlike the ID
-func (o *template) SetHandle(handle string) TemplateInterface {
+// A handle is a human friendly unique identifier for the site, unlike the ID
+func (o *site) SetHandle(handle string) SiteInterface {
 	o.Set(COLUMN_HANDLE, handle)
 	return o
 }
 
-func (o *template) Memo() string {
+func (o *site) Memo() string {
 	return o.Get("memo")
 }
 
-func (o *template) SetMemo(memo string) TemplateInterface {
+func (o *site) SetMemo(memo string) SiteInterface {
 	o.Set("memo", memo)
 	return o
 }
 
-func (o *template) Metas() (map[string]string, error) {
+func (o *site) Metas() (map[string]string, error) {
 	metasStr := o.Get("metas")
 
 	if metasStr == "" {
@@ -139,7 +144,7 @@ func (o *template) Metas() (map[string]string, error) {
 	return maputils.MapStringAnyToMapStringString(metasJson.(map[string]any)), nil
 }
 
-func (o *template) Meta(name string) string {
+func (o *site) Meta(name string) string {
 	metas, err := o.Metas()
 
 	if err != nil {
@@ -153,13 +158,13 @@ func (o *template) Meta(name string) string {
 	return ""
 }
 
-func (o *template) SetMeta(name string, value string) error {
+func (o *site) SetMeta(name string, value string) error {
 	return o.UpsertMetas(map[string]string{name: value})
 }
 
 // SetMetas stores metas as json string
 // Warning: it overwrites any existing metas
-func (o *template) SetMetas(metas map[string]string) error {
+func (o *site) SetMetas(metas map[string]string) error {
 	mapString, err := utils.ToJSON(metas)
 	if err != nil {
 		return err
@@ -170,7 +175,7 @@ func (o *template) SetMetas(metas map[string]string) error {
 	return nil
 }
 
-func (o *template) UpsertMetas(metas map[string]string) error {
+func (o *site) UpsertMetas(metas map[string]string) error {
 	currentMetas, err := o.Metas()
 
 	if err != nil {
@@ -184,55 +189,46 @@ func (o *template) UpsertMetas(metas map[string]string) error {
 	return o.SetMetas(currentMetas)
 }
 
-func (o *template) Name() string {
+func (o *site) Name() string {
 	return o.Get(COLUMN_NAME)
 }
 
-func (o *template) SetName(name string) TemplateInterface {
+func (o *site) SetName(name string) SiteInterface {
 	o.Set(COLUMN_NAME, name)
 	return o
 }
 
-func (o *template) SiteID() string {
-	return o.Get(COLUMN_SITE_ID)
-}
-
-func (o *template) SetSiteID(siteID string) TemplateInterface {
-	o.Set(COLUMN_SITE_ID, siteID)
-	return o
-}
-
-func (o *template) SoftDeletedAt() string {
+func (o *site) SoftDeletedAt() string {
 	return o.Get(COLUMN_SOFT_DELETED_AT)
 }
 
-func (o *template) SetSoftDeletedAt(softDeletedAt string) TemplateInterface {
+func (o *site) SetSoftDeletedAt(softDeletedAt string) SiteInterface {
 	o.Set(COLUMN_SOFT_DELETED_AT, softDeletedAt)
 	return o
 }
 
-func (o *template) SoftDeletedAtCarbon() carbon.Carbon {
+func (o *site) SoftDeletedAtCarbon() carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
-func (o *template) Status() string {
+func (o *site) Status() string {
 	return o.Get(COLUMN_STATUS)
 }
 
-func (o *template) SetStatus(status string) TemplateInterface {
+func (o *site) SetStatus(status string) SiteInterface {
 	o.Set(COLUMN_STATUS, status)
 	return o
 }
 
-func (o *template) UpdatedAt() string {
+func (o *site) UpdatedAt() string {
 	return o.Get(COLUMN_UPDATED_AT)
 }
 
-func (o *template) SetUpdatedAt(updatedAt string) TemplateInterface {
+func (o *site) SetUpdatedAt(updatedAt string) SiteInterface {
 	o.Set(COLUMN_UPDATED_AT, updatedAt)
 	return o
 }
 
-func (o *template) UpdatedAtCarbon() carbon.Carbon {
+func (o *site) UpdatedAtCarbon() carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }

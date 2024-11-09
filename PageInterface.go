@@ -50,6 +50,9 @@ type PageInterface interface {
 	Name() string
 	SetName(name string) PageInterface
 
+	SiteID() string
+	SetSiteID(siteID string) PageInterface
+
 	SoftDeletedAt() string
 	SetSoftDeletedAt(softDeletedAt string) PageInterface
 	SoftDeletedAtCarbon() carbon.Carbon
