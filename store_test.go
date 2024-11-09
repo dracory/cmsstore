@@ -239,18 +239,22 @@ func TestStorePageSoftDelete(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	pageFindWithDeleted, err := store.PageList(query)
+	pageFindWithSoftDeleted, err := store.PageList(query)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	if len(pageFindWithDeleted) == 0 {
+	if len(pageFindWithSoftDeleted) == 0 {
 		t.Fatal("Exam MUST be soft deleted")
 	}
 
-	if strings.Contains(pageFindWithDeleted[0].SoftDeletedAt(), sb.NULL_DATETIME) {
+	if strings.Contains(pageFindWithSoftDeleted[0].SoftDeletedAt(), sb.MAX_DATETIME) {
 		t.Fatal("Page MUST be soft deleted", page.SoftDeletedAt())
+	}
+
+	if !pageFindWithSoftDeleted[0].IsSoftDeleted() {
+		t.Fatal("Page MUST be soft deleted")
 	}
 }
 

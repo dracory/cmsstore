@@ -61,8 +61,8 @@ func (o *page) IsInactive() bool {
 	return o.Status() == PAGE_STATUS_INACTIVE
 }
 
-func (o *page) IsDeleted() bool {
-	return o.Status() == PAGE_STATUS_DELETED
+func (o *page) IsSoftDeleted() bool {
+	return o.SoftDeletedAtCarbon().Compare("<", carbon.Now(carbon.UTC))
 }
 
 // == SETTERS AND GETTERS =====================================================
@@ -297,38 +297,3 @@ func (o *page) SetUpdatedAt(updatedAt string) PageInterface {
 func (o *page) UpdatedAtCarbon() carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }
-
-// func (o *page) SetCreatedAt(createdAt string) *page {
-// 	o.Set("created_at", createdAt)
-// 	return o
-// }
-
-// func (o *page) SetContent(content string) *page {
-// 	o.Set("content", content)
-// 	return o
-// }
-
-// func (o *page) SetHandle(handle string) *page {
-// 	o.Set("handle", handle)
-// 	return o
-// }
-
-// func (o *page) SetName(name string) *page {
-// 	o.Set("name", name)
-// 	return o
-// }
-
-// func (o *page) SetID(id string) *page {
-// 	o.Set("id", id)
-// 	return o
-// }
-
-// func (o *page) SetStatus(status string) *page {
-// 	o.Set("status", status)
-// 	return o
-// }
-
-// func (o *page) SetUpdatedAt(updatedAt string) *page {
-// 	o.Set("updated_at", updatedAt)
-// 	return o
-// }

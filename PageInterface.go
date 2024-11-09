@@ -69,5 +69,5 @@ type PageInterface interface {
 
 	IsActive() bool
 	IsInactive() bool
-	IsDeleted() bool
+	IsSoftDeleted() bool
 }
