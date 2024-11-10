@@ -281,8 +281,7 @@ func (controller *siteManagerController) tableRecords(data siteManagerController
 					Title("Edit").
 					Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteUpdate(), map[string]string{
 						"site_id": site.ID(),
-					})).
-					Target("_blank")
+					}))
 
 				buttonDelete := hb.Hyperlink().
 					Class("btn btn-danger").

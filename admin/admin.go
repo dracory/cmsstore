@@ -8,8 +8,10 @@ import (
 	"net/http"
 
 	"github.com/gouniverse/blockeditor"
+	adminBlocks "github.com/gouniverse/cmsstore/admin/blocks"
 	adminPages "github.com/gouniverse/cmsstore/admin/pages"
 	adminSites "github.com/gouniverse/cmsstore/admin/sites"
+	adminTemplates "github.com/gouniverse/cmsstore/admin/templates"
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
@@ -86,8 +88,10 @@ func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Reque
 		pathHome: a.pageHome,
 	}
 
+	maps.Copy(routes, a.blockRoutes())
 	maps.Copy(routes, a.pageRoutes())
 	maps.Copy(routes, a.siteRoutes())
+	maps.Copy(routes, a.templateRoutes())
 
 	if val, ok := routes[route]; ok {
 		return val
@@ -184,7 +188,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 				Class(tile.Background).
 				Style("--bs-bg-opacity:0.3;").
 				Child(hb.Div().Class("row").
-					Child(hb.Div().Class("col-sm-8").
+					Child(hb.Div().Class("col-8").
 						Child(hb.Div().
 							Style("margin-top:-4px;margin-right:8px;font-size:32px;").
 							Text(tile.Count)).
@@ -192,9 +196,9 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 							Style("margin-top:-4px;margin-right:8px;font-size:16px;").
 							Text(tile.Title)),
 					).
-					Child(hb.Div().Class("col-sm-4").
+					Child(hb.Div().Class("col-4").
 						Child(hb.I().
-							Class("bi").
+							Class("bi float-end").
 							Class(tile.Icon).
 							Style(`color:silver;opacity:0.6;`).
 							Style("margin-top:-4px;margin-right:8px;font-size:48px;")),
@@ -210,7 +214,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 					Text("More info").
 					Child(hb.I().Class("bi bi-arrow-right-circle-fill ms-3").Style("margin-top:-4px;margin-right:8px;font-size:16px;")),
 				))
-		return hb.Div().Class("col-sm-6 col-3").Child(card)
+		return hb.Div().Class("col-xs-12 col-sm-6 col-md-3").Child(card)
 	})
 
 	heading := hb.NewHeading1().
@@ -254,6 +258,40 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 
 	responses.HTMLResponse(w, r, webpage)
 	return ""
+}
+
+func (a *admin) blockUI(r *http.Request) adminBlocks.UiInterface {
+	options := adminBlocks.UiConfig{
+		// BlockEditorDefinitions: a.blockEditorDefinitions,
+		Endpoint:         endpoint(r),
+		Layout:           a.render,
+		Logger:           a.logger,
+		PathBlockCreate:  pathBlocksBlockCreate,
+		PathBlockDelete:  pathBlocksBlockDelete,
+		PathBlockManager: pathBlocksBlockManager,
+		PathBlockUpdate:  pathBlocksBlockUpdate,
+		Store:            a.store,
+		URL:              url,
+	}
+	return adminBlocks.UI(options)
+}
+
+func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	blockRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
+		pathBlocksBlockCreate: func(w http.ResponseWriter, r *http.Request) {
+			a.blockUI(r).BlockCreate(w, r)
+		},
+		pathBlocksBlockDelete: func(w http.ResponseWriter, r *http.Request) {
+			a.blockUI(r).BlockDelete(w, r)
+		},
+		pathBlocksBlockManager: func(w http.ResponseWriter, r *http.Request) {
+			a.blockUI(r).BlockManager(w, r)
+		},
+		pathBlocksBlockUpdate: func(w http.ResponseWriter, r *http.Request) {
+			a.blockUI(r).BlockUpdate(w, r)
+		},
+	}
+	return blockRoutes
 }
 
 func (a *admin) pageUI(r *http.Request) adminPages.UiInterface {
@@ -322,6 +360,39 @@ func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 	}
 
 	return siteRoutes
+}
+
+func (a *admin) templateUI(r *http.Request) adminTemplates.UiInterface {
+	options := adminTemplates.UiConfig{
+		Endpoint:            endpoint(r),
+		Layout:              a.render,
+		Logger:              a.logger,
+		PathTemplateCreate:  pathTemplatesTemplateCreate,
+		PathTemplateDelete:  pathTemplatesTemplateDelete,
+		PathTemplateManager: pathTemplatesTemplateManager,
+		PathTemplateUpdate:  pathTemplatesTemplateUpdate,
+		Store:               a.store,
+		URL:                 url,
+	}
+	return adminTemplates.UI(options)
+}
+
+func (a *admin) templateRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	templateRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
+		pathTemplatesTemplateCreate: func(w http.ResponseWriter, r *http.Request) {
+			a.templateUI(r).TemplateCreate(w, r)
+		},
+		pathTemplatesTemplateDelete: func(w http.ResponseWriter, r *http.Request) {
+			a.templateUI(r).TemplateDelete(w, r)
+		},
+		pathTemplatesTemplateManager: func(w http.ResponseWriter, r *http.Request) {
+			a.templateUI(r).TemplateManager(w, r)
+		},
+		pathTemplatesTemplateUpdate: func(w http.ResponseWriter, r *http.Request) {
+			a.templateUI(r).TemplateUpdate(w, r)
+		},
+	}
+	return templateRoutes
 }
 
 func (a *admin) adminBreadcrumbs(breadcrumbs []bs.Breadcrumb) string {

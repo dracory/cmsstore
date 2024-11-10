@@ -4,13 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	// "project/config"
-	// "project/controllers/admin/cms/shared"
-	// "project/internal/helpers"
-	// "project/internal/layouts"
-	// "project/internal/links"
-	// "project/pkg/cmsstore"
-
 	"github.com/gouniverse/api"
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cdn"
@@ -25,25 +18,25 @@ import (
 	"github.com/spf13/cast"
 )
 
-const ActionModalPageFilterShow = "modal_site_filter_show"
+const ActionModalPageFilterShow = "modal_template_filter_show"
 
 // == CONTROLLER ==============================================================
 
-type pageManagerController struct {
+type templateManagerController struct {
 	ui UiInterface
 }
 
-var _ router.HTMLControllerInterface = (*pageManagerController)(nil)
+var _ router.HTMLControllerInterface = (*templateManagerController)(nil)
 
 // == CONSTRUCTOR =============================================================
 
-func NewPageManagerController(ui UiInterface) *pageManagerController {
-	return &pageManagerController{
+func NewTemplateManagerController(ui UiInterface) *templateManagerController {
+	return &templateManagerController{
 		ui: ui,
 	}
 }
 
-func (controller *pageManagerController) Handler(w http.ResponseWriter, r *http.Request) string {
+func (controller *templateManagerController) Handler(w http.ResponseWriter, r *http.Request) string {
 	data, errorMessage := controller.prepareData(r)
 
 	if errorMessage != "" {
@@ -65,11 +58,10 @@ func (controller *pageManagerController) Handler(w http.ResponseWriter, r *http.
 			cdn.Sweetalert2_11(),
 		},
 	}
-
-	return controller.ui.Layout(w, r, "Page  Manager | CMS", controller.page(data).ToHTML(), options)
+	return controller.ui.Layout(w, r, "Template Manager | CMS", controller.page(data).ToHTML(), options)
 }
 
-func (controller *pageManagerController) onModalRecordFilterShow(data pageManagerControllerData) *hb.Tag {
+func (controller *templateManagerController) onModalRecordFilterShow(data templateManagerControllerData) *hb.Tag {
 	modalCloseScript := `document.getElementById('ModalMessage').remove();document.getElementById('ModalBackdrop').remove();`
 
 	title := hb.Heading5().
@@ -96,13 +88,13 @@ func (controller *pageManagerController) onModalRecordFilterShow(data pageManage
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), nil),
+		ActionURL: controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateManager(), nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
 				Name:  "status",
 				Type:  form.FORM_FIELD_TYPE_SELECT,
-				Help:  `The status of the site.`,
+				Help:  `The status of the template.`,
 				Value: data.formStatus,
 				Options: []form.FieldOption{
 					{
@@ -145,17 +137,17 @@ func (controller *pageManagerController) onModalRecordFilterShow(data pageManage
 				Help:  `Filter by creation date.`,
 			}),
 			form.NewField(form.FieldOptions{
-				Label: "Site ID",
-				Name:  "site_id",
+				Label: "Template ID",
+				Name:  "template_id",
 				Type:  form.FORM_FIELD_TYPE_STRING,
-				Value: data.formSiteID,
-				Help:  `Find site by reference number (ID).`,
+				Value: data.formTemplateID,
+				Help:  `Find template by reference number (ID).`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Path",
 				Name:  "path",
 				Type:  form.FORM_FIELD_TYPE_STRING,
-				Value: controller.ui.PathPageManager(),
+				Value: controller.ui.PathTemplateManager(),
 				Help:  `Path to this page.`,
 			}),
 		},
@@ -196,7 +188,7 @@ func (controller *pageManagerController) onModalRecordFilterShow(data pageManage
 
 }
 
-func (controller *pageManagerController) page(data pageManagerControllerData) hb.TagInterface {
+func (controller *templateManagerController) page(data templateManagerControllerData) hb.TagInterface {
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
@@ -207,21 +199,21 @@ func (controller *pageManagerController) page(data pageManagerControllerData) hb
 			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
 		},
 		{
-			Name: "Page Manager",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), nil),
+			Name: "Template Manager",
+			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateManager(), nil),
 		},
 	})
 
 	buttonPageNew := hb.Button().
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
-		HTML("New Page").
-		HxGet(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageCreate(), nil)).
+		HTML("New Template").
+		HxGet(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateCreate(), nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
 	title := hb.Heading1().
-		HTML("CMS. Page Manager").
+		HTML("CMS. Template Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().
@@ -232,7 +224,7 @@ func (controller *pageManagerController) page(data pageManagerControllerData) hb
 		Child(controller.tableRecords(data))
 }
 
-func (controller *pageManagerController) tableRecords(data pageManagerControllerData) hb.TagInterface {
+func (controller *templateManagerController) tableRecords(data templateManagerControllerData) hb.TagInterface {
 	table := hb.Table().
 		Class("table table-striped table-hover table-bordered").
 		Children([]hb.TagInterface{
@@ -241,7 +233,7 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 					hb.TH().
 						Child(controller.sortableColumnLabel(data, "Name", cmsstore.COLUMN_NAME)).
 						Text(", ").
-						Child(controller.sortableColumnLabel(data, "Alias", cmsstore.COLUMN_ALIAS)).
+						Child(controller.sortableColumnLabel(data, "Domains", cmsstore.COLUMN_DOMAIN_NAMES)).
 						Text(", ").
 						Child(controller.sortableColumnLabel(data, "Reference", cmsstore.COLUMN_ID)).
 						Style(`cursor: pointer;`),
@@ -258,69 +250,58 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 						HTML("Actions"),
 				}),
 			}),
-			hb.Tbody().Children(lo.Map(data.recordList, func(page cmsstore.PageInterface, _ int) hb.TagInterface {
+			hb.Tbody().Children(lo.Map(data.recordList, func(template cmsstore.TemplateInterface, _ int) hb.TagInterface {
 
-				pageName := page.Name()
-				pageAlias := page.Alias()
+				templateName := template.Name()
 
-				siteLink := hb.Hyperlink().
-					Text(pageName).
-					Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{
-						"page_id": page.ID(),
+				templateLink := hb.Hyperlink().
+					Text(templateName).
+					Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateUpdate(), map[string]string{
+						"template_id": template.ID(),
 					}))
 
 				status := hb.Span().
 					Style(`font-weight: bold;`).
-					StyleIf(page.IsActive(), `color:green;`).
-					StyleIf(page.IsSoftDeleted(), `color:silver;`).
-					StyleIf(page.IsInactive(), `color:red;`).
-					HTML(page.Status())
+					StyleIf(template.IsActive(), `color:green;`).
+					StyleIf(template.IsSoftDeleted(), `color:silver;`).
+					StyleIf(template.IsInactive(), `color:red;`).
+					HTML(template.Status())
 
 				buttonEdit := hb.Hyperlink().
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{
-						"page_id": page.ID(),
+					Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateUpdate(), map[string]string{
+						"template_id": template.ID(),
 					}))
 
 				buttonDelete := hb.Hyperlink().
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageDelete(), map[string]string{
-						"page_id": page.ID(),
+					HxGet(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateDelete(), map[string]string{
+						"template_id": template.ID(),
 					})).
 					HxTarget("body").
 					HxSwap("beforeend")
 
-				// buttonImpersonate := hb.Hyperlink().
-				// 	Class("btn btn-warning me-2").
-				// 	Child(hb.I().Class("bi bi-shuffle")).
-				// 	Title("Impersonate").
-				// 	Href(links.NewAdminLinks().UsersUserImpersonate(map[string]string{"site_id": site.ID()}))
-
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
-						Child(hb.Div().Child(siteLink)).
-						Child(hb.Div().
-							Style("font-size: 11px;").
-							HTML("Alias: ").
-							HTML(pageAlias)).
+						Child(hb.Div().Child(templateLink)).
 						Child(hb.Div().
 							Style("font-size: 11px;").
 							HTML("Ref: ").
-							HTML(page.ID())),
+							HTML(template.ID())),
 					hb.TD().
 						Child(status),
 					hb.TD().
 						Child(hb.Div().
 							Style("font-size: 13px;white-space: nowrap;").
-							HTML(page.CreatedAtCarbon().Format("d M Y"))),
+							HTML(template.CreatedAtCarbon().Format("d M Y"))),
 					hb.TD().
 						Child(hb.Div().
 							Style("font-size: 13px;white-space: nowrap;").
-							HTML(page.UpdatedAtCarbon().Format("d M Y"))),
+							HTML(template.UpdatedAtCarbon().Format("d M Y"))),
 					hb.TD().
 						Child(buttonEdit).
 						// Child(buttonImpersonate).
@@ -338,7 +319,7 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 	})
 }
 
-func (controller *pageManagerController) sortableColumnLabel(data pageManagerControllerData, tableLabel string, columnName string) hb.TagInterface {
+func (controller *templateManagerController) sortableColumnLabel(data templateManagerControllerData, tableLabel string, columnName string) hb.TagInterface {
 	isSelected := strings.EqualFold(data.sortBy, columnName)
 
 	direction := lo.If(data.sortOrder == sb.ASC, sb.DESC).Else(sb.ASC)
@@ -347,14 +328,14 @@ func (controller *pageManagerController) sortableColumnLabel(data pageManagerCon
 		direction = sb.ASC
 	}
 
-	link := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), map[string]string{
-		"page":      "0",
-		"by":        columnName,
-		"sort":      direction,
-		"date_from": data.formCreatedFrom,
-		"date_to":   data.formCreatedTo,
-		"status":    data.formStatus,
-		"site_id":   data.formSiteID,
+	link := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateManager(), map[string]string{
+		"page":        "0",
+		"by":          columnName,
+		"sort":        direction,
+		"date_from":   data.formCreatedFrom,
+		"date_to":     data.formCreatedTo,
+		"status":      data.formStatus,
+		"template_id": data.formTemplateID,
 	})
 	return hb.Hyperlink().
 		HTML(tableLabel).
@@ -362,7 +343,7 @@ func (controller *pageManagerController) sortableColumnLabel(data pageManagerCon
 		Href(link)
 }
 
-func (controller *pageManagerController) sortingIndicator(columnName string, sortByColumnName string, sortOrder string) hb.TagInterface {
+func (controller *templateManagerController) sortingIndicator(columnName string, sortByColumnName string, sortOrder string) hb.TagInterface {
 	isSelected := strings.EqualFold(sortByColumnName, columnName)
 
 	direction := lo.If(isSelected && sortOrder == "asc", "up").
@@ -378,17 +359,17 @@ func (controller *pageManagerController) sortingIndicator(columnName string, sor
 	return sortingIndicator
 }
 
-func (controller *pageManagerController) tableFilter(data pageManagerControllerData) hb.TagInterface {
+func (controller *templateManagerController) tableFilter(data templateManagerControllerData) hb.TagInterface {
 	buttonFilter := hb.Button().
 		Class("btn btn-sm btn-info me-2").
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), map[string]string{
+		HxPost(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateManager(), map[string]string{
 			"action":       ActionModalPageFilterShow,
 			"name":         data.formName,
 			"status":       data.formStatus,
-			"site_id":      data.formSiteID,
+			"template_id":  data.formTemplateID,
 			"created_from": data.formCreatedFrom,
 			"created_to":   data.formCreatedTo,
 		})).
@@ -396,7 +377,7 @@ func (controller *pageManagerController) tableFilter(data pageManagerControllerD
 		HxSwap("beforeend")
 
 	description := []string{
-		hb.Span().HTML("Showing pages").Text(" ").ToHTML(),
+		hb.Span().HTML("Showing templates").Text(" ").ToHTML(),
 	}
 
 	if data.formStatus != "" {
@@ -409,8 +390,8 @@ func (controller *pageManagerController) tableFilter(data pageManagerControllerD
 		description = append(description, hb.Span().Text("and name: "+data.formName).ToHTML())
 	}
 
-	if data.formSiteID != "" {
-		description = append(description, hb.Span().Text("and ID: "+data.formSiteID).ToHTML())
+	if data.formTemplateID != "" {
+		description = append(description, hb.Span().Text("and ID: "+data.formTemplateID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
@@ -432,8 +413,8 @@ func (controller *pageManagerController) tableFilter(data pageManagerControllerD
 		})
 }
 
-func (controller *pageManagerController) tablePagination(data pageManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), map[string]string{
+func (controller *templateManagerController) tablePagination(data templateManagerControllerData, count int, page int, perPage int) hb.TagInterface {
+	url := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateManager(), map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,
@@ -457,7 +438,7 @@ func (controller *pageManagerController) tablePagination(data pageManagerControl
 		HTML(pagination)
 }
 
-func (controller *pageManagerController) prepareData(r *http.Request) (data pageManagerControllerData, errorMessage string) {
+func (controller *templateManagerController) prepareData(r *http.Request) (data templateManagerControllerData, errorMessage string) {
 	var err error
 	initialPerPage := 20
 	data.request = r
@@ -475,8 +456,8 @@ func (controller *pageManagerController) prepareData(r *http.Request) (data page
 	recordList, recordCount, err := controller.fetchRecordList(data)
 
 	if err != nil {
-		controller.ui.Logger().Error("At pageManagerController > prepareData", "error", err.Error())
-		return data, "error retrieving web sites"
+		controller.ui.Logger().Error("At templateManagerController > prepareData", "error", err.Error())
+		return data, "error retrieving web templates"
 	}
 
 	data.recordList = recordList
@@ -485,11 +466,11 @@ func (controller *pageManagerController) prepareData(r *http.Request) (data page
 	return data, ""
 }
 
-func (controller *pageManagerController) fetchRecordList(data pageManagerControllerData) (records []cmsstore.PageInterface, recordCount int64, err error) {
-	siteIDs := []string{}
+func (controller *templateManagerController) fetchRecordList(data templateManagerControllerData) (records []cmsstore.TemplateInterface, recordCount int64, err error) {
+	templateIDs := []string{}
 
-	if data.formSiteID != "" {
-		siteIDs = append(siteIDs, data.formSiteID)
+	if data.formTemplateID != "" {
+		templateIDs = append(templateIDs, data.formTemplateID)
 	}
 
 	// if data.formCreatedFrom != "" {
@@ -500,13 +481,13 @@ func (controller *pageManagerController) fetchRecordList(data pageManagerControl
 	// 	query.CreatedAtLte = data.formCreatedTo + " 23:59:59"
 	// }
 
-	query := cmsstore.NewPageQuery()
+	query := cmsstore.NewTemplateQuery()
 
-	if len(siteIDs) > 0 {
-		query, err = query.SetIDIn(siteIDs)
+	if len(templateIDs) > 0 {
+		query, err = query.SetIDIn(templateIDs)
 
 		if err != nil {
-			return []cmsstore.PageInterface{}, 0, err
+			return []cmsstore.TemplateInterface{}, 0, err
 		}
 	}
 
@@ -514,15 +495,7 @@ func (controller *pageManagerController) fetchRecordList(data pageManagerControl
 		query, err = query.SetStatus(data.formStatus)
 
 		if err != nil {
-			return []cmsstore.PageInterface{}, 0, err
-		}
-	}
-
-	if data.formAlias != "" {
-		query, err = query.SetAliasLike(data.formAlias)
-
-		if err != nil {
-			return []cmsstore.PageInterface{}, 0, err
+			return []cmsstore.TemplateInterface{}, 0, err
 		}
 	}
 
@@ -530,50 +503,50 @@ func (controller *pageManagerController) fetchRecordList(data pageManagerControl
 		query, err = query.SetNameLike(data.formName)
 
 		if err != nil {
-			return []cmsstore.PageInterface{}, 0, err
+			return []cmsstore.TemplateInterface{}, 0, err
 		}
 	}
 
 	query, err = query.SetLimit(data.perPage)
 
 	if err != nil {
-		return []cmsstore.PageInterface{}, 0, err
+		return []cmsstore.TemplateInterface{}, 0, err
 	}
 
 	query, err = query.SetOffset(data.pageInt * data.perPage)
 
 	if err != nil {
-		return []cmsstore.PageInterface{}, 0, err
+		return []cmsstore.TemplateInterface{}, 0, err
 	}
 
 	query, err = query.SetOrderBy(data.sortBy)
 
 	if err != nil {
-		return []cmsstore.PageInterface{}, 0, err
+		return []cmsstore.TemplateInterface{}, 0, err
 	}
 
 	query, err = query.SetSortOrder(data.sortOrder)
 
 	if err != nil {
-		return []cmsstore.PageInterface{}, 0, err
+		return []cmsstore.TemplateInterface{}, 0, err
 	}
 
-	recordList, err := controller.ui.Store().PageList(query)
+	recordList, err := controller.ui.Store().TemplateList(query)
 
 	if err != nil {
-		return []cmsstore.PageInterface{}, 0, err
+		return []cmsstore.TemplateInterface{}, 0, err
 	}
 
-	recordCount, err = controller.ui.Store().PageCount(query)
+	recordCount, err = controller.ui.Store().TemplateCount(query)
 
 	if err != nil {
-		return []cmsstore.PageInterface{}, 0, err
+		return []cmsstore.TemplateInterface{}, 0, err
 	}
 
 	return recordList, recordCount, nil
 }
 
-type pageManagerControllerData struct {
+type templateManagerControllerData struct {
 	request         *http.Request
 	action          string
 	page            string
@@ -583,10 +556,9 @@ type pageManagerControllerData struct {
 	sortBy          string
 	formStatus      string
 	formName        string
-	formAlias       string
 	formCreatedFrom string
 	formCreatedTo   string
-	formSiteID      string
-	recordList      []cmsstore.PageInterface
+	formTemplateID  string
+	recordList      []cmsstore.TemplateInterface
 	recordCount     int64
 }

@@ -5,6 +5,7 @@ import "errors"
 type blockQuery struct {
 	id              string
 	idIn            []string
+	nameLike        string
 	status          string
 	statusIn        []string
 	handle          string
@@ -49,6 +50,18 @@ func (q *blockQuery) SetIDIn(idIn []string) (BlockQueryInterface, error) {
 
 	q.idIn = idIn
 
+	return q, nil
+}
+
+func (q *blockQuery) NameLike() string {
+	return q.nameLike
+}
+
+func (q *blockQuery) SetNameLike(nameLike string) (BlockQueryInterface, error) {
+	if nameLike == "" {
+		return q, errors.New(ERROR_EMPTY_STRING)
+	}
+	q.nameLike = nameLike
 	return q, nil
 }
 

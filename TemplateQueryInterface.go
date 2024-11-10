@@ -23,6 +23,9 @@ type TemplateQueryInterface interface {
 	IDIn() []string
 	SetIDIn(idIn []string) (TemplateQueryInterface, error)
 
+	NameLike() string
+	SetNameLike(nameLike string) (TemplateQueryInterface, error)
+
 	Status() string
 	SetStatus(status string) (TemplateQueryInterface, error)
 

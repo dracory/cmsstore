@@ -2,11 +2,6 @@ package admin
 
 import (
 	"net/http"
-
-	// "project/config"
-	// "project/controllers/admin/cms/shared"
-	// "project/internal/helpers"
-	// "project/pkg/cmsstore"
 	"strings"
 
 	"github.com/gouniverse/bs"
@@ -21,28 +16,28 @@ import (
 
 // == CONTROLLER ==============================================================
 
-type pageCreateController struct {
+type templateCreateController struct {
 	ui UiInterface
 }
 
-type pageCreateControllerData struct {
+type templateCreateControllerData struct {
 	siteList       []cmsstore.SiteInterface
 	siteID         string
 	name           string
 	successMessage string
 }
 
-var _ router.HTMLControllerInterface = (*pageDeleteController)(nil)
+var _ router.HTMLControllerInterface = (*templateCreateController)(nil)
 
 // == CONSTRUCTOR =============================================================
 
-func NewPageCreateController(ui UiInterface) *pageCreateController {
-	return &pageCreateController{
+func NewTemplateCreateController(ui UiInterface) *templateCreateController {
+	return &templateCreateController{
 		ui: ui,
 	}
 }
 
-func (controller pageCreateController) Handler(w http.ResponseWriter, r *http.Request) string {
+func (controller templateCreateController) Handler(w http.ResponseWriter, r *http.Request) string {
 	data, errorMessage := controller.prepareDataAndValidate(r)
 
 	if errorMessage != "" {
@@ -67,15 +62,15 @@ func (controller pageCreateController) Handler(w http.ResponseWriter, r *http.Re
 		ToHTML()
 }
 
-func (controller *pageCreateController) modal(data pageCreateControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageCreate(), nil)
+func (controller *templateCreateController) modal(data templateCreateControllerData) hb.TagInterface {
+	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateCreate(), nil)
 
 	form := form.NewForm(form.FormOptions{
-		ID: "FormPageCreate",
+		ID: "FormTemplateCreate",
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
-				Label:    "Page name",
-				Name:     "page_name",
+				Label:    "Template name",
+				Name:     "template_name",
 				Type:     form.FORM_FIELD_TYPE_STRING,
 				Value:    data.name,
 				Required: true,
@@ -107,7 +102,7 @@ func (controller *pageCreateController) modal(data pageCreateControllerData) hb.
 
 	modalCloseScript := `closeModal` + modalID + `();`
 
-	modalHeading := hb.Heading5().HTML("New Page").Style(`margin:0px;`)
+	modalHeading := hb.Heading5().HTML("New Template").Style(`margin:0px;`)
 
 	modalClose := hb.Button().Type("button").
 		Class("btn-close").
@@ -163,8 +158,8 @@ func (controller *pageCreateController) modal(data pageCreateControllerData) hb.
 	})
 }
 
-func (controller *pageCreateController) prepareDataAndValidate(r *http.Request) (data pageCreateControllerData, errorMessage string) {
-	data.name = strings.TrimSpace(utils.Req(r, "page_name", ""))
+func (controller *templateCreateController) prepareDataAndValidate(r *http.Request) (data templateCreateControllerData, errorMessage string) {
+	data.name = strings.TrimSpace(utils.Req(r, "template_name", ""))
 	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
 
 	query := cmsstore.NewSiteQuery()
@@ -199,21 +194,21 @@ func (controller *pageCreateController) prepareDataAndValidate(r *http.Request) 
 	}
 
 	if data.name == "" {
-		return data, "page name is required"
+		return data, "template name is required"
 	}
 
-	page := cmsstore.NewPage()
-	page.SetSiteID(data.siteID)
-	page.SetName(data.name)
+	template := cmsstore.NewTemplate()
+	template.SetSiteID(data.siteID)
+	template.SetName(data.name)
 
-	err = controller.ui.Store().PageCreate(page)
+	err = controller.ui.Store().TemplateCreate(template)
 
 	if err != nil {
-		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
+		controller.ui.Logger().Error("At templateCreateController > prepareDataAndValidate", "error", err.Error())
 		return data, err.Error()
 	}
 
-	data.successMessage = "page created successfully."
+	data.successMessage = "template created successfully."
 
 	return data, ""
 

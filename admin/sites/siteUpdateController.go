@@ -7,7 +7,6 @@ import (
 	"github.com/gouniverse/api"
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cdn"
-	"github.com/gouniverse/cms/types"
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/form"
@@ -111,10 +110,18 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		HTML("Back").
 		Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteManager(), nil))
 
+	badgeStatus := hb.Div().
+		Class("badge fs-6 ms-3").
+		ClassIf(data.site.Status() == cmsstore.SITE_STATUS_ACTIVE, "bg-success").
+		ClassIf(data.site.Status() == cmsstore.SITE_STATUS_INACTIVE, "bg-secondary").
+		ClassIf(data.site.Status() == cmsstore.SITE_STATUS_DRAFT, "bg-warning").
+		Text(data.site.Status())
+
 	heading := hb.Heading1().
 		Text("CMS. Edit Site:").
 		Text(" ").
 		Text(data.site.Name()).
+		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).
 		Child(buttonCancel)
 
@@ -125,8 +132,8 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 				Class("card-header").
 				Style(`display:flex;justify-content:space-between;align-items:center;`).
 				Child(hb.Heading4().
-					HTMLIf(data.view == VIEW_SETTINGS, "Web Site Settings").
-					HTMLIf(data.view == VIEW_SEO, "Web Site SEO").
+					HTMLIf(data.view == VIEW_SETTINGS, "Site Settings").
+					HTMLIf(data.view == VIEW_SEO, "Site SEO").
 					Style("margin-bottom:0;display:inline-block;")).
 				Child(buttonSave),
 		).
@@ -181,19 +188,15 @@ func (controller siteUpdateController) form(data siteUpdateControllerData) hb.Ta
 				},
 				{
 					Value: "Draft",
-					Key:   types.WEBPAGE_STATUS_DRAFT,
+					Key:   cmsstore.SITE_STATUS_DRAFT,
 				},
 				{
 					Value: "Published",
-					Key:   types.WEBPAGE_STATUS_ACTIVE,
+					Key:   cmsstore.SITE_STATUS_ACTIVE,
 				},
 				{
 					Value: "Unpublished",
-					Key:   types.WEBPAGE_STATUS_INACTIVE,
-				},
-				{
-					Value: "In Trash Bin",
-					Key:   types.WEBPAGE_STATUS_DELETED,
+					Key:   cmsstore.SITE_STATUS_INACTIVE,
 				},
 			},
 		}),

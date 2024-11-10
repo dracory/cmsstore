@@ -3,6 +3,7 @@ package cmsstore
 type BlockQueryOptions struct {
 	ID           string
 	IDIn         []string
+	NameLike     string
 	Status       string
 	StatusIn     []string
 	Handle       string
@@ -22,6 +23,9 @@ type BlockQueryInterface interface {
 
 	IDIn() []string
 	SetIDIn(idIn []string) (BlockQueryInterface, error)
+
+	NameLike() string
+	SetNameLike(nameLike string) (BlockQueryInterface, error)
 
 	Status() string
 	SetStatus(status string) (BlockQueryInterface, error)

@@ -2,11 +2,6 @@ package admin
 
 import (
 	"net/http"
-
-	// "project/config"
-	// "project/controllers/admin/cms/shared"
-	// "project/internal/helpers"
-	// "project/pkg/cmsstore"
 	"strings"
 
 	"github.com/gouniverse/bs"
@@ -21,28 +16,30 @@ import (
 
 // == CONTROLLER ==============================================================
 
-type pageCreateController struct {
+type blockCreateController struct {
 	ui UiInterface
 }
 
-type pageCreateControllerData struct {
+type blockCreateControllerData struct {
 	siteList       []cmsstore.SiteInterface
 	siteID         string
+	pageID         string
+	templateID     string
 	name           string
 	successMessage string
 }
 
-var _ router.HTMLControllerInterface = (*pageDeleteController)(nil)
+var _ router.HTMLControllerInterface = (*blockCreateController)(nil)
 
 // == CONSTRUCTOR =============================================================
 
-func NewPageCreateController(ui UiInterface) *pageCreateController {
-	return &pageCreateController{
+func NewBlockCreateController(ui UiInterface) *blockCreateController {
+	return &blockCreateController{
 		ui: ui,
 	}
 }
 
-func (controller pageCreateController) Handler(w http.ResponseWriter, r *http.Request) string {
+func (controller blockCreateController) Handler(w http.ResponseWriter, r *http.Request) string {
 	data, errorMessage := controller.prepareDataAndValidate(r)
 
 	if errorMessage != "" {
@@ -67,15 +64,15 @@ func (controller pageCreateController) Handler(w http.ResponseWriter, r *http.Re
 		ToHTML()
 }
 
-func (controller *pageCreateController) modal(data pageCreateControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageCreate(), nil)
+func (controller *blockCreateController) modal(data blockCreateControllerData) hb.TagInterface {
+	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockCreate(), nil)
 
 	form := form.NewForm(form.FormOptions{
-		ID: "FormPageCreate",
+		ID: "FormBlockCreate",
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
-				Label:    "Page name",
-				Name:     "page_name",
+				Label:    "Block name",
+				Name:     "block_name",
 				Type:     form.FORM_FIELD_TYPE_STRING,
 				Value:    data.name,
 				Required: true,
@@ -107,7 +104,7 @@ func (controller *pageCreateController) modal(data pageCreateControllerData) hb.
 
 	modalCloseScript := `closeModal` + modalID + `();`
 
-	modalHeading := hb.Heading5().HTML("New Page").Style(`margin:0px;`)
+	modalHeading := hb.Heading5().HTML("New Block").Style(`margin:0px;`)
 
 	modalClose := hb.Button().Type("button").
 		Class("btn-close").
@@ -163,9 +160,11 @@ func (controller *pageCreateController) modal(data pageCreateControllerData) hb.
 	})
 }
 
-func (controller *pageCreateController) prepareDataAndValidate(r *http.Request) (data pageCreateControllerData, errorMessage string) {
-	data.name = strings.TrimSpace(utils.Req(r, "page_name", ""))
+func (controller *blockCreateController) prepareDataAndValidate(r *http.Request) (data blockCreateControllerData, errorMessage string) {
+	data.name = strings.TrimSpace(utils.Req(r, "block_name", ""))
 	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
+	data.pageID = strings.TrimSpace(utils.Req(r, "page_id", ""))         // empty for now
+	data.templateID = strings.TrimSpace(utils.Req(r, "template_id", "")) // empty for now
 
 	query := cmsstore.NewSiteQuery()
 
@@ -194,27 +193,32 @@ func (controller *pageCreateController) prepareDataAndValidate(r *http.Request) 
 		return data, ""
 	}
 
+	return controller.saveBlock(r, data)
+}
+
+func (controller *blockCreateController) saveBlock(_ *http.Request, data blockCreateControllerData) (d blockCreateControllerData, errorMessage string) {
 	if data.siteID == "" {
 		return data, "site id is required"
 	}
 
 	if data.name == "" {
-		return data, "page name is required"
+		return data, "block name is required"
 	}
 
-	page := cmsstore.NewPage()
-	page.SetSiteID(data.siteID)
-	page.SetName(data.name)
+	block := cmsstore.NewBlock()
+	block.SetPageID(data.pageID) // this is empty at the moment
+	block.SetSiteID(data.siteID)
+	block.SetTemplateID(data.templateID) // this is empty at the moment
+	block.SetName(data.name)
 
-	err = controller.ui.Store().PageCreate(page)
+	err := controller.ui.Store().BlockCreate(block)
 
 	if err != nil {
-		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
+		controller.ui.Logger().Error("At blockCreateController > prepareDataAndValidate", "error", err.Error())
 		return data, err.Error()
 	}
 
-	data.successMessage = "page created successfully."
+	data.successMessage = "block created successfully."
 
 	return data, ""
-
 }

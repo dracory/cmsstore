@@ -182,10 +182,18 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		HTML("Back").
 		Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), nil))
 
+	badgeStatus := hb.Div().
+		Class("badge fs-6 ms-3").
+		ClassIf(data.page.Status() == cmsstore.PAGE_STATUS_ACTIVE, "bg-success").
+		ClassIf(data.page.Status() == cmsstore.PAGE_STATUS_INACTIVE, "bg-secondary").
+		ClassIf(data.page.Status() == cmsstore.PAGE_STATUS_DRAFT, "bg-warning").
+		Text(data.page.Status())
+
 	heading := hb.Heading1().
 		Text("Edit page:").
 		Text(" ").
-		Text(data.page.Title()).
+		Text(data.page.Name()).
+		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).
 		Child(buttonCancel)
 
@@ -196,9 +204,9 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 				Class("card-header").
 				Style(`display:flex;justify-content:space-between;align-items:center;`).
 				Child(hb.Heading4().
-					HTMLIf(data.view == VIEW_CONTENT, "Web Page Contents").
-					HTMLIf(data.view == VIEW_SEO, "Web Page SEO").
-					HTMLIf(data.view == VIEW_SETTINGS, "Web Page Settings").
+					HTMLIf(data.view == VIEW_CONTENT, "Page Contents").
+					HTMLIf(data.view == VIEW_SEO, "Page SEO").
+					HTMLIf(data.view == VIEW_SETTINGS, "Page Settings").
 					Style("margin-bottom:0;display:inline-block;")).
 				Child(buttonSave),
 		).
@@ -260,19 +268,15 @@ func (controller pageUpdateController) form(data pageUpdateControllerData) hb.Ta
 				},
 				{
 					Value: "Draft",
-					Key:   types.WEBPAGE_STATUS_DRAFT,
+					Key:   cmsstore.PAGE_STATUS_DRAFT,
 				},
 				{
 					Value: "Published",
-					Key:   types.WEBPAGE_STATUS_ACTIVE,
+					Key:   cmsstore.PAGE_STATUS_ACTIVE,
 				},
 				{
 					Value: "Unpublished",
-					Key:   types.WEBPAGE_STATUS_INACTIVE,
-				},
-				{
-					Value: "In Trash Bin",
-					Key:   types.WEBPAGE_STATUS_DELETED,
+					Key:   cmsstore.PAGE_STATUS_INACTIVE,
 				},
 			},
 		},

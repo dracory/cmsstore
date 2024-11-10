@@ -12,27 +12,27 @@ import (
 
 // == CONTROLLER ==============================================================
 
-type siteDeleteController struct {
+type templateDeleteController struct {
 	ui UiInterface
 }
 
-var _ router.HTMLControllerInterface = (*siteDeleteController)(nil)
+var _ router.HTMLControllerInterface = (*templateDeleteController)(nil)
 
 // == CONSTRUCTOR =============================================================
 
-type siteDeleteControllerData struct {
-	siteID         string
-	site           cmsstore.SiteInterface
+type templateDeleteControllerData struct {
+	templateID     string
+	template       cmsstore.TemplateInterface
 	successMessage string
 }
 
-func NewSiteDeleteController(ui UiInterface) *siteDeleteController {
-	return &siteDeleteController{
+func NewTemplateDeleteController(ui UiInterface) *templateDeleteController {
+	return &templateDeleteController{
 		ui: ui,
 	}
 }
 
-func (controller siteDeleteController) Handler(w http.ResponseWriter, r *http.Request) string {
+func (controller templateDeleteController) Handler(w http.ResponseWriter, r *http.Request) string {
 	data, errorMessage := controller.prepareDataAndValidate(r)
 
 	if errorMessage != "" {
@@ -57,38 +57,38 @@ func (controller siteDeleteController) Handler(w http.ResponseWriter, r *http.Re
 		ToHTML()
 }
 
-func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteDelete(), map[string]string{
-		"site_id": data.siteID,
+func (controller *templateDeleteController) modal(data templateDeleteControllerData) hb.TagInterface {
+	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateDelete(), map[string]string{
+		"template_id": data.templateID,
 	})
 
-	modalID := "ModalSiteDelete"
+	modalID := "ModalTemplateDelete"
 	modalBackdropClass := "ModalBackdrop"
 
-	formGroupSiteId := hb.Input().
+	formGroupTemplateId := hb.Input().
 		Type(hb.TYPE_HIDDEN).
-		Name("site_id").
-		Value(data.siteID)
+		Name("template_id").
+		Value(data.templateID)
 
 	buttonDelete := hb.Button().
 		HTML("Delete").
 		Class("btn btn-primary float-end").
 		HxInclude("#Modal" + modalID).
 		HxPost(submitUrl).
-		HxSelectOob("#ModalSiteDelete").
+		HxSelectOob("#ModalTemplateDelete").
 		HxTarget("body").
 		HxSwap("beforeend")
 
 	modalCloseScript := `closeModal` + modalID + `();`
 
-	modalHeading := hb.Heading5().HTML("Delete Site").Style(`margin:0px;`)
+	modalHeading := hb.Heading5().HTML("Delete Template").Style(`margin:0px;`)
 
 	modalClose := hb.Button().Type("button").
 		Class("btn-close").
 		Data("bs-dismiss", "modal").
 		OnClick(modalCloseScript)
 
-	jsCloseFn := `function closeModal` + modalID + `() {document.getElementById('ModalSiteDelete').remove();[...document.getElementsByClassName('` + modalBackdropClass + `')].forEach(el => el.remove());}`
+	jsCloseFn := `function closeModal` + modalID + `() {document.getElementById('ModalTemplateDelete').remove();[...document.getElementsByClassName('` + modalBackdropClass + `')].forEach(el => el.remove());}`
 
 	modal := bs.Modal().
 		ID(modalID).
@@ -103,9 +103,9 @@ func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.
 						Child(modalClose)).
 				Child(
 					bs.ModalBody().
-						Child(hb.Paragraph().Text("Are you sure you want to delete this site?").Style(`margin-bottom:20px;color:red;`)).
+						Child(hb.Paragraph().Text("Are you sure you want to delete this template?").Style(`margin-bottom:20px;color:red;`)).
 						Child(hb.Paragraph().Text("This action cannot be undone.")).
-						Child(formGroupSiteId)).
+						Child(formGroupTemplateId)).
 				Child(bs.ModalFooter().
 					Style(`display:flex;justify-content:space-between;`).
 					Child(
@@ -127,38 +127,38 @@ func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.
 		})
 }
 
-func (controller *siteDeleteController) prepareDataAndValidate(r *http.Request) (data siteDeleteControllerData, errorMessage string) {
-	data.siteID = utils.Req(r, "site_id", "")
+func (controller *templateDeleteController) prepareDataAndValidate(r *http.Request) (data templateDeleteControllerData, errorMessage string) {
+	data.templateID = utils.Req(r, "template_id", "")
 
-	if data.siteID == "" {
-		return data, "site id is required"
+	if data.templateID == "" {
+		return data, "template id is required"
 	}
 
-	site, err := controller.ui.Store().SiteFindByID(data.siteID)
+	template, err := controller.ui.Store().TemplateFindByID(data.templateID)
 
 	if err != nil {
-		controller.ui.Logger().Error("Error. At siteDeleteController > prepareDataAndValidate", "error", err.Error())
+		controller.ui.Logger().Error("Error. At templateDeleteController > prepareDataAndValidate", "error", err.Error())
 		return data, err.Error()
 	}
 
-	if site == nil {
-		return data, "Site not found"
+	if template == nil {
+		return data, "Template not found"
 	}
 
-	data.site = site
+	data.template = template
 
 	if r.Method != "POST" {
 		return data, ""
 	}
 
-	err = controller.ui.Store().SiteSoftDelete(site)
+	err = controller.ui.Store().TemplateSoftDelete(template)
 
 	if err != nil {
-		controller.ui.Logger().Error("Error. At siteDeleteController > prepareDataAndValidate", "error", err.Error())
+		controller.ui.Logger().Error("Error. At templateDeleteController > prepareDataAndValidate", "error", err.Error())
 		return data, err.Error()
 	}
 
-	data.successMessage = "site deleted successfully."
+	data.successMessage = "template deleted successfully."
 
 	return data, ""
 

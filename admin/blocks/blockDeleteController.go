@@ -12,27 +12,27 @@ import (
 
 // == CONTROLLER ==============================================================
 
-type siteDeleteController struct {
+type blockDeleteController struct {
 	ui UiInterface
 }
 
-var _ router.HTMLControllerInterface = (*siteDeleteController)(nil)
+var _ router.HTMLControllerInterface = (*blockDeleteController)(nil)
 
 // == CONSTRUCTOR =============================================================
 
-type siteDeleteControllerData struct {
-	siteID         string
-	site           cmsstore.SiteInterface
+type blockDeleteControllerData struct {
+	blockID        string
+	block          cmsstore.BlockInterface
 	successMessage string
 }
 
-func NewSiteDeleteController(ui UiInterface) *siteDeleteController {
-	return &siteDeleteController{
+func NewBlockDeleteController(ui UiInterface) *blockDeleteController {
+	return &blockDeleteController{
 		ui: ui,
 	}
 }
 
-func (controller siteDeleteController) Handler(w http.ResponseWriter, r *http.Request) string {
+func (controller blockDeleteController) Handler(w http.ResponseWriter, r *http.Request) string {
 	data, errorMessage := controller.prepareDataAndValidate(r)
 
 	if errorMessage != "" {
@@ -57,38 +57,38 @@ func (controller siteDeleteController) Handler(w http.ResponseWriter, r *http.Re
 		ToHTML()
 }
 
-func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteDelete(), map[string]string{
-		"site_id": data.siteID,
+func (controller *blockDeleteController) modal(data blockDeleteControllerData) hb.TagInterface {
+	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockDelete(), map[string]string{
+		"block_id": data.blockID,
 	})
 
-	modalID := "ModalSiteDelete"
+	modalID := "ModalBlockDelete"
 	modalBackdropClass := "ModalBackdrop"
 
-	formGroupSiteId := hb.Input().
+	formGroupBlockId := hb.Input().
 		Type(hb.TYPE_HIDDEN).
-		Name("site_id").
-		Value(data.siteID)
+		Name("block_id").
+		Value(data.blockID)
 
 	buttonDelete := hb.Button().
 		HTML("Delete").
 		Class("btn btn-primary float-end").
 		HxInclude("#Modal" + modalID).
 		HxPost(submitUrl).
-		HxSelectOob("#ModalSiteDelete").
+		HxSelectOob("#ModalBlockDelete").
 		HxTarget("body").
 		HxSwap("beforeend")
 
 	modalCloseScript := `closeModal` + modalID + `();`
 
-	modalHeading := hb.Heading5().HTML("Delete Site").Style(`margin:0px;`)
+	modalHeading := hb.Heading5().HTML("Delete Block").Style(`margin:0px;`)
 
 	modalClose := hb.Button().Type("button").
 		Class("btn-close").
 		Data("bs-dismiss", "modal").
 		OnClick(modalCloseScript)
 
-	jsCloseFn := `function closeModal` + modalID + `() {document.getElementById('ModalSiteDelete').remove();[...document.getElementsByClassName('` + modalBackdropClass + `')].forEach(el => el.remove());}`
+	jsCloseFn := `function closeModal` + modalID + `() {document.getElementById('ModalBlockDelete').remove();[...document.getElementsByClassName('` + modalBackdropClass + `')].forEach(el => el.remove());}`
 
 	modal := bs.Modal().
 		ID(modalID).
@@ -103,9 +103,9 @@ func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.
 						Child(modalClose)).
 				Child(
 					bs.ModalBody().
-						Child(hb.Paragraph().Text("Are you sure you want to delete this site?").Style(`margin-bottom:20px;color:red;`)).
+						Child(hb.Paragraph().Text("Are you sure you want to delete this block?").Style(`margin-bottom:20px;color:red;`)).
 						Child(hb.Paragraph().Text("This action cannot be undone.")).
-						Child(formGroupSiteId)).
+						Child(formGroupBlockId)).
 				Child(bs.ModalFooter().
 					Style(`display:flex;justify-content:space-between;`).
 					Child(
@@ -127,38 +127,38 @@ func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.
 		})
 }
 
-func (controller *siteDeleteController) prepareDataAndValidate(r *http.Request) (data siteDeleteControllerData, errorMessage string) {
-	data.siteID = utils.Req(r, "site_id", "")
+func (controller *blockDeleteController) prepareDataAndValidate(r *http.Request) (data blockDeleteControllerData, errorMessage string) {
+	data.blockID = utils.Req(r, "block_id", "")
 
-	if data.siteID == "" {
-		return data, "site id is required"
+	if data.blockID == "" {
+		return data, "block id is required"
 	}
 
-	site, err := controller.ui.Store().SiteFindByID(data.siteID)
+	block, err := controller.ui.Store().BlockFindByID(data.blockID)
 
 	if err != nil {
-		controller.ui.Logger().Error("Error. At siteDeleteController > prepareDataAndValidate", "error", err.Error())
+		controller.ui.Logger().Error("Error. At blockDeleteController > prepareDataAndValidate", "error", err.Error())
 		return data, err.Error()
 	}
 
-	if site == nil {
-		return data, "Site not found"
+	if block == nil {
+		return data, "Block not found"
 	}
 
-	data.site = site
+	data.block = block
 
 	if r.Method != "POST" {
 		return data, ""
 	}
 
-	err = controller.ui.Store().SiteSoftDelete(site)
+	err = controller.ui.Store().BlockSoftDelete(block)
 
 	if err != nil {
-		controller.ui.Logger().Error("Error. At siteDeleteController > prepareDataAndValidate", "error", err.Error())
+		controller.ui.Logger().Error("Error. At blockDeleteController > prepareDataAndValidate", "error", err.Error())
 		return data, err.Error()
 	}
 
-	data.successMessage = "site deleted successfully."
+	data.successMessage = "block deleted successfully."
 
 	return data, ""
 

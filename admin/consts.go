@@ -3,6 +3,8 @@ package admin
 const keyEndpoint = "endpoint"
 const pathHome = "/"
 
+const pathBlocksBlockCreate = "/blocks/block-create"
+const pathBlocksBlockDelete = "/blocks/block-delete"
 const pathBlocksBlockManager = "/blocks/block-manager"
 const pathBlocksBlockUpdate = "/blocks/block-update"
 const pathPagesPageCreate = "/pages/page-create"
@@ -13,6 +15,8 @@ const pathSitesSiteCreate = "/sites/site-create"
 const pathSitesSiteDelete = "/sites/site-delete"
 const pathSitesSiteManager = "/sites/site-manager"
 const pathSitesSiteUpdate = "/sites/site-update"
+const pathTemplatesTemplateCreate = "/templates/template-create"
+const pathTemplatesTemplateDelete = "/templates/template-delete"
 const pathTemplatesTemplateManager = "/templates/template-manager"
 const pathTemplatesTemplateUpdate = "/templates/template-update"
 
