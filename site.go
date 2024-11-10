@@ -85,6 +85,10 @@ func (o *site) DomainNames() ([]string, error) {
 		return []string{}, errJson
 	}
 
+	if domainNamesJson == nil {
+		return []string{}, nil
+	}
+
 	return lo.Map(domainNamesJson.([]any), func(domainName any, _ int) string {
 		return domainName.(string)
 	}), nil

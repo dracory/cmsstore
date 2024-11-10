@@ -2,6 +2,7 @@ package admin
 
 import (
 	"net/http"
+	"slices"
 
 	"github.com/gouniverse/api"
 	"github.com/gouniverse/bs"
@@ -13,11 +14,14 @@ import (
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
 	"github.com/gouniverse/utils"
+	"github.com/samber/lo"
+	"github.com/spf13/cast"
 )
 
 const VIEW_SETTINGS = "settings"
 const VIEW_SEO = "seo"
-const ACTION_BLOCKEDITOR_HANDLE = "blockeditor_handle"
+const ACTION_REPEATER_ADD = "repeater_add"
+const ACTION_REPEATER_DELETE = "repeater_delete"
 
 // == CONTROLLER ==============================================================
 
@@ -39,13 +43,16 @@ func (controller *siteUpdateController) Handler(w http.ResponseWriter, r *http.R
 	data, errorMessage := controller.prepareDataAndValidate(r)
 
 	if errorMessage != "" {
-		//return helpers.ToFlashError(w, r, errorMessage, shared.NewLinks().Pages(map[string]string{}), 10)
 		return api.Error(errorMessage).ToString()
 	}
 
-	// if data.action == ACTION_BLOCKEDITOR_HANDLE {
-	// 	return blockeditor.Handle(w, r, controller.ui.BlockEditorDefinitions())
-	// }
+	if data.action == ACTION_REPEATER_ADD {
+		return controller.form(data).ToHTML()
+	}
+
+	if data.action == ACTION_REPEATER_DELETE {
+		return controller.form(data).ToHTML()
+	}
 
 	if r.Method == http.MethodPost {
 		return controller.form(data).ToHTML()
@@ -161,7 +168,7 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 
 func (controller siteUpdateController) form(data siteUpdateControllerData) hb.TagInterface {
 	fieldsSettings := []form.FieldInterface{
-		&form.Field{
+		form.NewField(form.FieldOptions{
 			Label: "Status",
 			Name:  "site_status",
 			Type:  form.FORM_FIELD_TYPE_SELECT,
@@ -189,43 +196,61 @@ func (controller siteUpdateController) form(data siteUpdateControllerData) hb.Ta
 					Key:   types.WEBPAGE_STATUS_DELETED,
 				},
 			},
-		},
-		&form.Field{
+		}),
+		form.NewField(form.FieldOptions{
 			Label: "Website Name (Internal)",
 			Name:  "site_name",
 			Type:  form.FORM_FIELD_TYPE_STRING,
 			Value: data.formName,
 			Help:  "The name of the site as displayed in the admin panel. This is not vsible to the site vistors",
-		},
-		&form.Field{
-			Label: "Website Name (Internal)",
-			Name:  "site_name",
-			Type:  form.FORM_FIELD_TYPE_STRING,
-			Value: data.formName,
-			Help:  "The name of the site as displayed in the admin panel. This is not vsible to the site vistors",
-		},
-		&form.Field{
+		}),
+		form.NewRepeater(form.RepeaterOptions{
+			Label: "Domain Names",
+			Fields: []form.FieldInterface{
+				form.NewField(form.FieldOptions{
+					Label: "Domain Name",
+					Name:  "site_domain_name",
+					Type:  form.FORM_FIELD_TYPE_STRING,
+				}),
+			},
+			Values: lo.Map(data.formDomainNames, func(domainName string, _ int) map[string]string {
+				return map[string]string{
+					"site_domain_name": domainName,
+				}
+			}),
+			RepeaterAddUrl: controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteUpdate(), map[string]string{
+				"site_id": data.siteID,
+				"view":    VIEW_SETTINGS,
+				"action":  ACTION_REPEATER_ADD,
+			}),
+			RepeaterRemoveUrl: controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteUpdate(), map[string]string{
+				"site_id": data.siteID,
+				"view":    VIEW_SETTINGS,
+				"action":  ACTION_REPEATER_DELETE,
+			}),
+		}),
+		form.NewField(form.FieldOptions{
 			Label: "Admin Notes (Internal)",
 			Name:  "site_memo",
 			Type:  form.FORM_FIELD_TYPE_TEXTAREA,
 			Value: data.formMemo,
 			Help:  "Admin notes for this site. These notes will not be visible to the public.",
-		},
-		&form.Field{
-			Label:    "Webpage ID",
+		}),
+		form.NewField(form.FieldOptions{
+			Label:    "Website ID",
 			Name:     "site_id",
 			Type:     form.FORM_FIELD_TYPE_STRING,
 			Value:    data.siteID,
 			Readonly: true,
-			Help:     "The reference number (ID) of the webpage. This is used to identify the webpage in the system and should not be changed.",
-		},
-		&form.Field{
+			Help:     "The reference number (ID) of the website. This is used to identify the website in the system and should not be changed.",
+		}),
+		form.NewField(form.FieldOptions{
 			Label:    "View",
 			Name:     "view",
 			Type:     form.FORM_FIELD_TYPE_HIDDEN,
 			Value:    data.view,
 			Readonly: true,
-		},
+		}),
 	}
 
 	fieldsSEO := controller.fieldsSEO(data)
@@ -284,6 +309,7 @@ func (controller siteUpdateController) saveSite(r *http.Request, data siteUpdate
 	data.formName = utils.Req(r, "site_name", "")
 	data.formStatus = utils.Req(r, "site_status", "")
 	data.formTitle = utils.Req(r, "site_title", "")
+	data.formDomainNames = utils.ReqArray(r, "site_domain_name", []string{})
 
 	if data.view == VIEW_SETTINGS {
 		if data.formStatus == "" {
@@ -296,6 +322,12 @@ func (controller siteUpdateController) saveSite(r *http.Request, data siteUpdate
 		data.site.SetMemo(data.formMemo)
 		data.site.SetName(data.formName)
 		data.site.SetStatus(data.formStatus)
+		_, err := data.site.SetDomainNames(data.formDomainNames)
+
+		if err != nil {
+			data.formErrorMessage = err.Error()
+			return data, ""
+		}
 	}
 
 	if data.view == VIEW_SEO {
@@ -343,8 +375,31 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 	data.formName = data.site.Name()
 	data.formMemo = data.site.Memo()
 	data.formStatus = data.site.Status()
+	data.formDomainNames, err = data.site.DomainNames()
+
+	if err != nil {
+		controller.ui.Logger().Error("At siteUpdateController > prepareDataAndValidate", "error", err.Error())
+		return data, err.Error()
+	}
 
 	if r.Method != http.MethodPost {
+		return data, ""
+	}
+
+	if data.action == ACTION_REPEATER_ADD {
+		data.formDomainNames = append(data.formDomainNames, "")
+		return data, ""
+	}
+
+	if data.action == ACTION_REPEATER_DELETE {
+		repeatableRemoveIndex := utils.Req(r, "repeatable_remove_index", "")
+
+		if repeatableRemoveIndex == "" {
+			return data, ""
+		}
+
+		data.formDomainNames = slices.Delete(data.formDomainNames, cast.ToInt(repeatableRemoveIndex), cast.ToInt(repeatableRemoveIndex)+1)
+
 		return data, ""
 	}
 
