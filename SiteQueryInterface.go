@@ -1,11 +1,12 @@
 package cmsstore
 
-type TemplateQueryOptions struct {
+type SiteQueryOptions struct {
 	ID           string
 	IDIn         []string
+	Handle       string
+	NameLike     string
 	Status       string
 	StatusIn     []string
-	Handle       string
 	CreatedAtGte string
 	CreatedAtLte string
 	Offset       int
@@ -16,43 +17,46 @@ type TemplateQueryOptions struct {
 	WithDeleted  bool
 }
 
-type TemplateQueryInterface interface {
+type SiteQueryInterface interface {
 	ID() string
-	SetID(id string) (TemplateQueryInterface, error)
+	SetID(id string) (SiteQueryInterface, error)
 
 	IDIn() []string
-	SetIDIn(idIn []string) (TemplateQueryInterface, error)
+	SetIDIn(idIn []string) (SiteQueryInterface, error)
+
+	NameLike() string
+	SetNameLike(nameLike string) (SiteQueryInterface, error)
 
 	Status() string
-	SetStatus(status string) (TemplateQueryInterface, error)
+	SetStatus(status string) (SiteQueryInterface, error)
 
 	StatusIn() []string
-	SetStatusIn(statusIn []string) (TemplateQueryInterface, error)
+	SetStatusIn(statusIn []string) (SiteQueryInterface, error)
 
 	Handle() string
-	SetHandle(handle string) (TemplateQueryInterface, error)
+	SetHandle(handle string) (SiteQueryInterface, error)
 
 	CreatedAtGte() string
-	SetCreatedAtGte(createdAtGte string) (TemplateQueryInterface, error)
+	SetCreatedAtGte(createdAtGte string) (SiteQueryInterface, error)
 
 	CreatedAtLte() string
-	SetCreatedAtLte(createdAtLte string) (TemplateQueryInterface, error)
+	SetCreatedAtLte(createdAtLte string) (SiteQueryInterface, error)
 
 	Offset() int
-	SetOffset(offset int) (TemplateQueryInterface, error)
+	SetOffset(offset int) (SiteQueryInterface, error)
 
 	Limit() int
-	SetLimit(limit int) (TemplateQueryInterface, error)
+	SetLimit(limit int) (SiteQueryInterface, error)
 
 	SortOrder() string
-	SetSortOrder(sortOrder string) (TemplateQueryInterface, error)
+	SetSortOrder(sortOrder string) (SiteQueryInterface, error)
 
 	OrderBy() string
-	SetOrderBy(orderBy string) (TemplateQueryInterface, error)
+	SetOrderBy(orderBy string) (SiteQueryInterface, error)
 
 	CountOnly() bool
-	SetCountOnly(countOnly bool) TemplateQueryInterface
+	SetCountOnly(countOnly bool) SiteQueryInterface
 
 	WithSoftDeleted() bool
-	SetWithSoftDeleted(withDeleted bool) TemplateQueryInterface
+	SetWithSoftDeleted(withDeleted bool) SiteQueryInterface
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/gouniverse/sb"
 	"github.com/gouniverse/uid"
 	"github.com/gouniverse/utils"
+	"github.com/samber/lo"
 )
 
 // == TYPE ===================================================================
@@ -84,7 +85,9 @@ func (o *site) DomainNames() ([]string, error) {
 		return []string{}, errJson
 	}
 
-	return domainNamesJson.([]string), nil
+	return lo.Map(domainNamesJson.([]any), func(domainName any, _ int) string {
+		return domainName.(string)
+	}), nil
 }
 
 func (o *site) SetDomainNames(domainNames []string) (SiteInterface, error) {

@@ -1,6 +1,5 @@
 package cmsstore
 
-// const BLOCK_STATUS_DELETED = "deleted"
 const BLOCK_STATUS_DRAFT = "draft"
 const BLOCK_STATUS_ACTIVE = "active"
 const BLOCK_STATUS_INACTIVE = "inactive"
@@ -32,7 +31,6 @@ const COLUMN_TEMPLATE_ID = "template_id"
 const COLUMN_TITLE = "title"
 const COLUMN_UPDATED_AT = "updated_at"
 
-// const PAGE_STATUS_DELETED = "deleted"
 const PAGE_STATUS_DRAFT = "draft"
 const PAGE_STATUS_ACTIVE = "active"
 const PAGE_STATUS_INACTIVE = "inactive"
@@ -44,7 +42,10 @@ const PAGE_EDITOR_HTMLAREA = "htmlarea"
 const PAGE_EDITOR_MARKDOWN = "markdown"
 const PAGE_EDITOR_TEXTAREA = "textarea"
 
-// const TEMPLATE_STATUS_DELETED = "deleted"
+const SITE_STATUS_DRAFT = "draft"
+const SITE_STATUS_ACTIVE = "active"
+const SITE_STATUS_INACTIVE = "inactive"
+
 const TEMPLATE_STATUS_DRAFT = "draft"
 const TEMPLATE_STATUS_ACTIVE = "active"
 const TEMPLATE_STATUS_INACTIVE = "inactive"

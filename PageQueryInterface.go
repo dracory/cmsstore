@@ -23,14 +23,17 @@ type PageQueryInterface interface {
 	IDIn() []string
 	SetIDIn(idIn []string) (PageQueryInterface, error)
 
+	Handle() string
+	SetHandle(handle string) (PageQueryInterface, error)
+
+	NameLike() string
+	SetNameLike(nameLike string) (PageQueryInterface, error)
+
 	Status() string
 	SetStatus(status string) (PageQueryInterface, error)
 
 	StatusIn() []string
 	SetStatusIn(statusIn []string) (PageQueryInterface, error)
-
-	Handle() string
-	SetHandle(handle string) (PageQueryInterface, error)
 
 	CreatedAtGte() string
 	SetCreatedAtGte(createdAtGte string) (PageQueryInterface, error)

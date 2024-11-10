@@ -5,9 +5,10 @@ import "errors"
 type pageQuery struct {
 	id              string
 	idIn            []string
+	handle          string
+	nameLike        string
 	status          string
 	statusIn        []string
-	handle          string
 	createdAtGte    string
 	createdAtLte    string
 	countOnly       bool
@@ -49,6 +50,18 @@ func (q *pageQuery) SetIDIn(idIn []string) (PageQueryInterface, error) {
 
 	q.idIn = idIn
 
+	return q, nil
+}
+
+func (q *pageQuery) NameLike() string {
+	return q.nameLike
+}
+
+func (q *pageQuery) SetNameLike(nameLike string) (PageQueryInterface, error) {
+	if nameLike == "" {
+		return q, errors.New(ERROR_EMPTY_STRING)
+	}
+	q.nameLike = nameLike
 	return q, nil
 }
 

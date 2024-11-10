@@ -2,29 +2,64 @@ package admin
 
 import (
 	"context"
+	"errors"
+	"log/slog"
+	"maps"
 	"net/http"
 
+	adminSites "github.com/gouniverse/cmsstore/admin/sites"
+
 	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cdn"
+	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/responses"
 	"github.com/gouniverse/utils"
+	"github.com/samber/lo"
+	"github.com/spf13/cast"
 )
 
-func New() *admin {
-	return &admin{}
+func New(options AdminOptions) (*admin, error) {
+	if options.Store == nil {
+		return nil, errors.New(ERROR_STORE_IS_NIL)
+	}
+
+	if options.Logger == nil {
+		return nil, errors.New(ERROR_LOGGER_IS_NIL)
+	}
+
+	return &admin{
+		logger:     options.Logger,
+		store:      options.Store,
+		funcLayout: options.FuncLayout,
+	}, nil
 }
 
 type Admin interface {
 	Handle(w http.ResponseWriter, r *http.Request)
 }
 
+type AdminOptions struct {
+	FuncLayout func(title string, body string, options struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}) string
+	Logger *slog.Logger
+	Store  cmsstore.StoreInterface
+}
+
 var _ Admin = (*admin)(nil)
 
 type admin struct {
-	funcLayout func(string) string
-	// header      func(string) string
-	// breadcrumbs func([]bs.Breadcrumb) string
+	funcLayout func(title string, body string, options struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}) string
+	logger *slog.Logger
+	store  cmsstore.StoreInterface
 }
 
 func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
@@ -44,37 +79,10 @@ func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Reque
 
 	routes := map[string]func(w http.ResponseWriter, r *http.Request){
 		pathHome: a.pageHome,
-
-		// START: Users
-		// PathUsersUserCreateAjax: cms.pageUsersUserCreateAjax,
-		// PathUsersUserTrashAjax:  cms.pageUsersUserTrashAjax,
-		// PathUsersUserManager:    cms.pageUsersUserManager,
-		// PathUsersUserUpdate:     cms.pageUsersUserUpdate,
-		// PathUsersUserUpdateAjax: cms.pageUsersUserUpdateAjax,
-		// END: Users
-
-		// START: Websites
-		// PathWebsitesWebsiteManager: cms.pageWebsitesWebsiteManager,
-		// END: Websites
-
-		// START: Custom Entities
-		// PathEntitiesEntityCreateAjax: cms.pageEntitiesEntityCreateAjax,
-		// PathEntitiesEntityManager:    cms.pageEntitiesEntityManager,
-		// PathEntitiesEntityUpdate:     cms.pageEntitiesEntityUpdate,
-		// PathEntitiesEntityUpdateAjax: cms.pageEntitiesEntityUpdateAjax,
-		// END: Custom Entities
-
 	}
 
-	// maps.Copy(routes, cms.blocksRoutes())
-	// maps.Copy(routes, cms.menuRoutes())
-	// maps.Copy(routes, cms.pageRoutes())
-	// maps.Copy(routes, cms.settingRoutes())
-	// maps.Copy(routes, cms.templateRoutes())
-	// maps.Copy(routes, cms.translationRoutes())
-	// maps.Copy(routes, cms.widgetRoutes())
+	maps.Copy(routes, a.siteRoutes())
 
-	// log.Println(route)
 	if val, ok := routes[route]; ok {
 		return val
 	}
@@ -83,33 +91,197 @@ func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Reque
 }
 
 func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
-	endpoint := r.Context().Value(keyEndpoint).(string)
-	// log.Println(endpoint)
-
-	header := a.adminHeader(endpoint)
+	header := a.adminHeader(endpoint(r))
 	breadcrumbs := a.adminBreadcrumbs([]bs.Breadcrumb{
 		{
-			URL:  endpoint,
+			URL:  endpoint(r),
 			Name: "Home",
 		},
 	})
 
-	container := hb.NewDiv().Attr("class", "container").Attr("id", "page-manager")
-	heading := hb.NewHeading1().HTML("CMS Dashboard")
+	pagesCount, errPagesCount := a.store.PageCount(cmsstore.NewPageQuery())
 
-	container.AddChild(hb.NewHTML(header))
-	container.AddChild(heading)
-	container.AddChild(hb.NewHTML(breadcrumbs))
-
-	h := container.ToHTML()
-
-	if a.funcLayout != nil && a.funcLayout("") != "" {
-		responses.HTMLResponse(w, r, a.funcLayout(h))
-		return
+	if errPagesCount != nil {
+		pagesCount = 0
 	}
 
-	webpage := webpageComplete("Home", h).ToHTML()
+	sitesCount, errSitesCount := a.store.SiteCount(cmsstore.NewSiteQuery())
+
+	if errSitesCount != nil {
+		sitesCount = 0
+	}
+
+	templatesCount, errTemplatesCount := a.store.TemplateCount(cmsstore.NewTemplateQuery())
+
+	if errTemplatesCount != nil {
+		templatesCount = 0
+	}
+
+	blocksCount, errBlocksCount := a.store.BlockCount(cmsstore.NewBlockQuery())
+
+	if errBlocksCount != nil {
+		blocksCount = 0
+	}
+
+	tiles := []struct {
+		Count      string
+		Title      string
+		Background string
+		Icon       string
+		URL        string
+	}{
+
+		{
+			Count:      cast.ToString(sitesCount),
+			Title:      "Total Sites",
+			Background: "bg-success",
+			Icon:       "bi-globe",
+			URL:        url(endpoint(r), pathSitesSiteManager, nil),
+		},
+		{
+			Count:      cast.ToString(pagesCount),
+			Title:      "Total Pages",
+			Background: "bg-info",
+			Icon:       "bi-journals",
+			URL:        url(endpoint(r), pathPagesPageManager, nil),
+		},
+		{
+			Count:      cast.ToString(templatesCount),
+			Title:      "Total Templates",
+			Background: "bg-warning",
+			Icon:       "bi-file-earmark-text-fill",
+			URL:        url(endpoint(r), pathTemplatesTemplateManager, nil),
+		},
+		{
+			Count:      cast.ToString(blocksCount),
+			Title:      "Total Blocks",
+			Background: "bg-primary",
+			Icon:       "bi-grid-3x3-gap-fill",
+			URL:        url(endpoint(r), pathBlocksBlockManager, nil),
+		},
+	}
+
+	cards := lo.Map(tiles, func(tile struct {
+		Count      string
+		Title      string
+		Background string
+		Icon       string
+		URL        string
+	}, index int) hb.TagInterface {
+		card := hb.Div().
+			Class("card").
+			Class("bg-transparent border round-10 shadow-lg h-100").
+			// OnMouseOver(`this.style.setProperty('background-color', 'beige', 'important');this.style.setProperty('scale', 1.1);this.style.setProperty('border', '4px solid moccasin', 'important');`).
+			// OnMouseOut(`this.style.setProperty('background-color', 'transparent', 'important');this.style.setProperty('scale', 1);this.style.setProperty('border', '4px solid transparent', 'important');`).
+			Child(hb.Div().
+				Class("card-body").
+				Class(tile.Background).
+				Style("--bs-bg-opacity:0.3;").
+				Child(hb.Div().Class("row").
+					Child(hb.Div().Class("col-sm-8").
+						Child(hb.Div().
+							Style("margin-top:-4px;margin-right:8px;font-size:32px;").
+							Text(tile.Count)).
+						Child(hb.NewDiv().
+							Style("margin-top:-4px;margin-right:8px;font-size:16px;").
+							Text(tile.Title)),
+					).
+					Child(hb.Div().Class("col-sm-4").
+						Child(hb.I().
+							Class("bi").
+							Class(tile.Icon).
+							Style(`color:silver;opacity:0.6;`).
+							Style("margin-top:-4px;margin-right:8px;font-size:48px;")),
+					),
+				)).
+			Child(hb.Div().
+				Class("card-footer text-center").
+				Class(tile.Background).
+				Style("--bs-bg-opacity:0.5;").
+				Child(hb.A().
+					Class("text-white").
+					Href(tile.URL).
+					Text("More info").
+					Child(hb.I().Class("bi bi-arrow-right-circle-fill ms-3").Style("margin-top:-4px;margin-right:8px;font-size:16px;")),
+				))
+		return hb.Div().Class("col-sm-6 col-3").Child(card)
+	})
+
+	heading := hb.NewHeading1().
+		HTML("Content Management Dashboard")
+
+	container := hb.NewDiv().
+		ID("page-manager").
+		Class("container").
+		Child(hb.NewHTML(header)).
+		Child(heading).
+		Child(hb.NewHTML(breadcrumbs)).
+		Child(hb.Div().Class("row g-3").Children(cards))
+
+	a.render(w, r, "Home", container.ToHTML(), struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}{})
+}
+
+func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	Styles     []string
+	StyleURLs  []string
+	Scripts    []string
+	ScriptURLs []string
+}) string {
+	webpage := webpageComplete(webpageTitle, webpageHtml, options).ToHTML()
+
+	if a.funcLayout != nil {
+		isNotEmpty := a.funcLayout("", "", struct {
+			Styles     []string
+			StyleURLs  []string
+			Scripts    []string
+			ScriptURLs []string
+		}{}) != ""
+		if isNotEmpty {
+			webpage = a.funcLayout(webpageTitle, webpageHtml, options)
+		}
+	}
+
 	responses.HTMLResponse(w, r, webpage)
+	return ""
+}
+
+func (a *admin) siteUI(r *http.Request) adminSites.UiInterface {
+	options := adminSites.UiConfig{
+		Endpoint:        endpoint(r),
+		Layout:          a.render,
+		Logger:          a.logger,
+		PathSiteCreate:  pathSitesSiteCreate,
+		PathSiteDelete:  pathSitesSiteDelete,
+		PathSiteManager: pathSitesSiteManager,
+		PathSiteUpdate:  pathSitesSiteUpdate,
+		Store:           a.store,
+		URL:             url,
+	}
+	return adminSites.UI(options)
+}
+
+func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	siteRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
+		pathSitesSiteCreate: func(w http.ResponseWriter, r *http.Request) {
+			a.siteUI(r).SiteCreate(w, r)
+		},
+		pathSitesSiteDelete: func(w http.ResponseWriter, r *http.Request) {
+			a.siteUI(r).SiteDelete(w, r)
+		},
+		pathSitesSiteUpdate: func(w http.ResponseWriter, r *http.Request) {
+			a.siteUI(r).SiteUpdate(w, r)
+		},
+		pathSitesSiteManager: func(w http.ResponseWriter, r *http.Request) {
+			a.siteUI(r).SiteManager(w, r)
+		},
+	}
+
+	return siteRoutes
 }
 
 func (a *admin) adminBreadcrumbs(breadcrumbs []bs.Breadcrumb) string {
@@ -211,57 +383,4 @@ func (a *admin) adminHeader(endpoint string) string {
 	divCard := hb.NewDiv().Class("card card-default mt-3 mb-3")
 	divCardBody := hb.NewDiv().Class("card-body").Style("padding: 2px;")
 	return divCard.AddChild(divCardBody.AddChild(ulNav)).ToHTML()
-}
-
-// WebpageComplete returns the webpage template for the website
-func webpageComplete(title, content string) *hb.HtmlWebpage {
-	faviconImgCms := `data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmzKzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABEQEAAQERAAEAAQABAAEAAQABAQEBEQABAAEREQEAAAERARARAREAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAAi6MAALu7AAC6owAAuC8AAIkjAAD//wAA//8AAP//AAD//wAA`
-	app := ""
-	webpage := hb.NewWebpage()
-	webpage.SetTitle(title)
-	webpage.SetFavicon(faviconImgCms)
-
-	webpage.AddStyleURLs([]string{
-		cdn.BootstrapCss_5_3_3(),
-	})
-	webpage.AddScriptURLs([]string{
-		cdn.BootstrapJs_5_3_3(),
-		cdn.Jquery_3_7_1(),
-		cdn.VueJs_3(),
-		cdn.Sweetalert2_11(),
-	})
-	webpage.AddScripts([]string{
-		app,
-	})
-	webpage.AddStyle(`html,body{height:100%;font-family: Ubuntu, sans-serif;}`)
-	webpage.AddStyle(`body {
-		font-family: "Nunito", sans-serif;
-		font-size: 0.9rem;
-		font-weight: 400;
-		line-height: 1.6;
-		color: #212529;
-		text-align: left;
-		background-color: #f8fafc;
-	}
-	.form-select {
-		display: block;
-		width: 100%;
-		padding: .375rem 2.25rem .375rem .75rem;
-		font-size: 1rem;
-		font-weight: 400;
-		line-height: 1.5;
-		color: #212529;
-		background-color: #fff;
-		background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-		background-repeat: no-repeat;
-		background-position: right .75rem center;
-		background-size: 16px 12px;
-		border: 1px solid #ced4da;
-		border-radius: .25rem;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		appearance: none;
-	}`)
-	webpage.AddChild(hb.NewHTML(content))
-	return webpage
 }

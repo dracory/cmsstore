@@ -5,6 +5,7 @@ import "errors"
 type siteQuery struct {
 	id              string
 	idIn            []string
+	nameLike        string
 	status          string
 	statusIn        []string
 	handle          string
@@ -49,6 +50,18 @@ func (q *siteQuery) SetIDIn(idIn []string) (SiteQueryInterface, error) {
 
 	q.idIn = idIn
 
+	return q, nil
+}
+
+func (q *siteQuery) NameLike() string {
+	return q.nameLike
+}
+
+func (q *siteQuery) SetNameLike(nameLike string) (SiteQueryInterface, error) {
+	if nameLike == "" {
+		return q, errors.New(ERROR_EMPTY_STRING)
+	}
+	q.nameLike = nameLike
 	return q, nil
 }
 

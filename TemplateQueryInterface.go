@@ -1,6 +1,6 @@
 package cmsstore
 
-type SiteQueryOptions struct {
+type TemplateQueryOptions struct {
 	ID           string
 	IDIn         []string
 	Status       string
@@ -16,43 +16,43 @@ type SiteQueryOptions struct {
 	WithDeleted  bool
 }
 
-type SiteQueryInterface interface {
+type TemplateQueryInterface interface {
 	ID() string
-	SetID(id string) (SiteQueryInterface, error)
+	SetID(id string) (TemplateQueryInterface, error)
 
 	IDIn() []string
-	SetIDIn(idIn []string) (SiteQueryInterface, error)
+	SetIDIn(idIn []string) (TemplateQueryInterface, error)
 
 	Status() string
-	SetStatus(status string) (SiteQueryInterface, error)
+	SetStatus(status string) (TemplateQueryInterface, error)
 
 	StatusIn() []string
-	SetStatusIn(statusIn []string) (SiteQueryInterface, error)
+	SetStatusIn(statusIn []string) (TemplateQueryInterface, error)
 
 	Handle() string
-	SetHandle(handle string) (SiteQueryInterface, error)
+	SetHandle(handle string) (TemplateQueryInterface, error)
 
 	CreatedAtGte() string
-	SetCreatedAtGte(createdAtGte string) (SiteQueryInterface, error)
+	SetCreatedAtGte(createdAtGte string) (TemplateQueryInterface, error)
 
 	CreatedAtLte() string
-	SetCreatedAtLte(createdAtLte string) (SiteQueryInterface, error)
+	SetCreatedAtLte(createdAtLte string) (TemplateQueryInterface, error)
 
 	Offset() int
-	SetOffset(offset int) (SiteQueryInterface, error)
+	SetOffset(offset int) (TemplateQueryInterface, error)
 
 	Limit() int
-	SetLimit(limit int) (SiteQueryInterface, error)
+	SetLimit(limit int) (TemplateQueryInterface, error)
 
 	SortOrder() string
-	SetSortOrder(sortOrder string) (SiteQueryInterface, error)
+	SetSortOrder(sortOrder string) (TemplateQueryInterface, error)
 
 	OrderBy() string
-	SetOrderBy(orderBy string) (SiteQueryInterface, error)
+	SetOrderBy(orderBy string) (TemplateQueryInterface, error)
 
 	CountOnly() bool
-	SetCountOnly(countOnly bool) SiteQueryInterface
+	SetCountOnly(countOnly bool) TemplateQueryInterface
 
 	WithSoftDeleted() bool
-	SetWithSoftDeleted(withDeleted bool) SiteQueryInterface
+	SetWithSoftDeleted(withDeleted bool) TemplateQueryInterface
 }

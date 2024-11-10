@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gouniverse/cmsstore/admin"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/utils"
 
@@ -45,7 +44,7 @@ func main() {
 	})
 
 	mux.HandleFunc("/cms", func(w http.ResponseWriter, r *http.Request) {
-		admin.New().Handle(w, r)
+		//admin.New().Handle(w, r)
 	})
 
 	// mux.HandleFunc("/cms", cmsStandalone().Router)

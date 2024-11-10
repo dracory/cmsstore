@@ -5,9 +5,10 @@ import "errors"
 type templateQuery struct {
 	id              string
 	idIn            []string
+	handle          string
+	nameLike        string
 	status          string
 	statusIn        []string
-	handle          string
 	createdAtGte    string
 	createdAtLte    string
 	countOnly       bool
@@ -49,6 +50,18 @@ func (q *templateQuery) SetIDIn(idIn []string) (TemplateQueryInterface, error) {
 
 	q.idIn = idIn
 
+	return q, nil
+}
+
+func (q *templateQuery) NameLike() string {
+	return q.nameLike
+}
+
+func (q *templateQuery) SetNameLike(nameLike string) (TemplateQueryInterface, error) {
+	if nameLike == "" {
+		return q, errors.New(ERROR_EMPTY_STRING)
+	}
+	q.nameLike = nameLike
 	return q, nil
 }
 

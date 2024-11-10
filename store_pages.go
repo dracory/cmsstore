@@ -294,6 +294,14 @@ func (store *store) pageSelectQuery(options PageQueryInterface) *goqu.SelectData
 		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
 	}
 
+	if options.Handle() != "" {
+		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
+	}
+
+	if options.NameLike() != "" {
+		q = q.Where(goqu.C(COLUMN_NAME).ILike(options.NameLike()))
+	}
+
 	if options.Status() != "" {
 		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
 	}
