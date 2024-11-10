@@ -238,20 +238,20 @@ func (controller *siteManagerController) tableRecords(data siteManagerController
 			hb.Thead().Children([]hb.TagInterface{
 				hb.TR().Children([]hb.TagInterface{
 					hb.TH().
-						Child(controller.sortableColumnLabel(data, "Name", "title")).
+						Child(controller.sortableColumnLabel(data, "Name", cmsstore.COLUMN_NAME)).
 						Text(", ").
-						Child(controller.sortableColumnLabel(data, "Domains", "alias")).
+						Child(controller.sortableColumnLabel(data, "Domains", cmsstore.COLUMN_DOMAIN_NAMES)).
 						Text(", ").
-						Child(controller.sortableColumnLabel(data, "Reference", "id")).
+						Child(controller.sortableColumnLabel(data, "Reference", cmsstore.COLUMN_ID)).
 						Style(`cursor: pointer;`),
 					hb.TH().
-						Child(controller.sortableColumnLabel(data, "Status", "status")).
+						Child(controller.sortableColumnLabel(data, "Status", cmsstore.COLUMN_STATUS)).
 						Style("width: 200px;cursor: pointer;"),
 					hb.TH().
-						Child(controller.sortableColumnLabel(data, "Created", "created_at")).
+						Child(controller.sortableColumnLabel(data, "Created", cmsstore.COLUMN_CREATED_AT)).
 						Style("width: 1px;cursor: pointer;"),
 					hb.TH().
-						Child(controller.sortableColumnLabel(data, "Modified", "updated_at")).
+						Child(controller.sortableColumnLabel(data, "Modified", cmsstore.COLUMN_UPDATED_AT)).
 						Style("width: 1px;cursor: pointer;"),
 					hb.TH().
 						HTML("Actions"),
@@ -341,10 +341,10 @@ func (controller *siteManagerController) tableRecords(data siteManagerController
 func (controller *siteManagerController) sortableColumnLabel(data siteManagerControllerData, tableLabel string, columnName string) hb.TagInterface {
 	isSelected := strings.EqualFold(data.sortBy, columnName)
 
-	direction := lo.If(data.sortOrder == "asc", "desc").Else("asc")
+	direction := lo.If(data.sortOrder == sb.ASC, sb.DESC).Else(sb.ASC)
 
 	if !isSelected {
-		direction = "asc"
+		direction = sb.ASC
 	}
 
 	link := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteManager(), map[string]string{
@@ -459,12 +459,13 @@ func (controller *siteManagerController) tablePagination(data siteManagerControl
 
 func (controller *siteManagerController) prepareData(r *http.Request) (data siteManagerControllerData, errorMessage string) {
 	var err error
+	initialPerPage := 20
 	data.request = r
 	data.action = utils.Req(r, "action", "")
 	data.page = utils.Req(r, "page", "0")
 	data.pageInt = cast.ToInt(data.page)
-	data.perPage = cast.ToInt(utils.Req(r, "per_page", "1"))
-	data.sortOrder = utils.Req(r, "sort_order", sb.DESC)
+	data.perPage = cast.ToInt(utils.Req(r, "per_page", cast.ToString(initialPerPage)))
+	data.sortOrder = utils.Req(r, "sort", sb.DESC)
 	data.sortBy = utils.Req(r, "by", cmsstore.COLUMN_CREATED_AT)
 	data.formName = utils.Req(r, "name", "")
 	data.formStatus = utils.Req(r, "status", "")

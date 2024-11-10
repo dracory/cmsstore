@@ -131,10 +131,9 @@ func (ui ui) SiteManager(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ui ui) SiteDelete(w http.ResponseWriter, r *http.Request) {
-	// controller := NewSiteDeleteController(ui)
-	// html := controller.Handler(w, r)
-	// responses.HTMLResponse(w, r, html)
-	responses.HTMLResponse(w, r, "Not implemented")
+	controller := NewSiteDeleteController(ui)
+	html := controller.Handler(w, r)
+	responses.HTMLResponse(w, r, html)
 }
 
 func (ui ui) SiteUpdate(w http.ResponseWriter, r *http.Request) {
