@@ -90,6 +90,8 @@ github.com/gouniverse/dataobject v0.3.0 h1:4m6zH8q3/Z159MrkX64gZO884SC2RE35FFzM1
 github.com/gouniverse/dataobject v0.3.0/go.mod h1:kGYa0bv14xCmkTCW2CpF9dIkh+S1N3O04c5eJY1jFqg=
 github.com/gouniverse/envenc v0.8.0 h1:pt1DVRrRXdxk4eA6vm0SBCdPrgXaF1EsDUq6tgXfpFs=
 github.com/gouniverse/envenc v0.8.0/go.mod h1:bdRPykXWVTAJfpEDht/iMqFtj/iigw2dqJci5dp/f8A=
+github.com/gouniverse/form v0.15.0 h1:7cXHiXlYDyuOZMw+CtZX/SvtsDai7KEpI82VOZpV2Ro=
+github.com/gouniverse/form v0.15.0/go.mod h1:yWHtyriw4p/uCYnJRn9bPskjZkFUSsN4gLR0Nnx1Prs=
 github.com/gouniverse/hb v1.78.0 h1:Cm0Ge9EkT1eWrEw6zTynz0AKJS7FLtYx8tluftl3m3w=
 github.com/gouniverse/hb v1.78.0/go.mod h1:WDUCGoptHp/fAYT634lQ2846sGx88yXOOWMvlEaezYM=
 github.com/gouniverse/maputils v0.7.0 h1:qoJnY8tY5gkdyuIkwGHJYwH7It7LnCevxU+P+c4nU/Y=
@@ -368,8 +370,8 @@ golang.org/x/xerrors v0.0.0-20190513163551-3ee3066db522/go.mod h1:I/5z698sn9Ka8T
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-golang.org/x/xerrors v0.0.0-20240716161551-93cc26a95ae9 h1:LLhsEBxRTBLuKlQxFBYUOU8xyFgXv6cOTp2HASDlsDk=
-golang.org/x/xerrors v0.0.0-20240716161551-93cc26a95ae9/go.mod h1:NDW/Ps6MPRej6fsCIbMTohpP40sJ/P/vI1MoTEGwX90=
+golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da h1:noIWHXmPHxILtqtCOPIhSt0ABwskkZKjD3bXGnZGpNY=
+golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da/go.mod h1:NDW/Ps6MPRej6fsCIbMTohpP40sJ/P/vI1MoTEGwX90=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/errgo.v2 v2.1.0/go.mod h1:hNsd1EY+bozCKY1Ytp96fpM3vjJbqLJn88ws8XvfDNI=
