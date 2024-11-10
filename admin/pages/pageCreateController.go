@@ -11,9 +11,12 @@ import (
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/form"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
+	"github.com/gouniverse/sb"
 	"github.com/gouniverse/utils"
+	"github.com/samber/lo"
 )
 
 // == CONTROLLER ==============================================================
@@ -23,6 +26,8 @@ type pageCreateController struct {
 }
 
 type pageCreateControllerData struct {
+	siteList       []cmsstore.SiteInterface
+	siteID         string
 	name           string
 	successMessage string
 }
@@ -65,10 +70,37 @@ func (controller pageCreateController) Handler(w http.ResponseWriter, r *http.Re
 func (controller *pageCreateController) modal(data pageCreateControllerData) hb.TagInterface {
 	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageCreate(), nil)
 
-	formGroupName := bs.FormGroup().
-		Class("mb-3").
-		Child(bs.FormLabel("Page name")).
-		Child(bs.FormInput().Name("page_name").Value(data.name))
+	form := form.NewForm(form.FormOptions{
+		ID: "FormPageCreate",
+		Fields: []form.FieldInterface{
+			form.NewField(form.FieldOptions{
+				Label:    "Page name",
+				Name:     "page_name",
+				Type:     form.FORM_FIELD_TYPE_STRING,
+				Value:    data.name,
+				Required: true,
+			}),
+			form.NewField(form.FieldOptions{
+				Label:    "Site",
+				Name:     "site_id",
+				Type:     form.FORM_FIELD_TYPE_SELECT,
+				Value:    data.siteID,
+				Required: true,
+				Options: append([]form.FieldOption{
+					{
+						Value: "Select site",
+						Key:   "",
+					},
+				},
+					lo.Map(data.siteList, func(site cmsstore.SiteInterface, index int) form.FieldOption {
+						return form.FieldOption{
+							Value: site.Name(),
+							Key:   site.ID(),
+						}
+					})...),
+			}),
+		},
+	})
 
 	modalID := "ModalPageCreate"
 	modalBackdropClass := "ModalBackdrop"
@@ -114,7 +146,7 @@ func (controller *pageCreateController) modal(data pageCreateControllerData) hb.
 						Child(modalClose)).
 				Child(
 					bs.ModalBody().
-						Child(formGroupName)).
+						Child(form.Build())).
 				Child(bs.ModalFooter().
 					Style(`display:flex;justify-content:space-between;`).
 					Child(buttonCancel).
@@ -133,9 +165,37 @@ func (controller *pageCreateController) modal(data pageCreateControllerData) hb.
 
 func (controller *pageCreateController) prepareDataAndValidate(r *http.Request) (data pageCreateControllerData, errorMessage string) {
 	data.name = strings.TrimSpace(utils.Req(r, "page_name", ""))
+	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
+
+	query := cmsstore.NewSiteQuery()
+
+	query, err := query.SetOrderBy(cmsstore.COLUMN_NAME)
+
+	if err != nil {
+		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
+		return data, err.Error()
+	}
+
+	query, err = query.SetSortOrder(sb.ASC)
+
+	if err != nil {
+		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
+		return data, err.Error()
+	}
+
+	data.siteList, err = controller.ui.Store().SiteList(query)
+
+	if err != nil {
+		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
+		return data, err.Error()
+	}
 
 	if r.Method != http.MethodPost {
 		return data, ""
+	}
+
+	if data.siteID == "" {
+		return data, "site id is required"
 	}
 
 	if data.name == "" {
@@ -143,9 +203,10 @@ func (controller *pageCreateController) prepareDataAndValidate(r *http.Request) 
 	}
 
 	page := cmsstore.NewPage()
+	page.SetSiteID(data.siteID)
 	page.SetName(data.name)
 
-	err := controller.ui.Store().PageCreate(page)
+	err = controller.ui.Store().PageCreate(page)
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())

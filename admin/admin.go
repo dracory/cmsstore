@@ -7,6 +7,7 @@ import (
 	"maps"
 	"net/http"
 
+	"github.com/gouniverse/blockeditor"
 	adminPages "github.com/gouniverse/cmsstore/admin/pages"
 	adminSites "github.com/gouniverse/cmsstore/admin/sites"
 
@@ -29,9 +30,10 @@ func New(options AdminOptions) (*admin, error) {
 	}
 
 	return &admin{
-		logger:     options.Logger,
-		store:      options.Store,
-		funcLayout: options.FuncLayout,
+		blockEditorDefinitions: options.BlockEditorDefinitions,
+		logger:                 options.Logger,
+		store:                  options.Store,
+		funcLayout:             options.FuncLayout,
 	}, nil
 }
 
@@ -40,7 +42,8 @@ type Admin interface {
 }
 
 type AdminOptions struct {
-	FuncLayout func(title string, body string, options struct {
+	BlockEditorDefinitions []blockeditor.BlockDefinition
+	FuncLayout             func(title string, body string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -53,7 +56,8 @@ type AdminOptions struct {
 var _ Admin = (*admin)(nil)
 
 type admin struct {
-	funcLayout func(title string, body string, options struct {
+	blockEditorDefinitions []blockeditor.BlockDefinition
+	funcLayout             func(title string, body string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -254,15 +258,16 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 
 func (a *admin) pageUI(r *http.Request) adminPages.UiInterface {
 	options := adminPages.UiConfig{
-		Endpoint:        endpoint(r),
-		Layout:          a.render,
-		Logger:          a.logger,
-		PathPageCreate:  pathPagesPageCreate,
-		PathPageDelete:  pathPagesPageDelete,
-		PathPageManager: pathPagesPageManager,
-		PathPageUpdate:  pathPagesPageUpdate,
-		Store:           a.store,
-		URL:             url,
+		BlockEditorDefinitions: a.blockEditorDefinitions,
+		Endpoint:               endpoint(r),
+		Layout:                 a.render,
+		Logger:                 a.logger,
+		PathPageCreate:         pathPagesPageCreate,
+		PathPageDelete:         pathPagesPageDelete,
+		PathPageManager:        pathPagesPageManager,
+		PathPageUpdate:         pathPagesPageUpdate,
+		Store:                  a.store,
+		URL:                    url,
 	}
 	return adminPages.UI(options)
 }

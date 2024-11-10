@@ -9,6 +9,7 @@ import (
 	"github.com/gouniverse/cdn"
 	"github.com/gouniverse/cms/types"
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/form"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
@@ -79,6 +80,8 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 		},
 		ScriptURLs: []string{
 			cdn.Htmx_2_0_0(),
+			cdn.Sweetalert2_11(),
+			cdn.Jquery_3_7_1(),
 			cdn.TrumbowygJs_2_27_3(),
 			codemirrorJs,
 			codemirrorXmlJs,
@@ -146,6 +149,25 @@ func (controller pageUpdateController) script() string {
 }
 
 func (controller pageUpdateController) page(data pageUpdateControllerData) hb.TagInterface {
+	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
+		{
+			Name: "Home",
+			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
+		},
+		{
+			Name: "CMS",
+			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
+		},
+		{
+			Name: "Page Manager",
+			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), nil),
+		},
+		{
+			Name: "Edit Page",
+			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{"page_id": data.pageID}),
+		},
+	})
+
 	buttonSave := hb.Button().
 		Class("btn btn-primary ms-2 float-end").
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
@@ -212,27 +234,12 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 				})).
 				HTML("Settings")))
 
-	// header := controller.ui.cmsHeader(controller.ui.Endpoint())
-	// breadcrumbs := controller.ui.cmsBreadcrumbs([]bs.Breadcrumb{
-	// 	{
-	// 		URL:  controller.ui.URL(controller.ui.Endpoint(), "", map[string]string{}),
-	// 		Name: "Home",
-	// 	},
-	// 	{
-	// 		URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), map[string]string{}),
-	// 		Name: "Webpage Manager",
-	// 	},
-	// 	{
-	// 		URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{"page_id": data.pageID}),
-	// 		Name: "Edit page",
-	// 	},
-	// })
-
 	return hb.Div().
 		Class("container").
 		// HTML(header).
+		Child(breadcrumbs).
+		Child(hb.HR()).
 		Child(heading).
-		// HTML(breadcrumbs).
 		// Child(pageTitle).
 		Child(tabs).
 		Child(card)

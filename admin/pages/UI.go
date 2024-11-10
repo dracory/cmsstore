@@ -140,10 +140,9 @@ func (ui ui) PageManager(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ui ui) PageDelete(w http.ResponseWriter, r *http.Request) {
-	// controller := NewPageDeleteController(ui)
-	// html := controller.Handler(w, r)
-	// responses.HTMLResponse(w, r, html)
-	responses.HTMLResponse(w, r, "Not implemented")
+	controller := NewPageDeleteController(ui)
+	html := controller.Handler(w, r)
+	responses.HTMLResponse(w, r, html)
 }
 
 func (ui ui) PageUpdate(w http.ResponseWriter, r *http.Request) {

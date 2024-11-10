@@ -207,7 +207,7 @@ func (controller *pageManagerController) page(data pageManagerControllerData) hb
 			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
 		},
 		{
-			Name: "Site Manager",
+			Name: "Page Manager",
 			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), nil),
 		},
 	})
@@ -397,7 +397,7 @@ func (controller *pageManagerController) tableFilter(data pageManagerControllerD
 		HxSwap("beforeend")
 
 	description := []string{
-		hb.Span().HTML("Showing sites").Text(" ").ToHTML(),
+		hb.Span().HTML("Showing pages").Text(" ").ToHTML(),
 	}
 
 	if data.formStatus != "" {
