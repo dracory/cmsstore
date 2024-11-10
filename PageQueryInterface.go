@@ -26,6 +26,9 @@ type PageQueryInterface interface {
 	Handle() string
 	SetHandle(handle string) (PageQueryInterface, error)
 
+	AliasLike() string
+	SetAliasLike(nameLike string) (PageQueryInterface, error)
+
 	NameLike() string
 	SetNameLike(nameLike string) (PageQueryInterface, error)
 

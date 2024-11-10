@@ -5,6 +5,8 @@ const pathHome = "/"
 
 const pathBlocksBlockManager = "/blocks/block-manager"
 const pathBlocksBlockUpdate = "/blocks/block-update"
+const pathPagesPageCreate = "/pages/page-create"
+const pathPagesPageDelete = "/pages/page-delete"
 const pathPagesPageManager = "/pages/page-manager"
 const pathPagesPageUpdate = "/pages/page-update"
 const pathSitesSiteCreate = "/sites/site-create"

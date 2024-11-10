@@ -12,14 +12,19 @@ import (
 type UiConfig struct {
 	BlockEditorDefinitions []blockeditor.BlockDefinition
 	Endpoint               string
-	Layout                 func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string)
-	Logger                 *slog.Logger
-	Store                  cmsstore.StoreInterface
-	URL                    func(endpoint string, path string, params map[string]string) string
-	PathPageCreate         string
-	PathPageDelete         string
-	PathPageManager        string
-	PathPageUpdate         string
+	Layout                 func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}) string
+	Logger          *slog.Logger
+	Store           cmsstore.StoreInterface
+	URL             func(endpoint string, path string, params map[string]string) string
+	PathPageCreate  string
+	PathPageDelete  string
+	PathPageManager string
+	PathPageUpdate  string
 }
 
 func UI(config UiConfig) UiInterface {
@@ -40,7 +45,12 @@ func UI(config UiConfig) UiInterface {
 type UiInterface interface {
 	BlockEditorDefinitions() []blockeditor.BlockDefinition
 	Endpoint() string
-	Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string)
+	Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}) string
 	Logger() *slog.Logger
 	PathPageCreate() string
 	PathPageDelete() string
@@ -57,14 +67,19 @@ type UiInterface interface {
 type ui struct {
 	blockEditorDefinitions []blockeditor.BlockDefinition
 	endpoint               string
-	layout                 func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string)
-	logger                 *slog.Logger
-	store                  cmsstore.StoreInterface
-	url                    func(endpoint string, path string, params map[string]string) string
-	pathPageCreate         string
-	pathPageDelete         string
-	pathPageManager        string
-	pathPageUpdate         string
+	layout                 func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}) string
+	logger          *slog.Logger
+	store           cmsstore.StoreInterface
+	url             func(endpoint string, path string, params map[string]string) string
+	pathPageCreate  string
+	pathPageDelete  string
+	pathPageManager string
+	pathPageUpdate  string
 }
 
 func (ui ui) BlockEditorDefinitions() []blockeditor.BlockDefinition {
@@ -75,8 +90,13 @@ func (ui ui) Endpoint() string {
 	return ui.endpoint
 }
 
-func (ui ui) Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string) {
-	ui.layout(w, r, webpageTitle, webpageHtml)
+func (ui ui) Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	Styles     []string
+	StyleURLs  []string
+	Scripts    []string
+	ScriptURLs []string
+}) string {
+	return ui.layout(w, r, webpageTitle, webpageHtml, options)
 }
 
 func (ui ui) Logger() *slog.Logger {

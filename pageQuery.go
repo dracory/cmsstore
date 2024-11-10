@@ -53,6 +53,18 @@ func (q *pageQuery) SetIDIn(idIn []string) (PageQueryInterface, error) {
 	return q, nil
 }
 
+func (q *pageQuery) AliasLike() string {
+	return q.nameLike
+}
+
+func (q *pageQuery) SetAliasLike(nameLike string) (PageQueryInterface, error) {
+	if nameLike == "" {
+		return q, errors.New(ERROR_EMPTY_STRING)
+	}
+	q.nameLike = nameLike
+	return q, nil
+}
+
 func (q *pageQuery) NameLike() string {
 	return q.nameLike
 }

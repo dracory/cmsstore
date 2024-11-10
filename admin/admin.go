@@ -7,6 +7,7 @@ import (
 	"maps"
 	"net/http"
 
+	adminPages "github.com/gouniverse/cmsstore/admin/pages"
 	adminSites "github.com/gouniverse/cmsstore/admin/sites"
 
 	"github.com/gouniverse/bs"
@@ -81,6 +82,7 @@ func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Reque
 		pathHome: a.pageHome,
 	}
 
+	maps.Copy(routes, a.pageRoutes())
 	maps.Copy(routes, a.siteRoutes())
 
 	if val, ok := routes[route]; ok {
@@ -248,6 +250,39 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 
 	responses.HTMLResponse(w, r, webpage)
 	return ""
+}
+
+func (a *admin) pageUI(r *http.Request) adminPages.UiInterface {
+	options := adminPages.UiConfig{
+		Endpoint:        endpoint(r),
+		Layout:          a.render,
+		Logger:          a.logger,
+		PathPageCreate:  pathPagesPageCreate,
+		PathPageDelete:  pathPagesPageDelete,
+		PathPageManager: pathPagesPageManager,
+		PathPageUpdate:  pathPagesPageUpdate,
+		Store:           a.store,
+		URL:             url,
+	}
+	return adminPages.UI(options)
+}
+
+func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	pageRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
+		pathPagesPageCreate: func(w http.ResponseWriter, r *http.Request) {
+			a.pageUI(r).PageCreate(w, r)
+		},
+		pathPagesPageDelete: func(w http.ResponseWriter, r *http.Request) {
+			a.pageUI(r).PageDelete(w, r)
+		},
+		pathPagesPageManager: func(w http.ResponseWriter, r *http.Request) {
+			a.pageUI(r).PageManager(w, r)
+		},
+		pathPagesPageUpdate: func(w http.ResponseWriter, r *http.Request) {
+			a.pageUI(r).PageUpdate(w, r)
+		},
+	}
+	return pageRoutes
 }
 
 func (a *admin) siteUI(r *http.Request) adminSites.UiInterface {

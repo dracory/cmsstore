@@ -6,6 +6,7 @@ import (
 	"github.com/gouniverse/api"
 	"github.com/gouniverse/blockeditor"
 	"github.com/gouniverse/bs"
+	"github.com/gouniverse/cdn"
 	"github.com/gouniverse/cms/types"
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/form"
@@ -66,65 +67,42 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 	const codemirrorFormattingJs = "//cdnjs.cloudflare.com/ajax/libs/codemirror/2.36.0/formatting.min.js"
 	const codemirrorMatchBracketsJs = "//cdnjs.cloudflare.com/ajax/libs/codemirror/3.22.0/addon/edit/matchbrackets.min.js"
 
-	// 	if controller.m.funcLayout("") != "" {
-	// 		out := hb.NewWrap().
-	// 			Children([]hb.TagInterface{
-	// 				hb.NewStyleURL(codemirrorCss),
-	// 				hb.NewStyleURL(cdn.TrumbowygCss_2_27_3()),
-	// 				hb.NewStyle(`.CodeMirror {
-	// 				border: 1px solid #eee;
-	// 				height: auto;
-	// 			}`),
-	// 				h,
-	// 				hb.NewScriptURL(cdn.Jquery_3_6_4()),
-	// 				hb.NewScriptURL(cdn.VueJs_3()),
-	// 				hb.NewScriptURL(cdn.Sweetalert2_11()),
-	// 				hb.NewScriptURL(cdn.Htmx_2_0_0()),
-	// 				hb.NewScriptURL(cdn.TrumbowygJs_2_27_3()),
-	// 				hb.NewScriptURL(codemirrorJs),
-	// 				hb.NewScriptURL(codemirrorXmlJs),
-	// 				hb.NewScriptURL(codemirrorHtmlmixedJs),
-	// 				hb.NewScriptURL(codemirrorJavascriptJs),
-	// 				hb.NewScriptURL(codemirrorCssJs),
-	// 				hb.NewScriptURL(codemirrorClikeJs),
-	// 				hb.NewScriptURL(codemirrorPhpJs),
-	// 				hb.NewScriptURL(codemirrorFormattingJs),
-	// 				hb.NewScriptURL(codemirrorMatchBracketsJs),
-	// 				hb.NewScript(controller.script()),
-	// 			}).ToHTML()
-	// 		return controller.m.funcLayout(out)
-	// 	}
+	options := struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}{
+		StyleURLs: []string{
+			codemirrorCss,
+			cdn.TrumbowygCss_2_27_3(),
+		},
+		ScriptURLs: []string{
+			cdn.Htmx_2_0_0(),
+			cdn.TrumbowygJs_2_27_3(),
+			codemirrorJs,
+			codemirrorXmlJs,
+			codemirrorHtmlmixedJs,
+			codemirrorJavascriptJs,
+			codemirrorCssJs,
+			codemirrorClikeJs,
+			codemirrorPhpJs,
+			codemirrorFormattingJs,
+			codemirrorMatchBracketsJs,
+		},
+		Styles: []string{
+			`.CodeMirror {
+				border: 1px solid #eee;
+				height: auto;
+			}
+			`,
+		},
+		Scripts: []string{
+			controller.script(),
+		},
+	}
 
-	// 	webpage := controller.m.webpageComplete("Edit Page", h.ToHTML())
-	// 	webpage.AddStyleURLs([]string{
-	// 		codemirrorCss,
-	// 		cdn.TrumbowygCss_2_27_3(),
-	// 	})
-	// 	webpage.AddScriptURLs([]string{
-	// 		cdn.Htmx_2_0_0(),
-	// 		cdn.TrumbowygJs_2_27_3(),
-	// 		codemirrorJs,
-	// 		codemirrorXmlJs,
-	// 		codemirrorHtmlmixedJs,
-	// 		codemirrorJavascriptJs,
-	// 		codemirrorCssJs,
-	// 		codemirrorClikeJs,
-	// 		codemirrorPhpJs,
-	// 		codemirrorFormattingJs,
-	// 		codemirrorMatchBracketsJs,
-	// 	})
-	// 	webpage.AddStyle(`
-	// .CodeMirror {
-	// 	border: 1px solid #eee;
-	// 	height: auto;
-	// }
-	// 	`)
-	// 	webpage.AddScript(controller.script())
-
-	// 	return controller.m.funcLayout(webpage.ToHTML())
-
-	controller.ui.Layout(w, r, "Edit page | CMS", html.ToHTML())
-	return ""
+	return controller.ui.Layout(w, r, "Edit page | CMS", html.ToHTML(), options)
 
 	// return layouts.NewAdminLayout(r, layouts.Options{
 	// 	Title:   "Edit page | Blog",

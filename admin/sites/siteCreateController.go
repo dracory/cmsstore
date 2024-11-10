@@ -139,7 +139,7 @@ func (controller *siteCreateController) prepareDataAndValidate(r *http.Request) 
 	}
 
 	if data.name == "" {
-		return data, "web page name is required"
+		return data, "site name is required"
 	}
 
 	site := cmsstore.NewSite()
@@ -149,7 +149,7 @@ func (controller *siteCreateController) prepareDataAndValidate(r *http.Request) 
 
 	if err != nil {
 		controller.ui.Logger().Error("At siteCreateController > prepareDataAndValidate", "error", err.Error())
-		return data, "Creating site failed. Please contact an administrator."
+		return data, err.Error()
 	}
 
 	data.successMessage = "site created successfully."

@@ -67,8 +67,8 @@ func (controller *pageCreateController) modal(data pageCreateControllerData) hb.
 
 	formGroupName := bs.FormGroup().
 		Class("mb-3").
-		Child(bs.FormLabel("Website name")).
-		Child(bs.FormInput().Name("site_name").Value(data.name))
+		Child(bs.FormLabel("Page name")).
+		Child(bs.FormInput().Name("page_name").Value(data.name))
 
 	modalID := "ModalPageCreate"
 	modalBackdropClass := "ModalBackdrop"
@@ -132,27 +132,27 @@ func (controller *pageCreateController) modal(data pageCreateControllerData) hb.
 }
 
 func (controller *pageCreateController) prepareDataAndValidate(r *http.Request) (data pageCreateControllerData, errorMessage string) {
-	data.name = strings.TrimSpace(utils.Req(r, "site_name", ""))
+	data.name = strings.TrimSpace(utils.Req(r, "page_name", ""))
 
 	if r.Method != http.MethodPost {
 		return data, ""
 	}
 
 	if data.name == "" {
-		return data, "web page name is required"
+		return data, "page name is required"
 	}
 
-	site := cmsstore.NewSite()
-	site.SetName(data.name)
+	page := cmsstore.NewPage()
+	page.SetName(data.name)
 
-	err := controller.ui.Store().SiteCreate(site)
+	err := controller.ui.Store().PageCreate(page)
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
-		return data, "Creating site failed. Please contact an administrator."
+		return data, err.Error()
 	}
 
-	data.successMessage = "site created successfully."
+	data.successMessage = "page created successfully."
 
 	return data, ""
 
