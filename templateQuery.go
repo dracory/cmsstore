@@ -47,6 +47,10 @@ func (q *templateQuery) Validate() error {
 		return errors.New("template query. offset cannot be negative")
 	}
 
+	if q.HasSiteID() && q.SiteID() == "" {
+		return errors.New("template query. site_id cannot be empty")
+	}
+
 	if q.HasStatus() && q.Status() == "" {
 		return errors.New("template query. status cannot be empty")
 	}
@@ -189,6 +193,19 @@ func (q *templateQuery) OrderBy() string {
 
 func (q *templateQuery) SetOrderBy(orderBy string) TemplateQueryInterface {
 	q.properties["order_by"] = orderBy
+	return q
+}
+
+func (q *templateQuery) HasSiteID() bool {
+	return q.hasProperty("site_id")
+}
+
+func (q *templateQuery) SiteID() string {
+	return q.properties["site_id"].(string)
+}
+
+func (q *templateQuery) SetSiteID(siteID string) TemplateQueryInterface {
+	q.properties["site_id"] = siteID
 	return q
 }
 

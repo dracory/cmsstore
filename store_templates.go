@@ -276,22 +276,6 @@ func (store *store) templateSelectQuery(options TemplateQueryInterface) (*goqu.S
 
 	q := goqu.Dialect(store.dbDriverName).From(store.templateTableName)
 
-	if options.HasID() {
-		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
-	}
-
-	if options.HasIDIn() {
-		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
-	}
-
-	if options.HasStatus() {
-		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
-	}
-
-	if options.HasStatusIn() {
-		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
-	}
-
 	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
 		q = q.Where(
 			goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()),
@@ -301,6 +285,34 @@ func (store *store) templateSelectQuery(options TemplateQueryInterface) (*goqu.S
 		q = q.Where(goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()))
 	} else if options.HasCreatedAtLte() {
 		q = q.Where(goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()))
+	}
+
+	if options.HasHandle() {
+		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
+	}
+
+	if options.HasID() {
+		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
+	}
+
+	if options.HasIDIn() {
+		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
+	}
+
+	if options.HasNameLike() {
+		q = q.Where(goqu.C(COLUMN_NAME).Like(options.NameLike()))
+	}
+
+	if options.HasSiteID() {
+		q = q.Where(goqu.C(COLUMN_SITE_ID).Eq(options.SiteID()))
+	}
+
+	if options.HasStatus() {
+		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
+	}
+
+	if options.HasStatusIn() {
+		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
 	}
 
 	if !options.IsCountOnly() {

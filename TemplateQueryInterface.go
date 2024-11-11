@@ -63,6 +63,10 @@ type TemplateQueryInterface interface {
 	OrderBy() string
 	SetOrderBy(orderBy string) TemplateQueryInterface
 
+	HasSiteID() bool
+	SiteID() string
+	SetSiteID(siteID string) TemplateQueryInterface
+
 	HasSoftDeletedIncluded() bool
 	SoftDeletedIncluded() bool
 	SetSoftDeletedIncluded(includeSoftDeleted bool) TemplateQueryInterface
