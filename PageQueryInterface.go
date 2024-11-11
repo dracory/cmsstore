@@ -17,48 +17,69 @@ type PageQueryOptions struct {
 }
 
 type PageQueryInterface interface {
-	ID() string
-	SetID(id string) (PageQueryInterface, error)
+	Validate() error
 
-	IDIn() []string
-	SetIDIn(idIn []string) (PageQueryInterface, error)
-
-	Handle() string
-	SetHandle(handle string) (PageQueryInterface, error)
-
+	HasAliasLike() bool
 	AliasLike() string
-	SetAliasLike(nameLike string) (PageQueryInterface, error)
+	SetAliasLike(nameLike string) PageQueryInterface
 
-	NameLike() string
-	SetNameLike(nameLike string) (PageQueryInterface, error)
-
-	Status() string
-	SetStatus(status string) (PageQueryInterface, error)
-
-	StatusIn() []string
-	SetStatusIn(statusIn []string) (PageQueryInterface, error)
-
+	HasCreatedAtGte() bool
 	CreatedAtGte() string
-	SetCreatedAtGte(createdAtGte string) (PageQueryInterface, error)
+	SetCreatedAtGte(createdAtGte string) PageQueryInterface
 
+	HasCreatedAtLte() bool
 	CreatedAtLte() string
-	SetCreatedAtLte(createdAtLte string) (PageQueryInterface, error)
+	SetCreatedAtLte(createdAtLte string) PageQueryInterface
 
-	Offset() int
-	SetOffset(offset int) (PageQueryInterface, error)
-
-	Limit() int
-	SetLimit(limit int) (PageQueryInterface, error)
-
-	SortOrder() string
-	SetSortOrder(sortOrder string) (PageQueryInterface, error)
-
-	OrderBy() string
-	SetOrderBy(orderBy string) (PageQueryInterface, error)
-
-	CountOnly() bool
+	HasCountOnly() bool
+	IsCountOnly() bool
 	SetCountOnly(countOnly bool) PageQueryInterface
 
-	WithSoftDeleted() bool
-	SetWithSoftDeleted(withDeleted bool) PageQueryInterface
+	HasHandle() bool
+	Handle() string
+	SetHandle(handle string) PageQueryInterface
+
+	HasID() bool
+	ID() string
+	SetID(id string) PageQueryInterface
+
+	HasIDIn() bool
+	IDIn() []string
+	SetIDIn(idIn []string) PageQueryInterface
+
+	HasLimit() bool
+	Limit() int
+	SetLimit(limit int) PageQueryInterface
+
+	HasNameLike() bool
+	NameLike() string
+	SetNameLike(nameLike string) PageQueryInterface
+
+	HasOffset() bool
+	Offset() int
+	SetOffset(offset int) PageQueryInterface
+
+	HasOrderBy() bool
+	OrderBy() string
+	SetOrderBy(orderBy string) PageQueryInterface
+
+	HasSortOrder() bool
+	SortOrder() string
+	SetSortOrder(sortOrder string) PageQueryInterface
+
+	HasSoftDeletedIncluded() bool
+	SoftDeletedIncluded() bool
+	SetSoftDeletedIncluded(softDeleteIncluded bool) PageQueryInterface
+
+	HasStatus() bool
+	Status() string
+	SetStatus(status string) PageQueryInterface
+
+	HasStatusIn() bool
+	StatusIn() []string
+	SetStatusIn(statusIn []string) PageQueryInterface
+
+	HasTemplateID() bool
+	TemplateID() string
+	SetTemplateID(templateID string) PageQueryInterface
 }

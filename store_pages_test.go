@@ -218,21 +218,11 @@ func TestStorePageSoftDelete(t *testing.T) {
 	if pageFound != nil {
 		t.Fatal("Page MUST be nil")
 	}
-	query := NewPageQuery().SetWithSoftDeleted(true)
 
-	query, err = query.SetID(page.ID())
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	pageFindWithSoftDeleted, err := store.PageList(query)
+	pageFindWithSoftDeleted, err := store.PageList(PageQuery().
+		SetSoftDeletedIncluded(true).
+		SetID(page.ID()).
+		SetLimit(1))
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -286,21 +276,10 @@ func TestStorePageDelete(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	query := NewPageQuery().SetWithSoftDeleted(true)
-
-	query, err = query.SetID(page.ID())
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	pageFindWithDeleted, err := store.PageList(query)
+	pageFindWithDeleted, err := store.PageList(PageQuery().
+		SetSoftDeletedIncluded(true).
+		SetID(page.ID()).
+		SetLimit(1))
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)

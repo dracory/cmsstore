@@ -2,203 +2,299 @@ package cmsstore
 
 import "errors"
 
-type pageQuery struct {
-	id              string
-	idIn            []string
-	handle          string
-	nameLike        string
-	status          string
-	statusIn        []string
-	createdAtGte    string
-	createdAtLte    string
-	countOnly       bool
-	offset          int64
-	limit           int
-	sortOrder       string
-	orderBy         string
-	withSoftDeleted bool
-}
+// == CONSTRUCTOR ============================================================
 
-func NewPageQuery() PageQueryInterface {
+func PageQuery() PageQueryInterface {
 	return &pageQuery{}
 }
 
+// == TYPE ===================================================================
+
+type pageQuery struct {
+	parameters map[string]any
+}
+
+// == INTERFACE VERIFICATION =================================================
+
 var _ PageQueryInterface = (*pageQuery)(nil)
 
-func (q *pageQuery) ID() string {
-	return q.id
-}
+// == INTERFACE IMPLEMENTATION ===============================================
 
-func (q *pageQuery) SetID(id string) (PageQueryInterface, error) {
-	if id == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+func (q *pageQuery) Validate() error {
+	if q.parameters == nil {
+		return errors.New("page query. parameters cannot be nil")
 	}
 
-	q.id = id
-
-	return q, nil
-}
-
-func (q *pageQuery) IDIn() []string {
-	return q.idIn
-}
-
-func (q *pageQuery) SetIDIn(idIn []string) (PageQueryInterface, error) {
-	if len(idIn) < 1 {
-		return q, errors.New(ERROR_EMPTY_ARRAY)
+	if q.HasAliasLike() && q.AliasLike() == "" {
+		return errors.New("page query. alias_like cannot be empty")
 	}
 
-	q.idIn = idIn
-
-	return q, nil
-}
-
-func (q *pageQuery) AliasLike() string {
-	return q.nameLike
-}
-
-func (q *pageQuery) SetAliasLike(nameLike string) (PageQueryInterface, error) {
-	if nameLike == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasCreatedAtGte() && q.CreatedAtGte() == "" {
+		return errors.New("page query. created_at_gte cannot be empty")
 	}
-	q.nameLike = nameLike
-	return q, nil
-}
 
-func (q *pageQuery) NameLike() string {
-	return q.nameLike
-}
-
-func (q *pageQuery) SetNameLike(nameLike string) (PageQueryInterface, error) {
-	if nameLike == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasCreatedAtLte() && q.CreatedAtLte() == "" {
+		return errors.New("page query. created_at_lte cannot be empty")
 	}
-	q.nameLike = nameLike
-	return q, nil
-}
 
-func (q *pageQuery) Status() string {
-	return q.status
-}
-
-func (q *pageQuery) SetStatus(status string) (PageQueryInterface, error) {
-	if status == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasID() && q.ID() == "" {
+		return errors.New("page query. id cannot be empty")
 	}
-	q.status = status
-	return q, nil
-}
 
-func (q *pageQuery) StatusIn() []string {
-	return q.statusIn
-}
-
-func (q *pageQuery) SetStatusIn(statusIn []string) (PageQueryInterface, error) {
-	if len(statusIn) < 1 {
-		return q, errors.New(ERROR_EMPTY_ARRAY)
+	if q.HasIDIn() && len(q.IDIn()) < 1 {
+		return errors.New("page query. id_in cannot be empty array")
 	}
-	q.statusIn = statusIn
-	return q, nil
-}
 
-func (q *pageQuery) Handle() string {
-	return q.handle
-}
-
-func (q *pageQuery) SetHandle(handle string) (PageQueryInterface, error) {
-	if handle == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasLimit() && q.Limit() < 0 {
+		return errors.New("page query. limit cannot be negative")
 	}
-	q.handle = handle
-	return q, nil
-}
 
-func (q *pageQuery) CreatedAtGte() string {
-	return q.createdAtGte
-}
-
-func (q *pageQuery) SetCreatedAtGte(createdAtGte string) (PageQueryInterface, error) {
-	if createdAtGte == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasHandle() && q.Handle() == "" {
+		return errors.New("page query. handle cannot be empty")
 	}
-	q.createdAtGte = createdAtGte
-	return q, nil
-}
 
-func (q *pageQuery) CreatedAtLte() string {
-	return q.createdAtLte
-}
-
-func (q *pageQuery) SetCreatedAtLte(createdAtLte string) (PageQueryInterface, error) {
-	if createdAtLte == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasNameLike() && q.NameLike() == "" {
+		return errors.New("page query. name_like cannot be empty")
 	}
-	q.createdAtLte = createdAtLte
-	return q, nil
-}
 
-func (q *pageQuery) Offset() int {
-	return int(q.offset)
-}
-
-func (q *pageQuery) SetOffset(offset int) (PageQueryInterface, error) {
-	if offset < 0 {
-		return q, errors.New(ERROR_NEGATIVE_NUMBER)
+	if q.HasOffset() && q.Offset() < 0 {
+		return errors.New("page query. offset cannot be negative")
 	}
-	q.offset = int64(offset)
-	return q, nil
-}
 
-func (q *pageQuery) Limit() int {
-	return q.limit
-}
-
-func (q *pageQuery) SetLimit(limit int) (PageQueryInterface, error) {
-	if limit < 1 {
-		return q, errors.New(ERROR_NEGATIVE_NUMBER)
+	if q.HasOrderBy() && q.OrderBy() == "" {
+		return errors.New("page query. order_by cannot be empty")
 	}
-	q.limit = limit
-	return q, nil
-}
 
-func (q *pageQuery) SortOrder() string {
-	return q.sortOrder
-}
-
-func (q *pageQuery) SetSortOrder(sortOrder string) (PageQueryInterface, error) {
-	if sortOrder == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasStatus() && q.Status() == "" {
+		return errors.New("page query. status cannot be empty")
 	}
-	q.sortOrder = sortOrder
-	return q, nil
-}
 
-func (q *pageQuery) OrderBy() string {
-	return q.orderBy
-}
-
-func (q *pageQuery) SetOrderBy(orderBy string) (PageQueryInterface, error) {
-	if orderBy == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasStatusIn() && len(q.StatusIn()) < 1 {
+		return errors.New("page query. status_in cannot be empty array")
 	}
-	q.orderBy = orderBy
-	return q, nil
+
+	if q.HasTemplateID() && q.TemplateID() == "" {
+		return errors.New("page query. template_id cannot be empty")
+	}
+
+	return nil
 }
 
-func (q *pageQuery) CountOnly() bool {
-	return q.countOnly
+func (p *pageQuery) HasAliasLike() bool {
+	return p.hasParameter("alias_like")
 }
 
-func (q *pageQuery) SetCountOnly(countOnly bool) PageQueryInterface {
-	q.countOnly = countOnly
-	return q
+func (p *pageQuery) AliasLike() string {
+	return p.parameters["alias_like"].(string)
 }
 
-func (q *pageQuery) WithSoftDeleted() bool {
-	return q.withSoftDeleted
+func (p *pageQuery) SetAliasLike(nameLike string) PageQueryInterface {
+	p.parameters["alias_like"] = nameLike
+	return p
 }
 
-func (q *pageQuery) SetWithSoftDeleted(withSoftDeleted bool) PageQueryInterface {
-	q.withSoftDeleted = withSoftDeleted
-	return q
+func (p *pageQuery) HasCreatedAtGte() bool {
+	return p.hasParameter("created_at_gte")
+}
+
+func (p *pageQuery) CreatedAtGte() string {
+	return p.parameters["created_at_gte"].(string)
+}
+
+func (p *pageQuery) SetCreatedAtGte(createdAtGte string) PageQueryInterface {
+	p.parameters["created_at_gte"] = createdAtGte
+	return p
+}
+
+func (p *pageQuery) HasCreatedAtLte() bool {
+	return p.hasParameter("created_at_lte")
+}
+
+func (p *pageQuery) CreatedAtLte() string {
+	return p.parameters["created_at_lte"].(string)
+}
+
+func (p *pageQuery) SetCreatedAtLte(createdAtLte string) PageQueryInterface {
+	p.parameters["created_at_lte"] = createdAtLte
+	return p
+}
+
+func (p *pageQuery) HasCountOnly() bool {
+	return p.hasParameter("count_only")
+}
+
+func (p *pageQuery) IsCountOnly() bool {
+	if !p.HasCountOnly() {
+		return false
+	}
+	return p.parameters["count_only"].(bool)
+}
+
+func (p *pageQuery) SetCountOnly(isCountOnly bool) PageQueryInterface {
+	p.parameters["count_only"] = isCountOnly
+	return p
+}
+
+func (p *pageQuery) HasHandle() bool {
+	return p.hasParameter("handle")
+}
+
+func (p *pageQuery) Handle() string {
+	return p.parameters["handle"].(string)
+}
+
+func (p *pageQuery) SetHandle(handle string) PageQueryInterface {
+	p.parameters["handle"] = handle
+	return p
+}
+
+func (p *pageQuery) HasID() bool {
+	return p.hasParameter("id")
+}
+
+func (p *pageQuery) ID() string {
+	return p.parameters["id"].(string)
+}
+
+func (p *pageQuery) SetID(id string) PageQueryInterface {
+	p.parameters["id"] = id
+	return p
+}
+
+func (p *pageQuery) HasIDIn() bool {
+	return p.hasParameter("id_in")
+}
+
+func (p *pageQuery) IDIn() []string {
+	return p.parameters["id_in"].([]string)
+}
+
+func (p *pageQuery) SetIDIn(idIn []string) PageQueryInterface {
+	p.parameters["id_in"] = idIn
+	return p
+}
+
+func (p *pageQuery) HasLimit() bool {
+	return p.hasParameter("limit")
+}
+
+func (p *pageQuery) Limit() int {
+	return p.parameters["limit"].(int)
+}
+
+func (p *pageQuery) SetLimit(limit int) PageQueryInterface {
+	p.parameters["limit"] = limit
+	return p
+}
+
+func (p *pageQuery) HasNameLike() bool {
+	return p.hasParameter("name_like")
+}
+
+func (p *pageQuery) NameLike() string {
+	return p.parameters["name_like"].(string)
+}
+
+func (p *pageQuery) SetNameLike(nameLike string) PageQueryInterface {
+	p.parameters["name_like"] = nameLike
+	return p
+}
+
+func (p *pageQuery) HasOffset() bool {
+	return p.hasParameter("offset")
+}
+
+func (p *pageQuery) Offset() int {
+	return p.parameters["offset"].(int)
+}
+
+func (p *pageQuery) SetOffset(offset int) PageQueryInterface {
+	p.parameters["offset"] = offset
+	return p
+}
+
+func (p *pageQuery) HasOrderBy() bool {
+	return p.hasParameter("order_by")
+}
+
+func (p *pageQuery) OrderBy() string {
+	return p.parameters["order_by"].(string)
+}
+
+func (p *pageQuery) SetOrderBy(orderBy string) PageQueryInterface {
+	p.parameters["order_by"] = orderBy
+	return p
+}
+
+func (p *pageQuery) HasSoftDeletedIncluded() bool {
+	return p.hasParameter("soft_deleted_included")
+}
+
+func (p *pageQuery) SoftDeletedIncluded() bool {
+	if !p.HasSoftDeletedIncluded() {
+		return false
+	}
+	return p.parameters["soft_deleted_included"].(bool)
+}
+
+func (p *pageQuery) SetSoftDeletedIncluded(softDeletedIncluded bool) PageQueryInterface {
+	p.parameters["soft_deleted_included"] = softDeletedIncluded
+	return p
+}
+
+func (p *pageQuery) HasSortOrder() bool {
+	return p.hasParameter("sort_order")
+}
+
+func (p *pageQuery) SortOrder() string {
+	return p.parameters["sort_order"].(string)
+}
+
+func (p *pageQuery) SetSortOrder(sortOrder string) PageQueryInterface {
+	p.parameters["sort_order"] = sortOrder
+	return p
+}
+
+func (p *pageQuery) HasStatus() bool {
+	return p.hasParameter("status")
+}
+
+func (p *pageQuery) Status() string {
+	return p.parameters["status"].(string)
+}
+
+func (p *pageQuery) SetStatus(status string) PageQueryInterface {
+	p.parameters["status"] = status
+	return p
+}
+
+func (p *pageQuery) HasStatusIn() bool {
+	return p.hasParameter("status_in")
+}
+
+func (p *pageQuery) StatusIn() []string {
+	return p.parameters["status_in"].([]string)
+}
+
+func (p *pageQuery) SetStatusIn(statusIn []string) PageQueryInterface {
+	p.parameters["status_in"] = statusIn
+	return p
+}
+
+func (p *pageQuery) HasTemplateID() bool {
+	return p.hasParameter("template_id")
+}
+
+func (p *pageQuery) TemplateID() string {
+	return p.parameters["template_id"].(string)
+}
+
+func (p *pageQuery) SetTemplateID(templateID string) PageQueryInterface {
+	p.parameters["template_id"] = templateID
+	return p
+}
+
+func (p *pageQuery) hasParameter(name string) bool {
+	_, ok := p.parameters[name]
+	return ok
 }

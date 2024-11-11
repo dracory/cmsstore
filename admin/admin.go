@@ -109,7 +109,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
-	pagesCount, errPagesCount := a.store.PageCount(cmsstore.NewPageQuery())
+	pagesCount, errPagesCount := a.store.PageCount(cmsstore.PageQuery())
 
 	if errPagesCount != nil {
 		pagesCount = 0

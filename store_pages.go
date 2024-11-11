@@ -15,7 +15,11 @@ import (
 func (store *store) PageCount(options PageQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
-	q := store.pageSelectQuery(options)
+	q, err := store.pageSelectQuery(options)
+
+	if err != nil {
+		return -1, err
+	}
 
 	sqlStr, params, errSql := q.Prepared(true).
 		Limit(1).
@@ -119,26 +123,14 @@ func (store *store) PageDeleteByID(id string) error {
 	return err
 }
 
-func (store *store) PageFindByHandle(hadle string) (page PageInterface, err error) {
-	if hadle == "" {
+func (store *store) PageFindByHandle(handle string) (page PageInterface, err error) {
+	if handle == "" {
 		return nil, errors.New("page handle is empty")
 	}
 
-	query := NewPageQuery()
-
-	query, err = query.SetHandle(hadle)
-
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		return nil, err
-	}
-
-	list, err := store.PageList(query)
+	list, err := store.PageList(PageQuery().
+		SetHandle(handle).
+		SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -156,21 +148,7 @@ func (store *store) PageFindByID(id string) (page PageInterface, err error) {
 		return nil, errors.New("page id is empty")
 	}
 
-	query := NewPageQuery()
-
-	query, err = query.SetID(id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		return nil, err
-	}
-
-	list, err := store.PageList(query)
+	list, err := store.PageList(PageQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -184,7 +162,11 @@ func (store *store) PageFindByID(id string) (page PageInterface, err error) {
 }
 
 func (store *store) PageList(query PageQueryInterface) ([]PageInterface, error) {
-	q := store.pageSelectQuery(query)
+	q, err := store.pageSelectQuery(query)
+
+	if err != nil {
+		return []PageInterface{}, err
+	}
 
 	sqlStr, _, errSql := q.Select().ToSQL()
 
@@ -283,60 +265,76 @@ func (store *store) PageUpdate(page PageInterface) error {
 	return err
 }
 
-func (store *store) pageSelectQuery(options PageQueryInterface) *goqu.SelectDataset {
+func (store *store) pageSelectQuery(options PageQueryInterface) (*goqu.SelectDataset, error) {
+	if options == nil {
+		return nil, errors.New("page options cannot be nil")
+	}
+
+	if err := options.Validate(); err != nil {
+		return nil, err
+	}
+
 	q := goqu.Dialect(store.dbDriverName).From(store.pageTableName)
 
-	if options.ID() != "" {
-		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
+	if options.HasAliasLike() {
+		q = q.Where(goqu.C(COLUMN_ALIAS).ILike(options.AliasLike()))
 	}
 
-	if len(options.IDIn()) > 0 {
-		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
-	}
-
-	if options.Handle() != "" {
-		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
-	}
-
-	if options.NameLike() != "" {
-		q = q.Where(goqu.C(COLUMN_NAME).ILike(options.NameLike()))
-	}
-
-	if options.Status() != "" {
-		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
-	}
-
-	if len(options.StatusIn()) > 0 {
-		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
-	}
-
-	if options.CreatedAtGte() != "" && options.CreatedAtLte() != "" {
+	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
 		q = q.Where(
 			goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()),
 			goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()),
 		)
-	} else if options.CreatedAtGte() != "" {
+	} else if options.HasCreatedAtGte() {
 		q = q.Where(goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()))
-	} else if options.CreatedAtLte() != "" {
+	} else if options.HasCreatedAtLte() {
 		q = q.Where(goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()))
 	}
 
-	if !options.CountOnly() {
-		if options.Limit() > 0 {
+	if options.HasHandle() {
+		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
+	}
+
+	if options.HasNameLike() {
+		q = q.Where(goqu.C(COLUMN_NAME).ILike(options.NameLike()))
+	}
+
+	if options.HasID() {
+		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
+	}
+
+	if options.HasIDIn() {
+		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
+	}
+
+	if options.HasStatus() {
+		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
+	}
+
+	if options.HasStatusIn() {
+		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
+	}
+
+	if options.HasTemplateID() {
+		q = q.Where(goqu.C(COLUMN_TEMPLATE_ID).Eq(options.TemplateID()))
+	}
+
+	if !options.IsCountOnly() {
+		if options.HasLimit() {
 			q = q.Limit(uint(options.Limit()))
 		}
 
-		if options.Offset() > 0 {
+		if options.HasOffset() {
 			q = q.Offset(uint(options.Offset()))
 		}
 	}
 
 	sortOrder := sb.DESC
-	if options.SortOrder() != "" {
+	if options.HasSortOrder() {
 		sortOrder = options.SortOrder()
 	}
 
-	if options.OrderBy() != "" {
+	if options.HasOrderBy() {
 		if strings.EqualFold(sortOrder, sb.ASC) {
 			q = q.Order(goqu.I(options.OrderBy()).Asc())
 		} else {
@@ -344,12 +342,12 @@ func (store *store) pageSelectQuery(options PageQueryInterface) *goqu.SelectData
 		}
 	}
 
-	if options.WithSoftDeleted() {
-		return q // soft deleted pages requested specifically
+	if options.SoftDeletedIncluded() {
+		return q, nil // soft deleted pages requested specifically
 	}
 
 	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).
 		Gt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	return q.Where(softDeleted)
+	return q.Where(softDeleted), nil
 }
