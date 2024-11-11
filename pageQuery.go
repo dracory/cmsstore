@@ -5,7 +5,9 @@ import "errors"
 // == CONSTRUCTOR ============================================================
 
 func PageQuery() PageQueryInterface {
-	return &pageQuery{}
+	return &pageQuery{
+		parameters: make(map[string]any),
+	}
 }
 
 // == TYPE ===================================================================

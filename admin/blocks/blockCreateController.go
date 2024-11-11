@@ -166,23 +166,11 @@ func (controller *blockCreateController) prepareDataAndValidate(r *http.Request)
 	data.pageID = strings.TrimSpace(utils.Req(r, "page_id", ""))         // empty for now
 	data.templateID = strings.TrimSpace(utils.Req(r, "template_id", "")) // empty for now
 
-	query := cmsstore.NewSiteQuery()
+	var err error
 
-	query, err := query.SetOrderBy(cmsstore.COLUMN_NAME)
-
-	if err != nil {
-		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
-		return data, err.Error()
-	}
-
-	query, err = query.SetSortOrder(sb.ASC)
-
-	if err != nil {
-		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
-		return data, err.Error()
-	}
-
-	data.siteList, err = controller.ui.Store().SiteList(query)
+	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC))
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())

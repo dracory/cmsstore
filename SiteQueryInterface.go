@@ -18,45 +18,61 @@ type SiteQueryOptions struct {
 }
 
 type SiteQueryInterface interface {
-	ID() string
-	SetID(id string) (SiteQueryInterface, error)
+	Validate() error
 
-	IDIn() []string
-	SetIDIn(idIn []string) (SiteQueryInterface, error)
-
-	NameLike() string
-	SetNameLike(nameLike string) (SiteQueryInterface, error)
-
-	Status() string
-	SetStatus(status string) (SiteQueryInterface, error)
-
-	StatusIn() []string
-	SetStatusIn(statusIn []string) (SiteQueryInterface, error)
-
-	Handle() string
-	SetHandle(handle string) (SiteQueryInterface, error)
-
-	CreatedAtGte() string
-	SetCreatedAtGte(createdAtGte string) (SiteQueryInterface, error)
-
+	HasCreatedAtLte() bool
 	CreatedAtLte() string
-	SetCreatedAtLte(createdAtLte string) (SiteQueryInterface, error)
+	SetCreatedAtLte(createdAtLte string) SiteQueryInterface
 
-	Offset() int
-	SetOffset(offset int) (SiteQueryInterface, error)
+	HasHandle() bool
+	Handle() string
+	SetHandle(handle string) SiteQueryInterface
 
+	HasCreatedAtGte() bool
+	CreatedAtGte() string
+	SetCreatedAtGte(createdAtGte string) SiteQueryInterface
+
+	HasID() bool
+	ID() string
+	SetID(id string) SiteQueryInterface
+
+	HasIDIn() bool
+	IDIn() []string
+	SetIDIn(idIn []string) SiteQueryInterface
+
+	HasLimit() bool
 	Limit() int
-	SetLimit(limit int) (SiteQueryInterface, error)
+	SetLimit(limit int) SiteQueryInterface
 
+	HasNameLike() bool
+	NameLike() string
+	SetNameLike(nameLike string) SiteQueryInterface
+
+	HasOffset() bool
+	Offset() int
+	SetOffset(offset int) SiteQueryInterface
+
+	HasSortOrder() bool
 	SortOrder() string
-	SetSortOrder(sortOrder string) (SiteQueryInterface, error)
+	SetSortOrder(sortOrder string) SiteQueryInterface
 
+	HasOrderBy() bool
 	OrderBy() string
-	SetOrderBy(orderBy string) (SiteQueryInterface, error)
+	SetOrderBy(orderBy string) SiteQueryInterface
 
-	CountOnly() bool
+	HasCountOnly() bool
+	IsCountOnly() bool
 	SetCountOnly(countOnly bool) SiteQueryInterface
 
-	WithSoftDeleted() bool
-	SetWithSoftDeleted(withDeleted bool) SiteQueryInterface
+	HasSoftDeletedIncluded() bool
+	SoftDeletedIncluded() bool
+	SetSoftDeletedIncluded(softDeletedIncluded bool) SiteQueryInterface
+
+	HasStatus() bool
+	Status() string
+	SetStatus(status string) SiteQueryInterface
+
+	HasStatusIn() bool
+	StatusIn() []string
+	SetStatusIn(statusIn []string) SiteQueryInterface
 }

@@ -215,21 +215,11 @@ func TestStoreSiteSoftDelete(t *testing.T) {
 	if siteFound != nil {
 		t.Fatal("Site MUST be nil")
 	}
-	query := NewSiteQuery().SetWithSoftDeleted(true)
 
-	query, err = query.SetID(site.ID())
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	siteFindWithSoftDeleted, err := store.SiteList(query)
+	siteFindWithSoftDeleted, err := store.SiteList(SiteQuery().
+		SetSoftDeletedIncluded(true).
+		SetID(site.ID()).
+		SetLimit(1))
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -282,21 +272,10 @@ func TestStoreSiteDelete(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	query := NewSiteQuery().SetWithSoftDeleted(true)
-
-	query, err = query.SetID(site.ID())
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	siteFindWithDeleted, err := store.SiteList(query)
+	siteFindWithDeleted, err := store.SiteList(SiteQuery().
+		SetSoftDeletedIncluded(true).
+		SetID(site.ID()).
+		SetLimit(1))
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)

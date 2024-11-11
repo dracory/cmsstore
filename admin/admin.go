@@ -115,7 +115,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 		pagesCount = 0
 	}
 
-	sitesCount, errSitesCount := a.store.SiteCount(cmsstore.NewSiteQuery())
+	sitesCount, errSitesCount := a.store.SiteCount(cmsstore.SiteQuery())
 
 	if errSitesCount != nil {
 		sitesCount = 0
