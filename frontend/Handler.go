@@ -93,11 +93,11 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 		return `Domain not supported: ` + domain
 	}
 
-	return frontend.PageRenderHtmlByAlias(r, site.ID(), r.URL.Path, language)
+	return frontend.PageRenderHtmlBySiteAndAlias(r, site.ID(), r.URL.Path, language)
 }
 
 // PageRenderHtmlByAlias builds the HTML of a page based on its alias
-func (frontend *frontend) PageRenderHtmlByAlias(r *http.Request, siteID string, alias string, language string) string {
+func (frontend *frontend) PageRenderHtmlBySiteAndAlias(r *http.Request, siteID string, alias string, language string) string {
 	page, err := frontend.PageFindBySiteAndAlias(siteID, alias)
 
 	if err != nil {

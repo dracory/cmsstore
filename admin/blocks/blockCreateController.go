@@ -198,6 +198,8 @@ func (controller *blockCreateController) saveBlock(_ *http.Request, data blockCr
 	block.SetSiteID(data.siteID)
 	block.SetTemplateID(data.templateID) // this is empty at the moment
 	block.SetName(data.name)
+	block.SetParentID("")    // not needed here at the moment
+	block.SetSequenceInt(-1) // not needed here at the moment
 
 	err := controller.ui.Store().BlockCreate(block)
 
