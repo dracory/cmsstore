@@ -31,10 +31,15 @@ type BlockQueryInterface interface {
 	HasNameLike() bool
 	HasOffset() bool
 	HasOrderBy() bool
+	HasPageID() bool
+	HasParentID() bool
+	HasSequence() bool
+	HasSiteID() bool
 	HasSoftDeleted() bool
 	HasSortOrder() bool
 	HasStatus() bool
 	HasStatusIn() bool
+	HasTemplateID() bool
 
 	CreatedAtGte() string
 	CreatedAtLte() string
@@ -43,12 +48,17 @@ type BlockQueryInterface interface {
 	IDIn() []string
 	Limit() int
 	NameLike() string
+	Offset() int
 	OrderBy() string
+	PageID() string
+	ParentID() string
+	Sequence() int
+	SiteID() string
 	SoftDeleteIncluded() bool
 	SortOrder() string
 	Status() string
 	StatusIn() []string
-	Offset() int
+	TemplateID() string
 
 	SetCountOnly(countOnly bool) BlockQueryInterface
 	SetID(id string) BlockQueryInterface
@@ -58,10 +68,15 @@ type BlockQueryInterface interface {
 	SetNameLike(nameLike string) BlockQueryInterface
 	SetOffset(offset int) BlockQueryInterface
 	SetOrderBy(orderBy string) BlockQueryInterface
+	SetPageID(pageID string) BlockQueryInterface
+	SetParentID(parentID string) BlockQueryInterface
+	SetSequence(sequence int) BlockQueryInterface
+	SetSiteID(websiteID string) BlockQueryInterface
 	SetSoftDeleteIncluded(withSoftDeleted bool) BlockQueryInterface
 	SetSortOrder(sortOrder string) BlockQueryInterface
 	SetStatus(status string) BlockQueryInterface
 	SetStatusIn(statusIn []string) BlockQueryInterface
+	SetTemplateID(templateID string) BlockQueryInterface
 
 	// ID() string
 	// SetID(id string) (BlockQueryInterface, error)

@@ -15,7 +15,11 @@ import (
 func (store *store) TemplateCount(options TemplateQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
-	q := store.templateSelectQuery(options)
+	q, err := store.templateSelectQuery(options)
+
+	if err != nil {
+		return -1, err
+	}
 
 	sqlStr, params, errSql := q.Prepared(true).
 		Limit(1).
@@ -124,21 +128,9 @@ func (store *store) TemplateFindByHandle(hadle string) (template TemplateInterfa
 		return nil, errors.New("template handle is empty")
 	}
 
-	query := NewTemplateQuery()
-
-	query, err = query.SetHandle(hadle)
-
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		return nil, err
-	}
-
-	list, err := store.TemplateList(query)
+	list, err := store.TemplateList(TemplateQuery().
+		SetHandle(hadle).
+		SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -156,21 +148,7 @@ func (store *store) TemplateFindByID(id string) (template TemplateInterface, err
 		return nil, errors.New("template id is empty")
 	}
 
-	query := NewTemplateQuery()
-
-	query, err = query.SetID(id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		return nil, err
-	}
-
-	list, err := store.TemplateList(query)
+	list, err := store.TemplateList(TemplateQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -184,7 +162,11 @@ func (store *store) TemplateFindByID(id string) (template TemplateInterface, err
 }
 
 func (store *store) TemplateList(query TemplateQueryInterface) ([]TemplateInterface, error) {
-	q := store.templateSelectQuery(query)
+	q, err := store.templateSelectQuery(query)
+
+	if err != nil {
+		return []TemplateInterface{}, err
+	}
 
 	sqlStr, _, errSql := q.Select().ToSQL()
 
@@ -283,52 +265,60 @@ func (store *store) TemplateUpdate(template TemplateInterface) error {
 	return err
 }
 
-func (store *store) templateSelectQuery(options TemplateQueryInterface) *goqu.SelectDataset {
+func (store *store) templateSelectQuery(options TemplateQueryInterface) (*goqu.SelectDataset, error) {
+	if options == nil {
+		return nil, errors.New("template query cannot be nil")
+	}
+
+	if err := options.Validate(); err != nil {
+		return nil, err
+	}
+
 	q := goqu.Dialect(store.dbDriverName).From(store.templateTableName)
 
-	if options.ID() != "" {
+	if options.HasID() {
 		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
 	}
 
-	if len(options.IDIn()) > 0 {
+	if options.HasIDIn() {
 		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
 	}
 
-	if options.Status() != "" {
+	if options.HasStatus() {
 		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
 	}
 
-	if len(options.StatusIn()) > 0 {
+	if options.HasStatusIn() {
 		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
 	}
 
-	if options.CreatedAtGte() != "" && options.CreatedAtLte() != "" {
+	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
 		q = q.Where(
 			goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()),
 			goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()),
 		)
-	} else if options.CreatedAtGte() != "" {
+	} else if options.HasCreatedAtGte() {
 		q = q.Where(goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()))
-	} else if options.CreatedAtLte() != "" {
+	} else if options.HasCreatedAtLte() {
 		q = q.Where(goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()))
 	}
 
-	if !options.CountOnly() {
-		if options.Limit() > 0 {
+	if !options.IsCountOnly() {
+		if options.HasLimit() {
 			q = q.Limit(uint(options.Limit()))
 		}
 
-		if options.Offset() > 0 {
+		if options.HasOffset() {
 			q = q.Offset(uint(options.Offset()))
 		}
 	}
 
 	sortOrder := sb.DESC
-	if options.SortOrder() != "" {
+	if options.HasSortOrder() {
 		sortOrder = options.SortOrder()
 	}
 
-	if options.OrderBy() != "" {
+	if options.HasOrderBy() {
 		if strings.EqualFold(sortOrder, sb.ASC) {
 			q = q.Order(goqu.I(options.OrderBy()).Asc())
 		} else {
@@ -336,12 +326,12 @@ func (store *store) templateSelectQuery(options TemplateQueryInterface) *goqu.Se
 		}
 	}
 
-	if options.WithSoftDeleted() {
-		return q // soft deleted templates requested specifically
+	if options.SoftDeletedIncluded() {
+		return q, nil // soft deleted templates requested specifically
 	}
 
 	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).
 		Gt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	return q.Where(softDeleted)
+	return q.Where(softDeleted), nil
 }

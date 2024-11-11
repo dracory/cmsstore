@@ -121,7 +121,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 		sitesCount = 0
 	}
 
-	templatesCount, errTemplatesCount := a.store.TemplateCount(cmsstore.NewTemplateQuery())
+	templatesCount, errTemplatesCount := a.store.TemplateCount(cmsstore.TemplateQuery())
 
 	if errTemplatesCount != nil {
 		templatesCount = 0

@@ -2,191 +2,251 @@ package cmsstore
 
 import "errors"
 
-type templateQuery struct {
-	id              string
-	idIn            []string
-	handle          string
-	nameLike        string
-	status          string
-	statusIn        []string
-	createdAtGte    string
-	createdAtLte    string
-	countOnly       bool
-	offset          int64
-	limit           int
-	sortOrder       string
-	orderBy         string
-	withSoftDeleted bool
+func TemplateQuery() TemplateQueryInterface {
+	return &templateQuery{
+		properties: make(map[string]interface{}),
+	}
 }
 
-func NewTemplateQuery() TemplateQueryInterface {
-	return &templateQuery{}
+type templateQuery struct {
+	properties map[string]interface{}
 }
 
 var _ TemplateQueryInterface = (*templateQuery)(nil)
 
-func (q *templateQuery) ID() string {
-	return q.id
-}
-
-func (q *templateQuery) SetID(id string) (TemplateQueryInterface, error) {
-	if id == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+func (q *templateQuery) Validate() error {
+	if q.HasCreatedAtGte() && q.CreatedAtGte() == "" {
+		return errors.New("template query. created_at_gte cannot be empty")
 	}
 
-	q.id = id
-
-	return q, nil
-}
-
-func (q *templateQuery) IDIn() []string {
-	return q.idIn
-}
-
-func (q *templateQuery) SetIDIn(idIn []string) (TemplateQueryInterface, error) {
-	if len(idIn) < 1 {
-		return q, errors.New(ERROR_EMPTY_ARRAY)
+	if q.HasCreatedAtLte() && q.CreatedAtLte() == "" {
+		return errors.New("template query. created_at_lte cannot be empty")
 	}
 
-	q.idIn = idIn
-
-	return q, nil
-}
-
-func (q *templateQuery) NameLike() string {
-	return q.nameLike
-}
-
-func (q *templateQuery) SetNameLike(nameLike string) (TemplateQueryInterface, error) {
-	if nameLike == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasID() && q.ID() == "" {
+		return errors.New("template query. id cannot be empty")
 	}
-	q.nameLike = nameLike
-	return q, nil
-}
 
-func (q *templateQuery) Status() string {
-	return q.status
-}
-
-func (q *templateQuery) SetStatus(status string) (TemplateQueryInterface, error) {
-	if status == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasIDIn() && len(q.IDIn()) < 1 {
+		return errors.New("template query. id_in cannot be empty array")
 	}
-	q.status = status
-	return q, nil
-}
 
-func (q *templateQuery) StatusIn() []string {
-	return q.statusIn
-}
-
-func (q *templateQuery) SetStatusIn(statusIn []string) (TemplateQueryInterface, error) {
-	if len(statusIn) < 1 {
-		return q, errors.New(ERROR_EMPTY_ARRAY)
+	if q.HasLimit() && q.Limit() < 0 {
+		return errors.New("template query. limit cannot be negative")
 	}
-	q.statusIn = statusIn
-	return q, nil
-}
 
-func (q *templateQuery) Handle() string {
-	return q.handle
-}
-
-func (q *templateQuery) SetHandle(handle string) (TemplateQueryInterface, error) {
-	if handle == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasHandle() && q.Handle() == "" {
+		return errors.New("template query. handle cannot be empty")
 	}
-	q.handle = handle
-	return q, nil
-}
 
-func (q *templateQuery) CreatedAtGte() string {
-	return q.createdAtGte
-}
-
-func (q *templateQuery) SetCreatedAtGte(createdAtGte string) (TemplateQueryInterface, error) {
-	if createdAtGte == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasNameLike() && q.NameLike() == "" {
+		return errors.New("template query. name_like cannot be empty")
 	}
-	q.createdAtGte = createdAtGte
-	return q, nil
-}
 
-func (q *templateQuery) CreatedAtLte() string {
-	return q.createdAtLte
-}
-
-func (q *templateQuery) SetCreatedAtLte(createdAtLte string) (TemplateQueryInterface, error) {
-	if createdAtLte == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+	if q.HasOffset() && q.Offset() < 0 {
+		return errors.New("template query. offset cannot be negative")
 	}
-	q.createdAtLte = createdAtLte
-	return q, nil
-}
 
-func (q *templateQuery) Offset() int {
-	return int(q.offset)
-}
-
-func (q *templateQuery) SetOffset(offset int) (TemplateQueryInterface, error) {
-	if offset < 0 {
-		return q, errors.New(ERROR_NEGATIVE_NUMBER)
+	if q.HasStatus() && q.Status() == "" {
+		return errors.New("template query. status cannot be empty")
 	}
-	q.offset = int64(offset)
-	return q, nil
-}
 
-func (q *templateQuery) Limit() int {
-	return q.limit
-}
-
-func (q *templateQuery) SetLimit(limit int) (TemplateQueryInterface, error) {
-	if limit < 1 {
-		return q, errors.New(ERROR_NEGATIVE_NUMBER)
+	if q.HasStatusIn() && len(q.StatusIn()) < 1 {
+		return errors.New("template query. status_in cannot be empty array")
 	}
-	q.limit = limit
-	return q, nil
+
+	return nil
 }
 
-func (q *templateQuery) SortOrder() string {
-	return q.sortOrder
+func (q *templateQuery) HasCountOnly() bool {
+	return q.hasProperty("count_only")
 }
 
-func (q *templateQuery) SetSortOrder(sortOrder string) (TemplateQueryInterface, error) {
-	if sortOrder == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
+func (q *templateQuery) IsCountOnly() bool {
+	if q.HasCountOnly() {
+		return q.properties["count_only"].(bool)
 	}
-	q.sortOrder = sortOrder
-	return q, nil
-}
 
-func (q *templateQuery) OrderBy() string {
-	return q.orderBy
-}
-
-func (q *templateQuery) SetOrderBy(orderBy string) (TemplateQueryInterface, error) {
-	if orderBy == "" {
-		return q, errors.New(ERROR_EMPTY_STRING)
-	}
-	q.orderBy = orderBy
-	return q, nil
-}
-
-func (q *templateQuery) CountOnly() bool {
-	return q.countOnly
+	return false
 }
 
 func (q *templateQuery) SetCountOnly(countOnly bool) TemplateQueryInterface {
-	q.countOnly = countOnly
+	q.properties["count_only"] = countOnly
 	return q
 }
 
-func (q *templateQuery) WithSoftDeleted() bool {
-	return q.withSoftDeleted
+func (q *templateQuery) HasCreatedAtGte() bool {
+	return q.hasProperty("created_at_gte")
 }
 
-func (q *templateQuery) SetWithSoftDeleted(withSoftDeleted bool) TemplateQueryInterface {
-	q.withSoftDeleted = withSoftDeleted
+func (q *templateQuery) CreatedAtGte() string {
+	return q.properties["created_at_gte"].(string)
+}
+
+func (q *templateQuery) SetCreatedAtGte(createdAtGte string) TemplateQueryInterface {
+	q.properties["created_at_gte"] = createdAtGte
 	return q
+}
+
+func (q *templateQuery) HasCreatedAtLte() bool {
+	return q.hasProperty("created_at_lte")
+}
+
+func (q *templateQuery) CreatedAtLte() string {
+	return q.properties["created_at_lte"].(string)
+}
+
+func (q *templateQuery) SetCreatedAtLte(createdAtLte string) TemplateQueryInterface {
+	q.properties["created_at_lte"] = createdAtLte
+	return q
+}
+
+func (q *templateQuery) HasHandle() bool {
+	return q.hasProperty("handle")
+}
+
+func (q *templateQuery) Handle() string {
+	return q.properties["handle"].(string)
+}
+
+func (q *templateQuery) SetHandle(handle string) TemplateQueryInterface {
+	q.properties["handle"] = handle
+	return q
+}
+
+func (q *templateQuery) HasID() bool {
+	return q.hasProperty("id")
+}
+
+func (q *templateQuery) ID() string {
+	return q.properties["id"].(string)
+}
+
+func (q *templateQuery) SetID(id string) TemplateQueryInterface {
+	q.properties["id"] = id
+	return q
+}
+
+func (q *templateQuery) HasIDIn() bool {
+	return q.hasProperty("id_in")
+}
+
+func (q *templateQuery) IDIn() []string {
+	return q.properties["id_in"].([]string)
+}
+
+func (q *templateQuery) SetIDIn(idIn []string) TemplateQueryInterface {
+	q.properties["id_in"] = idIn
+	return q
+}
+
+func (q *templateQuery) HasLimit() bool {
+	return q.hasProperty("limit")
+}
+
+func (q *templateQuery) Limit() int {
+	return q.properties["limit"].(int)
+}
+
+func (q *templateQuery) SetLimit(limit int) TemplateQueryInterface {
+	q.properties["limit"] = limit
+	return q
+}
+
+func (q *templateQuery) HasNameLike() bool {
+	return q.hasProperty("name_like")
+}
+
+func (q *templateQuery) NameLike() string {
+	return q.properties["name_like"].(string)
+}
+
+func (q *templateQuery) SetNameLike(nameLike string) TemplateQueryInterface {
+	q.properties["name_like"] = nameLike
+	return q
+}
+
+func (q *templateQuery) HasOffset() bool {
+	return q.hasProperty("offset")
+}
+
+func (q *templateQuery) Offset() int {
+	return q.properties["offset"].(int)
+}
+
+func (q *templateQuery) SetOffset(offset int) TemplateQueryInterface {
+	q.properties["offset"] = offset
+	return q
+}
+
+func (q *templateQuery) HasOrderBy() bool {
+	return q.hasProperty("order_by")
+}
+
+func (q *templateQuery) OrderBy() string {
+	return q.properties["order_by"].(string)
+}
+
+func (q *templateQuery) SetOrderBy(orderBy string) TemplateQueryInterface {
+	q.properties["order_by"] = orderBy
+	return q
+}
+
+func (q *templateQuery) HasSoftDeletedIncluded() bool {
+	return q.hasProperty("soft_delete_included")
+}
+
+func (q *templateQuery) SoftDeletedIncluded() bool {
+	if !q.HasSoftDeletedIncluded() {
+		return false
+	}
+	return q.properties["soft_delete_included"].(bool)
+}
+
+func (q *templateQuery) SetSoftDeletedIncluded(softDeleteIncluded bool) TemplateQueryInterface {
+	q.properties["soft_delete_included"] = softDeleteIncluded
+	return q
+}
+
+func (q *templateQuery) HasSortOrder() bool {
+	return q.hasProperty("sort_order")
+}
+
+func (q *templateQuery) SortOrder() string {
+	return q.properties["sort_order"].(string)
+}
+
+func (q *templateQuery) SetSortOrder(sortOrder string) TemplateQueryInterface {
+	q.properties["sort_order"] = sortOrder
+	return q
+}
+
+func (q *templateQuery) HasStatus() bool {
+	return q.hasProperty("status")
+}
+
+func (q *templateQuery) Status() string {
+	return q.properties["status"].(string)
+}
+
+func (q *templateQuery) SetStatus(status string) TemplateQueryInterface {
+	q.properties["status"] = status
+	return q
+}
+
+func (q *templateQuery) HasStatusIn() bool {
+	return q.hasProperty("status_in")
+}
+
+func (q *templateQuery) StatusIn() []string {
+	return q.properties["status_in"].([]string)
+}
+
+func (q *templateQuery) SetStatusIn(statusIn []string) TemplateQueryInterface {
+	q.properties["status_in"] = statusIn
+	return q
+}
+
+func (q *templateQuery) hasProperty(key string) bool {
+	return q.properties[key] != nil
 }

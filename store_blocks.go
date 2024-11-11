@@ -301,12 +301,32 @@ func (store *store) blockSelectQuery(options BlockQueryInterface) (*goqu.SelectD
 		q = q.Where(goqu.C(COLUMN_NAME).Like(`%` + options.NameLike() + `%`))
 	}
 
+	if options.HasPageID() {
+		q = q.Where(goqu.C(COLUMN_PAGE_ID).Eq(options.PageID()))
+	}
+
+	if options.HasParentID() {
+		q = q.Where(goqu.C(COLUMN_PARENT_ID).Eq(options.ParentID()))
+	}
+
+	if options.HasSequence() {
+		q = q.Where(goqu.C(COLUMN_SEQUENCE).Eq(options.Sequence()))
+	}
+
+	if options.HasSiteID() {
+		q = q.Where(goqu.C(COLUMN_SITE_ID).Eq(options.SiteID()))
+	}
+
 	if options.HasStatus() {
 		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
 	}
 
 	if options.HasStatusIn() {
 		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
+	}
+
+	if options.HasTemplateID() {
+		q = q.Where(goqu.C(COLUMN_TEMPLATE_ID).Eq(options.TemplateID()))
 	}
 
 	if !options.IsCountOnly() {

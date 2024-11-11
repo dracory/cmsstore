@@ -481,54 +481,22 @@ func (controller *templateManagerController) fetchRecordList(data templateManage
 	// 	query.CreatedAtLte = data.formCreatedTo + " 23:59:59"
 	// }
 
-	query := cmsstore.NewTemplateQuery()
+	query := cmsstore.TemplateQuery().
+		SetLimit(data.perPage).
+		SetOffset(data.pageInt * data.perPage).
+		SetOrderBy(data.sortBy).
+		SetSortOrder(data.sortOrder)
 
 	if len(templateIDs) > 0 {
-		query, err = query.SetIDIn(templateIDs)
-
-		if err != nil {
-			return []cmsstore.TemplateInterface{}, 0, err
-		}
+		query.SetIDIn(templateIDs)
 	}
 
 	if data.formStatus != "" {
-		query, err = query.SetStatus(data.formStatus)
-
-		if err != nil {
-			return []cmsstore.TemplateInterface{}, 0, err
-		}
+		query.SetStatus(data.formStatus)
 	}
 
 	if data.formName != "" {
-		query, err = query.SetNameLike(data.formName)
-
-		if err != nil {
-			return []cmsstore.TemplateInterface{}, 0, err
-		}
-	}
-
-	query, err = query.SetLimit(data.perPage)
-
-	if err != nil {
-		return []cmsstore.TemplateInterface{}, 0, err
-	}
-
-	query, err = query.SetOffset(data.pageInt * data.perPage)
-
-	if err != nil {
-		return []cmsstore.TemplateInterface{}, 0, err
-	}
-
-	query, err = query.SetOrderBy(data.sortBy)
-
-	if err != nil {
-		return []cmsstore.TemplateInterface{}, 0, err
-	}
-
-	query, err = query.SetSortOrder(data.sortOrder)
-
-	if err != nil {
-		return []cmsstore.TemplateInterface{}, 0, err
+		query.SetNameLike(data.formName)
 	}
 
 	recordList, err := controller.ui.Store().TemplateList(query)

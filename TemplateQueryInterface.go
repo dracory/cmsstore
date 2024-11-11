@@ -17,45 +17,61 @@ type TemplateQueryOptions struct {
 }
 
 type TemplateQueryInterface interface {
-	ID() string
-	SetID(id string) (TemplateQueryInterface, error)
+	Validate() error
 
-	IDIn() []string
-	SetIDIn(idIn []string) (TemplateQueryInterface, error)
-
-	NameLike() string
-	SetNameLike(nameLike string) (TemplateQueryInterface, error)
-
-	Status() string
-	SetStatus(status string) (TemplateQueryInterface, error)
-
-	StatusIn() []string
-	SetStatusIn(statusIn []string) (TemplateQueryInterface, error)
-
-	Handle() string
-	SetHandle(handle string) (TemplateQueryInterface, error)
-
-	CreatedAtGte() string
-	SetCreatedAtGte(createdAtGte string) (TemplateQueryInterface, error)
-
-	CreatedAtLte() string
-	SetCreatedAtLte(createdAtLte string) (TemplateQueryInterface, error)
-
-	Offset() int
-	SetOffset(offset int) (TemplateQueryInterface, error)
-
-	Limit() int
-	SetLimit(limit int) (TemplateQueryInterface, error)
-
-	SortOrder() string
-	SetSortOrder(sortOrder string) (TemplateQueryInterface, error)
-
-	OrderBy() string
-	SetOrderBy(orderBy string) (TemplateQueryInterface, error)
-
-	CountOnly() bool
+	HasCountOnly() bool
+	IsCountOnly() bool
 	SetCountOnly(countOnly bool) TemplateQueryInterface
 
-	WithSoftDeleted() bool
-	SetWithSoftDeleted(withDeleted bool) TemplateQueryInterface
+	HasCreatedAtGte() bool
+	CreatedAtGte() string
+	SetCreatedAtGte(createdAtGte string) TemplateQueryInterface
+
+	HasCreatedAtLte() bool
+	CreatedAtLte() string
+	SetCreatedAtLte(createdAtLte string) TemplateQueryInterface
+
+	HasHandle() bool
+	Handle() string
+	SetHandle(handle string) TemplateQueryInterface
+
+	HasID() bool
+	ID() string
+	SetID(id string) TemplateQueryInterface
+
+	HasIDIn() bool
+	IDIn() []string
+	SetIDIn(idIn []string) TemplateQueryInterface
+
+	HasNameLike() bool
+	NameLike() string
+	SetNameLike(nameLike string) TemplateQueryInterface
+
+	HasOffset() bool
+	Offset() int
+	SetOffset(offset int) TemplateQueryInterface
+
+	HasLimit() bool
+	Limit() int
+	SetLimit(limit int) TemplateQueryInterface
+
+	HasSortOrder() bool
+	SortOrder() string
+	SetSortOrder(sortOrder string) TemplateQueryInterface
+
+	HasOrderBy() bool
+	OrderBy() string
+	SetOrderBy(orderBy string) TemplateQueryInterface
+
+	HasSoftDeletedIncluded() bool
+	SoftDeletedIncluded() bool
+	SetSoftDeletedIncluded(includeSoftDeleted bool) TemplateQueryInterface
+
+	HasStatus() bool
+	Status() string
+	SetStatus(status string) TemplateQueryInterface
+
+	HasStatusIn() bool
+	StatusIn() []string
+	SetStatusIn(statusIn []string) TemplateQueryInterface
 }

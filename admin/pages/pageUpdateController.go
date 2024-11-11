@@ -785,7 +785,7 @@ func (pageUpdateController) fieldsSEO(data pageUpdateControllerData) []form.Fiel
 	return fieldsSEO
 }
 
-func (controller pageUpdateController) savepage(r *http.Request, data pageUpdateControllerData) (d pageUpdateControllerData, errorMessage string) {
+func (controller pageUpdateController) savePage(r *http.Request, data pageUpdateControllerData) (d pageUpdateControllerData, errorMessage string) {
 	data.formAlias = utils.Req(r, "page_alias", "")
 	data.formCanonicalURL = utils.Req(r, "page_canonical_url", "")
 	data.formContent = utils.Req(r, "page_content", "")
@@ -874,8 +874,6 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	data.page, err = controller.ui.Store().PageFindByID(data.pageID)
 
 	if err != nil {
-		// config.LogStore.ErrorWithContext("At pageUpdateController > prepareDataAndValidate", err.Error())
-		//return data, "page not found"
 		return data, err.Error()
 
 	}
@@ -888,46 +886,20 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	data.formCanonicalURL = data.page.CanonicalUrl()
 	data.formContent = data.page.Content()
 	data.formEditor = data.page.Editor()
-	// data.formImageUrl = data.page.ImageUrl()
-	// data.formFeatured = data.page.Featured()
 	data.formMetaDescription = data.page.MetaDescription()
 	data.formMetaKeywords = data.page.MetaKeywords()
 	data.formMetaRobots = data.page.MetaRobots()
 	data.formName = data.page.Name()
-	// data.formMemo = data.page.Memo()
-	// data.formPublishedAt = data.page.PublishedAtCarbon().ToDateTimeString()
-	// data.formSummary = data.page.Summary()
+	data.formMemo = data.page.Memo()
 	data.formStatus = data.page.Status()
 	data.formTemplateID = data.page.TemplateID()
 	data.formTitle = data.page.Title()
 
-	query := cmsstore.NewTemplateQuery()
-
-	query, err = query.SetOrderBy(cmsstore.COLUMN_NAME)
-
-	if err != nil {
-		return data, err.Error()
-	}
-
-	query, err = query.SetSortOrder(sb.ASC)
-
-	if err != nil {
-		return data, err.Error()
-	}
-
-	query, err = query.SetOffset(0)
-
-	if err != nil {
-		return data, err.Error()
-	}
-
-	query, err = query.SetLimit(100)
-
-	if err != nil {
-		return data, err.Error()
-	}
-
-	templateList, err := controller.ui.Store().TemplateList(query)
+	templateList, err := controller.ui.Store().TemplateList(cmsstore.TemplateQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
 
 	if err != nil {
 		return data, "Template list failed to be retrieved" + err.Error()
@@ -939,7 +911,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 		return data, ""
 	}
 
-	return controller.savepage(r, data)
+	return controller.savePage(r, data)
 }
 
 type pageUpdateControllerData struct {

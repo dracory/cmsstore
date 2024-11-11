@@ -90,6 +90,22 @@ func (q *blockQuery) HasOrderBy() bool {
 	return q.hasProperty("order_by")
 }
 
+func (q *blockQuery) HasPageID() bool {
+	return q.hasProperty("page_id")
+}
+
+func (q *blockQuery) HasParentID() bool {
+	return q.hasProperty("parent_id")
+}
+
+func (q *blockQuery) HasSequence() bool {
+	return q.hasProperty("sequence")
+}
+
+func (q *blockQuery) HasSiteID() bool {
+	return q.hasProperty("site_id")
+}
+
 func (q *blockQuery) HasSoftDeleted() bool {
 	return q.hasProperty("soft_deleted")
 }
@@ -106,17 +122,13 @@ func (q *blockQuery) HasStatusIn() bool {
 	return q.hasProperty("status_in")
 }
 
+func (q *blockQuery) HasTemplateID() bool {
+	return q.hasProperty("template_id")
+}
+
 func (q *blockQuery) IsCountOnly() bool {
 	if q.hasProperty("count_only") {
 		return q.properties["count_only"].(bool)
-	}
-
-	return false
-}
-
-func (q *blockQuery) IncludeSoftDeleted() bool {
-	if q.hasProperty("soft_deleted") {
-		return q.properties["soft_deleted"].(bool)
 	}
 
 	return false
@@ -128,6 +140,10 @@ func (q *blockQuery) CreatedAtGte() string {
 
 func (q *blockQuery) CreatedAtLte() string {
 	return q.properties["created_at_lte"].(string)
+}
+
+func (q *blockQuery) Handle() string {
+	return q.properties["handle"].(string)
 }
 
 func (q *blockQuery) ID() string {
@@ -154,7 +170,27 @@ func (q *blockQuery) OrderBy() string {
 	return q.properties["order_by"].(string)
 }
 
+func (q *blockQuery) PageID() string {
+	return q.properties["page_id"].(string)
+}
+
+func (q *blockQuery) ParentID() string {
+	return q.properties["parent_id"].(string)
+}
+
+func (q *blockQuery) Sequence() int {
+	return q.properties["sequence"].(int)
+}
+
+func (q *blockQuery) SiteID() string {
+	return q.properties["site_id"].(string)
+}
+
 func (q *blockQuery) SoftDeleteIncluded() bool {
+	if !q.hasProperty("soft_delete_included") {
+		return false
+	}
+
 	return q.properties["soft_delete_included"].(bool)
 }
 
@@ -170,8 +206,8 @@ func (q *blockQuery) StatusIn() []string {
 	return q.properties["status_in"].([]string)
 }
 
-func (q *blockQuery) Handle() string {
-	return q.properties["handle"].(string)
+func (q *blockQuery) TemplateID() string {
+	return q.properties["template_id"].(string)
 }
 
 func (q *blockQuery) SetCountOnly(countOnly bool) BlockQueryInterface {
@@ -214,6 +250,26 @@ func (q *blockQuery) SetOrderBy(orderBy string) BlockQueryInterface {
 	return q
 }
 
+func (q *blockQuery) SetPageID(pageID string) BlockQueryInterface {
+	q.properties["page_id"] = pageID
+	return q
+}
+
+func (q *blockQuery) SetParentID(parentID string) BlockQueryInterface {
+	q.properties["parent_id"] = parentID
+	return q
+}
+
+func (q *blockQuery) SetSequence(sequence int) BlockQueryInterface {
+	q.properties["sequence"] = sequence
+	return q
+}
+
+func (q *blockQuery) SetSiteID(siteID string) BlockQueryInterface {
+	q.properties["site_id"] = siteID
+	return q
+}
+
 func (q *blockQuery) SetSoftDeleteIncluded(SoftDeleteIncluded bool) BlockQueryInterface {
 	q.properties["soft_delete_included"] = SoftDeleteIncluded
 	return q
@@ -231,6 +287,11 @@ func (q *blockQuery) SetStatus(status string) BlockQueryInterface {
 
 func (q *blockQuery) SetStatusIn(statusIn []string) BlockQueryInterface {
 	q.properties["status_in"] = statusIn
+	return q
+}
+
+func (q *blockQuery) SetTemplateID(templateID string) BlockQueryInterface {
+	q.properties["template_id"] = templateID
 	return q
 }
 

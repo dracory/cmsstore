@@ -218,21 +218,11 @@ func TestStoreTemplateSoftDelete(t *testing.T) {
 	if templateFound != nil {
 		t.Fatal("Template MUST be nil")
 	}
-	query := NewTemplateQuery().SetWithSoftDeleted(true)
 
-	query, err = query.SetID(template.ID())
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	templateFindWithSoftDeleted, err := store.TemplateList(query)
+	templateFindWithSoftDeleted, err := store.TemplateList(TemplateQuery().
+		SetSoftDeletedIncluded(true).
+		SetID(template.ID()).
+		SetLimit(1))
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -286,21 +276,10 @@ func TestStoreTemplateDelete(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	query := NewTemplateQuery().SetWithSoftDeleted(true)
-
-	query, err = query.SetID(template.ID())
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	templateFindWithDeleted, err := store.TemplateList(query)
+	templateFindWithDeleted, err := store.TemplateList(TemplateQuery().
+		SetSoftDeletedIncluded(true).
+		SetID(template.ID()).
+		SetLimit(1))
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
