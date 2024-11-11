@@ -16,5 +16,5 @@ This package allows to build user interfaces based on blocks.
 
 ## Installation
 ```
-go get -u github.com/gouniverse/blockeditor
+go get -u github.com/gouniverse/cmsstore
 ```
