@@ -35,6 +35,16 @@ func (st *store) blockTableCreateSql() string {
 			Length: 40,
 		}).
 		Column(sb.Column{
+			Name:   COLUMN_PARENT_ID,
+			Type:   sb.COLUMN_TYPE_STRING,
+			Length: 40,
+		}).
+		Column(sb.Column{
+			Name:   COLUMN_SEQUENCE,
+			Type:   sb.COLUMN_TYPE_INTEGER,
+			Length: 11,
+		}).
+		Column(sb.Column{
 			Name:   COLUMN_TYPE,
 			Type:   sb.COLUMN_TYPE_STRING,
 			Length: 100,

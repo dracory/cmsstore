@@ -15,7 +15,11 @@ import (
 func (store *store) BlockCount(options BlockQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
-	q := store.blockSelectQuery(options)
+	q, err := store.blockSelectQuery(options)
+
+	if err != nil {
+		return -1, err
+	}
 
 	sqlStr, params, errSql := q.Prepared(true).
 		Limit(1).
@@ -124,21 +128,7 @@ func (store *store) BlockFindByHandle(hadle string) (block BlockInterface, err e
 		return nil, errors.New("block handle is empty")
 	}
 
-	query := NewBlockQuery()
-
-	query, err = query.SetHandle(hadle)
-
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		return nil, err
-	}
-
-	list, err := store.BlockList(query)
+	list, err := store.BlockList(BlockQuery().SetHandle(hadle).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -156,21 +146,7 @@ func (store *store) BlockFindByID(id string) (block BlockInterface, err error) {
 		return nil, errors.New("block id is empty")
 	}
 
-	query := NewBlockQuery()
-
-	query, err = query.SetID(id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		return nil, err
-	}
-
-	list, err := store.BlockList(query)
+	list, err := store.BlockList(BlockQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -184,7 +160,11 @@ func (store *store) BlockFindByID(id string) (block BlockInterface, err error) {
 }
 
 func (store *store) BlockList(query BlockQueryInterface) ([]BlockInterface, error) {
-	q := store.blockSelectQuery(query)
+	q, err := store.blockSelectQuery(query)
+
+	if err != nil {
+		return []BlockInterface{}, err
+	}
 
 	sqlStr, _, errSql := q.Select().ToSQL()
 
@@ -283,52 +263,68 @@ func (store *store) BlockUpdate(block BlockInterface) error {
 	return err
 }
 
-func (store *store) blockSelectQuery(options BlockQueryInterface) *goqu.SelectDataset {
+func (store *store) blockSelectQuery(options BlockQueryInterface) (*goqu.SelectDataset, error) {
+	if options == nil {
+		return nil, errors.New("block query: cannot be nil")
+	}
+
+	if err := options.Validate(); err != nil {
+		return nil, err
+	}
+
 	q := goqu.Dialect(store.dbDriverName).From(store.blockTableName)
 
-	if options.ID() != "" {
-		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
-	}
-
-	if len(options.IDIn()) > 0 {
-		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
-	}
-
-	if options.Status() != "" {
-		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
-	}
-
-	if len(options.StatusIn()) > 0 {
-		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
-	}
-
-	if options.CreatedAtGte() != "" && options.CreatedAtLte() != "" {
+	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
 		q = q.Where(
 			goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()),
 			goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()),
 		)
-	} else if options.CreatedAtGte() != "" {
+	} else if options.HasCreatedAtGte() {
 		q = q.Where(goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()))
-	} else if options.CreatedAtLte() != "" {
+	} else if options.HasCreatedAtLte() {
 		q = q.Where(goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()))
 	}
 
-	if !options.CountOnly() {
-		if options.Limit() > 0 {
+	if options.HasHandle() {
+		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
+	}
+
+	if options.HasID() {
+		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
+	}
+
+	if options.HasIDIn() {
+		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
+	}
+
+	if options.HasNameLike() {
+		q = q.Where(goqu.C(COLUMN_NAME).Like(`%` + options.NameLike() + `%`))
+	}
+
+	if options.HasStatus() {
+		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
+	}
+
+	if options.HasStatusIn() {
+		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
+	}
+
+	if !options.IsCountOnly() {
+		if options.HasLimit() {
 			q = q.Limit(uint(options.Limit()))
 		}
 
-		if options.Offset() > 0 {
+		if options.HasOffset() {
 			q = q.Offset(uint(options.Offset()))
 		}
 	}
 
 	sortOrder := sb.DESC
-	if options.SortOrder() != "" {
+	if options.HasSortOrder() && options.SortOrder() != "" {
 		sortOrder = options.SortOrder()
 	}
 
-	if options.OrderBy() != "" {
+	if options.HasOrderBy() && options.OrderBy() != "" {
 		if strings.EqualFold(sortOrder, sb.ASC) {
 			q = q.Order(goqu.I(options.OrderBy()).Asc())
 		} else {
@@ -336,12 +332,12 @@ func (store *store) blockSelectQuery(options BlockQueryInterface) *goqu.SelectDa
 		}
 	}
 
-	if options.WithSoftDeleted() {
-		return q // soft deleted blocks requested specifically
+	if options.SoftDeleteIncluded() {
+		return q, nil // soft deleted blocks requested specifically
 	}
 
 	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).
 		Gt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	return q.Where(softDeleted)
+	return q.Where(softDeleted), nil
 }

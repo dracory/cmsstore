@@ -7,6 +7,7 @@ import (
 	"github.com/gouniverse/sb"
 	"github.com/gouniverse/uid"
 	"github.com/gouniverse/utils"
+	"github.com/spf13/cast"
 )
 
 // == TYPE ===================================================================
@@ -200,6 +201,33 @@ func (o *block) PageID() string {
 
 func (o *block) SetPageID(pageID string) BlockInterface {
 	o.Set(COLUMN_PAGE_ID, pageID)
+	return o
+}
+
+func (o *block) ParentID() string {
+	return o.Get(COLUMN_PARENT_ID)
+}
+
+func (o *block) SetParentID(parentID string) BlockInterface {
+	o.Set(COLUMN_PARENT_ID, parentID)
+	return o
+}
+
+func (o *block) Sequence() string {
+	return o.Get(COLUMN_SEQUENCE)
+}
+
+func (o *block) SetSequence(sequence string) BlockInterface {
+	o.Set(COLUMN_SEQUENCE, sequence)
+	return o
+}
+
+func (o *block) SequenceInt() int {
+	return cast.ToInt(o.Sequence())
+}
+
+func (o *block) SetSequenceInt(sequence int) BlockInterface {
+	o.Set(COLUMN_SEQUENCE, cast.ToString(sequence))
 	return o
 }
 

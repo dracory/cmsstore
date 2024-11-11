@@ -38,6 +38,14 @@ type BlockInterface interface {
 	PageID() string
 	SetPageID(pageID string) BlockInterface
 
+	ParentID() string
+	SetParentID(parentID string) BlockInterface
+
+	Sequence() string
+	SequenceInt() int
+	SetSequenceInt(sequence int) BlockInterface
+	SetSequence(sequence string) BlockInterface
+
 	SiteID() string
 	SetSiteID(siteID string) BlockInterface
 

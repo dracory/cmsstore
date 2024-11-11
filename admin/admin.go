@@ -127,7 +127,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 		templatesCount = 0
 	}
 
-	blocksCount, errBlocksCount := a.store.BlockCount(cmsstore.NewBlockQuery())
+	blocksCount, errBlocksCount := a.store.BlockCount(cmsstore.BlockQuery())
 
 	if errBlocksCount != nil {
 		blocksCount = 0

@@ -481,55 +481,57 @@ func (controller *blockManagerController) fetchRecordList(data blockManagerContr
 	// 	query.CreatedAtLte = data.formCreatedTo + " 23:59:59"
 	// }
 
-	query := cmsstore.NewBlockQuery()
+	// query := cmsstore.NewBlockQuery()
 
-	if len(blockIDs) > 0 {
-		query, err = query.SetIDIn(blockIDs)
+	// if len(blockIDs) > 0 {
+	// 	query, err = query.SetIDIn(blockIDs)
 
-		if err != nil {
-			return []cmsstore.BlockInterface{}, 0, err
-		}
-	}
+	// 	if err != nil {
+	// 		return []cmsstore.BlockInterface{}, 0, err
+	// 	}
+	// }
 
-	if data.formStatus != "" {
-		query, err = query.SetStatus(data.formStatus)
+	// if data.formStatus != "" {
+	// 	query, err = query.SetStatus(data.formStatus)
 
-		if err != nil {
-			return []cmsstore.BlockInterface{}, 0, err
-		}
-	}
+	// 	if err != nil {
+	// 		return []cmsstore.BlockInterface{}, 0, err
+	// 	}
+	// }
 
-	if data.formName != "" {
-		query, err = query.SetNameLike(data.formName)
+	// if data.formName != "" {
+	// 	query, err = query.SetNameLike(data.formName)
 
-		if err != nil {
-			return []cmsstore.BlockInterface{}, 0, err
-		}
-	}
+	// 	if err != nil {
+	// 		return []cmsstore.BlockInterface{}, 0, err
+	// 	}
+	// }
 
-	query, err = query.SetLimit(data.perPage)
+	// query, err = query.SetLimit(data.perPage)
 
-	if err != nil {
-		return []cmsstore.BlockInterface{}, 0, err
-	}
+	// if err != nil {
+	// 	return []cmsstore.BlockInterface{}, 0, err
+	// }
 
-	query, err = query.SetOffset(data.pageInt * data.perPage)
+	// query, err = query.SetOffset(data.pageInt * data.perPage)
 
-	if err != nil {
-		return []cmsstore.BlockInterface{}, 0, err
-	}
+	// if err != nil {
+	// 	return []cmsstore.BlockInterface{}, 0, err
+	// }
 
-	query, err = query.SetOrderBy(data.sortBy)
+	// query, err = query.SetOrderBy(data.sortBy)
 
-	if err != nil {
-		return []cmsstore.BlockInterface{}, 0, err
-	}
+	// if err != nil {
+	// 	return []cmsstore.BlockInterface{}, 0, err
+	// }
 
-	query, err = query.SetSortOrder(data.sortOrder)
+	// query, err = query.SetSortOrder(data.sortOrder)
 
-	if err != nil {
-		return []cmsstore.BlockInterface{}, 0, err
-	}
+	// if err != nil {
+	// 	return []cmsstore.BlockInterface{}, 0, err
+	// }
+
+	query := cmsstore.BlockQuery()
 
 	recordList, err := controller.ui.Store().BlockList(query)
 

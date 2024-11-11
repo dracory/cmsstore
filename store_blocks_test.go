@@ -31,7 +31,9 @@ func TestStoreBlockCreate(t *testing.T) {
 	block := NewBlock().
 		SetSiteID("Site1").
 		SetPageID("").
-		SetTemplateID("")
+		SetTemplateID("").
+		SetParentID("").
+		SetSequenceInt(0)
 
 	err = store.BlockCreate(block)
 
@@ -60,6 +62,8 @@ func TestStoreBlockFindByHandle(t *testing.T) {
 		SetSiteID("Site1").
 		SetPageID("").
 		SetTemplateID("").
+		SetParentID("").
+		SetSequenceInt(0).
 		SetStatus(PAGE_STATUS_ACTIVE).
 		SetHandle("test-handle")
 
@@ -129,6 +133,8 @@ func TestStoreBlockFindByID(t *testing.T) {
 		SetSiteID("Site1").
 		SetPageID("").
 		SetTemplateID("").
+		SetParentID("").
+		SetSequenceInt(0).
 		SetStatus(PAGE_STATUS_ACTIVE)
 
 	err = block.SetMetas(map[string]string{
@@ -200,7 +206,9 @@ func TestStoreBlockSoftDelete(t *testing.T) {
 	block := NewBlock().
 		SetSiteID("Site1").
 		SetPageID("").
-		SetTemplateID("")
+		SetTemplateID("").
+		SetParentID("").
+		SetSequenceInt(0)
 
 	err = store.BlockCreate(block)
 
@@ -227,21 +235,11 @@ func TestStoreBlockSoftDelete(t *testing.T) {
 	if blockFound != nil {
 		t.Fatal("Block MUST be nil")
 	}
-	query := NewBlockQuery().SetWithSoftDeleted(true)
 
-	query, err = query.SetID(block.ID())
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	blockFindWithSoftDeleted, err := store.BlockList(query)
+	blockFindWithSoftDeleted, err := store.BlockList(BlockQuery().
+		SetID(block.ID()).
+		SetSoftDeleteIncluded(true).
+		SetLimit(1))
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -283,7 +281,9 @@ func TestStoreBlockDelete(t *testing.T) {
 	block := NewBlock().
 		SetSiteID("Site1").
 		SetPageID("").
-		SetTemplateID("")
+		SetTemplateID("").
+		SetParentID("").
+		SetSequenceInt(0)
 
 	err = store.BlockCreate(block)
 
@@ -297,21 +297,10 @@ func TestStoreBlockDelete(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	query := NewBlockQuery().SetWithSoftDeleted(true)
-
-	query, err = query.SetID(block.ID())
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	query, err = query.SetLimit(1)
-
-	if err != nil {
-		t.Fatal("unexpected error:", err)
-	}
-
-	blockFindWithDeleted, err := store.BlockList(query)
+	blockFindWithDeleted, err := store.BlockList(BlockQuery().
+		SetID(block.ID()).
+		SetLimit(1).
+		SetSoftDeleteIncluded(true))
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -346,6 +335,8 @@ func TestStoreBlockUpdate(t *testing.T) {
 		SetSiteID("Site1").
 		SetPageID("").
 		SetTemplateID("").
+		SetParentID("").
+		SetSequenceInt(0).
 		SetStatus(PAGE_STATUS_ACTIVE)
 
 	err = store.BlockCreate(block)
