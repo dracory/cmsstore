@@ -20,17 +20,25 @@ type SiteQueryOptions struct {
 type SiteQueryInterface interface {
 	Validate() error
 
-	HasCreatedAtLte() bool
-	CreatedAtLte() string
-	SetCreatedAtLte(createdAtLte string) SiteQueryInterface
-
-	HasHandle() bool
-	Handle() string
-	SetHandle(handle string) SiteQueryInterface
+	HasCountOnly() bool
+	IsCountOnly() bool
+	SetCountOnly(countOnly bool) SiteQueryInterface
 
 	HasCreatedAtGte() bool
 	CreatedAtGte() string
 	SetCreatedAtGte(createdAtGte string) SiteQueryInterface
+
+	HasCreatedAtLte() bool
+	CreatedAtLte() string
+	SetCreatedAtLte(createdAtLte string) SiteQueryInterface
+
+	HasDomainName() bool
+	DomainName() string
+	SetDomainName(domainName string) SiteQueryInterface
+
+	HasHandle() bool
+	Handle() string
+	SetHandle(handle string) SiteQueryInterface
 
 	HasID() bool
 	ID() string
@@ -59,10 +67,6 @@ type SiteQueryInterface interface {
 	HasOrderBy() bool
 	OrderBy() string
 	SetOrderBy(orderBy string) SiteQueryInterface
-
-	HasCountOnly() bool
-	IsCountOnly() bool
-	SetCountOnly(countOnly bool) SiteQueryInterface
 
 	HasSoftDeletedIncluded() bool
 	SoftDeletedIncluded() bool

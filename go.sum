@@ -102,6 +102,8 @@ github.com/gouniverse/router v1.4.0 h1:B5SazJtW3LdAASMPqgVBEX1b3sDRLRpuZcLT2MLr5
 github.com/gouniverse/router v1.4.0/go.mod h1:fJF+bcGNwynz9Z6Kuno4pPzgQy9T55fw1+NwqVHd0g0=
 github.com/gouniverse/sb v0.6.0 h1:2bfPUlQODeTZps/qlTNHGyGIUMn176JtpTjPISWSsq4=
 github.com/gouniverse/sb v0.6.0/go.mod h1:ERBPOD0uxfySkUjGxvSkUxaF09jZeVUQrhOOH1OgPx0=
+github.com/gouniverse/shortcode v0.4.0 h1:iIPI91nPRD7pNSnUCQBiHOvjJgorfJv+Na57W9xH9Kc=
+github.com/gouniverse/shortcode v0.4.0/go.mod h1:3AmIfeaJKbteiVmalROhmE6mcq73l37uPpDWlCrhvas=
 github.com/gouniverse/ui v0.10.0 h1:F5HDwIU8h3fi4yTZ6FCzkkVha3RHwp0aZkdJABSpO64=
 github.com/gouniverse/ui v0.10.0/go.mod h1:w37+Nx4aoyqGtt7liSFw7q1D0HBQBo2asH+GUIocczk=
 github.com/gouniverse/uid v1.5.0 h1:evyGegnY7+KeYirDhJntI9xmODf8jPMQw8DlMpQIPnM=

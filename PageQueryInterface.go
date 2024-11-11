@@ -19,6 +19,10 @@ type PageQueryOptions struct {
 type PageQueryInterface interface {
 	Validate() error
 
+	HasAlias() bool
+	Alias() string
+	SetAlias(alias string) PageQueryInterface
+
 	HasAliasLike() bool
 	AliasLike() string
 	SetAliasLike(nameLike string) PageQueryInterface
@@ -62,6 +66,10 @@ type PageQueryInterface interface {
 	HasOrderBy() bool
 	OrderBy() string
 	SetOrderBy(orderBy string) PageQueryInterface
+
+	HasSiteID() bool
+	SiteID() string
+	SetSiteID(siteID string) PageQueryInterface
 
 	HasSortOrder() bool
 	SortOrder() string

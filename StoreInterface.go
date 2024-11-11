@@ -30,6 +30,7 @@ type StoreInterface interface {
 	SiteCount(options SiteQueryInterface) (int64, error)
 	SiteDelete(site SiteInterface) error
 	SiteDeleteByID(id string) error
+	SiteFindByDomainName(siteDomainName string) (SiteInterface, error)
 	SiteFindByHandle(siteHandle string) (SiteInterface, error)
 	SiteFindByID(siteID string) (SiteInterface, error)
 	SiteList(query SiteQueryInterface) ([]SiteInterface, error)

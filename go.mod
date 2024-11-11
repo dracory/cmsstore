@@ -20,6 +20,7 @@ require (
 	github.com/gouniverse/responses v0.6.0
 	github.com/gouniverse/router v1.4.0
 	github.com/gouniverse/sb v0.6.0
+	github.com/gouniverse/ui v0.10.0
 	github.com/gouniverse/uid v1.5.0
 	github.com/gouniverse/utils v1.45.2
 	github.com/lib/pq v1.10.9
@@ -47,7 +48,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gouniverse/crypto v0.2.0 // indirect
 	github.com/gouniverse/envenc v0.8.0 // indirect
-	github.com/gouniverse/ui v0.10.0 // indirect
+	github.com/gouniverse/shortcode v0.4.0
 	github.com/gouniverse/webserver v0.1.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jedib0t/go-pretty v4.3.0+incompatible // indirect

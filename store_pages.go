@@ -276,6 +276,10 @@ func (store *store) pageSelectQuery(options PageQueryInterface) (*goqu.SelectDat
 
 	q := goqu.Dialect(store.dbDriverName).From(store.pageTableName)
 
+	if options.HasAlias() {
+		q = q.Where(goqu.C(COLUMN_ALIAS).Eq(options.Alias()))
+	}
+
 	if options.HasAliasLike() {
 		q = q.Where(goqu.C(COLUMN_ALIAS).ILike(options.AliasLike()))
 	}
@@ -305,6 +309,10 @@ func (store *store) pageSelectQuery(options PageQueryInterface) (*goqu.SelectDat
 
 	if options.HasIDIn() {
 		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
+	}
+
+	if options.HasSiteID() {
+		q = q.Where(goqu.C(COLUMN_SITE_ID).Eq(options.SiteID()))
 	}
 
 	if options.HasStatus() {

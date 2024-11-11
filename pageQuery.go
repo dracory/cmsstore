@@ -82,6 +82,19 @@ func (q *pageQuery) Validate() error {
 	return nil
 }
 
+func (p *pageQuery) HasAlias() bool {
+	return p.hasParameter("alias")
+}
+
+func (p *pageQuery) Alias() string {
+	return p.parameters["alias"].(string)
+}
+
+func (p *pageQuery) SetAlias(alias string) PageQueryInterface {
+	p.parameters["alias"] = alias
+	return p
+}
+
 func (p *pageQuery) HasAliasLike() bool {
 	return p.hasParameter("alias_like")
 }
@@ -225,6 +238,19 @@ func (p *pageQuery) OrderBy() string {
 
 func (p *pageQuery) SetOrderBy(orderBy string) PageQueryInterface {
 	p.parameters["order_by"] = orderBy
+	return p
+}
+
+func (p *pageQuery) HasSiteID() bool {
+	return p.hasParameter("site_id")
+}
+
+func (p *pageQuery) SiteID() string {
+	return p.parameters["site_id"].(string)
+}
+
+func (p *pageQuery) SetSiteID(siteID string) PageQueryInterface {
+	p.parameters["site_id"] = siteID
 	return p
 }
 

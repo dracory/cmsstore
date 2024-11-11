@@ -120,6 +120,19 @@ func (q *siteQuery) SetCreatedAtLte(createdAtLte string) SiteQueryInterface {
 	return q
 }
 
+func (q *siteQuery) HasDomainName() bool {
+	return q.hasParameter("domain_name")
+}
+
+func (q *siteQuery) DomainName() string {
+	return q.parameters["domain_name"].(string)
+}
+
+func (q *siteQuery) SetDomainName(domainName string) SiteQueryInterface {
+	q.parameters["domain_name"] = domainName
+	return q
+}
+
 func (q *siteQuery) HasHandle() bool {
 	return q.hasParameter("handle")
 }

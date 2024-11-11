@@ -123,6 +123,26 @@ func (store *store) SiteDeleteByID(id string) error {
 	return err
 }
 
+func (store *store) SiteFindByDomainName(domainName string) (site SiteInterface, err error) {
+	if domainName == "" {
+		return nil, errors.New("site domain is empty")
+	}
+
+	list, err := store.SiteList(SiteQuery().
+		SetDomainName(domainName).
+		SetLimit(1))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(list) > 0 {
+		return list[0], nil
+	}
+
+	return nil, nil
+}
+
 func (store *store) SiteFindByHandle(handle string) (site SiteInterface, err error) {
 	if handle == "" {
 		return nil, errors.New("site handle is empty")
@@ -276,16 +296,31 @@ func (store *store) siteSelectQuery(options SiteQueryInterface) (*goqu.SelectDat
 
 	q := goqu.Dialect(store.dbDriverName).From(store.siteTableName)
 
+	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
+		q = q.Where(
+			goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()),
+			goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()),
+		)
+	} else if options.HasCreatedAtGte() {
+		q = q.Where(goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()))
+	} else if options.HasCreatedAtLte() {
+		q = q.Where(goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()))
+	}
+
+	if options.HasDomainName() {
+		q = q.Where(goqu.C(COLUMN_DOMAIN_NAMES).ILike(`%"` + options.DomainName() + `"%`))
+	}
+
+	if options.HasHandle() {
+		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
+	}
+
 	if options.HasID() {
 		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
 	}
 
 	if options.HasIDIn() {
 		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
-	}
-
-	if options.HasHandle() {
-		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
 	}
 
 	if options.HasNameLike() {
@@ -298,17 +333,6 @@ func (store *store) siteSelectQuery(options SiteQueryInterface) (*goqu.SelectDat
 
 	if options.HasStatusIn() {
 		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
-	}
-
-	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
-		q = q.Where(
-			goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()),
-			goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()),
-		)
-	} else if options.HasCreatedAtGte() {
-		q = q.Where(goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()))
-	} else if options.HasCreatedAtLte() {
-		q = q.Where(goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()))
 	}
 
 	if !options.IsCountOnly() {
