@@ -57,8 +57,16 @@ func (store *store) TemplateCount(options TemplateQueryInterface) (int64, error)
 }
 
 func (store *store) TemplateCreate(template TemplateInterface) error {
-	template.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
-	template.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
+	if template == nil {
+		return errors.New("template is nil")
+	}
+	if template.CreatedAt() == "" {
+		template.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
+	}
+
+	if template.UpdatedAt() == "" {
+		template.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
+	}
 
 	data := template.Data()
 

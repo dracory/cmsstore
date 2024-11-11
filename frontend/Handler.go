@@ -414,11 +414,11 @@ func (frontend *frontend) ContentRenderBlockByID(content string, blockID string)
 	blockContent, err := frontend.findBlockContent(blockID)
 
 	if err != nil {
-		return "", err
+		return content, err
 	}
 
 	if blockContent == "" {
-		return "", nil
+		return content, nil
 	}
 
 	content = strings.ReplaceAll(content, "[[BLOCK_"+blockID+"]]", blockContent)
