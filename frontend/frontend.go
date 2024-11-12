@@ -15,14 +15,6 @@ import (
 	"github.com/samber/lo"
 )
 
-type LanguageKey struct{}
-
-var inMemCache CacheInterface
-
-func init() {
-	inMemCache = Cache()
-}
-
 type frontend struct {
 	blockEditorRenderer func(blocks []ui.BlockInterface) string
 	logger              *slog.Logger
