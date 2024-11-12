@@ -141,11 +141,11 @@ func (o *page) SetHandle(handle string) PageInterface {
 }
 
 func (o *page) Memo() string {
-	return o.Get("memo")
+	return o.Get(COLUMN_MEMO)
 }
 
 func (o *page) SetMemo(memo string) PageInterface {
-	o.Set("memo", memo)
+	o.Set(COLUMN_MEMO, memo)
 	return o
 }
 
@@ -177,7 +177,7 @@ func (o *page) SetMetaRobots(metaRobots string) PageInterface {
 }
 
 func (o *page) Metas() (map[string]string, error) {
-	metasStr := o.Get("metas")
+	metasStr := o.Get(COLUMN_METAS)
 
 	if metasStr == "" {
 		metasStr = "{}"

@@ -124,16 +124,16 @@ func (o *translation) SetHandle(handle string) TranslationInterface {
 }
 
 func (o *translation) Memo() string {
-	return o.Get("memo")
+	return o.Get(COLUMN_MEMO)
 }
 
 func (o *translation) SetMemo(memo string) TranslationInterface {
-	o.Set("memo", memo)
+	o.Set(COLUMN_MEMO, memo)
 	return o
 }
 
 func (o *translation) Metas() (map[string]string, error) {
-	metasStr := o.Get("metas")
+	metasStr := o.Get(COLUMN_METAS)
 
 	if metasStr == "" {
 		metasStr = "{}"

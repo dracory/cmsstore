@@ -118,16 +118,16 @@ func (o *block) SetHandle(handle string) BlockInterface {
 }
 
 func (o *block) Memo() string {
-	return o.Get("memo")
+	return o.Get(COLUMN_MEMO)
 }
 
 func (o *block) SetMemo(memo string) BlockInterface {
-	o.Set("memo", memo)
+	o.Set(COLUMN_MEMO, memo)
 	return o
 }
 
 func (o *block) Metas() (map[string]string, error) {
-	metasStr := o.Get("metas")
+	metasStr := o.Get(COLUMN_METAS)
 
 	if metasStr == "" {
 		metasStr = "{}"

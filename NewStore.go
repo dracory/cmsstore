@@ -14,6 +14,9 @@ type NewStoreOptions struct {
 	AutomigrateEnabled         bool
 	DebugEnabled               bool
 	BlockTableName             string
+	MenusEnabled               bool
+	MenuTableName              string
+	MenuItemTableName          string
 	PageTableName              string
 	SiteTableName              string
 	TemplateTableName          string
@@ -41,6 +44,14 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		return nil, errors.New("cms store: TemplateTableName is required")
 	}
 
+	if opts.MenusEnabled && opts.MenuTableName == "" {
+		return nil, errors.New("cms store: MenuTableName is required")
+	}
+
+	if opts.MenusEnabled && opts.MenuItemTableName == "" {
+		return nil, errors.New("cms store: MenuItemTableName is required")
+	}
+
 	if opts.TranslationsEnabled && opts.TranslationTableName == "" {
 		return nil, errors.New("cms store: TranslationTableName is required")
 	}
@@ -59,13 +70,17 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		dbDriverName:       opts.DbDriverName,
 		debugEnabled:       opts.DebugEnabled,
 
-		blockTableName:       opts.BlockTableName,
-		pageTableName:        opts.PageTableName,
-		siteTableName:        opts.SiteTableName,
-		templateTableName:    opts.TemplateTableName,
-		translationTableName: opts.TranslationTableName,
+		blockTableName:    opts.BlockTableName,
+		pageTableName:     opts.PageTableName,
+		siteTableName:     opts.SiteTableName,
+		templateTableName: opts.TemplateTableName,
+
+		menusEnabled:      opts.MenusEnabled,
+		menuTableName:     opts.MenuTableName,
+		menuItemTableName: opts.MenuItemTableName,
 
 		translationsEnabled:        opts.TranslationsEnabled,
+		translationTableName:       opts.TranslationTableName,
 		translationLanguageDefault: opts.TranslationLanguageDefault,
 		translationLanguages:       opts.TranslationLanguages,
 	}

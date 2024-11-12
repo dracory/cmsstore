@@ -1,21 +1,5 @@
 package cmsstore
 
-type TranslationQueryOptions struct {
-	ID           string
-	IDIn         []string
-	Status       string
-	StatusIn     []string
-	Handle       string
-	CreatedAtGte string
-	CreatedAtLte string
-	Offset       int
-	Limit        int
-	SortOrder    string
-	OrderBy      string
-	CountOnly    bool
-	WithDeleted  bool
-}
-
 type TranslationQueryInterface interface {
 	Validate() error
 

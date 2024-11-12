@@ -116,16 +116,16 @@ func (o *template) SetHandle(handle string) TemplateInterface {
 }
 
 func (o *template) Memo() string {
-	return o.Get("memo")
+	return o.Get(COLUMN_MEMO)
 }
 
 func (o *template) SetMemo(memo string) TemplateInterface {
-	o.Set("memo", memo)
+	o.Set(COLUMN_MEMO, memo)
 	return o
 }
 
 func (o *template) Metas() (map[string]string, error) {
-	metasStr := o.Get("metas")
+	metasStr := o.Get(COLUMN_METAS)
 
 	if metasStr == "" {
 		metasStr = "{}"

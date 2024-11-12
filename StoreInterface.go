@@ -15,6 +15,27 @@ type StoreInterface interface {
 	BlockSoftDeleteByID(id string) error
 	BlockUpdate(block BlockInterface) error
 
+	MenuCreate(menu MenuInterface) error
+	MenuCount(options MenuQueryInterface) (int64, error)
+	MenuDelete(menu MenuInterface) error
+	MenuDeleteByID(id string) error
+	MenuFindByHandle(menuHandle string) (MenuInterface, error)
+	MenuFindByID(menuID string) (MenuInterface, error)
+	MenuList(query MenuQueryInterface) ([]MenuInterface, error)
+	MenuSoftDelete(menu MenuInterface) error
+	MenuSoftDeleteByID(id string) error
+	MenuUpdate(menu MenuInterface) error
+
+	MenuItemCreate(menuItem MenuItemInterface) error
+	MenuItemCount(options MenuItemQueryInterface) (int64, error)
+	MenuItemDelete(menuItem MenuItemInterface) error
+	MenuItemDeleteByID(id string) error
+	MenuItemFindByID(menuItemID string) (MenuItemInterface, error)
+	MenuItemList(query MenuItemQueryInterface) ([]MenuItemInterface, error)
+	MenuItemSoftDelete(menuItem MenuItemInterface) error
+	MenuItemSoftDeleteByID(id string) error
+	MenuItemUpdate(menuItem MenuItemInterface) error
+
 	PageCreate(page PageInterface) error
 	PageCount(options PageQueryInterface) (int64, error)
 	PageDelete(page PageInterface) error

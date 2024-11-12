@@ -1,22 +1,5 @@
 package cmsstore
 
-// type BlockQueryOptions struct {
-// 	ID           string
-// 	IDIn         []string
-// 	NameLike     string
-// 	Status       string
-// 	StatusIn     []string
-// 	Handle       string
-// 	CreatedAtGte string
-// 	CreatedAtLte string
-// 	Offset       int
-// 	Limit        int
-// 	SortOrder    string
-// 	OrderBy      string
-// 	CountOnly    bool
-// 	WithDeleted  bool
-// }
-
 type BlockQueryInterface interface {
 	Validate() error
 

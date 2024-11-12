@@ -172,6 +172,20 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 				})).
 				HTML("Settings")))
 
+	toolsInfo := hb.NewParagraph().Class("alert alert-info").
+		HTML("Tools: ").
+		Child(hb.NewHyperlink().HTML("Google Translate").Href("https://translate.google.com").Target("_blank")).
+		HTML(", ").
+		Child(hb.NewHyperlink().HTML("Bing Translate").Href("https://www.bing.com/translator").Target("_blank")).
+		HTML(", ").
+		Child(hb.NewHyperlink().HTML("Translateking").Href("https://translateking.com/").Target("_blank")).
+		HTML(", ").
+		Child(hb.NewHyperlink().HTML("Baidu Translate").Href("https://fanyi.baidu.com/").Target("_blank")).
+		HTML(", ").
+		Child(hb.NewHyperlink().HTML("Yandex Translate").Href("https://translate.yandex.com").Target("_blank")).
+		HTML(", ").
+		Child(hb.NewHyperlink().HTML("Yandex Translate").Href("https://www.reverso.net/text-translation").Target("_blank"))
+
 	return hb.Div().
 		Class("container").
 		Child(breadcrumbs).
@@ -179,6 +193,7 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Child(adminHeader).
 		Child(hb.HR()).
 		Child(pageTitle).
+		Child(toolsInfo).
 		Child(tabs).
 		Child(card)
 }

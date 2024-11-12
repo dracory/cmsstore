@@ -8,16 +8,23 @@ import (
 // == TYPE ====================================================================
 
 type store struct {
-	blockTableName             string
-	pageTableName              string
-	siteTableName              string
-	templateTableName          string
-	translationTableName       string
-	db                         *sql.DB
-	dbDriverName               string
-	automigrateEnabled         bool
-	debugEnabled               bool
+	blockTableName     string
+	pageTableName      string
+	siteTableName      string
+	templateTableName  string
+	db                 *sql.DB
+	dbDriverName       string
+	automigrateEnabled bool
+	debugEnabled       bool
+
+	// Menus
+	menusEnabled      bool
+	menuTableName     string
+	menuItemTableName string
+
+	// Translations
 	translationsEnabled        bool
+	translationTableName       string
 	translationLanguages       map[string]string
 	translationLanguageDefault string
 }
@@ -35,6 +42,8 @@ func (store *store) AutoMigrate() error {
 	}
 
 	blockSql := store.blockTableCreateSql()
+	menuSql := store.menuTableCreateSql()
+	menuItemSql := store.menuItemTableCreateSql()
 	pageSql := store.pageTableCreateSql()
 	tableSql := store.siteTableCreateSql()
 	templateSql := store.templateTableCreateSql()
@@ -56,11 +65,29 @@ func (store *store) AutoMigrate() error {
 		return errors.New("template table create sql is empty")
 	}
 
+	if store.menusEnabled && store.menuTableName == "" {
+		return errors.New("menu table name is empty")
+	}
+
+	if store.menusEnabled && store.menuItemTableName == "" {
+		return errors.New("menu item table name is empty")
+	}
+
 	if store.translationsEnabled && translationSql == "" {
 		return errors.New("translation table create sql is empty")
 	}
 
-	sqlList := []string{blockSql, pageSql, tableSql, templateSql}
+	sqlList := []string{
+		blockSql,
+		pageSql,
+		tableSql,
+		templateSql,
+	}
+
+	if store.menusEnabled {
+		sqlList = append(sqlList, menuSql)
+		sqlList = append(sqlList, menuItemSql)
+	}
 
 	if store.translationsEnabled {
 		sqlList = append(sqlList, translationSql)
