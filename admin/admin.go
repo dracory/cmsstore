@@ -296,12 +296,7 @@ func (a *admin) pageUI(r *http.Request) adminPages.UiInterface {
 		Endpoint:               shared.Endpoint(r),
 		Layout:                 a.render,
 		Logger:                 a.logger,
-		PathPageCreate:         shared.PathPagesPageCreate,
-		PathPageDelete:         shared.PathPagesPageDelete,
-		PathPageManager:        shared.PathPagesPageManager,
-		PathPageUpdate:         shared.PathPagesPageUpdate,
 		Store:                  a.store,
-		URL:                    shared.URL,
 	}
 	return adminPages.UI(options)
 }
@@ -326,15 +321,10 @@ func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) siteUI(r *http.Request) adminSites.UiInterface {
 	options := adminSites.UiConfig{
-		Endpoint:        shared.Endpoint(r),
-		Layout:          a.render,
-		Logger:          a.logger,
-		PathSiteCreate:  shared.PathSitesSiteCreate,
-		PathSiteDelete:  shared.PathSitesSiteDelete,
-		PathSiteManager: shared.PathSitesSiteManager,
-		PathSiteUpdate:  shared.PathSitesSiteUpdate,
-		Store:           a.store,
-		URL:             shared.URL,
+		Endpoint: shared.Endpoint(r),
+		Layout:   a.render,
+		Logger:   a.logger,
+		Store:    a.store,
 	}
 	return adminSites.UI(options)
 }
@@ -360,16 +350,11 @@ func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) templateUI(r *http.Request) adminTemplates.UiInterface {
 	options := adminTemplates.UiConfig{
-		Endpoint:            shared.Endpoint(r),
-		AdminHeader:         a.adminHeader(shared.Endpoint(r)),
-		Layout:              a.render,
-		Logger:              a.logger,
-		PathTemplateCreate:  shared.PathTemplatesTemplateCreate,
-		PathTemplateDelete:  shared.PathTemplatesTemplateDelete,
-		PathTemplateManager: shared.PathTemplatesTemplateManager,
-		PathTemplateUpdate:  shared.PathTemplatesTemplateUpdate,
-		Store:               a.store,
-		URL:                 shared.URL,
+		Endpoint:    shared.Endpoint(r),
+		AdminHeader: a.adminHeader(shared.Endpoint(r)),
+		Layout:      a.render,
+		Logger:      a.logger,
+		Store:       a.store,
 	}
 	return adminTemplates.UI(options)
 }

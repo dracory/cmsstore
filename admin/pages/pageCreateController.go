@@ -11,6 +11,7 @@ import (
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/form"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
@@ -68,7 +69,7 @@ func (controller pageCreateController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *pageCreateController) modal(data pageCreateControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageCreate(), nil)
+	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathPagesPageCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormPageCreate",

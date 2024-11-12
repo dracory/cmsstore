@@ -11,6 +11,7 @@ import (
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
 	"github.com/gouniverse/utils"
@@ -63,7 +64,7 @@ func (controller siteCreateController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *siteCreateController) modal(data siteCreateControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteCreate(), nil)
+	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteCreate, nil)
 
 	formGroupName := bs.FormGroup().
 		Class("mb-3").

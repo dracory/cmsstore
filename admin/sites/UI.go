@@ -16,26 +16,16 @@ type UiConfig struct {
 		Scripts    []string
 		ScriptURLs []string
 	}) string
-	Logger          *slog.Logger
-	Store           cmsstore.StoreInterface
-	URL             func(endpoint string, path string, params map[string]string) string
-	PathSiteCreate  string
-	PathSiteDelete  string
-	PathSiteManager string
-	PathSiteUpdate  string
+	Logger *slog.Logger
+	Store  cmsstore.StoreInterface
 }
 
 func UI(config UiConfig) UiInterface {
 	return ui{
-		endpoint:        config.Endpoint,
-		layout:          config.Layout,
-		logger:          config.Logger,
-		store:           config.Store,
-		url:             config.URL,
-		pathSiteCreate:  config.PathSiteCreate,
-		pathSiteDelete:  config.PathSiteDelete,
-		pathSiteManager: config.PathSiteManager,
-		pathSiteUpdate:  config.PathSiteUpdate,
+		endpoint: config.Endpoint,
+		layout:   config.Layout,
+		logger:   config.Logger,
+		store:    config.Store,
 	}
 }
 
@@ -48,16 +38,11 @@ type UiInterface interface {
 		ScriptURLs []string
 	}) string
 	Logger() *slog.Logger
-	PathSiteCreate() string
-	PathSiteDelete() string
-	PathSiteManager() string
-	PathSiteUpdate() string
 	SiteCreate(w http.ResponseWriter, r *http.Request)
 	SiteManager(w http.ResponseWriter, r *http.Request)
 	SiteDelete(w http.ResponseWriter, r *http.Request)
 	SiteUpdate(w http.ResponseWriter, r *http.Request)
 	Store() cmsstore.StoreInterface
-	URL(endpoint string, path string, params map[string]string) string
 }
 
 type ui struct {
@@ -94,28 +79,8 @@ func (ui ui) Logger() *slog.Logger {
 	return ui.logger
 }
 
-func (ui ui) PathSiteCreate() string {
-	return ui.pathSiteCreate
-}
-
-func (ui ui) PathSiteDelete() string {
-	return ui.pathSiteDelete
-}
-
-func (ui ui) PathSiteManager() string {
-	return ui.pathSiteManager
-}
-
-func (ui ui) PathSiteUpdate() string {
-	return ui.pathSiteUpdate
-}
-
 func (ui ui) Store() cmsstore.StoreInterface {
 	return ui.store
-}
-
-func (ui ui) URL(endpoint string, path string, params map[string]string) string {
-	return ui.url(endpoint, path, params)
 }
 
 func (ui ui) SiteCreate(w http.ResponseWriter, r *http.Request) {

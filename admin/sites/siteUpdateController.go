@@ -80,19 +80,19 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
+			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
 		},
 		{
 			Name: "CMS",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
+			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
 		},
 		{
 			Name: "Site Manager",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteManager(), nil),
+			URL:  shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteManager, nil),
 		},
 		{
 			Name: "Edit Site",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteUpdate(), map[string]string{"site_id": data.siteID}),
+			URL:  shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{"site_id": data.siteID}),
 		},
 	})
 
@@ -101,14 +101,14 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormpageUpdate").
-		HxPost(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteUpdate(), map[string]string{"site_id": data.siteID})).
+		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{"site_id": data.siteID})).
 		HxTarget("#FormpageUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteManager(), nil))
+		Href(shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -147,7 +147,7 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteUpdate(), map[string]string{
+				Href(shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{
 					"site_id": data.siteID,
 					"view":    VIEW_SETTINGS,
 				})).
@@ -155,7 +155,7 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SEO, "active").
-				Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteUpdate(), map[string]string{
+				Href(shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{
 					"site_id": data.siteID,
 					"view":    VIEW_SEO,
 				})).
@@ -221,12 +221,12 @@ func (controller siteUpdateController) form(data siteUpdateControllerData) hb.Ta
 					"site_domain_name": domainName,
 				}
 			}),
-			RepeaterAddUrl: controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteUpdate(), map[string]string{
+			RepeaterAddUrl: shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{
 				"site_id": data.siteID,
 				"view":    VIEW_SETTINGS,
 				"action":  ACTION_REPEATER_ADD,
 			}),
-			RepeaterRemoveUrl: controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteUpdate(), map[string]string{
+			RepeaterRemoveUrl: shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{
 				"site_id": data.siteID,
 				"view":    VIEW_SETTINGS,
 				"action":  ACTION_REPEATER_DELETE,

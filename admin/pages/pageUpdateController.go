@@ -152,19 +152,19 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
+			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
 		},
 		{
 			Name: "CMS",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
+			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
 		},
 		{
 			Name: "Page Manager",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), nil),
+			URL:  shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, nil),
 		},
 		{
 			Name: "Edit Page",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{"page_id": data.pageID}),
+			URL:  shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID}),
 		},
 	})
 
@@ -173,14 +173,14 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormpageUpdate").
-		HxPost(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{"page_id": data.pageID})).
+		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID})).
 		HxTarget("#FormpageUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageManager(), nil))
+		Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -220,7 +220,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_CONTENT, "active").
-				Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{
+				Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
 					"page_id": data.pageID,
 					"view":    VIEW_CONTENT,
 				})).
@@ -228,7 +228,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SEO, "active").
-				Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{
+				Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
 					"page_id": data.pageID,
 					"view":    VIEW_SEO,
 				})).
@@ -236,7 +236,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{
+				Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
 					"page_id": data.pageID,
 					"view":    VIEW_SETTINGS,
 				})).
@@ -472,7 +472,7 @@ func (controller pageUpdateController) form(data pageUpdateControllerData) hb.Ta
 			// ID:    "blockeditor" + uid.HumanUid(),
 			Name:  fieldContent.Name,
 			Value: value,
-			HandleEndpoint: controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathPageUpdate(), map[string]string{
+			HandleEndpoint: shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
 				"page_id": data.pageID,
 				"action":  ACTION_BLOCKEDITOR_HANDLE,
 			}),

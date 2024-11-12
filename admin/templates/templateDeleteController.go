@@ -5,6 +5,7 @@ import (
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
 	"github.com/gouniverse/utils"
@@ -58,7 +59,7 @@ func (controller templateDeleteController) Handler(w http.ResponseWriter, r *htt
 }
 
 func (controller *templateDeleteController) modal(data templateDeleteControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateDelete(), map[string]string{
+	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateDelete, map[string]string{
 		"template_id": data.templateID,
 	})
 

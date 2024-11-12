@@ -18,27 +18,17 @@ type UiConfig struct {
 		Scripts    []string
 		ScriptURLs []string
 	}) string
-	Logger              *slog.Logger
-	Store               cmsstore.StoreInterface
-	URL                 func(endpoint string, path string, params map[string]string) string
-	PathTemplateCreate  string
-	PathTemplateDelete  string
-	PathTemplateManager string
-	PathTemplateUpdate  string
+	Logger *slog.Logger
+	Store  cmsstore.StoreInterface
 }
 
 func UI(config UiConfig) UiInterface {
 	return ui{
-		endpoint:            config.Endpoint,
-		adminHeader:         config.AdminHeader,
-		layout:              config.Layout,
-		logger:              config.Logger,
-		store:               config.Store,
-		url:                 config.URL,
-		pathTemplateCreate:  config.PathTemplateCreate,
-		pathTemplateDelete:  config.PathTemplateDelete,
-		pathTemplateManager: config.PathTemplateManager,
-		pathTemplateUpdate:  config.PathTemplateUpdate,
+		endpoint:    config.Endpoint,
+		adminHeader: config.AdminHeader,
+		layout:      config.Layout,
+		logger:      config.Logger,
+		store:       config.Store,
 	}
 }
 
@@ -52,16 +42,11 @@ type UiInterface interface {
 		ScriptURLs []string
 	}) string
 	Logger() *slog.Logger
-	PathTemplateCreate() string
-	PathTemplateDelete() string
-	PathTemplateManager() string
-	PathTemplateUpdate() string
 	TemplateCreate(w http.ResponseWriter, r *http.Request)
 	TemplateManager(w http.ResponseWriter, r *http.Request)
 	TemplateDelete(w http.ResponseWriter, r *http.Request)
 	TemplateUpdate(w http.ResponseWriter, r *http.Request)
 	Store() cmsstore.StoreInterface
-	URL(endpoint string, path string, params map[string]string) string
 }
 
 type ui struct {
@@ -103,28 +88,8 @@ func (ui ui) Logger() *slog.Logger {
 	return ui.logger
 }
 
-func (ui ui) PathTemplateCreate() string {
-	return ui.pathTemplateCreate
-}
-
-func (ui ui) PathTemplateDelete() string {
-	return ui.pathTemplateDelete
-}
-
-func (ui ui) PathTemplateManager() string {
-	return ui.pathTemplateManager
-}
-
-func (ui ui) PathTemplateUpdate() string {
-	return ui.pathTemplateUpdate
-}
-
 func (ui ui) Store() cmsstore.StoreInterface {
 	return ui.store
-}
-
-func (ui ui) URL(endpoint string, path string, params map[string]string) string {
-	return ui.url(endpoint, path, params)
 }
 
 func (ui ui) TemplateCreate(w http.ResponseWriter, r *http.Request) {

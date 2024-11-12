@@ -5,6 +5,7 @@ import (
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
 	"github.com/gouniverse/utils"
@@ -58,7 +59,7 @@ func (controller siteDeleteController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathSiteDelete(), map[string]string{
+	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteDelete, map[string]string{
 		"site_id": data.siteID,
 	})
 

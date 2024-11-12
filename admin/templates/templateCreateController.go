@@ -6,6 +6,7 @@ import (
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/form"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
@@ -63,7 +64,7 @@ func (controller templateCreateController) Handler(w http.ResponseWriter, r *htt
 }
 
 func (controller *templateCreateController) modal(data templateCreateControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathTemplateCreate(), nil)
+	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormTemplateCreate",

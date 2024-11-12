@@ -18,13 +18,8 @@ type UiConfig struct {
 		Scripts    []string
 		ScriptURLs []string
 	}) string
-	Logger          *slog.Logger
-	Store           cmsstore.StoreInterface
-	URL             func(endpoint string, path string, params map[string]string) string
-	PathPageCreate  string
-	PathPageDelete  string
-	PathPageManager string
-	PathPageUpdate  string
+	Logger *slog.Logger
+	Store  cmsstore.StoreInterface
 }
 
 func UI(config UiConfig) UiInterface {
@@ -34,11 +29,6 @@ func UI(config UiConfig) UiInterface {
 		layout:                 config.Layout,
 		logger:                 config.Logger,
 		store:                  config.Store,
-		url:                    config.URL,
-		pathPageCreate:         config.PathPageCreate,
-		pathPageDelete:         config.PathPageDelete,
-		pathPageManager:        config.PathPageManager,
-		pathPageUpdate:         config.PathPageUpdate,
 	}
 }
 
@@ -52,16 +42,11 @@ type UiInterface interface {
 		ScriptURLs []string
 	}) string
 	Logger() *slog.Logger
-	PathPageCreate() string
-	PathPageDelete() string
-	PathPageManager() string
-	PathPageUpdate() string
+	Store() cmsstore.StoreInterface
 	PageCreate(w http.ResponseWriter, r *http.Request)
 	PageManager(w http.ResponseWriter, r *http.Request)
 	PageDelete(w http.ResponseWriter, r *http.Request)
 	PageUpdate(w http.ResponseWriter, r *http.Request)
-	Store() cmsstore.StoreInterface
-	URL(endpoint string, path string, params map[string]string) string
 }
 
 type ui struct {
@@ -73,13 +58,8 @@ type ui struct {
 		Scripts    []string
 		ScriptURLs []string
 	}) string
-	logger          *slog.Logger
-	store           cmsstore.StoreInterface
-	url             func(endpoint string, path string, params map[string]string) string
-	pathPageCreate  string
-	pathPageDelete  string
-	pathPageManager string
-	pathPageUpdate  string
+	logger *slog.Logger
+	store  cmsstore.StoreInterface
 }
 
 func (ui ui) BlockEditorDefinitions() []blockeditor.BlockDefinition {
@@ -103,28 +83,8 @@ func (ui ui) Logger() *slog.Logger {
 	return ui.logger
 }
 
-func (ui ui) PathPageCreate() string {
-	return ui.pathPageCreate
-}
-
-func (ui ui) PathPageDelete() string {
-	return ui.pathPageDelete
-}
-
-func (ui ui) PathPageManager() string {
-	return ui.pathPageManager
-}
-
-func (ui ui) PathPageUpdate() string {
-	return ui.pathPageUpdate
-}
-
 func (ui ui) Store() cmsstore.StoreInterface {
 	return ui.store
-}
-
-func (ui ui) URL(endpoint string, path string, params map[string]string) string {
-	return ui.url(endpoint, path, params)
 }
 
 func (ui ui) PageCreate(w http.ResponseWriter, r *http.Request) {
