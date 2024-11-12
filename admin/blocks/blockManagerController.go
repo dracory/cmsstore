@@ -374,7 +374,7 @@ func (controller *blockManagerController) sortingIndicator(columnName string, so
 
 func (controller *blockManagerController) tableFilter(data blockManagerControllerData) hb.TagInterface {
 	buttonFilter := hb.Button().
-		Class("btn btn-sm btn-info me-2").
+		Class("btn btn-sm btn-info text-white me-2").
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").

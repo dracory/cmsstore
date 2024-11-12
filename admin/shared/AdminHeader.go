@@ -11,11 +11,11 @@ import (
 func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, endpoint string) hb.TagInterface {
 	linkHome := hb.NewHyperlink().
 		HTML("Dashboard").
-		Href(endpoint + "").
+		Href(URL(endpoint, PathHome, nil)).
 		Class("nav-link")
 	linkBlocks := hb.Hyperlink().
 		HTML("Blocks ").
-		Href(endpoint + "?path=" + PathBlocksBlockManager).
+		Href(URL(endpoint, PathBlocksBlockManager, nil)).
 		Class("nav-link")
 	// linkMenus := hb.NewHyperlink().
 	// 	HTML("Menus ").
@@ -23,15 +23,15 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, endpoint st
 	// 	Class("nav-link")
 	linkPages := hb.Hyperlink().
 		HTML("Pages ").
-		Href(endpoint + "?path=" + PathPagesPageManager).
+		Href(URL(endpoint, PathPagesPageManager, nil)).
 		Class("nav-link")
 	linkTemplates := hb.Hyperlink().
 		HTML("Templates ").
-		Href(endpoint + "?path=" + PathTemplatesTemplateManager).
+		Href(URL(endpoint, PathTemplatesTemplateManager, nil)).
 		Class("nav-link")
 	linkSites := hb.Hyperlink().
 		HTML("Sites ").
-		Href(endpoint + "?path=" + PathBlocksBlockManager).
+		Href(URL(endpoint, PathSitesSiteManager, nil)).
 		Class("nav-link")
 	// linkWidgets := hb.NewHyperlink().
 	// 	HTML("Widgets ").
@@ -43,7 +43,7 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, endpoint st
 	// 	Class("nav-link")
 	linkTranslations := hb.Hyperlink().
 		HTML("Translations").
-		Href(endpoint + "?path=" + PathTranslationsTranslationManager).
+		Href(URL(endpoint, PathTranslationsTranslationManager, nil)).
 		Class("nav-link")
 
 	templatesCount, err := store.TemplateCount(cmsstore.TemplateQuery())

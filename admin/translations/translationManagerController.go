@@ -229,8 +229,6 @@ func (controller *translationManagerController) tableRecords(data translationMan
 					hb.TH().
 						Child(controller.sortableColumnLabel(data, "Name", cmsstore.COLUMN_NAME)).
 						Text(", ").
-						Child(controller.sortableColumnLabel(data, "Domains", cmsstore.COLUMN_DOMAIN_NAMES)).
-						Text(", ").
 						Child(controller.sortableColumnLabel(data, "Reference", cmsstore.COLUMN_ID)).
 						Style(`cursor: pointer;`),
 					hb.TH().
@@ -357,7 +355,7 @@ func (controller *translationManagerController) sortingIndicator(columnName stri
 
 func (controller *translationManagerController) tableFilter(data translationManagerControllerData) hb.TagInterface {
 	buttonFilter := hb.Button().
-		Class("btn btn-sm btn-info me-2").
+		Class("btn btn-sm btn-info text-white me-2").
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
