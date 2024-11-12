@@ -149,19 +149,9 @@ func (controller pageUpdateController) script() string {
 }
 
 func (controller pageUpdateController) page(data pageUpdateControllerData) hb.TagInterface {
-	adminHeader := controller.ui.AdminHeader()
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
 
-	adminHomeBreadcrumb := lo.If(controller.ui.AdminHomeURL() != "", shared.Breadcrumb{
-		Name: "Home",
-		URL:  controller.ui.AdminHomeURL(),
-	}).Else(shared.Breadcrumb{})
-
-	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
-		adminHomeBreadcrumb,
-		{
-			Name: "CMS",
-			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
-		},
+	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
 		{
 			Name: "Page Manager",
 			URL:  shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, nil),

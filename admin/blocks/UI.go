@@ -5,78 +5,50 @@ import (
 	"net/http"
 
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/responses"
 )
 
-type UiConfig struct {
-	AdminHeader  hb.TagInterface
-	AdminHomeURL string
-	Endpoint     string
-	Layout       func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
-		Styles     []string
-		StyleURLs  []string
-		Scripts    []string
-		ScriptURLs []string
-	}) string
-	Logger *slog.Logger
-	Store  cmsstore.StoreInterface
-}
-
-func UI(config UiConfig) UiInterface {
+func UI(config shared.UiConfig) UiInterface {
 	return ui{
-		adminHeader:  config.AdminHeader,
-		adminHomeURL: config.AdminHomeURL,
-		endpoint:     config.Endpoint,
-		layout:       config.Layout,
-		logger:       config.Logger,
-		store:        config.Store,
+		// adminHeader:      config.AdminHeader,
+		adminBreadcrumbs: config.AdminBreadcrumbs,
+		endpoint:         config.Endpoint,
+		layout:           config.Layout,
+		logger:           config.Logger,
+		store:            config.Store,
 	}
 }
 
 type UiInterface interface {
-	AdminHeader() hb.TagInterface
-	AdminHomeURL() string
-	Endpoint() string
-	Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
-		Styles     []string
-		StyleURLs  []string
-		Scripts    []string
-		ScriptURLs []string
-	}) string
-	Logger() *slog.Logger
+	shared.UiInterface
 	BlockCreate(w http.ResponseWriter, r *http.Request)
 	BlockManager(w http.ResponseWriter, r *http.Request)
 	BlockDelete(w http.ResponseWriter, r *http.Request)
 	BlockUpdate(w http.ResponseWriter, r *http.Request)
-	Store() cmsstore.StoreInterface
 }
 
 type ui struct {
-	adminHeader  hb.TagInterface
-	adminHomeURL string
-	endpoint     string
-	layout       func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	// adminHeader      hb.TagInterface
+	adminBreadcrumbs func(endpoint string, breadcrumbs []shared.Breadcrumb) hb.TagInterface
+	endpoint         string
+	layout           func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
 		ScriptURLs []string
 	}) string
-	logger           *slog.Logger
-	store            cmsstore.StoreInterface
-	url              func(endpoint string, path string, params map[string]string) string
-	pathBlockCreate  string
-	pathBlockDelete  string
-	pathBlockManager string
-	pathBlockUpdate  string
+	logger *slog.Logger
+	store  cmsstore.StoreInterface
 }
 
-func (ui ui) AdminHeader() hb.TagInterface {
-	return ui.adminHeader
-}
+// func (ui ui) AdminHeader() hb.TagInterface {
+// 	return ui.adminHeader
+// }
 
-func (ui ui) AdminHomeURL() string {
-	return ui.adminHomeURL
+func (ui ui) AdminBreadcrumbs(endpoint string, breadcrumbs []shared.Breadcrumb) hb.TagInterface {
+	return ui.adminBreadcrumbs(endpoint, breadcrumbs)
 }
 
 func (ui ui) Endpoint() string {

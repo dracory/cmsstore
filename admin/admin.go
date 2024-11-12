@@ -15,7 +15,6 @@ import (
 	adminTemplates "github.com/gouniverse/cmsstore/admin/templates"
 	adminTranslations "github.com/gouniverse/cmsstore/admin/translations"
 
-	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/responses"
@@ -107,13 +106,8 @@ func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Reque
 }
 
 func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
-	header := a.adminHeader(shared.Endpoint(r))
-	breadcrumbs := a.adminBreadcrumbs([]bs.Breadcrumb{
-		{
-			URL:  shared.Endpoint(r),
-			Name: "Home",
-		},
-	})
+	adminHeader := a.adminHeader(shared.Endpoint(r))
+	adminBreadcrumbs := a.adminBreadcrumbs(shared.Endpoint(r), []shared.Breadcrumb{})
 
 	pagesCount, errPagesCount := a.store.PageCount(cmsstore.PageQuery())
 
@@ -223,15 +217,17 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 		return hb.Div().Class("col-xs-12 col-sm-6 col-md-3").Child(card)
 	})
 
-	heading := hb.NewHeading1().
+	pageTitle := hb.NewHeading1().
 		HTML("Content Management Dashboard")
 
 	container := hb.NewDiv().
 		ID("page-manager").
 		Class("container").
-		Child(header).
-		Child(heading).
-		Child(hb.NewHTML(breadcrumbs)).
+		Child(adminBreadcrumbs).
+		Child(hb.HR()).
+		Child(adminHeader).
+		Child(hb.HR()).
+		Child(pageTitle).
 		Child(hb.Div().Class("row g-3").Children(cards))
 
 	a.render(w, r, "Home", container.ToHTML(), struct {
@@ -267,14 +263,13 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 }
 
 func (a *admin) blockUI(r *http.Request) adminBlocks.UiInterface {
-	options := adminBlocks.UiConfig{
-		// BlockEditorDefinitions: a.blockEditorDefinitions,
-		AdminHeader:  a.adminHeader(shared.Endpoint(r)),
-		AdminHomeURL: a.adminHomeURL,
-		Endpoint:     shared.Endpoint(r),
-		Layout:       a.render,
-		Logger:       a.logger,
-		Store:        a.store,
+	options := shared.UiConfig{
+		BlockEditorDefinitions: a.blockEditorDefinitions,
+		AdminBreadcrumbs:       a.adminBreadcrumbs,
+		Endpoint:               shared.Endpoint(r),
+		Layout:                 a.render,
+		Logger:                 a.logger,
+		Store:                  a.store,
 	}
 	return adminBlocks.UI(options)
 }
@@ -298,10 +293,9 @@ func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Req
 }
 
 func (a *admin) pageUI(r *http.Request) adminPages.UiInterface {
-	options := adminPages.UiConfig{
+	options := shared.UiConfig{
 		BlockEditorDefinitions: a.blockEditorDefinitions,
-		AdminHeader:            a.adminHeader(shared.Endpoint(r)),
-		AdminHomeURL:           a.adminHomeURL,
+		AdminBreadcrumbs:       a.adminBreadcrumbs,
 		Endpoint:               shared.Endpoint(r),
 		Layout:                 a.render,
 		Logger:                 a.logger,
@@ -329,13 +323,13 @@ func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 }
 
 func (a *admin) siteUI(r *http.Request) adminSites.UiInterface {
-	options := adminSites.UiConfig{
-		AdminHeader:  a.adminHeader(shared.Endpoint(r)),
-		AdminHomeURL: a.adminHomeURL,
-		Endpoint:     shared.Endpoint(r),
-		Layout:       a.render,
-		Logger:       a.logger,
-		Store:        a.store,
+	options := shared.UiConfig{
+		BlockEditorDefinitions: a.blockEditorDefinitions,
+		AdminBreadcrumbs:       a.adminBreadcrumbs,
+		Endpoint:               shared.Endpoint(r),
+		Layout:                 a.render,
+		Logger:                 a.logger,
+		Store:                  a.store,
 	}
 	return adminSites.UI(options)
 }
@@ -360,13 +354,13 @@ func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 }
 
 func (a *admin) templateUI(r *http.Request) adminTemplates.UiInterface {
-	options := adminTemplates.UiConfig{
-		Endpoint:     shared.Endpoint(r),
-		AdminHeader:  a.adminHeader(shared.Endpoint(r)),
-		AdminHomeURL: a.adminHomeURL,
-		Layout:       a.render,
-		Logger:       a.logger,
-		Store:        a.store,
+	options := shared.UiConfig{
+		BlockEditorDefinitions: a.blockEditorDefinitions,
+		AdminBreadcrumbs:       a.adminBreadcrumbs,
+		Endpoint:               shared.Endpoint(r),
+		Layout:                 a.render,
+		Logger:                 a.logger,
+		Store:                  a.store,
 	}
 	return adminTemplates.UI(options)
 }
@@ -390,13 +384,13 @@ func (a *admin) templateRoutes() map[string]func(w http.ResponseWriter, r *http.
 }
 
 func (a *admin) translationUI(r *http.Request) adminTranslations.UiInterface {
-	options := adminTranslations.UiConfig{
-		Endpoint:     shared.Endpoint(r),
-		AdminHeader:  a.adminHeader(shared.Endpoint(r)),
-		AdminHomeURL: a.adminHomeURL,
-		Layout:       a.render,
-		Logger:       a.logger,
-		Store:        a.store,
+	options := shared.UiConfig{
+		BlockEditorDefinitions: a.blockEditorDefinitions,
+		AdminBreadcrumbs:       a.adminBreadcrumbs,
+		Endpoint:               shared.Endpoint(r),
+		Layout:                 a.render,
+		Logger:                 a.logger,
+		Store:                  a.store,
 	}
 	return adminTranslations.UI(options)
 }
@@ -419,10 +413,25 @@ func (a *admin) translationRoutes() map[string]func(w http.ResponseWriter, r *ht
 	return translationsRoutes
 }
 
-func (a *admin) adminBreadcrumbs(breadcrumbs []bs.Breadcrumb) string {
-	return bs.Breadcrumbs(breadcrumbs).
-		Style("margin-bottom:10px;").
-		ToHTML()
+func (a *admin) adminBreadcrumbs(endpoint string, pageBreadcrumbs []shared.Breadcrumb) hb.TagInterface {
+	adminHomeBreadcrumb := lo.If(a.adminHomeURL != "", shared.Breadcrumb{
+		Name: "Home",
+		URL:  a.adminHomeURL,
+	}).Else(shared.Breadcrumb{})
+
+	breadcrumbItems := []shared.Breadcrumb{
+		adminHomeBreadcrumb,
+		{
+			Name: "CMS",
+			URL:  shared.URL(endpoint, shared.PathHome, nil),
+		},
+	}
+
+	breadcrumbItems = append(breadcrumbItems, pageBreadcrumbs...)
+
+	breadcrumbs := shared.Breadcrumbs(breadcrumbItems)
+
+	return breadcrumbs
 }
 
 func (a *admin) adminHeader(endpoint string) hb.TagInterface {

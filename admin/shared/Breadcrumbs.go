@@ -2,7 +2,7 @@ package shared
 
 import "github.com/gouniverse/hb"
 
-func Breadcrumbs(breadcrumbs []Breadcrumb) *hb.Tag {
+func Breadcrumbs(breadcrumbs []Breadcrumb) hb.TagInterface {
 	nav := hb.Nav().Attr("aria-label", "breadcrumb")
 	ol := hb.OL().Attr("class", "breadcrumb")
 

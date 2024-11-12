@@ -12,7 +12,6 @@ import (
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
 	"github.com/gouniverse/utils"
-	"github.com/samber/lo"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -95,18 +94,8 @@ func (controller *blockUpdateController) Handler(w http.ResponseWriter, r *http.
 }
 
 func (controller blockUpdateController) page(data blockUpdateControllerData) hb.TagInterface {
-	adminHeader := controller.ui.AdminHeader()
-	adminHomeBreadcrumb := lo.If(controller.ui.AdminHomeURL() != "", shared.Breadcrumb{
-		Name: "Home",
-		URL:  controller.ui.AdminHomeURL(),
-	}).Else(shared.Breadcrumb{})
-
-	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
-		adminHomeBreadcrumb,
-		{
-			Name: "CMS",
-			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
-		},
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
+	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
 		{
 			Name: "Block Manager",
 			URL:  shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, nil),
