@@ -19,6 +19,9 @@ type TemplateQueryOptions struct {
 type TemplateQueryInterface interface {
 	Validate() error
 
+	Columns() []string
+	SetColumns(columns []string) TemplateQueryInterface
+
 	HasCountOnly() bool
 	IsCountOnly() bool
 	SetCountOnly(countOnly bool) TemplateQueryInterface

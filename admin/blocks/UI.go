@@ -10,9 +10,10 @@ import (
 )
 
 type UiConfig struct {
-	AdminHeader hb.TagInterface
-	Endpoint    string
-	Layout      func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	AdminHeader  hb.TagInterface
+	AdminHomeURL string
+	Endpoint     string
+	Layout       func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -24,16 +25,18 @@ type UiConfig struct {
 
 func UI(config UiConfig) UiInterface {
 	return ui{
-		adminHeader: config.AdminHeader,
-		endpoint:    config.Endpoint,
-		layout:      config.Layout,
-		logger:      config.Logger,
-		store:       config.Store,
+		adminHeader:  config.AdminHeader,
+		adminHomeURL: config.AdminHomeURL,
+		endpoint:     config.Endpoint,
+		layout:       config.Layout,
+		logger:       config.Logger,
+		store:        config.Store,
 	}
 }
 
 type UiInterface interface {
 	AdminHeader() hb.TagInterface
+	AdminHomeURL() string
 	Endpoint() string
 	Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
@@ -50,9 +53,10 @@ type UiInterface interface {
 }
 
 type ui struct {
-	adminHeader hb.TagInterface
-	endpoint    string
-	layout      func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	adminHeader  hb.TagInterface
+	adminHomeURL string
+	endpoint     string
+	layout       func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -69,6 +73,10 @@ type ui struct {
 
 func (ui ui) AdminHeader() hb.TagInterface {
 	return ui.adminHeader
+}
+
+func (ui ui) AdminHomeURL() string {
+	return ui.adminHomeURL
 }
 
 func (ui ui) Endpoint() string {

@@ -78,6 +78,19 @@ func (q *siteQuery) Validate() error {
 	return nil
 }
 
+func (q *siteQuery) Columns() []string {
+	if !q.hasParameter("columns") {
+		return []string{}
+	}
+
+	return q.parameters["columns"].([]string)
+}
+
+func (q *siteQuery) SetColumns(columns []string) SiteQueryInterface {
+	q.parameters["columns"] = columns
+	return q
+}
+
 func (q *siteQuery) HasCountOnly() bool {
 	return q.hasParameter("count_only")
 }

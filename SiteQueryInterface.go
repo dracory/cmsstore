@@ -20,6 +20,9 @@ type SiteQueryOptions struct {
 type SiteQueryInterface interface {
 	Validate() error
 
+	Columns() []string
+	SetColumns(columns []string) SiteQueryInterface
+
 	HasCountOnly() bool
 	IsCountOnly() bool
 	SetCountOnly(countOnly bool) SiteQueryInterface

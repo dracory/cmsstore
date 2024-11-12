@@ -12,6 +12,7 @@ import (
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
 	"github.com/gouniverse/utils"
+	"github.com/samber/lo"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -95,12 +96,13 @@ func (controller *blockUpdateController) Handler(w http.ResponseWriter, r *http.
 
 func (controller blockUpdateController) page(data blockUpdateControllerData) hb.TagInterface {
 	adminHeader := controller.ui.AdminHeader()
+	adminHomeBreadcrumb := lo.If(controller.ui.AdminHomeURL() != "", shared.Breadcrumb{
+		Name: "Home",
+		URL:  controller.ui.AdminHomeURL(),
+	}).Else(shared.Breadcrumb{})
 
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
-		{
-			Name: "Home",
-			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
-		},
+		adminHomeBreadcrumb,
 		{
 			Name: "CMS",
 			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
@@ -246,13 +248,6 @@ func (controller blockUpdateController) form(data blockUpdateControllerData) hb.
 
 func (blockUpdateController) fieldsContent(data blockUpdateControllerData) []form.FieldInterface {
 	fieldsContent := []form.FieldInterface{
-		form.NewField(form.FieldOptions{
-			Type: form.FORM_FIELD_TYPE_RAW,
-			Value: hb.Div().
-				Class(`alert alert-info`).
-				Child(hb.Text("Available variables: [[PageContent]], [[PageCanonicalUrl]], [[PageMetaDescription]], [[PageMetaKeywords]], [[PageMetaRobots]], [[PageTitle]]")).
-				ToHTML(),
-		}),
 		form.NewField(form.FieldOptions{
 			Label: "Content (HTML)",
 			Name:  "block_content",

@@ -18,25 +18,25 @@ import (
 	"github.com/spf13/cast"
 )
 
-const ActionModalPageFilterShow = "modal_template_filter_show"
+const ActionModalPageFilterShow = "modal_translation_filter_show"
 
 // == CONTROLLER ==============================================================
 
-type templateManagerController struct {
+type translationManagerController struct {
 	ui UiInterface
 }
 
-var _ router.HTMLControllerInterface = (*templateManagerController)(nil)
+var _ router.HTMLControllerInterface = (*translationManagerController)(nil)
 
 // == CONSTRUCTOR =============================================================
 
-func NewTemplateManagerController(ui UiInterface) *templateManagerController {
-	return &templateManagerController{
+func NewTranslationManagerController(ui UiInterface) *translationManagerController {
+	return &translationManagerController{
 		ui: ui,
 	}
 }
 
-func (controller *templateManagerController) Handler(w http.ResponseWriter, r *http.Request) string {
+func (controller *translationManagerController) Handler(w http.ResponseWriter, r *http.Request) string {
 	data, errorMessage := controller.prepareData(r)
 
 	if errorMessage != "" {
@@ -58,10 +58,10 @@ func (controller *templateManagerController) Handler(w http.ResponseWriter, r *h
 			cdn.Sweetalert2_11(),
 		},
 	}
-	return controller.ui.Layout(w, r, "Template Manager | CMS", controller.page(data).ToHTML(), options)
+	return controller.ui.Layout(w, r, "Translation Manager | CMS", controller.page(data).ToHTML(), options)
 }
 
-func (controller *templateManagerController) onModalRecordFilterShow(data templateManagerControllerData) *hb.Tag {
+func (controller *translationManagerController) onModalRecordFilterShow(data translationManagerControllerData) *hb.Tag {
 	modalCloseScript := `document.getElementById('ModalMessage').remove();document.getElementById('ModalBackdrop').remove();`
 
 	title := hb.Heading5().
@@ -88,13 +88,13 @@ func (controller *templateManagerController) onModalRecordFilterShow(data templa
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, nil),
+		ActionURL: shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
 				Name:  "status",
 				Type:  form.FORM_FIELD_TYPE_SELECT,
-				Help:  `The status of the template.`,
+				Help:  `The status of the translation.`,
 				Value: data.formStatus,
 				Options: []form.FieldOption{
 					{
@@ -137,17 +137,17 @@ func (controller *templateManagerController) onModalRecordFilterShow(data templa
 				Help:  `Filter by creation date.`,
 			}),
 			form.NewField(form.FieldOptions{
-				Label: "Template ID",
-				Name:  "template_id",
+				Label: "Translation ID",
+				Name:  "translation_id",
 				Type:  form.FORM_FIELD_TYPE_STRING,
-				Value: data.formTemplateID,
-				Help:  `Find template by reference number (ID).`,
+				Value: data.formTranslationID,
+				Help:  `Find translation by reference number (ID).`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Path",
 				Name:  "path",
 				Type:  form.FORM_FIELD_TYPE_STRING,
-				Value: shared.PathTemplatesTemplateManager,
+				Value: shared.PathTranslationsTranslationManager,
 				Help:  `Path to this page.`,
 			}),
 		},
@@ -188,7 +188,7 @@ func (controller *templateManagerController) onModalRecordFilterShow(data templa
 
 }
 
-func (controller *templateManagerController) page(data templateManagerControllerData) hb.TagInterface {
+func (controller *translationManagerController) page(data translationManagerControllerData) hb.TagInterface {
 	adminHeader := controller.ui.AdminHeader()
 
 	adminHomeBreadcrumb := lo.If(controller.ui.AdminHomeURL() != "", shared.Breadcrumb{
@@ -203,21 +203,21 @@ func (controller *templateManagerController) page(data templateManagerController
 			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
 		},
 		{
-			Name: "Template Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, nil),
+			Name: "Translation Manager",
+			URL:  shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationManager, nil),
 		},
 	})
 
 	buttonPageNew := hb.Button().
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
-		HTML("New Template").
-		HxGet(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateCreate, nil)).
+		HTML("New Translation").
+		HxGet(shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
 	title := hb.Heading1().
-		HTML("CMS. Template Manager").
+		HTML("CMS. Translation Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().
@@ -230,7 +230,7 @@ func (controller *templateManagerController) page(data templateManagerController
 		Child(controller.tableRecords(data))
 }
 
-func (controller *templateManagerController) tableRecords(data templateManagerControllerData) hb.TagInterface {
+func (controller *translationManagerController) tableRecords(data translationManagerControllerData) hb.TagInterface {
 	table := hb.Table().
 		Class("table table-striped table-hover table-bordered").
 		Children([]hb.TagInterface{
@@ -256,58 +256,58 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 						HTML("Actions"),
 				}),
 			}),
-			hb.Tbody().Children(lo.Map(data.recordList, func(template cmsstore.TemplateInterface, _ int) hb.TagInterface {
+			hb.Tbody().Children(lo.Map(data.recordList, func(translation cmsstore.TranslationInterface, _ int) hb.TagInterface {
 
-				templateName := template.Name()
+				translationName := translation.Name()
 
-				templateLink := hb.Hyperlink().
-					Text(templateName).
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateUpdate, map[string]string{
-						"template_id": template.ID(),
+				translationLink := hb.Hyperlink().
+					Text(translationName).
+					Href(shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationUpdate, map[string]string{
+						"translation_id": translation.ID(),
 					}))
 
 				status := hb.Span().
 					Style(`font-weight: bold;`).
-					StyleIf(template.IsActive(), `color:green;`).
-					StyleIf(template.IsSoftDeleted(), `color:silver;`).
-					StyleIf(template.IsInactive(), `color:red;`).
-					HTML(template.Status())
+					StyleIf(translation.IsActive(), `color:green;`).
+					StyleIf(translation.IsSoftDeleted(), `color:silver;`).
+					StyleIf(translation.IsInactive(), `color:red;`).
+					HTML(translation.Status())
 
 				buttonEdit := hb.Hyperlink().
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateUpdate, map[string]string{
-						"template_id": template.ID(),
+					Href(shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationUpdate, map[string]string{
+						"translation_id": translation.ID(),
 					}))
 
 				buttonDelete := hb.Hyperlink().
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateDelete, map[string]string{
-						"template_id": template.ID(),
+					HxGet(shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationDelete, map[string]string{
+						"translation_id": translation.ID(),
 					})).
 					HxTarget("body").
 					HxSwap("beforeend")
 
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
-						Child(hb.Div().Child(templateLink)).
+						Child(hb.Div().Child(translationLink)).
 						Child(hb.Div().
 							Style("font-size: 11px;").
 							HTML("Ref: ").
-							HTML(template.ID())),
+							HTML(translation.ID())),
 					hb.TD().
 						Child(status),
 					hb.TD().
 						Child(hb.Div().
 							Style("font-size: 13px;white-space: nowrap;").
-							HTML(template.CreatedAtCarbon().Format("d M Y"))),
+							HTML(translation.CreatedAtCarbon().Format("d M Y"))),
 					hb.TD().
 						Child(hb.Div().
 							Style("font-size: 13px;white-space: nowrap;").
-							HTML(template.UpdatedAtCarbon().Format("d M Y"))),
+							HTML(translation.UpdatedAtCarbon().Format("d M Y"))),
 					hb.TD().
 						Child(buttonEdit).
 						// Child(buttonImpersonate).
@@ -325,7 +325,7 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 	})
 }
 
-func (controller *templateManagerController) sortableColumnLabel(data templateManagerControllerData, tableLabel string, columnName string) hb.TagInterface {
+func (controller *translationManagerController) sortableColumnLabel(data translationManagerControllerData, tableLabel string, columnName string) hb.TagInterface {
 	isSelected := strings.EqualFold(data.sortBy, columnName)
 
 	direction := lo.If(data.sortOrder == sb.ASC, sb.DESC).Else(sb.ASC)
@@ -334,14 +334,14 @@ func (controller *templateManagerController) sortableColumnLabel(data templateMa
 		direction = sb.ASC
 	}
 
-	link := shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, map[string]string{
-		"page":        "0",
-		"by":          columnName,
-		"sort":        direction,
-		"date_from":   data.formCreatedFrom,
-		"date_to":     data.formCreatedTo,
-		"status":      data.formStatus,
-		"template_id": data.formTemplateID,
+	link := shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationManager, map[string]string{
+		"page":           "0",
+		"by":             columnName,
+		"sort":           direction,
+		"date_from":      data.formCreatedFrom,
+		"date_to":        data.formCreatedTo,
+		"status":         data.formStatus,
+		"translation_id": data.formTranslationID,
 	})
 	return hb.Hyperlink().
 		HTML(tableLabel).
@@ -349,7 +349,7 @@ func (controller *templateManagerController) sortableColumnLabel(data templateMa
 		Href(link)
 }
 
-func (controller *templateManagerController) sortingIndicator(columnName string, sortByColumnName string, sortOrder string) hb.TagInterface {
+func (controller *translationManagerController) sortingIndicator(columnName string, sortByColumnName string, sortOrder string) hb.TagInterface {
 	isSelected := strings.EqualFold(sortByColumnName, columnName)
 
 	direction := lo.If(isSelected && sortOrder == "asc", "up").
@@ -365,25 +365,25 @@ func (controller *templateManagerController) sortingIndicator(columnName string,
 	return sortingIndicator
 }
 
-func (controller *templateManagerController) tableFilter(data templateManagerControllerData) hb.TagInterface {
+func (controller *translationManagerController) tableFilter(data translationManagerControllerData) hb.TagInterface {
 	buttonFilter := hb.Button().
 		Class("btn btn-sm btn-info me-2").
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, map[string]string{
-			"action":       ActionModalPageFilterShow,
-			"name":         data.formName,
-			"status":       data.formStatus,
-			"template_id":  data.formTemplateID,
-			"created_from": data.formCreatedFrom,
-			"created_to":   data.formCreatedTo,
+		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationManager, map[string]string{
+			"action":         ActionModalPageFilterShow,
+			"name":           data.formName,
+			"status":         data.formStatus,
+			"translation_id": data.formTranslationID,
+			"created_from":   data.formCreatedFrom,
+			"created_to":     data.formCreatedTo,
 		})).
 		HxTarget("body").
 		HxSwap("beforeend")
 
 	description := []string{
-		hb.Span().HTML("Showing templates").Text(" ").ToHTML(),
+		hb.Span().HTML("Showing translations").Text(" ").ToHTML(),
 	}
 
 	if data.formStatus != "" {
@@ -396,8 +396,8 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 		description = append(description, hb.Span().Text("and name: "+data.formName).ToHTML())
 	}
 
-	if data.formTemplateID != "" {
-		description = append(description, hb.Span().Text("and ID: "+data.formTemplateID).ToHTML())
+	if data.formTranslationID != "" {
+		description = append(description, hb.Span().Text("and ID: "+data.formTranslationID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
@@ -419,8 +419,8 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 		})
 }
 
-func (controller *templateManagerController) tablePagination(data templateManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, map[string]string{
+func (controller *translationManagerController) tablePagination(data translationManagerControllerData, count int, page int, perPage int) hb.TagInterface {
+	url := shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,
@@ -444,7 +444,7 @@ func (controller *templateManagerController) tablePagination(data templateManage
 		HTML(pagination)
 }
 
-func (controller *templateManagerController) prepareData(r *http.Request) (data templateManagerControllerData, errorMessage string) {
+func (controller *translationManagerController) prepareData(r *http.Request) (data translationManagerControllerData, errorMessage string) {
 	var err error
 	initialPerPage := 20
 	data.request = r
@@ -462,8 +462,8 @@ func (controller *templateManagerController) prepareData(r *http.Request) (data 
 	recordList, recordCount, err := controller.fetchRecordList(data)
 
 	if err != nil {
-		controller.ui.Logger().Error("At templateManagerController > prepareData", "error", err.Error())
-		return data, "error retrieving web templates"
+		controller.ui.Logger().Error("At translationManagerController > prepareData", "error", err.Error())
+		return data, "error retrieving web translations"
 	}
 
 	data.recordList = recordList
@@ -472,11 +472,11 @@ func (controller *templateManagerController) prepareData(r *http.Request) (data 
 	return data, ""
 }
 
-func (controller *templateManagerController) fetchRecordList(data templateManagerControllerData) (records []cmsstore.TemplateInterface, recordCount int64, err error) {
-	templateIDs := []string{}
+func (controller *translationManagerController) fetchRecordList(data translationManagerControllerData) (records []cmsstore.TranslationInterface, recordCount int64, err error) {
+	translationIDs := []string{}
 
-	if data.formTemplateID != "" {
-		templateIDs = append(templateIDs, data.formTemplateID)
+	if data.formTranslationID != "" {
+		translationIDs = append(translationIDs, data.formTranslationID)
 	}
 
 	// if data.formCreatedFrom != "" {
@@ -487,14 +487,14 @@ func (controller *templateManagerController) fetchRecordList(data templateManage
 	// 	query.CreatedAtLte = data.formCreatedTo + " 23:59:59"
 	// }
 
-	query := cmsstore.TemplateQuery().
+	query := cmsstore.TranslationQuery().
 		SetLimit(data.perPage).
 		SetOffset(data.pageInt * data.perPage).
 		SetOrderBy(data.sortBy).
 		SetSortOrder(data.sortOrder)
 
-	if len(templateIDs) > 0 {
-		query.SetIDIn(templateIDs)
+	if len(translationIDs) > 0 {
+		query.SetIDIn(translationIDs)
 	}
 
 	if data.formStatus != "" {
@@ -505,34 +505,34 @@ func (controller *templateManagerController) fetchRecordList(data templateManage
 		query.SetNameLike(data.formName)
 	}
 
-	recordList, err := controller.ui.Store().TemplateList(query)
+	recordList, err := controller.ui.Store().TranslationList(query)
 
 	if err != nil {
-		return []cmsstore.TemplateInterface{}, 0, err
+		return []cmsstore.TranslationInterface{}, 0, err
 	}
 
-	recordCount, err = controller.ui.Store().TemplateCount(query)
+	recordCount, err = controller.ui.Store().TranslationCount(query)
 
 	if err != nil {
-		return []cmsstore.TemplateInterface{}, 0, err
+		return []cmsstore.TranslationInterface{}, 0, err
 	}
 
 	return recordList, recordCount, nil
 }
 
-type templateManagerControllerData struct {
-	request         *http.Request
-	action          string
-	page            string
-	pageInt         int
-	perPage         int
-	sortOrder       string
-	sortBy          string
-	formStatus      string
-	formName        string
-	formCreatedFrom string
-	formCreatedTo   string
-	formTemplateID  string
-	recordList      []cmsstore.TemplateInterface
-	recordCount     int64
+type translationManagerControllerData struct {
+	request           *http.Request
+	action            string
+	page              string
+	pageInt           int
+	perPage           int
+	sortOrder         string
+	sortBy            string
+	formStatus        string
+	formName          string
+	formCreatedFrom   string
+	formCreatedTo     string
+	formTranslationID string
+	recordList        []cmsstore.TranslationInterface
+	recordCount       int64
 }

@@ -7,9 +7,6 @@ type SiteInterface interface {
 	DataChanged() map[string]string
 	MarkAsNotDirty()
 
-	ID() string
-	SetID(id string) SiteInterface
-
 	CreatedAt() string
 	SetCreatedAt(createdAt string) SiteInterface
 	CreatedAtCarbon() carbon.Carbon
@@ -19,6 +16,9 @@ type SiteInterface interface {
 
 	Handle() string
 	SetHandle(handle string) SiteInterface
+
+	ID() string
+	SetID(id string) SiteInterface
 
 	Memo() string
 	SetMemo(memo string) SiteInterface

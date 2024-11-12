@@ -54,6 +54,19 @@ func (q *blockQuery) Validate() error {
 	return nil
 }
 
+func (q *blockQuery) Columns() []string {
+	if !q.hasProperty("columns") {
+		return []string{}
+	}
+
+	return q.properties["columns"].([]string)
+}
+
+func (q *blockQuery) SetColumns(columns []string) BlockQueryInterface {
+	q.properties["columns"] = columns
+	return q
+}
+
 func (q *blockQuery) HasCreatedAtGte() bool {
 	return q.hasProperty("created_at_gte")
 }

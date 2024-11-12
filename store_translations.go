@@ -12,10 +12,10 @@ import (
 	"github.com/samber/lo"
 )
 
-func (store *store) BlockCount(options BlockQueryInterface) (int64, error) {
+func (store *store) TranslationCount(options TranslationQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
-	q, _, err := store.blockSelectQuery(options)
+	q, _, err := store.translationSelectQuery(options)
 
 	if err != nil {
 		return -1, err
@@ -56,14 +56,22 @@ func (store *store) BlockCount(options BlockQueryInterface) (int64, error) {
 	return i, nil
 }
 
-func (store *store) BlockCreate(block BlockInterface) error {
-	block.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
-	block.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
+func (store *store) TranslationCreate(translation TranslationInterface) error {
+	if translation == nil {
+		return errors.New("translation is nil")
+	}
+	if translation.CreatedAt() == "" {
+		translation.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
+	}
 
-	data := block.Data()
+	if translation.UpdatedAt() == "" {
+		translation.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
+	}
+
+	data := translation.Data()
 
 	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Insert(store.blockTableName).
+		Insert(store.translationTableName).
 		Prepared(true).
 		Rows(data).
 		ToSQL()
@@ -77,7 +85,7 @@ func (store *store) BlockCreate(block BlockInterface) error {
 	}
 
 	if store.db == nil {
-		return errors.New("blockstore: database is nil")
+		return errors.New("translationstore: database is nil")
 	}
 
 	_, err := store.db.Exec(sqlStr, params...)
@@ -86,26 +94,26 @@ func (store *store) BlockCreate(block BlockInterface) error {
 		return err
 	}
 
-	block.MarkAsNotDirty()
+	translation.MarkAsNotDirty()
 
 	return nil
 }
 
-func (store *store) BlockDelete(block BlockInterface) error {
-	if block == nil {
-		return errors.New("block is nil")
+func (store *store) TranslationDelete(translation TranslationInterface) error {
+	if translation == nil {
+		return errors.New("translation is nil")
 	}
 
-	return store.BlockDeleteByID(block.ID())
+	return store.TranslationDeleteByID(translation.ID())
 }
 
-func (store *store) BlockDeleteByID(id string) error {
+func (store *store) TranslationDeleteByID(id string) error {
 	if id == "" {
-		return errors.New("block id is empty")
+		return errors.New("translation id is empty")
 	}
 
 	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Delete(store.blockTableName).
+		Delete(store.translationTableName).
 		Prepared(true).
 		Where(goqu.C("id").Eq(id)).
 		ToSQL()
@@ -123,12 +131,14 @@ func (store *store) BlockDeleteByID(id string) error {
 	return err
 }
 
-func (store *store) BlockFindByHandle(hadle string) (block BlockInterface, err error) {
+func (store *store) TranslationFindByHandle(hadle string) (translation TranslationInterface, err error) {
 	if hadle == "" {
-		return nil, errors.New("block handle is empty")
+		return nil, errors.New("translation handle is empty")
 	}
 
-	list, err := store.BlockList(BlockQuery().SetHandle(hadle).SetLimit(1))
+	list, err := store.TranslationList(TranslationQuery().
+		SetHandle(hadle).
+		SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -141,12 +151,12 @@ func (store *store) BlockFindByHandle(hadle string) (block BlockInterface, err e
 	return nil, nil
 }
 
-func (store *store) BlockFindByID(id string) (block BlockInterface, err error) {
+func (store *store) TranslationFindByID(id string) (translation TranslationInterface, err error) {
 	if id == "" {
-		return nil, errors.New("block id is empty")
+		return nil, errors.New("translation id is empty")
 	}
 
-	list, err := store.BlockList(BlockQuery().SetID(id).SetLimit(1))
+	list, err := store.TranslationList(TranslationQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -159,17 +169,25 @@ func (store *store) BlockFindByID(id string) (block BlockInterface, err error) {
 	return nil, nil
 }
 
-func (store *store) BlockList(query BlockQueryInterface) ([]BlockInterface, error) {
-	q, columns, err := store.blockSelectQuery(query)
+func (store *store) TranslationLanguageDefault() string {
+	return store.translationLanguageDefault
+}
+
+func (store *store) TranslationLanguages() map[string]string {
+	return store.translationLanguages
+}
+
+func (store *store) TranslationList(query TranslationQueryInterface) ([]TranslationInterface, error) {
+	q, columns, err := store.translationSelectQuery(query)
 
 	if err != nil {
-		return []BlockInterface{}, err
+		return []TranslationInterface{}, err
 	}
 
 	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 
 	if errSql != nil {
-		return []BlockInterface{}, nil
+		return []TranslationInterface{}, nil
 	}
 
 	if store.debugEnabled {
@@ -177,59 +195,59 @@ func (store *store) BlockList(query BlockQueryInterface) ([]BlockInterface, erro
 	}
 
 	if store.db == nil {
-		return []BlockInterface{}, errors.New("blockstore: database is nil")
+		return []TranslationInterface{}, errors.New("translationstore: database is nil")
 	}
 
 	db := sb.NewDatabase(store.db, store.dbDriverName)
 
 	if db == nil {
-		return []BlockInterface{}, errors.New("blockstore: database is nil")
+		return []TranslationInterface{}, errors.New("translationstore: database is nil")
 	}
 
 	modelMaps, err := db.SelectToMapString(sqlStr)
 
 	if err != nil {
-		return []BlockInterface{}, err
+		return []TranslationInterface{}, err
 	}
 
-	list := []BlockInterface{}
+	list := []TranslationInterface{}
 
 	lo.ForEach(modelMaps, func(modelMap map[string]string, index int) {
-		model := NewBlockFromExistingData(modelMap)
+		model := NewTranslationFromExistingData(modelMap)
 		list = append(list, model)
 	})
 
 	return list, nil
 }
 
-func (store *store) BlockSoftDelete(block BlockInterface) error {
-	if block == nil {
-		return errors.New("block is nil")
+func (store *store) TranslationSoftDelete(translation TranslationInterface) error {
+	if translation == nil {
+		return errors.New("translation is nil")
 	}
 
-	block.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
+	translation.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	return store.BlockUpdate(block)
+	return store.TranslationUpdate(translation)
 }
 
-func (store *store) BlockSoftDeleteByID(id string) error {
-	block, err := store.BlockFindByID(id)
+func (store *store) TranslationSoftDeleteByID(id string) error {
+	translation, err := store.TranslationFindByID(id)
 
 	if err != nil {
 		return err
 	}
 
-	return store.BlockSoftDelete(block)
+	return store.TranslationSoftDelete(translation)
 }
 
-func (store *store) BlockUpdate(block BlockInterface) error {
-	if block == nil {
-		return errors.New("block is nil")
+func (store *store) TranslationUpdate(translation TranslationInterface) error {
+	if translation == nil {
+		return errors.New("translation is nil")
 	}
 
-	block.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
+	translation.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	dataChanged := block.DataChanged()
+	dataChanged := translation.DataChanged()
 
 	delete(dataChanged, COLUMN_ID) // ID is not updateable
 
@@ -238,10 +256,10 @@ func (store *store) BlockUpdate(block BlockInterface) error {
 	}
 
 	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Update(store.blockTableName).
+		Update(store.translationTableName).
 		Prepared(true).
 		Set(dataChanged).
-		Where(goqu.C(COLUMN_ID).Eq(block.ID())).
+		Where(goqu.C(COLUMN_ID).Eq(translation.ID())).
 		ToSQL()
 
 	if errSql != nil {
@@ -253,26 +271,26 @@ func (store *store) BlockUpdate(block BlockInterface) error {
 	}
 
 	if store.db == nil {
-		return errors.New("blockstore: database is nil")
+		return errors.New("translationstore: database is nil")
 	}
 
 	_, err := store.db.Exec(sqlStr, params...)
 
-	block.MarkAsNotDirty()
+	translation.MarkAsNotDirty()
 
 	return err
 }
 
-func (store *store) blockSelectQuery(options BlockQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
+func (store *store) translationSelectQuery(options TranslationQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	if options == nil {
-		return nil, []any{}, errors.New("block query: cannot be nil")
+		return nil, nil, errors.New("translation query cannot be nil")
 	}
 
 	if err := options.Validate(); err != nil {
-		return nil, []any{}, err
+		return nil, nil, err
 	}
 
-	q := goqu.Dialect(store.dbDriverName).From(store.blockTableName)
+	q := goqu.Dialect(store.dbDriverName).From(store.translationTableName)
 
 	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
 		q = q.Where(
@@ -298,19 +316,7 @@ func (store *store) blockSelectQuery(options BlockQueryInterface) (selectDataset
 	}
 
 	if options.HasNameLike() {
-		q = q.Where(goqu.C(COLUMN_NAME).Like(`%` + options.NameLike() + `%`))
-	}
-
-	if options.HasPageID() {
-		q = q.Where(goqu.C(COLUMN_PAGE_ID).Eq(options.PageID()))
-	}
-
-	if options.HasParentID() {
-		q = q.Where(goqu.C(COLUMN_PARENT_ID).Eq(options.ParentID()))
-	}
-
-	if options.HasSequence() {
-		q = q.Where(goqu.C(COLUMN_SEQUENCE).Eq(options.Sequence()))
+		q = q.Where(goqu.C(COLUMN_NAME).Like(options.NameLike()))
 	}
 
 	if options.HasSiteID() {
@@ -325,10 +331,6 @@ func (store *store) blockSelectQuery(options BlockQueryInterface) (selectDataset
 		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
 	}
 
-	if options.HasTemplateID() {
-		q = q.Where(goqu.C(COLUMN_TEMPLATE_ID).Eq(options.TemplateID()))
-	}
-
 	if !options.IsCountOnly() {
 		if options.HasLimit() {
 			q = q.Limit(uint(options.Limit()))
@@ -340,11 +342,11 @@ func (store *store) blockSelectQuery(options BlockQueryInterface) (selectDataset
 	}
 
 	sortOrder := sb.DESC
-	if options.HasSortOrder() && options.SortOrder() != "" {
+	if options.HasSortOrder() {
 		sortOrder = options.SortOrder()
 	}
 
-	if options.HasOrderBy() && options.OrderBy() != "" {
+	if options.HasOrderBy() {
 		if strings.EqualFold(sortOrder, sb.ASC) {
 			q = q.Order(goqu.I(options.OrderBy()).Asc())
 		} else {
@@ -358,8 +360,8 @@ func (store *store) blockSelectQuery(options BlockQueryInterface) (selectDataset
 		columns = append(columns, column)
 	}
 
-	if options.SoftDeleteIncluded() {
-		return q, columns, nil // soft deleted blocks requested specifically
+	if options.SoftDeletedIncluded() {
+		return q, columns, nil // soft deleted translations requested specifically
 	}
 
 	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).

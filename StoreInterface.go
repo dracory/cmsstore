@@ -48,4 +48,17 @@ type StoreInterface interface {
 	TemplateSoftDelete(template TemplateInterface) error
 	TemplateSoftDeleteByID(id string) error
 	TemplateUpdate(template TemplateInterface) error
+
+	TranslationCreate(translation TranslationInterface) error
+	TranslationCount(options TranslationQueryInterface) (int64, error)
+	TranslationDelete(translation TranslationInterface) error
+	TranslationDeleteByID(id string) error
+	TranslationFindByHandle(translationHandle string) (TranslationInterface, error)
+	TranslationFindByID(translationID string) (TranslationInterface, error)
+	TranslationList(query TranslationQueryInterface) ([]TranslationInterface, error)
+	TranslationSoftDelete(translation TranslationInterface) error
+	TranslationSoftDeleteByID(id string) error
+	TranslationUpdate(translation TranslationInterface) error
+	TranslationLanguageDefault() string
+	TranslationLanguages() map[string]string
 }

@@ -9,14 +9,18 @@ import (
 
 // NewStoreOptions define the options for creating a new block store
 type NewStoreOptions struct {
-	BlockTableName     string
-	PageTableName      string
-	SiteTableName      string
-	TemplateTableName  string
-	DB                 *sql.DB
-	DbDriverName       string
-	AutomigrateEnabled bool
-	DebugEnabled       bool
+	DB                         *sql.DB
+	DbDriverName               string
+	AutomigrateEnabled         bool
+	DebugEnabled               bool
+	BlockTableName             string
+	PageTableName              string
+	SiteTableName              string
+	TemplateTableName          string
+	TranslationTableName       string
+	TranslationsEnabled        bool
+	TranslationLanguageDefault string
+	TranslationLanguages       map[string]string
 }
 
 // NewStore creates a new block store
@@ -37,6 +41,10 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		return nil, errors.New("cms store: TemplateTableName is required")
 	}
 
+	if opts.TranslationsEnabled && opts.TranslationTableName == "" {
+		return nil, errors.New("cms store: TranslationTableName is required")
+	}
+
 	if opts.DB == nil {
 		return nil, errors.New("cms store: DB is required")
 	}
@@ -46,14 +54,20 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 	}
 
 	store := &store{
-		blockTableName:     opts.BlockTableName,
-		pageTableName:      opts.PageTableName,
-		siteTableName:      opts.SiteTableName,
-		templateTableName:  opts.TemplateTableName,
 		automigrateEnabled: opts.AutomigrateEnabled,
 		db:                 opts.DB,
 		dbDriverName:       opts.DbDriverName,
 		debugEnabled:       opts.DebugEnabled,
+
+		blockTableName:       opts.BlockTableName,
+		pageTableName:        opts.PageTableName,
+		siteTableName:        opts.SiteTableName,
+		templateTableName:    opts.TemplateTableName,
+		translationTableName: opts.TranslationTableName,
+
+		translationsEnabled:        opts.TranslationsEnabled,
+		translationLanguageDefault: opts.TranslationLanguageDefault,
+		translationLanguages:       opts.TranslationLanguages,
 	}
 
 	if store.automigrateEnabled {

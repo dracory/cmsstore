@@ -15,7 +15,7 @@ import (
 func (store *store) TemplateCount(options TemplateQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
-	q, err := store.templateSelectQuery(options)
+	q, _, err := store.templateSelectQuery(options)
 
 	if err != nil {
 		return -1, err
@@ -170,13 +170,13 @@ func (store *store) TemplateFindByID(id string) (template TemplateInterface, err
 }
 
 func (store *store) TemplateList(query TemplateQueryInterface) ([]TemplateInterface, error) {
-	q, err := store.templateSelectQuery(query)
+	q, columns, err := store.templateSelectQuery(query)
 
 	if err != nil {
 		return []TemplateInterface{}, err
 	}
 
-	sqlStr, _, errSql := q.Select().ToSQL()
+	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 
 	if errSql != nil {
 		return []TemplateInterface{}, nil
@@ -273,13 +273,13 @@ func (store *store) TemplateUpdate(template TemplateInterface) error {
 	return err
 }
 
-func (store *store) templateSelectQuery(options TemplateQueryInterface) (*goqu.SelectDataset, error) {
+func (store *store) templateSelectQuery(options TemplateQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	if options == nil {
-		return nil, errors.New("template query cannot be nil")
+		return nil, nil, errors.New("template query cannot be nil")
 	}
 
 	if err := options.Validate(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	q := goqu.Dialect(store.dbDriverName).From(store.templateTableName)
@@ -346,12 +346,18 @@ func (store *store) templateSelectQuery(options TemplateQueryInterface) (*goqu.S
 		}
 	}
 
+	columns = []any{}
+
+	for _, column := range options.Columns() {
+		columns = append(columns, column)
+	}
+
 	if options.SoftDeletedIncluded() {
-		return q, nil // soft deleted templates requested specifically
+		return q, columns, nil // soft deleted templates requested specifically
 	}
 
 	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).
 		Gt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	return q.Where(softDeleted), nil
+	return q.Where(softDeleted), columns, nil
 }

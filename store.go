@@ -8,14 +8,18 @@ import (
 // == TYPE ====================================================================
 
 type store struct {
-	blockTableName     string
-	pageTableName      string
-	siteTableName      string
-	templateTableName  string
-	db                 *sql.DB
-	dbDriverName       string
-	automigrateEnabled bool
-	debugEnabled       bool
+	blockTableName             string
+	pageTableName              string
+	siteTableName              string
+	templateTableName          string
+	translationTableName       string
+	db                         *sql.DB
+	dbDriverName               string
+	automigrateEnabled         bool
+	debugEnabled               bool
+	translationsEnabled        bool
+	translationLanguages       map[string]string
+	translationLanguageDefault string
 }
 
 // == INTERFACE ===============================================================
@@ -34,6 +38,7 @@ func (store *store) AutoMigrate() error {
 	pageSql := store.pageTableCreateSql()
 	tableSql := store.siteTableCreateSql()
 	templateSql := store.templateTableCreateSql()
+	translationSql := store.translationTableCreateSql()
 
 	if blockSql == "" {
 		return errors.New("block table create sql is empty")
@@ -51,7 +56,17 @@ func (store *store) AutoMigrate() error {
 		return errors.New("template table create sql is empty")
 	}
 
-	for _, sql := range []string{blockSql, pageSql, tableSql, templateSql} {
+	if store.translationsEnabled && translationSql == "" {
+		return errors.New("translation table create sql is empty")
+	}
+
+	sqlList := []string{blockSql, pageSql, tableSql, templateSql}
+
+	if store.translationsEnabled {
+		sqlList = append(sqlList, translationSql)
+	}
+
+	for _, sql := range sqlList {
 		_, err := store.db.Exec(sql)
 
 		if err != nil {

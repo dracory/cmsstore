@@ -13,6 +13,7 @@ import (
 	"github.com/gouniverse/cmsstore/admin/shared"
 	adminSites "github.com/gouniverse/cmsstore/admin/sites"
 	adminTemplates "github.com/gouniverse/cmsstore/admin/templates"
+	adminTranslations "github.com/gouniverse/cmsstore/admin/translations"
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
@@ -22,6 +23,19 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
+
+type AdminOptions struct {
+	BlockEditorDefinitions []blockeditor.BlockDefinition
+	FuncLayout             func(title string, body string, options struct {
+		Styles     []string
+		StyleURLs  []string
+		Scripts    []string
+		ScriptURLs []string
+	}) string
+	Logger       *slog.Logger
+	Store        cmsstore.StoreInterface
+	AdminHomeURL string
+}
 
 func New(options AdminOptions) (*admin, error) {
 	if options.Store == nil {
@@ -37,23 +51,12 @@ func New(options AdminOptions) (*admin, error) {
 		logger:                 options.Logger,
 		store:                  options.Store,
 		funcLayout:             options.FuncLayout,
+		adminHomeURL:           options.AdminHomeURL,
 	}, nil
 }
 
 type Admin interface {
 	Handle(w http.ResponseWriter, r *http.Request)
-}
-
-type AdminOptions struct {
-	BlockEditorDefinitions []blockeditor.BlockDefinition
-	FuncLayout             func(title string, body string, options struct {
-		Styles     []string
-		StyleURLs  []string
-		Scripts    []string
-		ScriptURLs []string
-	}) string
-	Logger *slog.Logger
-	Store  cmsstore.StoreInterface
 }
 
 var _ Admin = (*admin)(nil)
@@ -66,8 +69,9 @@ type admin struct {
 		Scripts    []string
 		ScriptURLs []string
 	}) string
-	logger *slog.Logger
-	store  cmsstore.StoreInterface
+	logger       *slog.Logger
+	store        cmsstore.StoreInterface
+	adminHomeURL string
 }
 
 func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +97,7 @@ func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Reque
 	maps.Copy(routes, a.pageRoutes())
 	maps.Copy(routes, a.siteRoutes())
 	maps.Copy(routes, a.templateRoutes())
+	maps.Copy(routes, a.translationRoutes())
 
 	if val, ok := routes[route]; ok {
 		return val
@@ -264,11 +269,12 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 func (a *admin) blockUI(r *http.Request) adminBlocks.UiInterface {
 	options := adminBlocks.UiConfig{
 		// BlockEditorDefinitions: a.blockEditorDefinitions,
-		AdminHeader: a.adminHeader(shared.Endpoint(r)),
-		Endpoint:    shared.Endpoint(r),
-		Layout:      a.render,
-		Logger:      a.logger,
-		Store:       a.store,
+		AdminHeader:  a.adminHeader(shared.Endpoint(r)),
+		AdminHomeURL: a.adminHomeURL,
+		Endpoint:     shared.Endpoint(r),
+		Layout:       a.render,
+		Logger:       a.logger,
+		Store:        a.store,
 	}
 	return adminBlocks.UI(options)
 }
@@ -295,6 +301,7 @@ func (a *admin) pageUI(r *http.Request) adminPages.UiInterface {
 	options := adminPages.UiConfig{
 		BlockEditorDefinitions: a.blockEditorDefinitions,
 		AdminHeader:            a.adminHeader(shared.Endpoint(r)),
+		AdminHomeURL:           a.adminHomeURL,
 		Endpoint:               shared.Endpoint(r),
 		Layout:                 a.render,
 		Logger:                 a.logger,
@@ -323,11 +330,12 @@ func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) siteUI(r *http.Request) adminSites.UiInterface {
 	options := adminSites.UiConfig{
-		AdminHeader: a.adminHeader(shared.Endpoint(r)),
-		Endpoint:    shared.Endpoint(r),
-		Layout:      a.render,
-		Logger:      a.logger,
-		Store:       a.store,
+		AdminHeader:  a.adminHeader(shared.Endpoint(r)),
+		AdminHomeURL: a.adminHomeURL,
+		Endpoint:     shared.Endpoint(r),
+		Layout:       a.render,
+		Logger:       a.logger,
+		Store:        a.store,
 	}
 	return adminSites.UI(options)
 }
@@ -353,11 +361,12 @@ func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) templateUI(r *http.Request) adminTemplates.UiInterface {
 	options := adminTemplates.UiConfig{
-		Endpoint:    shared.Endpoint(r),
-		AdminHeader: a.adminHeader(shared.Endpoint(r)),
-		Layout:      a.render,
-		Logger:      a.logger,
-		Store:       a.store,
+		Endpoint:     shared.Endpoint(r),
+		AdminHeader:  a.adminHeader(shared.Endpoint(r)),
+		AdminHomeURL: a.adminHomeURL,
+		Layout:       a.render,
+		Logger:       a.logger,
+		Store:        a.store,
 	}
 	return adminTemplates.UI(options)
 }
@@ -380,6 +389,36 @@ func (a *admin) templateRoutes() map[string]func(w http.ResponseWriter, r *http.
 	return templateRoutes
 }
 
+func (a *admin) translationUI(r *http.Request) adminTranslations.UiInterface {
+	options := adminTranslations.UiConfig{
+		Endpoint:     shared.Endpoint(r),
+		AdminHeader:  a.adminHeader(shared.Endpoint(r)),
+		AdminHomeURL: a.adminHomeURL,
+		Layout:       a.render,
+		Logger:       a.logger,
+		Store:        a.store,
+	}
+	return adminTranslations.UI(options)
+}
+
+func (a *admin) translationRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	translationsRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
+		shared.PathTranslationsTranslationCreate: func(w http.ResponseWriter, r *http.Request) {
+			a.translationUI(r).TranslationCreate(w, r)
+		},
+		shared.PathTranslationsTranslationDelete: func(w http.ResponseWriter, r *http.Request) {
+			a.translationUI(r).TranslationDelete(w, r)
+		},
+		shared.PathTranslationsTranslationManager: func(w http.ResponseWriter, r *http.Request) {
+			a.translationUI(r).TranslationManager(w, r)
+		},
+		shared.PathTranslationsTranslationUpdate: func(w http.ResponseWriter, r *http.Request) {
+			a.translationUI(r).TranslationUpdate(w, r)
+		},
+	}
+	return translationsRoutes
+}
+
 func (a *admin) adminBreadcrumbs(breadcrumbs []bs.Breadcrumb) string {
 	return bs.Breadcrumbs(breadcrumbs).
 		Style("margin-bottom:10px;").
@@ -391,7 +430,7 @@ func (a *admin) adminHeader(endpoint string) hb.TagInterface {
 		HTML("Dashboard").
 		Href(endpoint + "").
 		Class("nav-link")
-	linkBlocks := hb.NewHyperlink().
+	linkBlocks := hb.Hyperlink().
 		HTML("Blocks ").
 		Href(endpoint + "?path=" + shared.PathBlocksBlockManager).
 		Class("nav-link")
@@ -399,15 +438,15 @@ func (a *admin) adminHeader(endpoint string) hb.TagInterface {
 	// 	HTML("Menus ").
 	// 	Href(endpoint + "?path=" + PathMenusMenuManager).
 	// 	Class("nav-link")
-	linkPages := hb.NewHyperlink().
+	linkPages := hb.Hyperlink().
 		HTML("Pages ").
 		Href(endpoint + "?path=" + shared.PathPagesPageManager).
 		Class("nav-link")
-	linkTemplates := hb.NewHyperlink().
+	linkTemplates := hb.Hyperlink().
 		HTML("Templates ").
 		Href(endpoint + "?path=" + shared.PathTemplatesTemplateManager).
 		Class("nav-link")
-	linkSites := hb.NewHyperlink().
+	linkSites := hb.Hyperlink().
 		HTML("Sites ").
 		Href(endpoint + "?path=" + shared.PathBlocksBlockManager).
 		Class("nav-link")
@@ -419,10 +458,10 @@ func (a *admin) adminHeader(endpoint string) hb.TagInterface {
 	// 	HTML("Settings").
 	// 	Href(endpoint + "?path=" + PathSettingsSettingManager).
 	// 	Class("nav-link")
-	// linkTranslations := hb.NewHyperlink().
-	// 	HTML("Translations").
-	// 	Href(endpoint + "?path=" + PathTranslationsTranslationManager).
-	// 	Class("nav-link")
+	linkTranslations := hb.Hyperlink().
+		HTML("Translations").
+		Href(endpoint + "?path=" + shared.PathTranslationsTranslationManager).
+		Class("nav-link")
 
 	templatesCount, err := a.store.TemplateCount(cmsstore.TemplateQuery())
 
@@ -450,6 +489,13 @@ func (a *admin) adminHeader(endpoint string) hb.TagInterface {
 	if err != nil {
 		a.logger.Error(err.Error())
 		sitesCount = -1
+	}
+
+	translationsCount, err := a.store.TranslationCount(cmsstore.TranslationQuery())
+
+	if err != nil {
+		a.logger.Error(err.Error())
+		translationsCount = -1
 	}
 
 	ulNav := hb.NewUL().Class("nav  nav-pills justify-content-center")
@@ -493,9 +539,13 @@ func (a *admin) adminHeader(endpoint string) hb.TagInterface {
 	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkWidgets.AddChild(hb.NewSpan().Class("badge bg-secondary").HTML(strconv.FormatInt(widgetsCount, 10)))))
 	// }
 
-	// if cms.translationsEnabled {
-	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").Child(linkTranslations.Child(hb.NewSpan().Class("badge bg-secondary").HTML(utils.ToString(translationsCount)))))
-	// }
+	ulNav.Child(hb.
+		LI().
+		Class("nav-item").
+		Child(linkTranslations.
+			Child(hb.NewSpan().
+				Class("badge bg-secondary ms-1").
+				HTML(cast.ToString(translationsCount)))))
 
 	// if cms.settingsEnabled {
 	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkSettings))

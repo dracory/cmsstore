@@ -62,6 +62,19 @@ func (q *templateQuery) Validate() error {
 	return nil
 }
 
+func (q *templateQuery) Columns() []string {
+	if !q.hasProperty("columns") {
+		return []string{}
+	}
+
+	return q.properties["columns"].([]string)
+}
+
+func (q *templateQuery) SetColumns(columns []string) TemplateQueryInterface {
+	q.properties["columns"] = columns
+	return q
+}
+
 func (q *templateQuery) HasCountOnly() bool {
 	return q.hasProperty("count_only")
 }

@@ -15,7 +15,7 @@ import (
 func (store *store) SiteCount(options SiteQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
-	q, err := store.siteSelectQuery(options)
+	q, _, err := store.siteSelectQuery(options)
 
 	if err != nil {
 		return -1, err
@@ -182,13 +182,13 @@ func (store *store) SiteFindByID(id string) (site SiteInterface, err error) {
 }
 
 func (store *store) SiteList(query SiteQueryInterface) ([]SiteInterface, error) {
-	q, err := store.siteSelectQuery(query)
+	q, columns, err := store.siteSelectQuery(query)
 
 	if err != nil {
 		return []SiteInterface{}, err
 	}
 
-	sqlStr, _, errSql := q.Select().ToSQL()
+	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 
 	if errSql != nil {
 		return []SiteInterface{}, nil
@@ -285,13 +285,13 @@ func (store *store) SiteUpdate(site SiteInterface) error {
 	return err
 }
 
-func (store *store) siteSelectQuery(options SiteQueryInterface) (*goqu.SelectDataset, error) {
+func (store *store) siteSelectQuery(options SiteQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	if options == nil {
-		return nil, errors.New("site options cannot be nil")
+		return nil, []any{}, errors.New("site options cannot be nil")
 	}
 
 	if err := options.Validate(); err != nil {
-		return nil, err
+		return nil, []any{}, err
 	}
 
 	q := goqu.Dialect(store.dbDriverName).From(store.siteTableName)
@@ -358,12 +358,18 @@ func (store *store) siteSelectQuery(options SiteQueryInterface) (*goqu.SelectDat
 		}
 	}
 
+	columns = []any{}
+
+	for _, column := range options.Columns() {
+		columns = append(columns, column)
+	}
+
 	if options.SoftDeletedIncluded() {
-		return q, nil // soft deleted sites requested specifically
+		return q, columns, nil // soft deleted sites requested specifically
 	}
 
 	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).
 		Gt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	return q.Where(softDeleted), nil
+	return q.Where(softDeleted), columns, nil
 }

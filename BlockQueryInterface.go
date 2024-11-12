@@ -22,6 +22,9 @@ type BlockQueryInterface interface {
 
 	IsCountOnly() bool
 
+	Columns() []string
+	SetColumns(columns []string) BlockQueryInterface
+
 	HasCreatedAtGte() bool
 	HasCreatedAtLte() bool
 	HasHandle() bool
