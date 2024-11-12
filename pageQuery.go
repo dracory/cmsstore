@@ -108,6 +108,18 @@ func (p *pageQuery) SetAliasLike(nameLike string) PageQueryInterface {
 	return p
 }
 
+func (p *pageQuery) Columns() []string {
+	if p.parameters["columns"] == nil {
+		return []string{}
+	}
+	return p.parameters["columns"].([]string)
+}
+
+func (p *pageQuery) SetColumns(columns []string) PageQueryInterface {
+	p.parameters["columns"] = columns
+	return p
+}
+
 func (p *pageQuery) HasCreatedAtGte() bool {
 	return p.hasParameter("created_at_gte")
 }

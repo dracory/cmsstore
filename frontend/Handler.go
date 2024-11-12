@@ -17,20 +17,10 @@ import (
 
 type LanguageKey struct{}
 
-type Config struct {
-	BlockEditorRenderer func(blocks []ui.BlockInterface) string
-	Logger              *slog.Logger
-	Shortcodes          []cmsstore.ShortcodeInterface
-	Store               cmsstore.StoreInterface
-}
+var inMemCache CacheInterface
 
-func New(config Config) frontend {
-	return frontend{
-		blockEditorRenderer: config.BlockEditorRenderer,
-		logger:              config.Logger,
-		shortcodes:          config.Shortcodes,
-		store:               config.Store,
-	}
+func init() {
+	inMemCache = Cache()
 }
 
 type frontend struct {
@@ -38,6 +28,8 @@ type frontend struct {
 	logger              *slog.Logger
 	shortcodes          []cmsstore.ShortcodeInterface
 	store               cmsstore.StoreInterface
+	cacheEnabled        bool
+	cacheExpireSeconds  int
 }
 
 // Handler is the main handler for the CMS frontend.
@@ -82,7 +74,7 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 	// 	}
 	// }
 
-	site, err := frontend.store.SiteFindByDomainName(domain)
+	site, err := frontend.fetchSiteByDomainName(domain)
 
 	if err != nil {
 		frontend.logger.Error(`At StringHandler`, "error", err.Error())
@@ -96,9 +88,169 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 	return frontend.PageRenderHtmlBySiteAndAlias(r, site.ID(), r.URL.Path, language)
 }
 
+// fetchBlockContent returns the content of the block specified by the ID
+//
+// Business Logic:
+// - if the block find returns an error error is returned
+// - if the block is not active an empty string is returned
+// - the block content is returned
+//
+// Parameters:
+// - blockID: the ID of the block
+//
+// Returns:
+// - content: the content of the block
+func (frontend *frontend) fetchBlockContent(blockID string) (string, error) {
+	if blockID == "" {
+		return "", nil
+	}
+
+	key := "block_content_" + blockID
+
+	if frontend.cacheEnabled && inMemCache.Has(key) {
+		// cfmt.Successln("block found in cache: " + key)
+		blockContent, err := inMemCache.Get(key)
+
+		if err != nil {
+			return "", err
+		}
+
+		return blockContent.(string), err
+	}
+
+	block, err := frontend.store.BlockFindByID(blockID)
+
+	if err != nil {
+		if frontend.cacheEnabled {
+			inMemCache.Set(key, "", frontend.cacheExpireSeconds)
+		}
+		return "", err
+	}
+
+	if block == nil {
+		if frontend.cacheEnabled {
+			inMemCache.Set(key, "", frontend.cacheExpireSeconds)
+		}
+		return "", nil
+	}
+
+	content := ""
+
+	if block.IsActive() {
+		content = block.Content()
+	}
+
+	if frontend.cacheEnabled {
+		inMemCache.Set(key, content, frontend.cacheExpireSeconds)
+	}
+
+	return content, nil
+}
+
+func (frontend *frontend) fetchPageAliasMapBySite(siteID string) (map[string]string, error) {
+	key := "page_alias_map_site:" + siteID
+
+	if frontend.cacheEnabled && inMemCache.Has(key) {
+		// cfmt.Successln("page alias map found in cache: " + key)
+		pageAliasMap, err := inMemCache.Get(key)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return pageAliasMap.(map[string]string), err
+	}
+
+	pages, err := frontend.store.PageList(cmsstore.PageQuery().
+		SetSiteID(siteID).
+		SetColumns([]string{"id", "alias"}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	pageAliasMap := make(map[string]string, len(pages))
+
+	for _, page := range pages {
+		pageAliasMap[page.ID()] = page.Alias()
+	}
+
+	if frontend.cacheEnabled {
+		inMemCache.Set(key, pageAliasMap, frontend.cacheExpireSeconds)
+	}
+
+	return pageAliasMap, nil
+}
+
+func (frontend *frontend) fetchPageBySiteAndAlias(siteID string, alias string) (cmsstore.PageInterface, error) {
+	key := "page_site:" + siteID + ":alias:" + alias
+
+	if frontend.cacheEnabled && inMemCache.Has(key) {
+		// cfmt.Successln("page found in cache: " + key)
+		page, err := inMemCache.Get(key)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return page.(cmsstore.PageInterface), err
+	}
+
+	pages, err := frontend.store.PageList(cmsstore.PageQuery().
+		SetSiteID(siteID).
+		SetAlias(alias).
+		SetLimit(1))
+
+	if err != nil {
+		return nil, err
+	}
+
+	var page cmsstore.PageInterface = nil
+
+	if len(pages) > 0 {
+		page = pages[0]
+	}
+
+	if frontend.cacheEnabled {
+		inMemCache.Set(key, page, frontend.cacheExpireSeconds)
+	}
+
+	return page, nil
+}
+
+func (frontend *frontend) fetchSiteByDomainName(domain string) (cmsstore.SiteInterface, error) {
+	key := "site_domain:" + domain
+
+	if frontend.cacheEnabled && inMemCache.Has(key) {
+		// cfmt.Successln("site found in cache: " + key)
+		site, err := inMemCache.Get(key)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return site.(cmsstore.SiteInterface), err
+	}
+
+	site, err := frontend.store.SiteFindByDomainName(domain)
+
+	if err != nil {
+		if frontend.cacheEnabled {
+			inMemCache.Set(key, nil, frontend.cacheExpireSeconds)
+		}
+		return nil, err
+	}
+
+	if frontend.cacheEnabled {
+		inMemCache.Set(key, site, frontend.cacheExpireSeconds)
+	}
+
+	return site, err
+}
+
 // PageRenderHtmlByAlias builds the HTML of a page based on its alias
 func (frontend *frontend) PageRenderHtmlBySiteAndAlias(r *http.Request, siteID string, alias string, language string) string {
-	page, err := frontend.PageFindBySiteAndAlias(siteID, alias)
+	page, err := frontend.pageFindBySiteAndAlias(siteID, alias)
 
 	if err != nil {
 		frontend.logger.Error(`At PageRenderHtmlByAlias`, "error", err.Error())
@@ -223,7 +375,7 @@ func (frontend *frontend) renderContentToHtml(r *http.Request, content string, o
 		content = strings.ReplaceAll(content, "[[ "+key+" ]]", value)
 	}
 
-	content, err = frontend.ContentRenderBlocks(content)
+	content, err = frontend.contentRenderBlocks(content)
 
 	if err != nil {
 		return "", err
@@ -237,7 +389,7 @@ func (frontend *frontend) renderContentToHtml(r *http.Request, content string, o
 
 	language := lo.If(options.Language == "", "en").Else(options.Language)
 
-	content, err = frontend.ContentRenderTranslations(content, language)
+	content, err = frontend.contentRenderTranslations(content, language)
 
 	if err != nil {
 		return "", err
@@ -246,45 +398,39 @@ func (frontend *frontend) renderContentToHtml(r *http.Request, content string, o
 	return content, nil
 }
 
-// PageFindByAlias helper method to find a page by alias
+// pageFindBySiteAndAlias helper method to find a page by site and alias
 //
 // =====================================================================
-//  1. It will attempt to find the page by the provided alias exactly
+//  1. It will attempt to find the page by the provided site and alias exactly
 //     as provided
-//  2. It will attempt to find the page with the alias prefixed with "/"
+//  2. It will attempt to find the page with the site and the alias prefixed with "/"
 //     in case of error
 //
 // =====================================================================
-func (frontend *frontend) PageFindBySiteAndAlias(siteID string, alias string) (cmsstore.PageInterface, error) {
+func (frontend *frontend) pageFindBySiteAndAlias(siteID string, alias string) (cmsstore.PageInterface, error) {
 	// Try to find by "alias"
-	pages, err := frontend.store.PageList(cmsstore.PageQuery().
-		SetSiteID(siteID).
-		SetAlias(alias).
-		SetLimit(1))
+	page, err := frontend.fetchPageBySiteAndAlias(siteID, alias)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(pages) > 0 {
-		return pages[0], nil
+	if page != nil {
+		return page, nil
 	}
 
 	// Try to find by "/alias"
-	pages, err = frontend.store.PageList(cmsstore.PageQuery().
-		SetSiteID(siteID).
-		SetAlias("/" + alias).
-		SetLimit(1))
+	page, err = frontend.fetchPageBySiteAndAlias(siteID, "/"+alias)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(pages) > 0 {
-		return pages[0], nil
+	if page != nil {
+		return page, nil
 	}
 
-	page, err := frontend.PageFindBySiteAndAliasWithPatterns(siteID, alias)
+	page, err = frontend.pageFindBySiteAndAliasWithPatterns(siteID, alias)
 
 	if err != nil {
 		return nil, err
@@ -311,7 +457,7 @@ func (frontend *frontend) PageFindBySiteAndAlias(siteID string, alias string) (c
 //	:alpha
 //
 // =====================================================================
-func (frontend *frontend) PageFindBySiteAndAliasWithPatterns(siteID string, alias string) (cmsstore.PageInterface, error) {
+func (frontend *frontend) pageFindBySiteAndAliasWithPatterns(siteID string, alias string) (cmsstore.PageInterface, error) {
 	patterns := map[string]string{
 		":any":     "([^/]+)",
 		":num":     "([0-9]+)",
@@ -322,18 +468,10 @@ func (frontend *frontend) PageFindBySiteAndAliasWithPatterns(siteID string, alia
 		":alpha":   "([a-zA-Z0-9-_]+)",
 	}
 
-	// can we optimize this to retrieve only the id and alias column?
-	pages, err := frontend.store.PageList(cmsstore.PageQuery().
-		SetSiteID(siteID))
+	pageAliasMap, err := frontend.fetchPageAliasMapBySite(siteID)
 
 	if err != nil {
 		return nil, err
-	}
-
-	pageAliasMap := make(map[string]string, len(pages))
-
-	for _, page := range pages {
-		pageAliasMap[page.ID()] = page.Alias()
 	}
 
 	for pageID, pageAlias := range pageAliasMap {
@@ -355,12 +493,17 @@ func (frontend *frontend) PageFindBySiteAndAliasWithPatterns(siteID string, alia
 }
 
 // RenderBlocks renders the blocks in a string
-func (frontend *frontend) ContentRenderBlocks(content string) (string, error) {
-	blockIDs := ContentFindIdsByPatternPrefix(content, "BLOCK")
+func (frontend *frontend) contentRenderBlocks(content string) (string, error) {
+	blockIDs := contentFindIdsByPatternPrefix(content, "BLOCK")
+
+	if len(blockIDs) == 0 {
+		return content, nil
+	}
 
 	var err error
+
 	for _, blockID := range blockIDs {
-		content, err = frontend.ContentRenderBlockByID(content, blockID)
+		content, err = frontend.contentRenderBlockByID(content, blockID)
 
 		if err != nil {
 			return content, err
@@ -370,9 +513,13 @@ func (frontend *frontend) ContentRenderBlocks(content string) (string, error) {
 	return content, nil
 }
 
-// ContentRenderTranslations renders the translations in a string
-func (frontend *frontend) ContentRenderTranslations(content string, language string) (string, error) {
-	translationIDs := ContentFindIdsByPatternPrefix(content, "TRANSLATION")
+// contentRenderTranslations renders the translations in a string
+func (frontend *frontend) contentRenderTranslations(content string, language string) (string, error) {
+	translationIDs := contentFindIdsByPatternPrefix(content, "TRANSLATION")
+
+	if len(translationIDs) == 0 {
+		return content, nil
+	}
 
 	var err error
 	for _, translationID := range translationIDs {
@@ -387,7 +534,7 @@ func (frontend *frontend) ContentRenderTranslations(content string, language str
 }
 
 // returns the IDs in the content who have the following format [[prefix_id]]
-func ContentFindIdsByPatternPrefix(content, prefix string) []string {
+func contentFindIdsByPatternPrefix(content, prefix string) []string {
 	ids := []string{}
 
 	re := regexp.MustCompilePOSIX("|\\[\\[" + prefix + "_(.*)\\]\\]|U")
@@ -397,6 +544,9 @@ func ContentFindIdsByPatternPrefix(content, prefix string) []string {
 	for _, match := range matches {
 		if match[0] == "" {
 			continue
+		}
+		if match[1] == "" {
+			continue // no need to add empty IDs
 		}
 		ids = append(ids, match[1])
 	}
@@ -417,12 +567,12 @@ func ContentFindIdsByPatternPrefix(content, prefix string) []string {
 //
 // Returns:
 // - content: the rendered content
-func (frontend *frontend) ContentRenderBlockByID(content string, blockID string) (string, error) {
+func (frontend *frontend) contentRenderBlockByID(content string, blockID string) (string, error) {
 	if blockID == "" {
 		return content, nil
 	}
 
-	blockContent, err := frontend.findBlockContent(blockID)
+	blockContent, err := frontend.fetchBlockContent(blockID)
 
 	if err != nil {
 		return content, err
@@ -470,34 +620,4 @@ func (frontend *frontend) ContentRenderTranslationByIdOrHandle(content string, t
 	// content = strings.ReplaceAll(content, "[[ TRANSLATION_"+translationID+" ]]", translation)
 
 	// return content, nil
-}
-
-// findBlockContent returns the content of the block specified by the ID
-//
-// Business Logic:
-// - if the block find returns an error error is returned
-// - if the block is not active an empty string is returned
-// - the block content is returned
-//
-// Parameters:
-// - blockID: the ID of the block
-//
-// Returns:
-// - content: the content of the block
-func (frontend *frontend) findBlockContent(blockID string) (string, error) {
-	block, err := frontend.store.BlockFindByID(blockID)
-
-	if err != nil {
-		return "", err
-	}
-
-	if block == nil {
-		return "", nil
-	}
-
-	if block.IsActive() {
-		return block.Content(), nil
-	}
-
-	return "", nil
 }

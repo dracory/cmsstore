@@ -19,6 +19,9 @@ type PageQueryOptions struct {
 type PageQueryInterface interface {
 	Validate() error
 
+	Columns() []string
+	SetColumns(columns []string) PageQueryInterface
+
 	HasAlias() bool
 	Alias() string
 	SetAlias(alias string) PageQueryInterface

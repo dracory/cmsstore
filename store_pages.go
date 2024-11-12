@@ -15,7 +15,7 @@ import (
 func (store *store) PageCount(options PageQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
-	q, err := store.pageSelectQuery(options)
+	q, _, err := store.pageSelectQuery(options)
 
 	if err != nil {
 		return -1, err
@@ -162,13 +162,13 @@ func (store *store) PageFindByID(id string) (page PageInterface, err error) {
 }
 
 func (store *store) PageList(query PageQueryInterface) ([]PageInterface, error) {
-	q, err := store.pageSelectQuery(query)
+	q, columns, err := store.pageSelectQuery(query)
 
 	if err != nil {
 		return []PageInterface{}, err
 	}
 
-	sqlStr, _, errSql := q.Select().ToSQL()
+	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 
 	if errSql != nil {
 		return []PageInterface{}, nil
@@ -265,13 +265,13 @@ func (store *store) PageUpdate(page PageInterface) error {
 	return err
 }
 
-func (store *store) pageSelectQuery(options PageQueryInterface) (*goqu.SelectDataset, error) {
+func (store *store) pageSelectQuery(options PageQueryInterface) (selectDataset *goqu.SelectDataset, selectColumns []any, err error) {
 	if options == nil {
-		return nil, errors.New("page options cannot be nil")
+		return nil, []any{}, errors.New("page options cannot be nil")
 	}
 
 	if err := options.Validate(); err != nil {
-		return nil, err
+		return nil, []any{}, err
 	}
 
 	q := goqu.Dialect(store.dbDriverName).From(store.pageTableName)
@@ -351,11 +351,17 @@ func (store *store) pageSelectQuery(options PageQueryInterface) (*goqu.SelectDat
 	}
 
 	if options.SoftDeletedIncluded() {
-		return q, nil // soft deleted pages requested specifically
+		return q, []any{}, nil // soft deleted pages requested specifically
 	}
 
 	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).
 		Gt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	return q.Where(softDeleted), nil
+	columns := []any{}
+
+	for _, column := range options.Columns() {
+		columns = append(columns, column)
+	}
+
+	return q.Where(softDeleted), columns, nil
 }
