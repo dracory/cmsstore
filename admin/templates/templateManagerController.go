@@ -219,8 +219,9 @@ func (controller *templateManagerController) page(data templateManagerController
 
 	return hb.Div().
 		Class("container").
-		Child(adminHeader).
 		Child(breadcrumbs).
+		Child(hb.HR()).
+		Child(adminHeader).
 		Child(hb.HR()).
 		Child(title).
 		Child(controller.tableRecords(data))

@@ -264,10 +264,11 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 func (a *admin) blockUI(r *http.Request) adminBlocks.UiInterface {
 	options := adminBlocks.UiConfig{
 		// BlockEditorDefinitions: a.blockEditorDefinitions,
-		Endpoint: shared.Endpoint(r),
-		Layout:   a.render,
-		Logger:   a.logger,
-		Store:    a.store,
+		AdminHeader: a.adminHeader(shared.Endpoint(r)),
+		Endpoint:    shared.Endpoint(r),
+		Layout:      a.render,
+		Logger:      a.logger,
+		Store:       a.store,
 	}
 	return adminBlocks.UI(options)
 }
@@ -293,6 +294,7 @@ func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Req
 func (a *admin) pageUI(r *http.Request) adminPages.UiInterface {
 	options := adminPages.UiConfig{
 		BlockEditorDefinitions: a.blockEditorDefinitions,
+		AdminHeader:            a.adminHeader(shared.Endpoint(r)),
 		Endpoint:               shared.Endpoint(r),
 		Layout:                 a.render,
 		Logger:                 a.logger,
@@ -321,10 +323,11 @@ func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) siteUI(r *http.Request) adminSites.UiInterface {
 	options := adminSites.UiConfig{
-		Endpoint: shared.Endpoint(r),
-		Layout:   a.render,
-		Logger:   a.logger,
-		Store:    a.store,
+		AdminHeader: a.adminHeader(shared.Endpoint(r)),
+		Endpoint:    shared.Endpoint(r),
+		Layout:      a.render,
+		Logger:      a.logger,
+		Store:       a.store,
 	}
 	return adminSites.UI(options)
 }

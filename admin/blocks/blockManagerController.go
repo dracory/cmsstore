@@ -123,11 +123,23 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 				Help:  `Filter by name.`,
 			}),
 			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `<div class="row">`,
+			}),
+			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `<div class="col-6">`,
+			}),
+			form.NewField(form.FieldOptions{
 				Label: "Created From",
 				Name:  "created_from",
 				Type:  form.FORM_FIELD_TYPE_DATE,
 				Value: data.formCreatedFrom,
 				Help:  `Filter by creation date.`,
+			}),
+			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `</div><div class="col-6">`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Created To",
@@ -137,18 +149,23 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 				Help:  `Filter by creation date.`,
 			}),
 			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `</div></div>`,
+			}),
+			form.NewField(form.FieldOptions{
 				Label: "Block ID",
 				Name:  "block_id",
 				Type:  form.FORM_FIELD_TYPE_STRING,
 				Value: data.formBlockID,
 				Help:  `Find block by reference number (ID).`,
 			}),
+			// !!! Needed or it loses the path from the get submission
 			form.NewField(form.FieldOptions{
 				Label: "Path",
 				Name:  "path",
-				Type:  form.FORM_FIELD_TYPE_STRING,
+				Type:  form.FORM_FIELD_TYPE_HIDDEN,
 				Value: shared.PathBlocksBlockManager,
-				Help:  `Path to this page.`,
+				Help:  `The path of the page.`,
 			}),
 		},
 	}).Build()
@@ -189,6 +206,8 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 }
 
 func (controller *blockManagerController) page(data blockManagerControllerData) hb.TagInterface {
+	adminHeader := controller.ui.AdminHeader()
+
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
@@ -212,7 +231,7 @@ func (controller *blockManagerController) page(data blockManagerControllerData) 
 		HxTarget("body").
 		HxSwap("beforeend")
 
-	title := hb.Heading1().
+	pageTitle := hb.Heading1().
 		HTML("CMS. Block Manager").
 		Child(buttonPageNew)
 
@@ -220,7 +239,9 @@ func (controller *blockManagerController) page(data blockManagerControllerData) 
 		Class("container").
 		Child(breadcrumbs).
 		Child(hb.HR()).
-		Child(title).
+		Child(adminHeader).
+		Child(hb.HR()).
+		Child(pageTitle).
 		Child(controller.tableRecords(data))
 }
 
@@ -233,8 +254,8 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 					hb.TH().
 						Child(controller.sortableColumnLabel(data, "Name", cmsstore.COLUMN_NAME)).
 						Text(", ").
-						Child(controller.sortableColumnLabel(data, "Domains", cmsstore.COLUMN_DOMAIN_NAMES)).
-						Text(", ").
+						// Child(controller.sortableColumnLabel(data, "Site", cmsstore.COLUMN_SITE_ID)).
+						// Text(", ").
 						Child(controller.sortableColumnLabel(data, "Reference", cmsstore.COLUMN_ID)).
 						Style(`cursor: pointer;`),
 					hb.TH().

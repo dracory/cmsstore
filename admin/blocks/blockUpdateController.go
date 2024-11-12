@@ -94,6 +94,8 @@ func (controller *blockUpdateController) Handler(w http.ResponseWriter, r *http.
 }
 
 func (controller blockUpdateController) page(data blockUpdateControllerData) hb.TagInterface {
+	adminHeader := controller.ui.AdminHeader()
+
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
@@ -134,7 +136,7 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		ClassIf(data.block.Status() == cmsstore.TEMPLATE_STATUS_DRAFT, "bg-warning").
 		Text(data.block.Status())
 
-	heading := hb.Heading1().
+	pageTitle := hb.Heading1().
 		Text("CMS. Edit Block:").
 		Text(" ").
 		Text(data.block.Name()).
@@ -182,10 +184,9 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Class("container").
 		Child(breadcrumbs).
 		Child(hb.HR()).
-		// HTML(header).
-		Child(heading).
-		// HTML(breadcrumbs).
-		// Child(pageTitle).
+		Child(adminHeader).
+		Child(hb.HR()).
+		Child(pageTitle).
 		Child(tabs).
 		Child(card).
 		Child(hb.HR().Class("mt-4")).

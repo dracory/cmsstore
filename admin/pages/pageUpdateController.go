@@ -149,6 +149,8 @@ func (controller pageUpdateController) script() string {
 }
 
 func (controller pageUpdateController) page(data pageUpdateControllerData) hb.TagInterface {
+	adminHeader := controller.ui.AdminHeader()
+
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
@@ -189,7 +191,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		ClassIf(data.page.Status() == cmsstore.PAGE_STATUS_DRAFT, "bg-warning").
 		Text(data.page.Status())
 
-	heading := hb.Heading1().
+	pageTitle := hb.Heading1().
 		Text("Edit page:").
 		Text(" ").
 		Text(data.page.Name()).
@@ -244,11 +246,11 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 
 	return hb.Div().
 		Class("container").
-		// HTML(header).
 		Child(breadcrumbs).
 		Child(hb.HR()).
-		Child(heading).
-		// Child(pageTitle).
+		Child(adminHeader).
+		Child(hb.HR()).
+		Child(pageTitle).
 		Child(tabs).
 		Child(card)
 }

@@ -196,6 +196,8 @@ func (controller *siteManagerController) onModalRecordFilterShow(data siteManage
 }
 
 func (controller *siteManagerController) page(data siteManagerControllerData) hb.TagInterface {
+	adminHeader := controller.ui.AdminHeader()
+
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
@@ -226,6 +228,8 @@ func (controller *siteManagerController) page(data siteManagerControllerData) hb
 	return hb.Div().
 		Class("container").
 		Child(breadcrumbs).
+		Child(hb.HR()).
+		Child(adminHeader).
 		Child(hb.HR()).
 		Child(title).
 		Child(controller.tableRecords(data))

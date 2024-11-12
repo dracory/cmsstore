@@ -131,6 +131,14 @@ func (controller *pageManagerController) onModalRecordFilterShow(data pageManage
 				Help:  `Filter by name.`,
 			}),
 			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `<div class="row">`,
+			}),
+			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `<div class="col-6">`,
+			}),
+			form.NewField(form.FieldOptions{
 				Label: "Created From",
 				Name:  "created_from",
 				Type:  form.FORM_FIELD_TYPE_DATE,
@@ -138,11 +146,27 @@ func (controller *pageManagerController) onModalRecordFilterShow(data pageManage
 				Help:  `Filter by creation date.`,
 			}),
 			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `</div>`,
+			}),
+			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `<div class="col-6">`,
+			}),
+			form.NewField(form.FieldOptions{
 				Label: "Created To",
 				Name:  "created_to",
 				Type:  form.FORM_FIELD_TYPE_DATE,
 				Value: data.formCreatedTo,
 				Help:  `Filter by creation date.`,
+			}),
+			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `</div>`,
+			}),
+			form.NewField(form.FieldOptions{
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: `</div>`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Site ID",
@@ -197,6 +221,8 @@ func (controller *pageManagerController) onModalRecordFilterShow(data pageManage
 }
 
 func (controller *pageManagerController) page(data pageManagerControllerData) hb.TagInterface {
+	adminHeader := controller.ui.AdminHeader()
+
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
@@ -220,7 +246,7 @@ func (controller *pageManagerController) page(data pageManagerControllerData) hb
 		HxTarget("body").
 		HxSwap("beforeend")
 
-	title := hb.Heading1().
+	pageTitle := hb.Heading1().
 		HTML("CMS. Page Manager").
 		Child(buttonPageNew)
 
@@ -228,7 +254,9 @@ func (controller *pageManagerController) page(data pageManagerControllerData) hb
 		Class("container").
 		Child(breadcrumbs).
 		Child(hb.HR()).
-		Child(title).
+		Child(adminHeader).
+		Child(hb.HR()).
+		Child(pageTitle).
 		Child(controller.tableRecords(data))
 }
 
@@ -486,19 +514,11 @@ func (controller *pageManagerController) prepareData(r *http.Request) (data page
 }
 
 func (controller *pageManagerController) fetchRecordList(data pageManagerControllerData) (records []cmsstore.PageInterface, recordCount int64, err error) {
-	siteIDs := []string{}
+	pageIDs := []string{}
 
-	if data.formSiteID != "" {
-		siteIDs = append(siteIDs, data.formSiteID)
+	if data.formPageID != "" {
+		pageIDs = append(pageIDs, data.formPageID)
 	}
-
-	// if data.formCreatedFrom != "" {
-	// 	query.CreatedAtGte = data.formCreatedFrom + " 00:00:00"
-	// }
-
-	// if data.formCreatedTo != "" {
-	// 	query.CreatedAtLte = data.formCreatedTo + " 23:59:59"
-	// }
 
 	query := cmsstore.PageQuery().
 		SetLimit(data.perPage).
@@ -506,8 +526,20 @@ func (controller *pageManagerController) fetchRecordList(data pageManagerControl
 		SetOrderBy(data.sortBy).
 		SetSortOrder(data.sortOrder)
 
-	if len(siteIDs) > 0 {
-		query = query.SetIDIn(siteIDs)
+	if data.formCreatedFrom != "" {
+		query = query.SetCreatedAtGte(data.formCreatedFrom + " 00:00:00")
+	}
+
+	if data.formCreatedTo != "" {
+		query = query.SetCreatedAtLte(data.formCreatedTo + " 23:59:59")
+	}
+
+	if data.formSiteID != "" {
+		query = query.SetSiteID(data.formSiteID)
+	}
+
+	if len(pageIDs) > 0 {
+		query = query.SetIDIn(pageIDs)
 	}
 
 	if data.formStatus != "" {
@@ -550,6 +582,7 @@ type pageManagerControllerData struct {
 	formAlias       string
 	formCreatedFrom string
 	formCreatedTo   string
+	formPageID      string
 	formSiteID      string
 	recordList      []cmsstore.PageInterface
 	recordCount     int64

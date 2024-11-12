@@ -77,6 +77,8 @@ func (controller *siteUpdateController) Handler(w http.ResponseWriter, r *http.R
 }
 
 func (controller siteUpdateController) page(data siteUpdateControllerData) hb.TagInterface {
+	adminHeader := controller.ui.AdminHeader()
+
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
@@ -117,7 +119,7 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		ClassIf(data.site.Status() == cmsstore.SITE_STATUS_DRAFT, "bg-warning").
 		Text(data.site.Status())
 
-	heading := hb.Heading1().
+	pageTitle := hb.Heading1().
 		Text("CMS. Edit Site:").
 		Text(" ").
 		Text(data.site.Name()).
@@ -165,10 +167,9 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		Class("container").
 		Child(breadcrumbs).
 		Child(hb.HR()).
-		// HTML(header).
-		Child(heading).
-		// HTML(breadcrumbs).
-		// Child(pageTitle).
+		Child(adminHeader).
+		Child(hb.HR()).
+		Child(pageTitle).
 		Child(tabs).
 		Child(card)
 }

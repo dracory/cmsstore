@@ -94,6 +94,8 @@ func (controller *templateUpdateController) Handler(w http.ResponseWriter, r *ht
 }
 
 func (controller templateUpdateController) page(data templateUpdateControllerData) hb.TagInterface {
+	adminHeader := controller.ui.AdminHeader()
+
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
@@ -134,7 +136,7 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		ClassIf(data.template.Status() == cmsstore.TEMPLATE_STATUS_DRAFT, "bg-warning").
 		Text(data.template.Status())
 
-	heading := hb.Heading1().
+	pageTitle := hb.Heading1().
 		Text("CMS. Edit Template:").
 		Text(" ").
 		Text(data.template.Name()).
@@ -182,10 +184,9 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Class("container").
 		Child(breadcrumbs).
 		Child(hb.HR()).
-		// HTML(header).
-		Child(heading).
-		// HTML(breadcrumbs).
-		// Child(pageTitle).
+		Child(adminHeader).
+		Child(hb.HR()).
+		Child(pageTitle).
 		Child(tabs).
 		Child(card)
 }
