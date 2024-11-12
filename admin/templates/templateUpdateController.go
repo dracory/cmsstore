@@ -216,8 +216,15 @@ func (controller templateUpdateController) form(data templateUpdateControllerDat
 
 	if data.formSuccessMessage != "" {
 		formpageUpdate.AddField(&form.Field{
-			Type:  form.FORM_FIELD_TYPE_RAW,
-			Value: hb.Swal(hb.SwalOptions{Icon: "success", Text: data.formSuccessMessage}).ToHTML(),
+			Type: form.FORM_FIELD_TYPE_RAW,
+			Value: hb.Swal(hb.SwalOptions{
+				Icon:              "success",
+				Text:              data.formSuccessMessage,
+				Position:          "top-end",
+				Timer:             1500,
+				ShowConfirmButton: false,
+				ShowCancelButton:  false,
+			}).ToHTML(),
 		})
 	}
 

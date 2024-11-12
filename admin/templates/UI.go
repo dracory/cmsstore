@@ -5,12 +5,14 @@ import (
 	"net/http"
 
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/hb"
 	"github.com/gouniverse/responses"
 )
 
 type UiConfig struct {
-	Endpoint string
-	Layout   func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	Endpoint    string
+	AdminHeader hb.TagInterface
+	Layout      func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -28,6 +30,7 @@ type UiConfig struct {
 func UI(config UiConfig) UiInterface {
 	return ui{
 		endpoint:            config.Endpoint,
+		adminHeader:         config.AdminHeader,
 		layout:              config.Layout,
 		logger:              config.Logger,
 		store:               config.Store,
@@ -41,6 +44,7 @@ func UI(config UiConfig) UiInterface {
 
 type UiInterface interface {
 	Endpoint() string
+	AdminHeader() hb.TagInterface
 	Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
@@ -61,8 +65,9 @@ type UiInterface interface {
 }
 
 type ui struct {
-	endpoint string
-	layout   func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	endpoint    string
+	adminHeader hb.TagInterface
+	layout      func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -75,6 +80,10 @@ type ui struct {
 	pathTemplateDelete  string
 	pathTemplateManager string
 	pathTemplateUpdate  string
+}
+
+func (ui ui) AdminHeader() hb.TagInterface {
+	return ui.adminHeader
 }
 
 func (ui ui) Endpoint() string {

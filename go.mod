@@ -15,7 +15,7 @@ require (
 	github.com/gouniverse/cms v1.7.3
 	github.com/gouniverse/dataobject v0.3.0
 	github.com/gouniverse/form v0.15.0
-	github.com/gouniverse/hb v1.78.0
+	github.com/gouniverse/hb v1.78.1
 	github.com/gouniverse/maputils v0.7.0
 	github.com/gouniverse/responses v0.6.0
 	github.com/gouniverse/router v1.4.0

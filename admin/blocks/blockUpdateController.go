@@ -97,19 +97,19 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
+			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
 		},
 		{
 			Name: "CMS",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), "", nil),
+			URL:  shared.URL(controller.ui.Endpoint(), "", nil),
 		},
 		{
 			Name: "Block Manager",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockManager(), nil),
+			URL:  shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, nil),
 		},
 		{
 			Name: "Edit Block",
-			URL:  controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockUpdate(), map[string]string{"block_id": data.blockID}),
+			URL:  shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{"block_id": data.blockID}),
 		},
 	})
 
@@ -118,14 +118,14 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormBlockUpdate").
-		HxPost(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockUpdate(), map[string]string{"block_id": data.blockID})).
+		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{"block_id": data.blockID})).
 		HxTarget("#FormBlockUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockManager(), nil))
+		Href(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -164,7 +164,7 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_CONTENT, "active").
-				Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockUpdate(), map[string]string{
+				Href(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{
 					"block_id": data.blockID,
 					"view":     VIEW_CONTENT,
 				})).
@@ -172,7 +172,7 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockUpdate(), map[string]string{
+				Href(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{
 					"block_id": data.blockID,
 					"view":     VIEW_SETTINGS,
 				})).
@@ -187,7 +187,19 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		// HTML(breadcrumbs).
 		// Child(pageTitle).
 		Child(tabs).
-		Child(card)
+		Child(card).
+		Child(hb.HR().Class("mt-4")).
+		Child(hb.Div().
+			Class("text-info mb-2").
+			Text("To use this block in your website use the following shortcode:").
+			Child(hb.BR())).
+		Child(hb.PRE().
+			Child(hb.Code().
+				Text(`<!-- START: Block: ` + data.block.Name() + ` -->`).
+				Text("\n").
+				Text(`[[BLOCK_` + data.blockID + `]]`).
+				Text("\n").
+				Text(`<!-- END: Block: ` + data.block.Name() + ` -->`)))
 }
 
 func (controller blockUpdateController) form(data blockUpdateControllerData) hb.TagInterface {
@@ -216,8 +228,15 @@ func (controller blockUpdateController) form(data blockUpdateControllerData) hb.
 
 	if data.formSuccessMessage != "" {
 		formpageUpdate.AddField(&form.Field{
-			Type:  form.FORM_FIELD_TYPE_RAW,
-			Value: hb.Swal(hb.SwalOptions{Icon: "success", Text: data.formSuccessMessage}).ToHTML(),
+			Type: form.FORM_FIELD_TYPE_RAW,
+			Value: hb.Swal(hb.SwalOptions{
+				Icon:              "success",
+				Text:              data.formSuccessMessage,
+				Position:          "top-end",
+				Timer:             1500,
+				ShowConfirmButton: false,
+				ShowCancelButton:  false,
+			}).ToHTML(),
 		})
 	}
 

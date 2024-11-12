@@ -16,26 +16,26 @@ type UiConfig struct {
 		Scripts    []string
 		ScriptURLs []string
 	}) string
-	Logger           *slog.Logger
-	Store            cmsstore.StoreInterface
-	URL              func(endpoint string, path string, params map[string]string) string
-	PathBlockCreate  string
-	PathBlockDelete  string
-	PathBlockManager string
-	PathBlockUpdate  string
+	Logger *slog.Logger
+	Store  cmsstore.StoreInterface
+	// URL    func(endpoint string, path string, params map[string]string) string
+	// PathBlockCreate  string
+	// PathBlockDelete  string
+	// PathBlockManager string
+	// PathBlockUpdate  string
 }
 
 func UI(config UiConfig) UiInterface {
 	return ui{
-		endpoint:         config.Endpoint,
-		layout:           config.Layout,
-		logger:           config.Logger,
-		store:            config.Store,
-		url:              config.URL,
-		pathBlockCreate:  config.PathBlockCreate,
-		pathBlockDelete:  config.PathBlockDelete,
-		pathBlockManager: config.PathBlockManager,
-		pathBlockUpdate:  config.PathBlockUpdate,
+		endpoint: config.Endpoint,
+		layout:   config.Layout,
+		logger:   config.Logger,
+		store:    config.Store,
+		// url:      config.URL,
+		// pathBlockCreate:  config.PathBlockCreate,
+		// pathBlockDelete:  config.PathBlockDelete,
+		// pathBlockManager: config.PathBlockManager,
+		// pathBlockUpdate:  config.PathBlockUpdate,
 	}
 }
 
@@ -48,16 +48,16 @@ type UiInterface interface {
 		ScriptURLs []string
 	}) string
 	Logger() *slog.Logger
-	PathBlockCreate() string
-	PathBlockDelete() string
-	PathBlockManager() string
-	PathBlockUpdate() string
+	// PathBlockCreate() string
+	// PathBlockDelete() string
+	// PathBlockManager() string
+	// PathBlockUpdate() string
 	BlockCreate(w http.ResponseWriter, r *http.Request)
 	BlockManager(w http.ResponseWriter, r *http.Request)
 	BlockDelete(w http.ResponseWriter, r *http.Request)
 	BlockUpdate(w http.ResponseWriter, r *http.Request)
 	Store() cmsstore.StoreInterface
-	URL(endpoint string, path string, params map[string]string) string
+	// URL(endpoint string, path string, params map[string]string) string
 }
 
 type ui struct {
@@ -94,29 +94,29 @@ func (ui ui) Logger() *slog.Logger {
 	return ui.logger
 }
 
-func (ui ui) PathBlockCreate() string {
-	return ui.pathBlockCreate
-}
+// func (ui ui) PathBlockCreate() string {
+// 	return ui.pathBlockCreate
+// }
 
-func (ui ui) PathBlockDelete() string {
-	return ui.pathBlockDelete
-}
+// func (ui ui) PathBlockDelete() string {
+// 	return ui.pathBlockDelete
+// }
 
-func (ui ui) PathBlockManager() string {
-	return ui.pathBlockManager
-}
+// func (ui ui) PathBlockManager() string {
+// 	return ui.pathBlockManager
+// }
 
-func (ui ui) PathBlockUpdate() string {
-	return ui.pathBlockUpdate
-}
+// func (ui ui) PathBlockUpdate() string {
+// 	return ui.pathBlockUpdate
+// }
 
 func (ui ui) Store() cmsstore.StoreInterface {
 	return ui.store
 }
 
-func (ui ui) URL(endpoint string, path string, params map[string]string) string {
-	return ui.url(endpoint, path, params)
-}
+// func (ui ui) URL(endpoint string, path string, params map[string]string) string {
+// 	return ui.url(endpoint, path, params)
+// }
 
 func (ui ui) BlockCreate(w http.ResponseWriter, r *http.Request) {
 	controller := NewBlockCreateController(ui)

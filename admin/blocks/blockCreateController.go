@@ -6,6 +6,7 @@ import (
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/form"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
@@ -65,7 +66,7 @@ func (controller blockCreateController) Handler(w http.ResponseWriter, r *http.R
 }
 
 func (controller *blockCreateController) modal(data blockCreateControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockCreate(), nil)
+	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormBlockCreate",

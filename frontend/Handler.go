@@ -404,8 +404,19 @@ func ContentFindIdsByPatternPrefix(content, prefix string) []string {
 	return ids
 }
 
-// ContentRenderBlockByID renders the block specified by the ID in a content
-// if the blockID is empty or not found the initial content is returned
+// ContentRenderBlockByID renders the block specified by the ID in the content
+//
+// Business Logic:
+// - if the blockID is empty the initial content is returned
+// - if the block content returns an error the initial content is returned
+// - the block tag is replaced by the block content in the initial content
+//
+// Parameters:
+// - content: the content to render
+// - blockID: the ID of the block
+//
+// Returns:
+// - content: the rendered content
 func (frontend *frontend) ContentRenderBlockByID(content string, blockID string) (string, error) {
 	if blockID == "" {
 		return content, nil
@@ -415,10 +426,6 @@ func (frontend *frontend) ContentRenderBlockByID(content string, blockID string)
 
 	if err != nil {
 		return content, err
-	}
-
-	if blockContent == "" {
-		return content, nil
 	}
 
 	content = strings.ReplaceAll(content, "[[BLOCK_"+blockID+"]]", blockContent)
@@ -465,6 +472,18 @@ func (frontend *frontend) ContentRenderTranslationByIdOrHandle(content string, t
 	// return content, nil
 }
 
+// findBlockContent returns the content of the block specified by the ID
+//
+// Business Logic:
+// - if the block find returns an error error is returned
+// - if the block is not active an empty string is returned
+// - the block content is returned
+//
+// Parameters:
+// - blockID: the ID of the block
+//
+// Returns:
+// - content: the content of the block
 func (frontend *frontend) findBlockContent(blockID string) (string, error) {
 	block, err := frontend.store.BlockFindByID(blockID)
 

@@ -10,6 +10,7 @@ import (
 	"github.com/gouniverse/blockeditor"
 	adminBlocks "github.com/gouniverse/cmsstore/admin/blocks"
 	adminPages "github.com/gouniverse/cmsstore/admin/pages"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	adminSites "github.com/gouniverse/cmsstore/admin/sites"
 	adminTemplates "github.com/gouniverse/cmsstore/admin/templates"
 
@@ -24,11 +25,11 @@ import (
 
 func New(options AdminOptions) (*admin, error) {
 	if options.Store == nil {
-		return nil, errors.New(ERROR_STORE_IS_NIL)
+		return nil, errors.New(shared.ERROR_STORE_IS_NIL)
 	}
 
 	if options.Logger == nil {
-		return nil, errors.New(ERROR_LOGGER_IS_NIL)
+		return nil, errors.New(shared.ERROR_LOGGER_IS_NIL)
 	}
 
 	return &admin{
@@ -73,10 +74,10 @@ func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
 	path := utils.Req(r, "path", "home")
 
 	if path == "" {
-		path = pathHome
+		path = shared.PathHome
 	}
 
-	ctx := context.WithValue(r.Context(), keyEndpoint, r.URL.Path)
+	ctx := context.WithValue(r.Context(), shared.KeyEndpoint, r.URL.Path)
 
 	routeFunc := a.getRoute(path)
 	routeFunc(w, r.WithContext(ctx))
@@ -85,7 +86,7 @@ func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
 func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Request) {
 
 	routes := map[string]func(w http.ResponseWriter, r *http.Request){
-		pathHome: a.pageHome,
+		shared.PathHome: a.pageHome,
 	}
 
 	maps.Copy(routes, a.blockRoutes())
@@ -97,14 +98,14 @@ func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Reque
 		return val
 	}
 
-	return routes[pathHome]
+	return routes[shared.PathHome]
 }
 
 func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
-	header := a.adminHeader(endpoint(r))
+	header := a.adminHeader(shared.Endpoint(r))
 	breadcrumbs := a.adminBreadcrumbs([]bs.Breadcrumb{
 		{
-			URL:  endpoint(r),
+			URL:  shared.Endpoint(r),
 			Name: "Home",
 		},
 	})
@@ -146,28 +147,28 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 			Title:      "Total Sites",
 			Background: "bg-success",
 			Icon:       "bi-globe",
-			URL:        url(endpoint(r), pathSitesSiteManager, nil),
+			URL:        shared.URL(shared.Endpoint(r), shared.PathSitesSiteManager, nil),
 		},
 		{
 			Count:      cast.ToString(pagesCount),
 			Title:      "Total Pages",
 			Background: "bg-info",
 			Icon:       "bi-journals",
-			URL:        url(endpoint(r), pathPagesPageManager, nil),
+			URL:        shared.URL(shared.Endpoint(r), shared.PathPagesPageManager, nil),
 		},
 		{
 			Count:      cast.ToString(templatesCount),
 			Title:      "Total Templates",
 			Background: "bg-warning",
 			Icon:       "bi-file-earmark-text-fill",
-			URL:        url(endpoint(r), pathTemplatesTemplateManager, nil),
+			URL:        shared.URL(shared.Endpoint(r), shared.PathTemplatesTemplateManager, nil),
 		},
 		{
 			Count:      cast.ToString(blocksCount),
 			Title:      "Total Blocks",
 			Background: "bg-primary",
 			Icon:       "bi-grid-3x3-gap-fill",
-			URL:        url(endpoint(r), pathBlocksBlockManager, nil),
+			URL:        shared.URL(shared.Endpoint(r), shared.PathBlocksBlockManager, nil),
 		},
 	}
 
@@ -223,7 +224,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 	container := hb.NewDiv().
 		ID("page-manager").
 		Class("container").
-		Child(hb.NewHTML(header)).
+		Child(header).
 		Child(heading).
 		Child(hb.NewHTML(breadcrumbs)).
 		Child(hb.Div().Class("row g-3").Children(cards))
@@ -263,31 +264,26 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 func (a *admin) blockUI(r *http.Request) adminBlocks.UiInterface {
 	options := adminBlocks.UiConfig{
 		// BlockEditorDefinitions: a.blockEditorDefinitions,
-		Endpoint:         endpoint(r),
-		Layout:           a.render,
-		Logger:           a.logger,
-		PathBlockCreate:  pathBlocksBlockCreate,
-		PathBlockDelete:  pathBlocksBlockDelete,
-		PathBlockManager: pathBlocksBlockManager,
-		PathBlockUpdate:  pathBlocksBlockUpdate,
-		Store:            a.store,
-		URL:              url,
+		Endpoint: shared.Endpoint(r),
+		Layout:   a.render,
+		Logger:   a.logger,
+		Store:    a.store,
 	}
 	return adminBlocks.UI(options)
 }
 
 func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	blockRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		pathBlocksBlockCreate: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathBlocksBlockCreate: func(w http.ResponseWriter, r *http.Request) {
 			a.blockUI(r).BlockCreate(w, r)
 		},
-		pathBlocksBlockDelete: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathBlocksBlockDelete: func(w http.ResponseWriter, r *http.Request) {
 			a.blockUI(r).BlockDelete(w, r)
 		},
-		pathBlocksBlockManager: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathBlocksBlockManager: func(w http.ResponseWriter, r *http.Request) {
 			a.blockUI(r).BlockManager(w, r)
 		},
-		pathBlocksBlockUpdate: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathBlocksBlockUpdate: func(w http.ResponseWriter, r *http.Request) {
 			a.blockUI(r).BlockUpdate(w, r)
 		},
 	}
@@ -297,31 +293,31 @@ func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Req
 func (a *admin) pageUI(r *http.Request) adminPages.UiInterface {
 	options := adminPages.UiConfig{
 		BlockEditorDefinitions: a.blockEditorDefinitions,
-		Endpoint:               endpoint(r),
+		Endpoint:               shared.Endpoint(r),
 		Layout:                 a.render,
 		Logger:                 a.logger,
-		PathPageCreate:         pathPagesPageCreate,
-		PathPageDelete:         pathPagesPageDelete,
-		PathPageManager:        pathPagesPageManager,
-		PathPageUpdate:         pathPagesPageUpdate,
+		PathPageCreate:         shared.PathPagesPageCreate,
+		PathPageDelete:         shared.PathPagesPageDelete,
+		PathPageManager:        shared.PathPagesPageManager,
+		PathPageUpdate:         shared.PathPagesPageUpdate,
 		Store:                  a.store,
-		URL:                    url,
+		URL:                    shared.URL,
 	}
 	return adminPages.UI(options)
 }
 
 func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	pageRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		pathPagesPageCreate: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathPagesPageCreate: func(w http.ResponseWriter, r *http.Request) {
 			a.pageUI(r).PageCreate(w, r)
 		},
-		pathPagesPageDelete: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathPagesPageDelete: func(w http.ResponseWriter, r *http.Request) {
 			a.pageUI(r).PageDelete(w, r)
 		},
-		pathPagesPageManager: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathPagesPageManager: func(w http.ResponseWriter, r *http.Request) {
 			a.pageUI(r).PageManager(w, r)
 		},
-		pathPagesPageUpdate: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathPagesPageUpdate: func(w http.ResponseWriter, r *http.Request) {
 			a.pageUI(r).PageUpdate(w, r)
 		},
 	}
@@ -330,31 +326,31 @@ func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) siteUI(r *http.Request) adminSites.UiInterface {
 	options := adminSites.UiConfig{
-		Endpoint:        endpoint(r),
+		Endpoint:        shared.Endpoint(r),
 		Layout:          a.render,
 		Logger:          a.logger,
-		PathSiteCreate:  pathSitesSiteCreate,
-		PathSiteDelete:  pathSitesSiteDelete,
-		PathSiteManager: pathSitesSiteManager,
-		PathSiteUpdate:  pathSitesSiteUpdate,
+		PathSiteCreate:  shared.PathSitesSiteCreate,
+		PathSiteDelete:  shared.PathSitesSiteDelete,
+		PathSiteManager: shared.PathSitesSiteManager,
+		PathSiteUpdate:  shared.PathSitesSiteUpdate,
 		Store:           a.store,
-		URL:             url,
+		URL:             shared.URL,
 	}
 	return adminSites.UI(options)
 }
 
 func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	siteRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		pathSitesSiteCreate: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathSitesSiteCreate: func(w http.ResponseWriter, r *http.Request) {
 			a.siteUI(r).SiteCreate(w, r)
 		},
-		pathSitesSiteDelete: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathSitesSiteDelete: func(w http.ResponseWriter, r *http.Request) {
 			a.siteUI(r).SiteDelete(w, r)
 		},
-		pathSitesSiteUpdate: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathSitesSiteUpdate: func(w http.ResponseWriter, r *http.Request) {
 			a.siteUI(r).SiteUpdate(w, r)
 		},
-		pathSitesSiteManager: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathSitesSiteManager: func(w http.ResponseWriter, r *http.Request) {
 			a.siteUI(r).SiteManager(w, r)
 		},
 	}
@@ -364,31 +360,32 @@ func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) templateUI(r *http.Request) adminTemplates.UiInterface {
 	options := adminTemplates.UiConfig{
-		Endpoint:            endpoint(r),
+		Endpoint:            shared.Endpoint(r),
+		AdminHeader:         a.adminHeader(shared.Endpoint(r)),
 		Layout:              a.render,
 		Logger:              a.logger,
-		PathTemplateCreate:  pathTemplatesTemplateCreate,
-		PathTemplateDelete:  pathTemplatesTemplateDelete,
-		PathTemplateManager: pathTemplatesTemplateManager,
-		PathTemplateUpdate:  pathTemplatesTemplateUpdate,
+		PathTemplateCreate:  shared.PathTemplatesTemplateCreate,
+		PathTemplateDelete:  shared.PathTemplatesTemplateDelete,
+		PathTemplateManager: shared.PathTemplatesTemplateManager,
+		PathTemplateUpdate:  shared.PathTemplatesTemplateUpdate,
 		Store:               a.store,
-		URL:                 url,
+		URL:                 shared.URL,
 	}
 	return adminTemplates.UI(options)
 }
 
 func (a *admin) templateRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	templateRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		pathTemplatesTemplateCreate: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathTemplatesTemplateCreate: func(w http.ResponseWriter, r *http.Request) {
 			a.templateUI(r).TemplateCreate(w, r)
 		},
-		pathTemplatesTemplateDelete: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathTemplatesTemplateDelete: func(w http.ResponseWriter, r *http.Request) {
 			a.templateUI(r).TemplateDelete(w, r)
 		},
-		pathTemplatesTemplateManager: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathTemplatesTemplateManager: func(w http.ResponseWriter, r *http.Request) {
 			a.templateUI(r).TemplateManager(w, r)
 		},
-		pathTemplatesTemplateUpdate: func(w http.ResponseWriter, r *http.Request) {
+		shared.PathTemplatesTemplateUpdate: func(w http.ResponseWriter, r *http.Request) {
 			a.templateUI(r).TemplateUpdate(w, r)
 		},
 	}
@@ -401,27 +398,31 @@ func (a *admin) adminBreadcrumbs(breadcrumbs []bs.Breadcrumb) string {
 		ToHTML()
 }
 
-func (a *admin) adminHeader(endpoint string) string {
+func (a *admin) adminHeader(endpoint string) hb.TagInterface {
 	linkHome := hb.NewHyperlink().
 		HTML("Dashboard").
 		Href(endpoint + "").
 		Class("nav-link")
-	// linkBlocks := hb.NewHyperlink().
-	// 	HTML("Blocks ").
-	// 	Href(endpoint + "?path=" + PathBlocksBlockManager).
-	// 	Class("nav-link")
+	linkBlocks := hb.NewHyperlink().
+		HTML("Blocks ").
+		Href(endpoint + "?path=" + shared.PathBlocksBlockManager).
+		Class("nav-link")
 	// linkMenus := hb.NewHyperlink().
 	// 	HTML("Menus ").
 	// 	Href(endpoint + "?path=" + PathMenusMenuManager).
 	// 	Class("nav-link")
-	// linkPages := hb.NewHyperlink().
-	// 	HTML("Pages ").
-	// 	Href(endpoint + "?path=" + PathPagesPageManager).
-	// 	Class("nav-link")
-	// linkTemplates := hb.NewHyperlink().
-	// 	HTML("Templates ").
-	// 	Href(endpoint + "?path=" + PathTemplatesTemplateManager).
-	// 	Class("nav-link")
+	linkPages := hb.NewHyperlink().
+		HTML("Pages ").
+		Href(endpoint + "?path=" + shared.PathPagesPageManager).
+		Class("nav-link")
+	linkTemplates := hb.NewHyperlink().
+		HTML("Templates ").
+		Href(endpoint + "?path=" + shared.PathTemplatesTemplateManager).
+		Class("nav-link")
+	linkSites := hb.NewHyperlink().
+		HTML("Sites ").
+		Href(endpoint + "?path=" + shared.PathBlocksBlockManager).
+		Class("nav-link")
 	// linkWidgets := hb.NewHyperlink().
 	// 	HTML("Widgets ").
 	// 	Href(endpoint + "?path=" + PathWidgetsWidgetManager).
@@ -435,43 +436,70 @@ func (a *admin) adminHeader(endpoint string) string {
 	// 	Href(endpoint + "?path=" + PathTranslationsTranslationManager).
 	// 	Class("nav-link")
 
-	// blocksCount, _ := cms.EntityStore.EntityCount(entitystore.EntityQueryOptions{
-	// 	EntityType: ENTITY_TYPE_BLOCK,
-	// })
-	// menusCount, _ := cms.EntityStore.EntityCount(entitystore.EntityQueryOptions{
-	// 	EntityType: ENTITY_TYPE_MENU,
-	// })
-	// pagesCount, _ := cms.EntityStore.EntityCount(entitystore.EntityQueryOptions{
-	// 	EntityType: ENTITY_TYPE_PAGE,
-	// })
-	// templatesCount, _ := cms.EntityStore.EntityCount(entitystore.EntityQueryOptions{
-	// 	EntityType: ENTITY_TYPE_TEMPLATE,
-	// })
-	// translationsCount, _ := cms.EntityStore.EntityCount(entitystore.EntityQueryOptions{
-	// 	EntityType: ENTITY_TYPE_TRANSLATION,
-	// })
-	// widgetsCount, _ := cms.EntityStore.EntityCount(entitystore.EntityQueryOptions{
-	// 	EntityType: ENTITY_TYPE_WIDGET,
-	// })
+	templatesCount, err := a.store.TemplateCount(cmsstore.TemplateQuery())
+
+	if err != nil {
+		a.logger.Error(err.Error())
+		templatesCount = -1
+	}
+
+	blocksCount, err := a.store.BlockCount(cmsstore.BlockQuery())
+
+	if err != nil {
+		a.logger.Error(err.Error())
+		blocksCount = -1
+	}
+
+	pagesCount, err := a.store.PageCount(cmsstore.PageQuery())
+
+	if err != nil {
+		a.logger.Error(err.Error())
+		pagesCount = -1
+	}
+
+	sitesCount, err := a.store.SiteCount(cmsstore.SiteQuery())
+
+	if err != nil {
+		a.logger.Error(err.Error())
+		sitesCount = -1
+	}
 
 	ulNav := hb.NewUL().Class("nav  nav-pills justify-content-center")
 	ulNav.AddChild(hb.NewLI().Class("nav-item").Child(linkHome))
 
-	// if cms.templatesEnabled {
-	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkTemplates.AddChild(hb.NewSpan().Class("badge bg-secondary").HTML(strconv.FormatInt(templatesCount, 10)))))
-	// }
+	ulNav.Child(hb.LI().
+		Class("nav-item").
+		Child(linkSites.
+			Child(hb.Span().
+				Class("badge bg-secondary").
+				HTML(cast.ToString(sitesCount)))))
 
-	// if cms.pagesEnabled {
-	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkPages.AddChild(hb.NewSpan().Class("badge bg-secondary").HTML(strconv.FormatInt(pagesCount, 10)))))
-	// }
+	ulNav.Child(hb.LI().
+		Class("nav-item").
+		Child(linkTemplates.
+			Child(hb.Span().
+				Class("badge bg-secondary").
+				HTML(cast.ToString(templatesCount)))))
+
+	ulNav.Child(hb.
+		LI().
+		Class("nav-item").
+		Child(linkPages.
+			Child(hb.NewSpan().
+				Class("badge bg-secondary").
+				HTML(cast.ToString(pagesCount)))))
 
 	// if cms.menusEnabled {
 	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkMenus.AddChild(hb.NewSpan().Class("badge bg-secondary").HTML(strconv.FormatInt(menusCount, 10)))))
 	// }
 
-	// if cms.blocksEnabled {
-	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkBlocks.AddChild(hb.NewSpan().Class("badge bg-secondary").HTML(strconv.FormatInt(blocksCount, 10)))))
-	// }
+	ulNav.Child(hb.
+		LI().
+		Class("nav-item").
+		Child(linkBlocks.
+			Child(hb.NewSpan().
+				Class("badge bg-secondary").
+				HTML(cast.ToString(blocksCount)))))
 
 	// if cms.widgetsEnabled {
 	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkWidgets.AddChild(hb.NewSpan().Class("badge bg-secondary").HTML(strconv.FormatInt(widgetsCount, 10)))))
@@ -493,5 +521,5 @@ func (a *admin) adminHeader(endpoint string) string {
 
 	divCard := hb.NewDiv().Class("card card-default mt-3 mb-3")
 	divCardBody := hb.NewDiv().Class("card-body").Style("padding: 2px;")
-	return divCard.AddChild(divCardBody.AddChild(ulNav)).ToHTML()
+	return divCard.AddChild(divCardBody.AddChild(ulNav))
 }

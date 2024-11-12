@@ -94,6 +94,8 @@ github.com/gouniverse/form v0.15.0 h1:7cXHiXlYDyuOZMw+CtZX/SvtsDai7KEpI82VOZpV2R
 github.com/gouniverse/form v0.15.0/go.mod h1:yWHtyriw4p/uCYnJRn9bPskjZkFUSsN4gLR0Nnx1Prs=
 github.com/gouniverse/hb v1.78.0 h1:Cm0Ge9EkT1eWrEw6zTynz0AKJS7FLtYx8tluftl3m3w=
 github.com/gouniverse/hb v1.78.0/go.mod h1:WDUCGoptHp/fAYT634lQ2846sGx88yXOOWMvlEaezYM=
+github.com/gouniverse/hb v1.78.1 h1:Eliw85Lnxd89+RYMyAoqXfXDtTSGu+1O+cKWZlBoORc=
+github.com/gouniverse/hb v1.78.1/go.mod h1:WDUCGoptHp/fAYT634lQ2846sGx88yXOOWMvlEaezYM=
 github.com/gouniverse/maputils v0.7.0 h1:qoJnY8tY5gkdyuIkwGHJYwH7It7LnCevxU+P+c4nU/Y=
 github.com/gouniverse/maputils v0.7.0/go.mod h1:s8HbjSvEqBl+R+bFCvFd+mY07bx7EQM5YhIjDgF26Q0=
 github.com/gouniverse/responses v0.6.0 h1:34KYyxYUqyXDslAuJMEKp5rM4CWpR23jmUwDaR0gJKo=

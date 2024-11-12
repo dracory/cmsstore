@@ -5,6 +5,7 @@ import (
 
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cmsstore"
+	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
 	"github.com/gouniverse/utils"
@@ -58,7 +59,7 @@ func (controller blockDeleteController) Handler(w http.ResponseWriter, r *http.R
 }
 
 func (controller *blockDeleteController) modal(data blockDeleteControllerData) hb.TagInterface {
-	submitUrl := controller.ui.URL(controller.ui.Endpoint(), controller.ui.PathBlockDelete(), map[string]string{
+	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockDelete, map[string]string{
 		"block_id": data.blockID,
 	})
 

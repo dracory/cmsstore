@@ -189,6 +189,7 @@ func (controller *templateManagerController) onModalRecordFilterShow(data templa
 }
 
 func (controller *templateManagerController) page(data templateManagerControllerData) hb.TagInterface {
+	adminHeader := controller.ui.AdminHeader()
 	breadcrumbs := shared.Breadcrumbs([]shared.Breadcrumb{
 		{
 			Name: "Home",
@@ -218,6 +219,7 @@ func (controller *templateManagerController) page(data templateManagerController
 
 	return hb.Div().
 		Class("container").
+		Child(adminHeader).
 		Child(breadcrumbs).
 		Child(hb.HR()).
 		Child(title).
