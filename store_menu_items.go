@@ -319,6 +319,10 @@ func (store *store) menuItemSelectQuery(options MenuItemQueryInterface) (selectD
 		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
 	}
 
+	if options.HasMenuID() {
+		q = q.Where(goqu.C(COLUMN_MENU_ID).Eq(options.MenuID()))
+	}
+
 	if options.HasNameLike() {
 		q = q.Where(goqu.C(COLUMN_NAME).Like(options.NameLike()))
 	}

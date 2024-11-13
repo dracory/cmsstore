@@ -108,3 +108,11 @@ func (store *store) AutoMigrate() error {
 func (st *store) EnableDebug(debug bool) {
 	st.debugEnabled = debug
 }
+
+func (store *store) MenusEnabled() bool {
+	return store.menusEnabled
+}
+
+func (store *store) TranslationsEnabled() bool {
+	return store.translationsEnabled
+}

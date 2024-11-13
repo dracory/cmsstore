@@ -9,6 +9,7 @@ import (
 
 	"github.com/gouniverse/blockeditor"
 	adminBlocks "github.com/gouniverse/cmsstore/admin/blocks"
+	adminMenus "github.com/gouniverse/cmsstore/admin/menus"
 	adminPages "github.com/gouniverse/cmsstore/admin/pages"
 	"github.com/gouniverse/cmsstore/admin/shared"
 	adminSites "github.com/gouniverse/cmsstore/admin/sites"
@@ -91,10 +92,18 @@ func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Reque
 	}
 
 	maps.Copy(routes, a.blockRoutes())
+
+	if a.store.MenusEnabled() {
+		maps.Copy(routes, a.menuRoutes())
+	}
+
 	maps.Copy(routes, a.pageRoutes())
 	maps.Copy(routes, a.siteRoutes())
 	maps.Copy(routes, a.templateRoutes())
-	maps.Copy(routes, a.translationRoutes())
+
+	if a.store.TranslationsEnabled() {
+		maps.Copy(routes, a.translationRoutes())
+	}
 
 	if val, ok := routes[route]; ok {
 		return val
@@ -143,6 +152,24 @@ func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Req
 		},
 	}
 	return blockRoutes
+}
+
+func (a *admin) menuRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	menuRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
+		shared.PathMenusMenuCreate: func(w http.ResponseWriter, r *http.Request) {
+			adminMenus.UI(a.uiConfig(r)).MenuCreate(w, r)
+		},
+		shared.PathMenusMenuDelete: func(w http.ResponseWriter, r *http.Request) {
+			adminMenus.UI(a.uiConfig(r)).MenuDelete(w, r)
+		},
+		shared.PathMenusMenuManager: func(w http.ResponseWriter, r *http.Request) {
+			adminMenus.UI(a.uiConfig(r)).MenuManager(w, r)
+		},
+		shared.PathMenusMenuUpdate: func(w http.ResponseWriter, r *http.Request) {
+			adminMenus.UI(a.uiConfig(r)).MenuUpdate(w, r)
+		},
+	}
+	return menuRoutes
 }
 
 func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {

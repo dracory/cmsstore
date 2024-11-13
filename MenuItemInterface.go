@@ -39,7 +39,9 @@ type MenuItemInterface interface {
 	SetParentID(parentID string) MenuItemInterface
 
 	Sequence() string
+	SequenceInt() int
 	SetSequence(sequence string) MenuItemInterface
+	SetSequenceInt(sequence int) MenuItemInterface
 
 	SoftDeletedAt() string
 	SetSoftDeletedAt(softDeletedAt string) MenuItemInterface

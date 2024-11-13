@@ -7,6 +7,7 @@ import (
 	"github.com/gouniverse/sb"
 	"github.com/gouniverse/uid"
 	"github.com/gouniverse/utils"
+	"github.com/spf13/cast"
 )
 
 // == TYPE ===================================================================
@@ -224,8 +225,17 @@ func (o *menuItem) Sequence() string {
 	return o.Get(COLUMN_SEQUENCE)
 }
 
+func (o *menuItem) SequenceInt() int {
+	return cast.ToInt(o.Sequence())
+}
+
 func (o *menuItem) SetSequence(sequence string) MenuItemInterface {
 	o.Set(COLUMN_SEQUENCE, sequence)
+	return o
+}
+
+func (o *menuItem) SetSequenceInt(sequence int) MenuItemInterface {
+	o.SetSequence(cast.ToString(sequence))
 	return o
 }
 

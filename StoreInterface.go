@@ -15,6 +15,8 @@ type StoreInterface interface {
 	BlockSoftDeleteByID(id string) error
 	BlockUpdate(block BlockInterface) error
 
+	MenusEnabled() bool
+
 	MenuCreate(menu MenuInterface) error
 	MenuCount(options MenuQueryInterface) (int64, error)
 	MenuDelete(menu MenuInterface) error
@@ -69,6 +71,8 @@ type StoreInterface interface {
 	TemplateSoftDelete(template TemplateInterface) error
 	TemplateSoftDeleteByID(id string) error
 	TemplateUpdate(template TemplateInterface) error
+
+	TranslationsEnabled() bool
 
 	TranslationCreate(translation TranslationInterface) error
 	TranslationCount(options TranslationQueryInterface) (int64, error)

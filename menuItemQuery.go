@@ -153,6 +153,19 @@ func (q *menuItemQuery) SetLimit(limit int) MenuItemQueryInterface {
 	return q
 }
 
+func (q *menuItemQuery) HasMenuID() bool {
+	return q.hasProperty("menu_id")
+}
+
+func (q *menuItemQuery) MenuID() string {
+	return q.properties["menu_id"].(string)
+}
+
+func (q *menuItemQuery) SetMenuID(menuID string) MenuItemQueryInterface {
+	q.properties["menu_id"] = menuID
+	return q
+}
+
 func (q *menuItemQuery) HasNameLike() bool {
 	return q.hasProperty("name_like")
 }

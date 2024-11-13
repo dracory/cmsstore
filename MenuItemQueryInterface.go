@@ -26,6 +26,10 @@ type MenuItemQueryInterface interface {
 	IDIn() []string
 	SetIDIn(idIn []string) MenuItemQueryInterface
 
+	HasMenuID() bool
+	MenuID() string
+	SetMenuID(menuID string) MenuItemQueryInterface
+
 	HasNameLike() bool
 	NameLike() string
 	SetNameLike(nameLike string) MenuItemQueryInterface

@@ -106,41 +106,6 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 	}
 
 	return controller.ui.Layout(w, r, "Edit page | CMS", html.ToHTML(), options)
-
-	// return layouts.NewAdminLayout(r, layouts.Options{
-	// 	Title:   "Edit page | Blog",
-	// 	Content: controller.page(data),
-	// 	ScriptURLs: []string{
-	// 		cdn.Jquery_3_7_1(),
-	// 		cdn.TrumbowygJs_2_27_3(),
-	// 		cdn.Sweetalert2_10(),
-	// 		cdn.JqueryUiJs_1_13_1(), // needed for BlockArea
-	// 		links.NewWebsiteLinks().Resource(`/js/blockarea_v0200.js`, map[string]string{}), // needed for BlockArea
-	// 		codemirrorJs,
-	// 		codemirrorXmlJs,
-	// 		codemirrorHtmlmixedJs,
-	// 		codemirrorJavascriptJs,
-	// 		codemirrorCssJs,
-	// 		codemirrorClikeJs,
-	// 		codemirrorPhpJs,
-	// 		codemirrorFormattingJs,
-	// 		codemirrorMatchBracketsJs,
-	// 	},
-	// 	Scripts: []string{
-	// 		controller.script(),
-	// 	},
-	// 	StyleURLs: []string{
-	// 		cdn.TrumbowygCss_2_27_3(),
-	// 		cdn.JqueryUiCss_1_13_1(), // needed for BlockArea
-	// 		codemirrorCss,
-	// 	},
-	// 	Styles: []string{
-	// 		`.CodeMirror {
-	// 			border: 1px solid #eee;
-	// 			height: auto;
-	// 		}`,
-	// 	},
-	// }).ToHTML()
 }
 
 func (controller pageUpdateController) script() string {
@@ -248,315 +213,12 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 }
 
 func (controller pageUpdateController) form(data pageUpdateControllerData) hb.TagInterface {
-	fieldsSettings := []form.FieldInterface{
-		&form.Field{
-			Label: "Status",
-			Name:  "page_status",
-			Type:  form.FORM_FIELD_TYPE_SELECT,
-			Value: data.formStatus,
-			Help:  "The status of this webpage. Published pages will be displayed on the website.",
-			Options: []form.FieldOption{
-				{
-					Value: "- not selected -",
-					Key:   "",
-				},
-				{
-					Value: "Draft",
-					Key:   cmsstore.PAGE_STATUS_DRAFT,
-				},
-				{
-					Value: "Published",
-					Key:   cmsstore.PAGE_STATUS_ACTIVE,
-				},
-				{
-					Value: "Unpublished",
-					Key:   cmsstore.PAGE_STATUS_INACTIVE,
-				},
-			},
-		},
-		&form.Field{
-			Label: "Template ID",
-			Name:  "page_template_id",
-			Type:  form.FORM_FIELD_TYPE_SELECT,
-			Value: data.formTemplateID,
-			Help:  "The template that this page content will be displayed in. This feature is useful if you want to implement consistent layouts. Leaving the template empty will display the page content as it is, standalone",
-			OptionsF: func() []form.FieldOption {
-				options := []form.FieldOption{
-					{
-						Value: "- not template selected, page content will be displayed as it is -",
-						Key:   "",
-					},
-				}
-				for _, template := range data.templateList {
-					name := template.Name()
-					options = append(options, form.FieldOption{
-						Value: name,
-						Key:   template.ID(),
-					})
-				}
-				return options
+	fieldsSettings := controller.fieldsSettings(data)
 
-			},
-		},
-		// {
-		// 	Label: "Image URL",
-		// 	Name:  "page_image_url",
-		// 	Type:  form.FORM_FIELD_TYPE_IMAGE,
-		// 	Value: data.formImageUrl,
-		// 	Help:  "The image that will be displayed on the blog page. If left empty, the default image will be used.",
-		// },
-		// {
-		// 	Label: "Featured",
-		// 	Name:  "page_featured",
-		// 	Type:  form.FORM_FIELD_TYPE_SELECT,
-		// 	Value: data.formFeatured,
-		// 	Help:  "Is this blog page featured? Featured pages will be displayed on the home page.",
-		// 	Options: []form.FieldOption{
-		// 		{
-		// 			Value: "- not selected -",
-		// 			Key:   "",
-		// 		},
-		// 		{
-		// 			Value: "No",
-		// 			Key:   "no",
-		// 		},
-		// 		{
-		// 			Value: "Yes",
-		// 			Key:   "yes",
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	Label: "Published At",
-		// 	Name:  "page_published_at",
-		// 	Type:  form.FORM_FIELD_TYPE_DATETIME,
-		// 	Value: data.formPublishedAt,
-		// 	Help:  "The date this blog page was published.",
-		// },
-		&form.Field{
-			Label: "Editor",
-			Name:  "page_editor",
-			Type:  form.FORM_FIELD_TYPE_SELECT,
-			Value: data.formEditor,
-			Help:  "The content editor that will be used while editing this webpage content. Once set, this should not be changed, or the content may be lost. If left empty, the default editor (textarea) will be used. Note you will need to save and refresh to activate",
-			OptionsF: func() []form.FieldOption {
-				options := []form.FieldOption{
-					{
-						Value: "- not selected -",
-						Key:   "",
-					},
-				}
+	fieldsContent, errorMessage := controller.fieldsContent(data)
 
-				options = append(options, form.FieldOption{
-					Value: "CodeMirror (HTML Source Editor)",
-					Key:   types.WEBPAGE_EDITOR_CODEMIRROR,
-				})
-
-				if len(controller.ui.BlockEditorDefinitions()) > 0 {
-					options = append(options, form.FieldOption{
-						Value: "BlockEditor (Visual Editor using Blocks)",
-						Key:   types.WEBPAGE_EDITOR_BLOCKEDITOR,
-					})
-				}
-
-				options = append(options, form.FieldOption{
-					Value: "Markdown (Simple Textarea)",
-					Key:   types.WEBPAGE_EDITOR_MARKDOWN,
-				})
-
-				options = append(options, form.FieldOption{
-					Value: "HTML Area (WYSIWYG)",
-					Key:   types.WEBPAGE_EDITOR_HTMLAREA,
-				})
-
-				options = append(options, form.FieldOption{
-					Value: "Text Area",
-					Key:   types.WEBPAGE_EDITOR_TEXTAREA,
-				})
-
-				return options
-			},
-		},
-		&form.Field{
-			Label: "Webpage Name",
-			Name:  "page_name",
-			Type:  form.FORM_FIELD_TYPE_STRING,
-			Value: data.formName,
-			Help:  "The name of the page as displayed in the admin panel. This is not vsible to the page vistors",
-		},
-		// {
-		// 	Label: "Admin Notes",
-		// 	Name:  "page_memo",
-		// 	Type:  form.FORM_FIELD_TYPE_TEXTAREA,
-		// 	Value: data.formMemo,
-		// 	Help:  "Admin notes for this blogpage. These notes will not be visible to the public.",
-		// },
-		&form.Field{
-			Label:    "Webpage ID",
-			Name:     "page_id",
-			Type:     form.FORM_FIELD_TYPE_STRING,
-			Value:    data.pageID,
-			Readonly: true,
-			Help:     "The reference number (ID) of the webpage. This is used to identify the webpage in the system and should not be changed.",
-		},
-		&form.Field{
-			Label:    "View",
-			Name:     "view",
-			Type:     form.FORM_FIELD_TYPE_HIDDEN,
-			Value:    data.view,
-			Readonly: true,
-		},
-	}
-
-	editor := lo.IfF(data.page != nil, func() string { return data.page.Editor() }).Else("")
-
-	fieldContent := form.Field{
-		Label:   "Content",
-		Name:    "page_content",
-		Type:    form.FORM_FIELD_TYPE_TEXTAREA,
-		Value:   data.formContent,
-		Help:    "The content of this webpage. This will be displayed in the browser. If template is selected, the content will be displayed inside the template.",
-		Options: []form.FieldOption{},
-	}
-
-	if editor == types.WEBPAGE_EDITOR_CODEMIRROR {
-		//fieldContent.Type = form.FORM_FIELD_TYPE_CODEMIRROR
-		fieldContent.Options = []form.FieldOption{}
-	}
-
-	// For HTML Area editor, configure the Trumbowyg editor
-	if editor == types.WEBPAGE_EDITOR_HTMLAREA {
-		htmlAreaFieldOptions := []form.FieldOption{
-			{
-				Key: "config",
-				Value: `{
-	btns: [
-		['viewHTML'],
-		['undo', 'redo'],
-		['formatting'],
-		['strong', 'em', 'del'],
-		['superscript', 'subscript'],
-		['link','justifyLeft','justifyRight','justifyCenter','justifyFull'],
-		['unorderedList', 'orderedList'],
-		['insertImage'],
-		['removeformat'],
-		['horizontalRule'],
-		['fullscreen'],
-	],
-	autogrow: true,
-	removeformatPasted: true,
-	tagsToRemove: ['script', 'link', 'embed', 'iframe', 'input'],
-	tagsToKeep: ['hr', 'img', 'i'],
-	autogrowOnEnter: true,
-	linkTargets: ['_blank'],
-	}`,
-			}}
-		fieldContent.Type = form.FORM_FIELD_TYPE_HTMLAREA
-		fieldContent.Options = htmlAreaFieldOptions
-	}
-
-	if editor == types.WEBPAGE_EDITOR_BLOCKEDITOR {
-		value := fieldContent.Value
-
-		if value == "" {
-			value = `[]`
-		}
-
-		editor, err := blockeditor.NewEditor(blockeditor.NewEditorOptions{
-			// ID:    "blockeditor" + uid.HumanUid(),
-			Name:  fieldContent.Name,
-			Value: value,
-			HandleEndpoint: shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
-				"page_id": data.pageID,
-				"action":  ACTION_BLOCKEDITOR_HANDLE,
-			}),
-			BlockDefinitions: controller.ui.BlockEditorDefinitions(),
-		})
-
-		if err != nil {
-			return hb.Div().Class("alert alert-danger").Text("Error creating blockeditor: ").Text(err.Error())
-		}
-
-		fieldContent.Type = form.FORM_FIELD_TYPE_BLOCKEDITOR
-		fieldContent.CustomInput = editor
-	}
-
-	fieldsContent := []form.FieldInterface{
-		&form.Field{
-			Label: "Title",
-			Name:  "page_title",
-			Type:  form.FORM_FIELD_TYPE_STRING,
-			Value: data.formTitle,
-			Help:  "The title of this blog as will be seen everywhere",
-		},
-		&fieldContent,
-		&form.Field{
-			Label:    "page ID",
-			Name:     "page_id",
-			Type:     form.FORM_FIELD_TYPE_HIDDEN,
-			Value:    data.pageID,
-			Readonly: true,
-		},
-		&form.Field{
-			Label:    "View",
-			Name:     "view",
-			Type:     form.FORM_FIELD_TYPE_HIDDEN,
-			Value:    VIEW_CONTENT,
-			Readonly: true,
-		},
-	}
-
-	if editor == types.WEBPAGE_EDITOR_MARKDOWN {
-		contentScript := hb.Script(`
-setTimeout(() => {
-	const textArea = document.querySelector('textarea[name="page_content"]');
-	textArea.style.height = '300px';
-}, 2000)
-			`).
-			ToHTML()
-
-		fieldsContent = append(fieldsContent, &form.Field{
-			Type:  form.FORM_FIELD_TYPE_RAW,
-			Value: contentScript,
-		})
-	}
-
-	if editor == types.WEBPAGE_EDITOR_CODEMIRROR {
-		contentScript := hb.Script(`
-function codeMirrorSelector() {
-	return 'textarea[name="page_content"]';
-}
-function getCodeMirrorEditor() {
-	return document.querySelector(codeMirrorSelector());
-}
-setTimeout(function () {
-    console.log(getCodeMirrorEditor());
-	if (getCodeMirrorEditor()) {
-		var editor = CodeMirror.fromTextArea(getCodeMirrorEditor(), {
-			lineNumbers: true,
-			matchBrackets: true,
-			mode: "application/x-httpd-php",
-			indentUnit: 4,
-			indentWithTabs: true,
-			enterMode: "keep", tabMode: "shift"
-		});
-		$(document).on('mouseup', codeMirrorSelector(), function() {
-			getCodeMirrorEditor().value = editor.getValue();
-		});
-		$(document).on('change', codeMirrorSelector(), function() {
-			getCodeMirrorEditor().value = editor.getValue();
-		});
-		setInterval(()=>{
-			getCodeMirrorEditor().value = editor.getValue();
-		}, 1000)
-	}
-}, 500);
-		`).ToHTML()
-
-		fieldsContent = append(fieldsContent, &form.Field{
-			Type:  form.FORM_FIELD_TYPE_RAW,
-			Value: contentScript,
-		})
+	if errorMessage != "" {
+		hb.Div().Class("alert alert-danger").Text(errorMessage)
 	}
 
 	fieldsSEO := controller.fieldsSEO(data)
@@ -784,6 +446,325 @@ func (pageUpdateController) fieldsSEO(data pageUpdateControllerData) []form.Fiel
 		},
 	}
 	return fieldsSEO
+}
+
+func (c pageUpdateController) fieldsContent(data pageUpdateControllerData) (fields []form.FieldInterface, errorMessage string) {
+	editor := lo.IfF(data.page != nil, func() string { return data.page.Editor() }).Else("")
+
+	fieldContent := form.Field{
+		Label:   "Content",
+		Name:    "page_content",
+		Type:    form.FORM_FIELD_TYPE_TEXTAREA,
+		Value:   data.formContent,
+		Help:    "The content of this webpage. This will be displayed in the browser. If template is selected, the content will be displayed inside the template.",
+		Options: []form.FieldOption{},
+	}
+
+	if editor == types.WEBPAGE_EDITOR_CODEMIRROR {
+		//fieldContent.Type = form.FORM_FIELD_TYPE_CODEMIRROR
+		fieldContent.Options = []form.FieldOption{}
+	}
+
+	// For HTML Area editor, configure the Trumbowyg editor
+	if editor == types.WEBPAGE_EDITOR_HTMLAREA {
+		htmlAreaFieldOptions := []form.FieldOption{
+			{
+				Key: "config",
+				Value: `{
+	btns: [
+		['viewHTML'],
+		['undo', 'redo'],
+		['formatting'],
+		['strong', 'em', 'del'],
+		['superscript', 'subscript'],
+		['link','justifyLeft','justifyRight','justifyCenter','justifyFull'],
+		['unorderedList', 'orderedList'],
+		['insertImage'],
+		['removeformat'],
+		['horizontalRule'],
+		['fullscreen'],
+	],
+	autogrow: true,
+	removeformatPasted: true,
+	tagsToRemove: ['script', 'link', 'embed', 'iframe', 'input'],
+	tagsToKeep: ['hr', 'img', 'i'],
+	autogrowOnEnter: true,
+	linkTargets: ['_blank'],
+	}`,
+			}}
+		fieldContent.Type = form.FORM_FIELD_TYPE_HTMLAREA
+		fieldContent.Options = htmlAreaFieldOptions
+	}
+
+	if editor == types.WEBPAGE_EDITOR_BLOCKEDITOR {
+		value := fieldContent.Value
+
+		if value == "" {
+			value = `[]`
+		}
+
+		editor, err := blockeditor.NewEditor(blockeditor.NewEditorOptions{
+			// ID:    "blockeditor" + uid.HumanUid(),
+			Name:  fieldContent.Name,
+			Value: value,
+			HandleEndpoint: shared.URL(c.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
+				"page_id": data.pageID,
+				"action":  ACTION_BLOCKEDITOR_HANDLE,
+			}),
+			BlockDefinitions: c.ui.BlockEditorDefinitions(),
+		})
+
+		if err != nil {
+			return nil, "Error creating blockeditor: " + err.Error()
+		}
+
+		fieldContent.Type = form.FORM_FIELD_TYPE_BLOCKEDITOR
+		fieldContent.CustomInput = editor
+	}
+
+	fieldsContent := []form.FieldInterface{
+		&form.Field{
+			Label: "Title",
+			Name:  "page_title",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: data.formTitle,
+			Help:  "The title of this blog as will be seen everywhere",
+		},
+		&fieldContent,
+		&form.Field{
+			Label:    "page ID",
+			Name:     "page_id",
+			Type:     form.FORM_FIELD_TYPE_HIDDEN,
+			Value:    data.pageID,
+			Readonly: true,
+		},
+		&form.Field{
+			Label:    "View",
+			Name:     "view",
+			Type:     form.FORM_FIELD_TYPE_HIDDEN,
+			Value:    VIEW_CONTENT,
+			Readonly: true,
+		},
+	}
+
+	if editor == types.WEBPAGE_EDITOR_MARKDOWN {
+		contentScript := hb.Script(`
+setTimeout(() => {
+	const textArea = document.querySelector('textarea[name="page_content"]');
+	textArea.style.height = '300px';
+}, 2000)
+			`).
+			ToHTML()
+
+		fieldsContent = append(fieldsContent, &form.Field{
+			Type:  form.FORM_FIELD_TYPE_RAW,
+			Value: contentScript,
+		})
+	}
+
+	if editor == types.WEBPAGE_EDITOR_CODEMIRROR {
+		contentScript := hb.Script(`
+function codeMirrorSelector() {
+	return 'textarea[name="page_content"]';
+}
+function getCodeMirrorEditor() {
+	return document.querySelector(codeMirrorSelector());
+}
+setTimeout(function () {
+    console.log(getCodeMirrorEditor());
+	if (getCodeMirrorEditor()) {
+		var editor = CodeMirror.fromTextArea(getCodeMirrorEditor(), {
+			lineNumbers: true,
+			matchBrackets: true,
+			mode: "application/x-httpd-php",
+			indentUnit: 4,
+			indentWithTabs: true,
+			enterMode: "keep", tabMode: "shift"
+		});
+		$(document).on('mouseup', codeMirrorSelector(), function() {
+			getCodeMirrorEditor().value = editor.getValue();
+		});
+		$(document).on('change', codeMirrorSelector(), function() {
+			getCodeMirrorEditor().value = editor.getValue();
+		});
+		setInterval(()=>{
+			getCodeMirrorEditor().value = editor.getValue();
+		}, 1000)
+	}
+}, 500);
+		`).ToHTML()
+
+		fieldsContent = append(fieldsContent, &form.Field{
+			Type:  form.FORM_FIELD_TYPE_RAW,
+			Value: contentScript,
+		})
+	}
+
+	return fieldsContent, ""
+}
+
+func (c pageUpdateController) fieldsSettings(data pageUpdateControllerData) []form.FieldInterface {
+	fieldsSettings := []form.FieldInterface{
+		&form.Field{
+			Label: "Status",
+			Name:  "page_status",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: data.formStatus,
+			Help:  "The status of this webpage. Published pages will be displayed on the website.",
+			Options: []form.FieldOption{
+				{
+					Value: "- not selected -",
+					Key:   "",
+				},
+				{
+					Value: "Draft",
+					Key:   cmsstore.PAGE_STATUS_DRAFT,
+				},
+				{
+					Value: "Published",
+					Key:   cmsstore.PAGE_STATUS_ACTIVE,
+				},
+				{
+					Value: "Unpublished",
+					Key:   cmsstore.PAGE_STATUS_INACTIVE,
+				},
+			},
+		},
+		&form.Field{
+			Label: "Template ID",
+			Name:  "page_template_id",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: data.formTemplateID,
+			Help:  "The template that this page content will be displayed in. This feature is useful if you want to implement consistent layouts. Leaving the template empty will display the page content as it is, standalone",
+			OptionsF: func() []form.FieldOption {
+				options := []form.FieldOption{
+					{
+						Value: "- not template selected, page content will be displayed as it is -",
+						Key:   "",
+					},
+				}
+				for _, template := range data.templateList {
+					name := template.Name()
+					options = append(options, form.FieldOption{
+						Value: name,
+						Key:   template.ID(),
+					})
+				}
+				return options
+
+			},
+		},
+		// {
+		// 	Label: "Image URL",
+		// 	Name:  "page_image_url",
+		// 	Type:  form.FORM_FIELD_TYPE_IMAGE,
+		// 	Value: data.formImageUrl,
+		// 	Help:  "The image that will be displayed on the blog page. If left empty, the default image will be used.",
+		// },
+		// {
+		// 	Label: "Featured",
+		// 	Name:  "page_featured",
+		// 	Type:  form.FORM_FIELD_TYPE_SELECT,
+		// 	Value: data.formFeatured,
+		// 	Help:  "Is this blog page featured? Featured pages will be displayed on the home page.",
+		// 	Options: []form.FieldOption{
+		// 		{
+		// 			Value: "- not selected -",
+		// 			Key:   "",
+		// 		},
+		// 		{
+		// 			Value: "No",
+		// 			Key:   "no",
+		// 		},
+		// 		{
+		// 			Value: "Yes",
+		// 			Key:   "yes",
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Label: "Published At",
+		// 	Name:  "page_published_at",
+		// 	Type:  form.FORM_FIELD_TYPE_DATETIME,
+		// 	Value: data.formPublishedAt,
+		// 	Help:  "The date this blog page was published.",
+		// },
+		&form.Field{
+			Label: "Editor",
+			Name:  "page_editor",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: data.formEditor,
+			Help:  "The content editor that will be used while editing this webpage content. Once set, this should not be changed, or the content may be lost. If left empty, the default editor (textarea) will be used. Note you will need to save and refresh to activate",
+			OptionsF: func() []form.FieldOption {
+				options := []form.FieldOption{
+					{
+						Value: "- not selected -",
+						Key:   "",
+					},
+				}
+
+				options = append(options, form.FieldOption{
+					Value: "CodeMirror (HTML Source Editor)",
+					Key:   types.WEBPAGE_EDITOR_CODEMIRROR,
+				})
+
+				if len(c.ui.BlockEditorDefinitions()) > 0 {
+					options = append(options, form.FieldOption{
+						Value: "BlockEditor (Visual Editor using Blocks)",
+						Key:   types.WEBPAGE_EDITOR_BLOCKEDITOR,
+					})
+				}
+
+				options = append(options, form.FieldOption{
+					Value: "Markdown (Simple Textarea)",
+					Key:   types.WEBPAGE_EDITOR_MARKDOWN,
+				})
+
+				options = append(options, form.FieldOption{
+					Value: "HTML Area (WYSIWYG)",
+					Key:   types.WEBPAGE_EDITOR_HTMLAREA,
+				})
+
+				options = append(options, form.FieldOption{
+					Value: "Text Area",
+					Key:   types.WEBPAGE_EDITOR_TEXTAREA,
+				})
+
+				return options
+			},
+		},
+		&form.Field{
+			Label: "Webpage Name",
+			Name:  "page_name",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: data.formName,
+			Help:  "The name of the page as displayed in the admin panel. This is not vsible to the page vistors",
+		},
+		// {
+		// 	Label: "Admin Notes",
+		// 	Name:  "page_memo",
+		// 	Type:  form.FORM_FIELD_TYPE_TEXTAREA,
+		// 	Value: data.formMemo,
+		// 	Help:  "Admin notes for this blogpage. These notes will not be visible to the public.",
+		// },
+		&form.Field{
+			Label:    "Webpage ID",
+			Name:     "page_id",
+			Type:     form.FORM_FIELD_TYPE_STRING,
+			Value:    data.pageID,
+			Readonly: true,
+			Help:     "The reference number (ID) of the webpage. This is used to identify the webpage in the system and should not be changed.",
+		},
+		&form.Field{
+			Label:    "View",
+			Name:     "view",
+			Type:     form.FORM_FIELD_TYPE_HIDDEN,
+			Value:    data.view,
+			Readonly: true,
+		},
+	}
+
+	return fieldsSettings
 }
 
 func (controller pageUpdateController) savePage(r *http.Request, data pageUpdateControllerData) (d pageUpdateControllerData, errorMessage string) {
