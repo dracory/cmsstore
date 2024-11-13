@@ -60,7 +60,7 @@ func (controller blockDeleteController) Handler(w http.ResponseWriter, r *http.R
 }
 
 func (controller *blockDeleteController) modal(data blockDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockDelete, map[string]string{
+	submitUrl := shared.URLR(data.request, shared.PathBlocksBlockDelete, map[string]string{
 		"block_id": data.blockID,
 	})
 

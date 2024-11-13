@@ -100,11 +100,11 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Template Manager",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, nil),
+			URL:  shared.URLR(data.request, shared.PathTemplatesTemplateManager, nil),
 		},
 		{
 			Name: "Edit Template",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{"template_id": data.templateID}),
+			URL:  shared.URLR(data.request, shared.PathTemplatesTemplateUpdate, map[string]string{"template_id": data.templateID}),
 		},
 	}, struct{ SiteList []cmsstore.SiteInterface }{
 		SiteList: data.siteList,
@@ -115,14 +115,14 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormTemplateUpdate").
-		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{"template_id": data.templateID})).
+		HxPost(shared.URLR(data.request, shared.PathTemplatesTemplateUpdate, map[string]string{"template_id": data.templateID})).
 		HxTarget("#FormTemplateUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, nil))
+		Href(shared.URLR(data.request, shared.PathTemplatesTemplateManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -161,7 +161,7 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_CONTENT, "active").
-				Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
+				Href(shared.URLR(data.request, shared.PathTemplatesTemplateUpdate, map[string]string{
 					"template_id": data.templateID,
 					"view":        VIEW_CONTENT,
 				})).
@@ -169,7 +169,7 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
+				Href(shared.URLR(data.request, shared.PathTemplatesTemplateUpdate, map[string]string{
 					"template_id": data.templateID,
 					"view":        VIEW_SETTINGS,
 				})).
@@ -331,7 +331,7 @@ func (controller templateUpdateController) fieldsSettings(data templateUpdateCon
 
 	fieldSiteID := &form.Field{
 		Label: "Belongs to Site",
-		Name:  "page_site_id",
+		Name:  "template_site_id",
 		Type:  form.FORM_FIELD_TYPE_SELECT,
 		Value: data.formSiteID,
 		Help:  "The site that this page belongs to",
@@ -421,6 +421,7 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 	data.formContent = utils.Req(r, "template_content", "")
 	data.formMemo = utils.Req(r, "template_memo", "")
 	data.formName = utils.Req(r, "template_name", "")
+	data.formSiteID = utils.Req(r, "template_site_id", "")
 	data.formStatus = utils.Req(r, "template_status", "")
 	data.formTitle = utils.Req(r, "template_title", "")
 
@@ -459,7 +460,7 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 	}
 
 	data.formSuccessMessage = "template saved successfully"
-	data.formRedirectURL = shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
+	data.formRedirectURL = shared.URLR(data.request, shared.PathTemplatesTemplateUpdate, map[string]string{
 		"template_id": data.template.ID(),
 		"view":        data.view,
 	})

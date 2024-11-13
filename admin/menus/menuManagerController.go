@@ -85,14 +85,22 @@ func (controller *menuManagerController) onModalRecordFilterShow(data menuManage
 		Class("btn btn-primary float-end").
 		OnClick(`FormFilters.submit();` + modalCloseScript)
 
+	fieldSiteID := form.NewField(form.FieldOptions{
+		Label: "Site ID",
+		Name:  "filter_site_id",
+		Type:  form.FORM_FIELD_TYPE_STRING,
+		Value: data.formSiteID,
+		Help:  `Find site by reference number (ID).`,
+	})
+
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, nil),
+		ActionURL: shared.URLR(data.request, shared.PathMenusMenuManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
-				Name:  "status",
+				Name:  "filter_status",
 				Type:  form.FORM_FIELD_TYPE_SELECT,
 				Help:  `The status of the menu.`,
 				Value: data.formStatus,
@@ -117,36 +125,38 @@ func (controller *menuManagerController) onModalRecordFilterShow(data menuManage
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Name",
-				Name:  "name",
+				Name:  "filter_name",
 				Type:  form.FORM_FIELD_TYPE_STRING,
 				Value: data.formName,
 				Help:  `Filter by name.`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Created From",
-				Name:  "created_from",
+				Name:  "filter_created_from",
 				Type:  form.FORM_FIELD_TYPE_DATE,
 				Value: data.formCreatedFrom,
 				Help:  `Filter by creation date.`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Created To",
-				Name:  "created_to",
+				Name:  "filter_created_to",
 				Type:  form.FORM_FIELD_TYPE_DATE,
 				Value: data.formCreatedTo,
 				Help:  `Filter by creation date.`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Menu ID",
-				Name:  "menu_id",
+				Name:  "filter_menu_id",
 				Type:  form.FORM_FIELD_TYPE_STRING,
 				Value: data.formMenuID,
 				Help:  `Find menu by reference number (ID).`,
 			}),
+			fieldSiteID,
+			// !!! Needed or it loses the path from the get submission
 			form.NewField(form.FieldOptions{
 				Label: "Path",
 				Name:  "path",
-				Type:  form.FORM_FIELD_TYPE_STRING,
+				Type:  form.FORM_FIELD_TYPE_HIDDEN,
 				Value: shared.PathMenusMenuManager,
 				Help:  `Path to this page.`,
 			}),
@@ -194,7 +204,7 @@ func (controller *menuManagerController) page(data menuManagerControllerData) hb
 	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Menu Manager",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, nil),
+			URL:  shared.URLR(data.request, shared.PathMenusMenuManager, nil),
 		},
 	}, struct{ SiteList []cmsstore.SiteInterface }{
 		SiteList: data.siteList,
@@ -204,7 +214,7 @@ func (controller *menuManagerController) page(data menuManagerControllerData) hb
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("New Menu").
-		HxGet(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuCreate, nil)).
+		HxGet(shared.URLR(data.request, shared.PathMenusMenuCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
@@ -257,7 +267,7 @@ func (controller *menuManagerController) tableRecords(data menuManagerController
 
 				menuLink := hb.Hyperlink().
 					Text(menuName).
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathMenusMenuUpdate, map[string]string{
 						"menu_id": menu.ID(),
 					}))
 
@@ -272,7 +282,7 @@ func (controller *menuManagerController) tableRecords(data menuManagerController
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathMenusMenuUpdate, map[string]string{
 						"menu_id": menu.ID(),
 					}))
 
@@ -280,7 +290,7 @@ func (controller *menuManagerController) tableRecords(data menuManagerController
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuDelete, map[string]string{
+					HxGet(shared.URLR(data.request, shared.PathMenusMenuDelete, map[string]string{
 						"menu_id": menu.ID(),
 					})).
 					HxTarget("body").
@@ -333,7 +343,7 @@ func (controller *menuManagerController) sortableColumnLabel(data menuManagerCon
 		direction = sb.ASC
 	}
 
-	link := shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, map[string]string{
+	link := shared.URLR(data.request, shared.PathMenusMenuManager, map[string]string{
 		"page":      "0",
 		"by":        columnName,
 		"sort":      direction,
@@ -370,7 +380,7 @@ func (controller *menuManagerController) tableFilter(data menuManagerControllerD
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, map[string]string{
+		HxPost(shared.URLR(data.request, shared.PathMenusMenuManager, map[string]string{
 			"action":       ActionModalPageFilterShow,
 			"name":         data.formName,
 			"status":       data.formStatus,
@@ -419,7 +429,7 @@ func (controller *menuManagerController) tableFilter(data menuManagerControllerD
 }
 
 func (controller *menuManagerController) tablePagination(data menuManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, map[string]string{
+	url := shared.URLR(data.request, shared.PathMenusMenuManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,
@@ -453,20 +463,20 @@ func (controller *menuManagerController) prepareData(r *http.Request) (data menu
 	data.perPage = cast.ToInt(utils.Req(r, "per_page", cast.ToString(initialPerPage)))
 	data.sortOrder = utils.Req(r, "sort", sb.DESC)
 	data.sortBy = utils.Req(r, "by", cmsstore.COLUMN_CREATED_AT)
-	data.formName = utils.Req(r, "name", "")
-	data.formStatus = utils.Req(r, "status", "")
-	data.formCreatedFrom = utils.Req(r, "created_from", "")
-	data.formCreatedTo = utils.Req(r, "created_to", "")
 
-	recordList, recordCount, err := controller.fetchRecordList(data)
+	data.formCreatedFrom = utils.Req(r, "filter_created_from", "")
+	data.formCreatedTo = utils.Req(r, "filter_created_to", "")
+	data.formMenuID = utils.Req(r, "filter_menu_id", "")
+	data.formName = utils.Req(r, "filter_name", "")
+	data.formSiteID = utils.Req(r, "filter_site_id", "")
+	data.formStatus = utils.Req(r, "filter_status", "")
+
+	data.recordList, data.recordCount, err = controller.fetchRecordList(data)
 
 	if err != nil {
 		controller.ui.Logger().Error("At menuManagerController > prepareData", "error", err.Error())
 		return data, "error retrieving web menus"
 	}
-
-	data.recordList = recordList
-	data.recordCount = recordCount
 
 	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
@@ -489,14 +499,6 @@ func (controller *menuManagerController) fetchRecordList(data menuManagerControl
 		menuIDs = append(menuIDs, data.formMenuID)
 	}
 
-	// if data.formCreatedFrom != "" {
-	// 	query.CreatedAtGte = data.formCreatedFrom + " 00:00:00"
-	// }
-
-	// if data.formCreatedTo != "" {
-	// 	query.CreatedAtLte = data.formCreatedTo + " 23:59:59"
-	// }
-
 	query := cmsstore.MenuQuery().
 		SetLimit(data.perPage).
 		SetOffset(data.pageInt * data.perPage).
@@ -514,6 +516,18 @@ func (controller *menuManagerController) fetchRecordList(data menuManagerControl
 	if data.formName != "" {
 		query.SetNameLike(data.formName)
 	}
+
+	if data.formSiteID != "" {
+		query.SetSiteID(data.formSiteID)
+	}
+
+	// if data.formCreatedFrom != "" {
+	// 	query.CreatedAtGte = data.formCreatedFrom + " 00:00:00"
+	// }
+
+	// if data.formCreatedTo != "" {
+	// 	query.CreatedAtLte = data.formCreatedTo + " 23:59:59"
+	// }
 
 	recordList, err := controller.ui.Store().MenuList(query)
 
@@ -541,11 +555,13 @@ type menuManagerControllerData struct {
 
 	siteList []cmsstore.SiteInterface
 
-	formStatus      string
-	formName        string
 	formCreatedFrom string
 	formCreatedTo   string
 	formMenuID      string
-	recordList      []cmsstore.MenuInterface
-	recordCount     int64
+	formName        string
+	formSiteID      string
+	formStatus      string
+
+	recordList  []cmsstore.MenuInterface
+	recordCount int64
 }

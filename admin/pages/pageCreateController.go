@@ -70,7 +70,7 @@ func (controller pageCreateController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *pageCreateController) modal(data pageCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathPagesPageCreate, nil)
+	submitUrl := shared.URLR(data.request, shared.PathPagesPageCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormPageCreate",

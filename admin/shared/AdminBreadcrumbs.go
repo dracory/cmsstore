@@ -47,18 +47,24 @@ func AdminBreadcrumbs(r *http.Request, pageBreadcrumbs []Breadcrumb, options str
 			Text("Site: ").
 			Text(lo.IfF(siteFound, func() string { return site.Name() }).Else("all sites")))
 
-	dropdownMenu := hb.UL().Class("dropdown-menu")
+	dropdownMenu := hb.UL().
+		Class("dropdown-menu").
+		Child(hb.LI().
+			Class("dropdown-item").
+			Child(hb.Hyperlink().
+				Text("All sites").
+				Href(URLR(r, path, map[string]string{
+					"filter_site_id": "",
+				}))))
 
 	for _, site := range options.SiteList {
-		link := hb.Hyperlink().
-			Text(site.Name()).
-			Href(URLR(r, path, map[string]string{
-				"filter_site_id": site.ID(),
-			}))
-
 		dropdownMenu.Child(hb.LI().
 			Class("dropdown-item").
-			Child(link))
+			Child(hb.Hyperlink().
+				Text(site.Name()).
+				Href(URLR(r, path, map[string]string{
+					"filter_site_id": site.ID(),
+				}))))
 	}
 
 	dropdown.Child(dropdownMenu)

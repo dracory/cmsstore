@@ -60,7 +60,7 @@ func (controller menuDeleteController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *menuDeleteController) modal(data menuDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuDelete, map[string]string{
+	submitUrl := shared.URLR(data.request, shared.PathMenusMenuDelete, map[string]string{
 		"menu_id": data.menuID,
 	})
 

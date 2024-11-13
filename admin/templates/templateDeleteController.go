@@ -60,7 +60,7 @@ func (controller templateDeleteController) Handler(w http.ResponseWriter, r *htt
 }
 
 func (controller *templateDeleteController) modal(data templateDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateDelete, map[string]string{
+	submitUrl := shared.URLR(data.request, shared.PathTemplatesTemplateDelete, map[string]string{
 		"template_id": data.templateID,
 	})
 

@@ -85,10 +85,18 @@ func (controller *templateManagerController) onModalRecordFilterShow(data templa
 		Class("btn btn-primary float-end").
 		OnClick(`FormFilters.submit();` + modalCloseScript)
 
+	fieldSiteID := form.NewField(form.FieldOptions{
+		Label: "Site ID",
+		Name:  "filter_site_id",
+		Type:  form.FORM_FIELD_TYPE_STRING,
+		Value: data.formSiteID,
+		Help:  `Find site by reference number (ID).`,
+	})
+
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, nil),
+		ActionURL: shared.URLR(data.request, shared.PathTemplatesTemplateManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
@@ -143,6 +151,7 @@ func (controller *templateManagerController) onModalRecordFilterShow(data templa
 				Value: data.formTemplateID,
 				Help:  `Find template by reference number (ID).`,
 			}),
+			fieldSiteID,
 			form.NewField(form.FieldOptions{
 				Label: "Path",
 				Name:  "path",
@@ -194,7 +203,7 @@ func (controller *templateManagerController) page(data templateManagerController
 	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Template Manager",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, nil),
+			URL:  shared.URLR(data.request, shared.PathTemplatesTemplateManager, nil),
 		},
 	}, struct{ SiteList []cmsstore.SiteInterface }{
 		SiteList: data.siteList,
@@ -204,7 +213,7 @@ func (controller *templateManagerController) page(data templateManagerController
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("New Template").
-		HxGet(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateCreate, nil)).
+		HxGet(shared.URLR(data.request, shared.PathTemplatesTemplateCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
@@ -257,7 +266,7 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 
 				templateLink := hb.Hyperlink().
 					Text(templateName).
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathTemplatesTemplateUpdate, map[string]string{
 						"template_id": template.ID(),
 					}))
 
@@ -272,7 +281,7 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathTemplatesTemplateUpdate, map[string]string{
 						"template_id": template.ID(),
 					}))
 
@@ -280,7 +289,7 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateDelete, map[string]string{
+					HxGet(shared.URLR(data.request, shared.PathTemplatesTemplateDelete, map[string]string{
 						"template_id": template.ID(),
 					})).
 					HxTarget("body").
@@ -333,7 +342,7 @@ func (controller *templateManagerController) sortableColumnLabel(data templateMa
 		direction = sb.ASC
 	}
 
-	link := shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, map[string]string{
+	link := shared.URLR(data.request, shared.PathTemplatesTemplateManager, map[string]string{
 		"page":        "0",
 		"by":          columnName,
 		"sort":        direction,
@@ -370,7 +379,7 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, map[string]string{
+		HxPost(shared.URLR(data.request, shared.PathTemplatesTemplateManager, map[string]string{
 			"action":       ActionModalPageFilterShow,
 			"name":         data.formName,
 			"status":       data.formStatus,
@@ -399,6 +408,10 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 		description = append(description, hb.Span().Text("and ID: "+data.formTemplateID).ToHTML())
 	}
 
+	if data.formSiteID != "" {
+		description = append(description, hb.Span().Text("and site ID: "+data.formSiteID).ToHTML())
+	}
+
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
 		description = append(description, hb.Span().Text("and created between: "+data.formCreatedFrom+" and "+data.formCreatedTo).ToHTML())
 	} else if data.formCreatedFrom != "" {
@@ -419,7 +432,7 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 }
 
 func (controller *templateManagerController) tablePagination(data templateManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, map[string]string{
+	url := shared.URLR(data.request, shared.PathTemplatesTemplateManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,
@@ -453,10 +466,11 @@ func (controller *templateManagerController) prepareData(r *http.Request) (data 
 	data.perPage = cast.ToInt(utils.Req(r, "per_page", cast.ToString(initialPerPage)))
 	data.sortOrder = utils.Req(r, "sort", sb.DESC)
 	data.sortBy = utils.Req(r, "by", cmsstore.COLUMN_CREATED_AT)
-	data.formName = utils.Req(r, "name", "")
-	data.formStatus = utils.Req(r, "status", "")
-	data.formCreatedFrom = utils.Req(r, "created_from", "")
-	data.formCreatedTo = utils.Req(r, "created_to", "")
+	data.formCreatedFrom = utils.Req(r, "filter_created_from", "")
+	data.formCreatedTo = utils.Req(r, "filter_created_to", "")
+	data.formSiteID = utils.Req(r, "filter_site_id", "")
+	data.formName = utils.Req(r, "filter_name", "")
+	data.formStatus = utils.Req(r, "filter_status", "")
 
 	recordList, recordCount, err := controller.fetchRecordList(data)
 
@@ -504,15 +518,19 @@ func (controller *templateManagerController) fetchRecordList(data templateManage
 		SetSortOrder(data.sortOrder)
 
 	if len(templateIDs) > 0 {
-		query.SetIDIn(templateIDs)
+		query = query.SetIDIn(templateIDs)
+	}
+
+	if data.formSiteID != "" {
+		query = query.SetSiteID(data.formSiteID)
 	}
 
 	if data.formStatus != "" {
-		query.SetStatus(data.formStatus)
+		query = query.SetStatus(data.formStatus)
 	}
 
 	if data.formName != "" {
-		query.SetNameLike(data.formName)
+		query = query.SetNameLike(data.formName)
 	}
 
 	recordList, err := controller.ui.Store().TemplateList(query)
@@ -538,15 +556,17 @@ type templateManagerControllerData struct {
 	pageInt   int
 	perPage   int
 	sortOrder string
+	sortBy    string
 
 	siteList []cmsstore.SiteInterface
 
-	sortBy          string
-	formStatus      string
-	formName        string
 	formCreatedFrom string
 	formCreatedTo   string
+	formName        string
+	formSiteID      string
+	formStatus      string
 	formTemplateID  string
-	recordList      []cmsstore.TemplateInterface
-	recordCount     int64
+
+	recordList  []cmsstore.TemplateInterface
+	recordCount int64
 }

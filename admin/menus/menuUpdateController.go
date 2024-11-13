@@ -90,7 +90,7 @@ func (controller *menuUpdateController) treeEditorHandle(r *http.Request, data m
 	treeControl := &treeControl{
 		treeJSON:         menuItemsJson,
 		targetTextareaID: "menu_items",
-		renderURL: shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
+		renderURL: shared.URLR(data.request, shared.PathMenusMenuUpdate, map[string]string{
 			"menu_id": data.menuID,
 			"action":  ACTION_TREEEDITOR_HANDLE,
 		}),
@@ -120,11 +120,11 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Menu Manager",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, nil),
+			URL:  shared.URLR(data.request, shared.PathMenusMenuManager, nil),
 		},
 		{
 			Name: "Edit Menu",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{"menu_id": data.menuID}),
+			URL:  shared.URLR(data.request, shared.PathMenusMenuUpdate, map[string]string{"menu_id": data.menuID}),
 		},
 	}, struct{ SiteList []cmsstore.SiteInterface }{
 		SiteList: data.siteList,
@@ -135,14 +135,14 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormMenuUpdate").
-		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{"menu_id": data.menuID})).
+		HxPost(shared.URLR(data.request, shared.PathMenusMenuUpdate, map[string]string{"menu_id": data.menuID})).
 		HxTarget("#FormMenuUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, nil))
+		Href(shared.URLR(data.request, shared.PathMenusMenuManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -181,7 +181,7 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_MENU_ITEMS, "active").
-				Href(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
+				Href(shared.URLR(data.request, shared.PathMenusMenuUpdate, map[string]string{
 					"menu_id": data.menuID,
 					"view":    VIEW_MENU_ITEMS,
 				})).
@@ -189,7 +189,7 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
+				Href(shared.URLR(data.request, shared.PathMenusMenuUpdate, map[string]string{
 					"menu_id": data.menuID,
 					"view":    VIEW_SETTINGS,
 				})).
@@ -255,7 +255,7 @@ func (controller menuUpdateController) form(data menuUpdateControllerData) hb.Ta
 }
 
 func (c menuUpdateController) fieldsMenuItems(data menuUpdateControllerData) []form.FieldInterface {
-	url := shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
+	url := shared.URLR(data.request, shared.PathMenusMenuUpdate, map[string]string{
 		"action":  ACTION_TREEEDITOR_HANDLE,
 		"menu_id": data.menuID,
 	})
@@ -476,7 +476,7 @@ func (controller menuUpdateController) saveMenu(r *http.Request, data menuUpdate
 
 	data.formSuccessMessage = "Menu saved successfully"
 	if refreshPage {
-		data.formRedirectURL = shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
+		data.formRedirectURL = shared.URLR(data.request, shared.PathMenusMenuUpdate, map[string]string{
 			"menu_id": data.menuID,
 			"view":    data.view,
 		})

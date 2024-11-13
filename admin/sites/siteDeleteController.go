@@ -60,7 +60,7 @@ func (controller siteDeleteController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteDelete, map[string]string{
+	submitUrl := shared.URLR(data.request, shared.PathSitesSiteDelete, map[string]string{
 		"site_id": data.siteID,
 	})
 

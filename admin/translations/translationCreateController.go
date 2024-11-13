@@ -65,7 +65,7 @@ func (controller translationCreateController) Handler(w http.ResponseWriter, r *
 }
 
 func (controller *translationCreateController) modal(data translationCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationCreate, nil)
+	submitUrl := shared.URLR(data.request, shared.PathTranslationsTranslationCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormTranslationCreate",

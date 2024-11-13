@@ -85,14 +85,22 @@ func (controller *translationManagerController) onModalRecordFilterShow(data tra
 		Class("btn btn-primary float-end").
 		OnClick(`FormFilters.submit();` + modalCloseScript)
 
+	fieldSiteID := form.NewField(form.FieldOptions{
+		Label: "Site ID",
+		Name:  "filter_site_id",
+		Type:  form.FORM_FIELD_TYPE_STRING,
+		Value: data.formSiteID,
+		Help:  `Find site by reference number (ID).`,
+	})
+
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, nil),
+		ActionURL: shared.URLR(data.request, shared.PathTranslationsTranslationManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
-				Name:  "status",
+				Name:  "filter_status",
 				Type:  form.FORM_FIELD_TYPE_SELECT,
 				Help:  `The status of the translation.`,
 				Value: data.formStatus,
@@ -117,36 +125,38 @@ func (controller *translationManagerController) onModalRecordFilterShow(data tra
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Name",
-				Name:  "name",
+				Name:  "filter_name",
 				Type:  form.FORM_FIELD_TYPE_STRING,
 				Value: data.formName,
 				Help:  `Filter by name.`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Created From",
-				Name:  "created_from",
+				Name:  "filter_created_from",
 				Type:  form.FORM_FIELD_TYPE_DATE,
 				Value: data.formCreatedFrom,
 				Help:  `Filter by creation date.`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Created To",
-				Name:  "created_to",
+				Name:  "filter_created_to",
 				Type:  form.FORM_FIELD_TYPE_DATE,
 				Value: data.formCreatedTo,
 				Help:  `Filter by creation date.`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Translation ID",
-				Name:  "translation_id",
+				Name:  "filter_translation_id",
 				Type:  form.FORM_FIELD_TYPE_STRING,
 				Value: data.formTranslationID,
 				Help:  `Find translation by reference number (ID).`,
 			}),
+			fieldSiteID,
+			// !!! Needed or it loses the path from the get submission
 			form.NewField(form.FieldOptions{
 				Label: "Path",
 				Name:  "path",
-				Type:  form.FORM_FIELD_TYPE_STRING,
+				Type:  form.FORM_FIELD_TYPE_HIDDEN,
 				Value: shared.PathTranslationsTranslationManager,
 				Help:  `Path to this page.`,
 			}),
@@ -194,7 +204,7 @@ func (controller *translationManagerController) page(data translationManagerCont
 	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Translation Manager",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, nil),
+			URL:  shared.URLR(data.request, shared.PathTranslationsTranslationManager, nil),
 		},
 	}, struct{ SiteList []cmsstore.SiteInterface }{
 		SiteList: data.siteList,
@@ -204,7 +214,7 @@ func (controller *translationManagerController) page(data translationManagerCont
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("New Translation").
-		HxGet(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationCreate, nil)).
+		HxGet(shared.URLR(data.request, shared.PathTranslationsTranslationCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
@@ -257,7 +267,7 @@ func (controller *translationManagerController) tableRecords(data translationMan
 
 				translationLink := hb.Hyperlink().
 					Text(translationName).
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathTranslationsTranslationUpdate, map[string]string{
 						"translation_id": translation.ID(),
 					}))
 
@@ -272,7 +282,7 @@ func (controller *translationManagerController) tableRecords(data translationMan
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathTranslationsTranslationUpdate, map[string]string{
 						"translation_id": translation.ID(),
 					}))
 
@@ -280,7 +290,7 @@ func (controller *translationManagerController) tableRecords(data translationMan
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationDelete, map[string]string{
+					HxGet(shared.URLR(data.request, shared.PathTranslationsTranslationDelete, map[string]string{
 						"translation_id": translation.ID(),
 					})).
 					HxTarget("body").
@@ -333,7 +343,7 @@ func (controller *translationManagerController) sortableColumnLabel(data transla
 		direction = sb.ASC
 	}
 
-	link := shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, map[string]string{
+	link := shared.URLR(data.request, shared.PathTranslationsTranslationManager, map[string]string{
 		"page":           "0",
 		"by":             columnName,
 		"sort":           direction,
@@ -370,7 +380,7 @@ func (controller *translationManagerController) tableFilter(data translationMana
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, map[string]string{
+		HxPost(shared.URLR(data.request, shared.PathTranslationsTranslationManager, map[string]string{
 			"action":         ActionModalPageFilterShow,
 			"name":           data.formName,
 			"status":         data.formStatus,
@@ -399,6 +409,10 @@ func (controller *translationManagerController) tableFilter(data translationMana
 		description = append(description, hb.Span().Text("and ID: "+data.formTranslationID).ToHTML())
 	}
 
+	if data.formSiteID != "" {
+		description = append(description, hb.Span().Text("and site ID: "+data.formSiteID).ToHTML())
+	}
+
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
 		description = append(description, hb.Span().Text("and created between: "+data.formCreatedFrom+" and "+data.formCreatedTo).ToHTML())
 	} else if data.formCreatedFrom != "" {
@@ -419,7 +433,7 @@ func (controller *translationManagerController) tableFilter(data translationMana
 }
 
 func (controller *translationManagerController) tablePagination(data translationManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, map[string]string{
+	url := shared.URLR(data.request, shared.PathTranslationsTranslationManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,
@@ -453,10 +467,13 @@ func (controller *translationManagerController) prepareData(r *http.Request) (da
 	data.perPage = cast.ToInt(utils.Req(r, "per_page", cast.ToString(initialPerPage)))
 	data.sortOrder = utils.Req(r, "sort", sb.DESC)
 	data.sortBy = utils.Req(r, "by", cmsstore.COLUMN_CREATED_AT)
-	data.formName = utils.Req(r, "name", "")
-	data.formStatus = utils.Req(r, "status", "")
-	data.formCreatedFrom = utils.Req(r, "created_from", "")
-	data.formCreatedTo = utils.Req(r, "created_to", "")
+
+	data.formCreatedFrom = utils.Req(r, "filter_created_from", "")
+	data.formCreatedTo = utils.Req(r, "filter_created_to", "")
+	data.formName = utils.Req(r, "filter_name", "")
+	data.formStatus = utils.Req(r, "filter_status", "")
+	data.formSiteID = utils.Req(r, "filter_site_id", "")
+	data.formTranslationID = utils.Req(r, "filter_translation_id", "")
 
 	recordList, recordCount, err := controller.fetchRecordList(data)
 
@@ -507,12 +524,16 @@ func (controller *translationManagerController) fetchRecordList(data translation
 		query.SetIDIn(translationIDs)
 	}
 
+	if data.formName != "" {
+		query.SetNameLike(data.formName)
+	}
+
 	if data.formStatus != "" {
 		query.SetStatus(data.formStatus)
 	}
 
-	if data.formName != "" {
-		query.SetNameLike(data.formName)
+	if data.formSiteID != "" {
+		query.SetSiteID(data.formSiteID)
 	}
 
 	recordList, err := controller.ui.Store().TranslationList(query)
@@ -531,19 +552,22 @@ func (controller *translationManagerController) fetchRecordList(data translation
 }
 
 type translationManagerControllerData struct {
-	request           *http.Request
-	action            string
-	siteList          []cmsstore.SiteInterface
-	page              string
-	pageInt           int
-	perPage           int
-	sortOrder         string
-	sortBy            string
-	formStatus        string
-	formName          string
+	request   *http.Request
+	action    string
+	siteList  []cmsstore.SiteInterface
+	page      string
+	pageInt   int
+	perPage   int
+	sortOrder string
+	sortBy    string
+
 	formCreatedFrom   string
 	formCreatedTo     string
+	formName          string
+	formSiteID        string
+	formStatus        string
 	formTranslationID string
-	recordList        []cmsstore.TranslationInterface
-	recordCount       int64
+
+	recordList  []cmsstore.TranslationInterface
+	recordCount int64
 }

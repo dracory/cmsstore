@@ -60,7 +60,7 @@ func (controller pageDeleteController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *pageDeleteController) modal(data pageDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathPagesPageDelete, map[string]string{
+	submitUrl := shared.URLR(data.request, shared.PathPagesPageDelete, map[string]string{
 		"page_id": data.pageID,
 	})
 

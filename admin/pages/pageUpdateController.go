@@ -119,11 +119,11 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Page Manager",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, nil),
+			URL:  shared.URLR(data.request, shared.PathPagesPageManager, nil),
 		},
 		{
 			Name: "Edit Page",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID}),
+			URL:  shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID}),
 		},
 	}, struct{ SiteList []cmsstore.SiteInterface }{
 		SiteList: data.siteList,
@@ -134,14 +134,14 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormpageUpdate").
-		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID})).
+		HxPost(shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID})).
 		HxTarget("#FormpageUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, nil))
+		Href(shared.URLR(data.request, shared.PathPagesPageManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -181,7 +181,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_CONTENT, "active").
-				Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
+				Href(shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
 					"page_id": data.pageID,
 					"view":    VIEW_CONTENT,
 				})).
@@ -189,7 +189,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SEO, "active").
-				Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
+				Href(shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
 					"page_id": data.pageID,
 					"view":    VIEW_SEO,
 				})).
@@ -197,7 +197,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
+				Href(shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
 					"page_id": data.pageID,
 					"view":    VIEW_SETTINGS,
 				})).
@@ -517,7 +517,7 @@ func (c pageUpdateController) fieldsContent(data pageUpdateControllerData) (fiel
 			// ID:    "blockeditor" + uid.HumanUid(),
 			Name:  fieldContent.Name,
 			Value: value,
-			HandleEndpoint: shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
+			HandleEndpoint: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
 				"page_id": data.pageID,
 				"action":  ACTION_BLOCKEDITOR_HANDLE,
 			}),
@@ -855,7 +855,7 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 
 	data.formSuccessMessage = "page saved successfully"
 
-	data.formRedirectURL = shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
+	data.formRedirectURL = shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
 		"page_id": data.pageID,
 		"view":    data.view,
 	})
@@ -928,7 +928,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	data.formTemplateID = data.page.TemplateID()
 	data.formTitle = data.page.Title()
 
-	siteList, err := controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).
@@ -937,8 +937,6 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	if err != nil {
 		return data, "Site list failed to be retrieved" + err.Error()
 	}
-
-	data.siteList = siteList
 
 	templateList, err := controller.ui.Store().TemplateList(cmsstore.TemplateQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).

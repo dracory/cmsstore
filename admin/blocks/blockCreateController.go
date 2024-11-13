@@ -67,7 +67,7 @@ func (controller blockCreateController) Handler(w http.ResponseWriter, r *http.R
 }
 
 func (controller *blockCreateController) modal(data blockCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockCreate, nil)
+	submitUrl := shared.URLR(data.request, shared.PathBlocksBlockCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormBlockCreate",

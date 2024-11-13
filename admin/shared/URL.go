@@ -5,6 +5,7 @@ import (
 	urlpkg "net/url"
 
 	"github.com/gouniverse/utils"
+	"github.com/samber/lo"
 )
 
 func URL(endpoint string, path string, params map[string]string) string {
@@ -26,7 +27,10 @@ func URLR(r *http.Request, path string, params map[string]string) string {
 	}
 
 	params["path"] = path
-	params["filter_site_id"] = filterSiteID
+
+	if !lo.HasKey(params, "filter_site_id") {
+		params["filter_site_id"] = filterSiteID
+	}
 
 	url := endpoint + query(params)
 

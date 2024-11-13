@@ -65,7 +65,7 @@ func (controller siteCreateController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *siteCreateController) modal(data siteCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteCreate, nil)
+	submitUrl := shared.URLR(data.request, shared.PathSitesSiteCreate, nil)
 
 	formGroupName := bs.FormGroup().
 		Class("mb-3").

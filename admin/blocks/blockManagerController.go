@@ -85,10 +85,18 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 		Class("btn btn-primary float-end").
 		OnClick(`FormFilters.submit();` + modalCloseScript)
 
+	fieldSiteID := form.NewField(form.FieldOptions{
+		Label: "Site ID",
+		Name:  "filter_site_id",
+		Type:  form.FORM_FIELD_TYPE_STRING,
+		Value: data.formSiteID,
+		Help:  `Find site by reference number (ID).`,
+	})
+
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, nil),
+		ActionURL: shared.URLR(data.request, shared.PathBlocksBlockManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
@@ -159,6 +167,7 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 				Value: data.formBlockID,
 				Help:  `Find block by reference number (ID).`,
 			}),
+			fieldSiteID,
 			// !!! Needed or it loses the path from the get submission
 			form.NewField(form.FieldOptions{
 				Label: "Path",
@@ -211,7 +220,7 @@ func (controller *blockManagerController) page(data blockManagerControllerData) 
 	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Block Manager",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, nil),
+			URL:  shared.URLR(data.request, shared.PathBlocksBlockManager, nil),
 		},
 	}, struct{ SiteList []cmsstore.SiteInterface }{
 		SiteList: data.siteList,
@@ -221,7 +230,7 @@ func (controller *blockManagerController) page(data blockManagerControllerData) 
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("New Block").
-		HxGet(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockCreate, nil)).
+		HxGet(shared.URLR(data.request, shared.PathBlocksBlockCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
@@ -276,7 +285,7 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 
 				blockLink := hb.Hyperlink().
 					Text(blockName).
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathBlocksBlockUpdate, map[string]string{
 						"block_id": block.ID(),
 					}))
 
@@ -291,7 +300,7 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathBlocksBlockUpdate, map[string]string{
 						"block_id": block.ID(),
 					}))
 
@@ -299,7 +308,7 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockDelete, map[string]string{
+					HxGet(shared.URLR(data.request, shared.PathBlocksBlockDelete, map[string]string{
 						"block_id": block.ID(),
 					})).
 					HxTarget("body").
@@ -352,7 +361,7 @@ func (controller *blockManagerController) sortableColumnLabel(data blockManagerC
 		direction = sb.ASC
 	}
 
-	link := shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, map[string]string{
+	link := shared.URLR(data.request, shared.PathBlocksBlockManager, map[string]string{
 		"page":      "0",
 		"by":        columnName,
 		"sort":      direction,
@@ -389,7 +398,7 @@ func (controller *blockManagerController) tableFilter(data blockManagerControlle
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, map[string]string{
+		HxPost(shared.URLR(data.request, shared.PathBlocksBlockManager, map[string]string{
 			"action":       ActionModalPageFilterShow,
 			"name":         data.formName,
 			"status":       data.formStatus,
@@ -438,7 +447,7 @@ func (controller *blockManagerController) tableFilter(data blockManagerControlle
 }
 
 func (controller *blockManagerController) tablePagination(data blockManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, map[string]string{
+	url := shared.URLR(data.request, shared.PathBlocksBlockManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,
@@ -472,10 +481,13 @@ func (controller *blockManagerController) prepareData(r *http.Request) (data blo
 	data.perPage = cast.ToInt(utils.Req(r, "per_page", cast.ToString(initialPerPage)))
 	data.sortOrder = utils.Req(r, "sort", sb.DESC)
 	data.sortBy = utils.Req(r, "by", cmsstore.COLUMN_CREATED_AT)
-	data.formName = utils.Req(r, "name", "")
-	data.formStatus = utils.Req(r, "status", "")
-	data.formCreatedFrom = utils.Req(r, "created_from", "")
-	data.formCreatedTo = utils.Req(r, "created_to", "")
+
+	data.formBlockID = utils.Req(r, "filter_block_id", "")
+	data.formCreatedFrom = utils.Req(r, "filter_created_from", "")
+	data.formCreatedTo = utils.Req(r, "filter_created_to", "")
+	data.formName = utils.Req(r, "filter_name", "")
+	data.formSiteID = utils.Req(r, "filter_site_id", "")
+	data.formStatus = utils.Req(r, "filter_status", "")
 
 	recordList, recordCount, err := controller.fetchRecordList(data)
 
@@ -508,38 +520,30 @@ func (controller *blockManagerController) fetchRecordList(data blockManagerContr
 		blockIDs = append(blockIDs, data.formBlockID)
 	}
 
+	query := cmsstore.BlockQuery()
+
+	if len(blockIDs) > 0 {
+		query.SetIDIn(blockIDs)
+	}
+
+	if data.formName != "" {
+		query.SetNameLike(data.formName)
+	}
+
+	if data.formStatus != "" {
+		query.SetStatus(data.formStatus)
+	}
+
+	if data.formSiteID != "" {
+		query.SetSiteID(data.formSiteID)
+	}
+
 	// if data.formCreatedFrom != "" {
-	// 	query.CreatedAtGte = data.formCreatedFrom + " 00:00:00"
+	// 	query.SetCreatedAtGte(data.formCreatedFrom + " 00:00:00")
 	// }
 
 	// if data.formCreatedTo != "" {
 	// 	query.CreatedAtLte = data.formCreatedTo + " 23:59:59"
-	// }
-
-	// query := cmsstore.NewBlockQuery()
-
-	// if len(blockIDs) > 0 {
-	// 	query, err = query.SetIDIn(blockIDs)
-
-	// 	if err != nil {
-	// 		return []cmsstore.BlockInterface{}, 0, err
-	// 	}
-	// }
-
-	// if data.formStatus != "" {
-	// 	query, err = query.SetStatus(data.formStatus)
-
-	// 	if err != nil {
-	// 		return []cmsstore.BlockInterface{}, 0, err
-	// 	}
-	// }
-
-	// if data.formName != "" {
-	// 	query, err = query.SetNameLike(data.formName)
-
-	// 	if err != nil {
-	// 		return []cmsstore.BlockInterface{}, 0, err
-	// 	}
 	// }
 
 	// query, err = query.SetLimit(data.perPage)
@@ -565,8 +569,6 @@ func (controller *blockManagerController) fetchRecordList(data blockManagerContr
 	// if err != nil {
 	// 	return []cmsstore.BlockInterface{}, 0, err
 	// }
-
-	query := cmsstore.BlockQuery()
 
 	recordList, err := controller.ui.Store().BlockList(query)
 
@@ -595,11 +597,13 @@ type blockManagerControllerData struct {
 
 	siteList []cmsstore.SiteInterface
 
-	formStatus      string
-	formName        string
+	formBlockID     string
 	formCreatedFrom string
 	formCreatedTo   string
-	formBlockID     string
-	recordList      []cmsstore.BlockInterface
-	recordCount     int64
+	formName        string
+	formSiteID      string
+	formStatus      string
+
+	recordList  []cmsstore.BlockInterface
+	recordCount int64
 }

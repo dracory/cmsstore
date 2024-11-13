@@ -92,14 +92,22 @@ func (controller *siteManagerController) onModalRecordFilterShow(data siteManage
 		Class("btn btn-primary float-end").
 		OnClick(`FormFilters.submit();` + modalCloseScript)
 
+	fieldSiteID := form.NewField(form.FieldOptions{
+		Label: "Site ID",
+		Name:  "filter_site_id",
+		Type:  form.FORM_FIELD_TYPE_STRING,
+		Value: data.formSiteID,
+		Help:  `Find site by reference number (ID).`,
+	})
+
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteManager, nil),
+		ActionURL: shared.URLR(data.request, shared.PathSitesSiteManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
-				Name:  "status",
+				Name:  "filter_status",
 				Type:  form.FORM_FIELD_TYPE_SELECT,
 				Help:  `The status of the site.`,
 				Value: data.formStatus,
@@ -124,36 +132,30 @@ func (controller *siteManagerController) onModalRecordFilterShow(data siteManage
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Name",
-				Name:  "name",
+				Name:  "filter_name",
 				Type:  form.FORM_FIELD_TYPE_STRING,
 				Value: data.formName,
 				Help:  `Filter by name.`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Created From",
-				Name:  "created_from",
+				Name:  "filter_created_from",
 				Type:  form.FORM_FIELD_TYPE_DATE,
 				Value: data.formCreatedFrom,
 				Help:  `Filter by creation date.`,
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Created To",
-				Name:  "created_to",
+				Name:  "filter_created_to",
 				Type:  form.FORM_FIELD_TYPE_DATE,
 				Value: data.formCreatedTo,
 				Help:  `Filter by creation date.`,
 			}),
-			form.NewField(form.FieldOptions{
-				Label: "Site ID",
-				Name:  "site_id",
-				Type:  form.FORM_FIELD_TYPE_STRING,
-				Value: data.formSiteID,
-				Help:  `Find site by reference number (ID).`,
-			}),
+			fieldSiteID,
 			form.NewField(form.FieldOptions{
 				Label: "Path",
 				Name:  "path",
-				Type:  form.FORM_FIELD_TYPE_STRING,
+				Type:  form.FORM_FIELD_TYPE_HIDDEN,
 				Value: shared.PathSitesSiteManager,
 				Help:  `Path to this page.`,
 			}),
@@ -201,17 +203,17 @@ func (controller *siteManagerController) page(data siteManagerControllerData) hb
 	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Site Manager",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteManager, nil),
+			URL:  shared.URLR(data.request, shared.PathSitesSiteManager, nil),
 		},
 	}, struct{ SiteList []cmsstore.SiteInterface }{
-		SiteList: nil,
+		SiteList: data.siteList,
 	})
 
 	buttonPageNew := hb.Button().
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("New Site").
-		HxGet(shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteCreate, nil)).
+		HxGet(shared.URLR(data.request, shared.PathSitesSiteCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
@@ -262,7 +264,7 @@ func (controller *siteManagerController) tableRecords(data siteManagerController
 
 				siteLink := hb.Hyperlink().
 					Text(siteName).
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathSitesSiteUpdate, map[string]string{
 						"site_id": site.ID(),
 					}))
 
@@ -277,7 +279,7 @@ func (controller *siteManagerController) tableRecords(data siteManagerController
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{
+					Href(shared.URLR(data.request, shared.PathSitesSiteUpdate, map[string]string{
 						"site_id": site.ID(),
 					}))
 
@@ -285,7 +287,7 @@ func (controller *siteManagerController) tableRecords(data siteManagerController
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteDelete, map[string]string{
+					HxGet(shared.URLR(data.request, shared.PathSitesSiteDelete, map[string]string{
 						"site_id": site.ID(),
 					})).
 					HxTarget("body").
@@ -344,7 +346,7 @@ func (controller *siteManagerController) sortableColumnLabel(data siteManagerCon
 		direction = sb.ASC
 	}
 
-	link := shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteManager, map[string]string{
+	link := shared.URLR(data.request, shared.PathSitesSiteManager, map[string]string{
 		"page":      "0",
 		"by":        columnName,
 		"sort":      direction,
@@ -381,7 +383,7 @@ func (controller *siteManagerController) tableFilter(data siteManagerControllerD
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteManager, map[string]string{
+		HxPost(shared.URLR(data.request, shared.PathSitesSiteManager, map[string]string{
 			"action":       ActionModalPageFilterShow,
 			"name":         data.formName,
 			"status":       data.formStatus,
@@ -430,7 +432,7 @@ func (controller *siteManagerController) tableFilter(data siteManagerControllerD
 }
 
 func (controller *siteManagerController) tablePagination(data siteManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteManager, map[string]string{
+	url := shared.URLR(data.request, shared.PathSitesSiteManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,
@@ -464,20 +466,29 @@ func (controller *siteManagerController) prepareData(r *http.Request) (data site
 	data.perPage = cast.ToInt(utils.Req(r, "per_page", cast.ToString(initialPerPage)))
 	data.sortOrder = utils.Req(r, "sort", sb.DESC)
 	data.sortBy = utils.Req(r, "by", cmsstore.COLUMN_CREATED_AT)
-	data.formName = utils.Req(r, "name", "")
-	data.formStatus = utils.Req(r, "status", "")
-	data.formCreatedFrom = utils.Req(r, "created_from", "")
-	data.formCreatedTo = utils.Req(r, "created_to", "")
 
-	recordList, recordCount, err := controller.fetchRecordList(data)
+	data.formCreatedFrom = utils.Req(r, "filter_created_from", "")
+	data.formCreatedTo = utils.Req(r, "filter_created_to", "")
+	data.formName = utils.Req(r, "filter_name", "")
+	data.formSiteID = utils.Req(r, "filter_site_id", "")
+	data.formStatus = utils.Req(r, "filter_status", "")
+
+	data.recordList, data.recordCount, err = controller.fetchRecordList(data)
 
 	if err != nil {
 		controller.ui.Logger().Error("At siteManagerController > prepareData", "error", err.Error())
 		return data, "error retrieving web sites"
 	}
 
-	data.recordList = recordList
-	data.recordCount = recordCount
+	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
+	if err != nil {
+		return data, "Site list failed to be retrieved" + err.Error()
+	}
 
 	return data, ""
 }
@@ -531,13 +542,17 @@ func (controller *siteManagerController) fetchRecordList(data siteManagerControl
 }
 
 type siteManagerControllerData struct {
-	request         *http.Request
-	action          string
-	page            string
-	pageInt         int
-	perPage         int
-	sortOrder       string
-	sortBy          string
+	request *http.Request
+	action  string
+
+	page      string
+	pageInt   int
+	perPage   int
+	sortOrder string
+	sortBy    string
+
+	siteList []cmsstore.SiteInterface
+
 	formStatus      string
 	formName        string
 	formCreatedFrom string

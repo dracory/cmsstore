@@ -65,7 +65,7 @@ func (controller templateCreateController) Handler(w http.ResponseWriter, r *htt
 }
 
 func (controller *templateCreateController) modal(data templateCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateCreate, nil)
+	submitUrl := shared.URLR(data.request, shared.PathTemplatesTemplateCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormTemplateCreate",

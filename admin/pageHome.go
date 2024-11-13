@@ -6,14 +6,25 @@ import (
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/hb"
+	"github.com/gouniverse/sb"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
 
 func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
+	siteList, err := a.store.SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
+	if err != nil {
+		siteList = []cmsstore.SiteInterface{}
+	}
+
 	adminHeader := shared.AdminHeader(a.store, a.logger, r)
 	adminBreadcrumbs := shared.AdminBreadcrumbs(r, []shared.Breadcrumb{}, struct{ SiteList []cmsstore.SiteInterface }{
-		SiteList: nil,
+		SiteList: siteList,
 	})
 
 	pagesCount, errPagesCount := a.store.PageCount(cmsstore.PageQuery())
@@ -53,28 +64,28 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 			Title:      "Total Sites",
 			Background: "bg-success",
 			Icon:       "bi-globe",
-			URL:        shared.URL(shared.Endpoint(r), shared.PathSitesSiteManager, nil),
+			URL:        shared.URLR(r, shared.PathSitesSiteManager, nil),
 		},
 		{
 			Count:      cast.ToString(pagesCount),
 			Title:      "Total Pages",
 			Background: "bg-info",
 			Icon:       "bi-journals",
-			URL:        shared.URL(shared.Endpoint(r), shared.PathPagesPageManager, nil),
+			URL:        shared.URLR(r, shared.PathPagesPageManager, nil),
 		},
 		{
 			Count:      cast.ToString(templatesCount),
 			Title:      "Total Templates",
 			Background: "bg-warning",
 			Icon:       "bi-file-earmark-text-fill",
-			URL:        shared.URL(shared.Endpoint(r), shared.PathTemplatesTemplateManager, nil),
+			URL:        shared.URLR(r, shared.PathTemplatesTemplateManager, nil),
 		},
 		{
 			Count:      cast.ToString(blocksCount),
 			Title:      "Total Blocks",
 			Background: "bg-primary",
 			Icon:       "bi-grid-3x3-gap-fill",
-			URL:        shared.URL(shared.Endpoint(r), shared.PathBlocksBlockManager, nil),
+			URL:        shared.URLR(r, shared.PathBlocksBlockManager, nil),
 		},
 	}
 

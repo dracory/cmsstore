@@ -77,11 +77,11 @@ func (controller translationUpdateController) page(data translationUpdateControl
 	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Translation Manager",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, nil),
+			URL:  shared.URLR(data.request, shared.PathTranslationsTranslationManager, nil),
 		},
 		{
 			Name: "Edit Translation",
-			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{"translation_id": data.translationID}),
+			URL:  shared.URLR(data.request, shared.PathTranslationsTranslationUpdate, map[string]string{"translation_id": data.translationID}),
 		},
 	}, struct{ SiteList []cmsstore.SiteInterface }{
 		SiteList: data.siteList,
@@ -92,14 +92,14 @@ func (controller translationUpdateController) page(data translationUpdateControl
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormTranslationUpdate").
-		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{"translation_id": data.translationID})).
+		HxPost(shared.URLR(data.request, shared.PathTranslationsTranslationUpdate, map[string]string{"translation_id": data.translationID})).
 		HxTarget("#FormTranslationUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, nil))
+		Href(shared.URLR(data.request, shared.PathTranslationsTranslationManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -138,7 +138,7 @@ func (controller translationUpdateController) page(data translationUpdateControl
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_CONTENT, "active").
-				Href(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{
+				Href(shared.URLR(data.request, shared.PathTranslationsTranslationUpdate, map[string]string{
 					"translation_id": data.translationID,
 					"view":           VIEW_CONTENT,
 				})).
@@ -146,7 +146,7 @@ func (controller translationUpdateController) page(data translationUpdateControl
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{
+				Href(shared.URLR(data.request, shared.PathTranslationsTranslationUpdate, map[string]string{
 					"translation_id": data.translationID,
 					"view":           VIEW_SETTINGS,
 				})).
@@ -476,7 +476,7 @@ func (controller translationUpdateController) saveTranslation(r *http.Request, d
 
 	data.formSuccessMessage = "translation saved successfully"
 	if refreshPage {
-		data.formRedirectURL = shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{
+		data.formRedirectURL = shared.URLR(data.request, shared.PathTranslationsTranslationUpdate, map[string]string{
 			"translation_id": data.translationID,
 			"view":           data.view,
 		})

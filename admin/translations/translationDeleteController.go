@@ -60,7 +60,7 @@ func (controller translationDeleteController) Handler(w http.ResponseWriter, r *
 }
 
 func (controller *translationDeleteController) modal(data translationDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationDelete, map[string]string{
+	submitUrl := shared.URLR(data.request, shared.PathTranslationsTranslationDelete, map[string]string{
 		"translation_id": data.translationID,
 	})
 

@@ -65,7 +65,7 @@ func (controller menuCreateController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *menuCreateController) modal(data menuCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuCreate, nil)
+	submitUrl := shared.URLR(data.request, shared.PathMenusMenuCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormMenuCreate",
