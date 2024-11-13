@@ -196,6 +196,8 @@ func (controller *translationManagerController) page(data translationManagerCont
 			Name: "Translation Manager",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, nil),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonPageNew := hb.Button().
@@ -207,7 +209,7 @@ func (controller *translationManagerController) page(data translationManagerCont
 		HxSwap("beforeend")
 
 	title := hb.Heading1().
-		HTML("CMS. Translation Manager").
+		HTML("Translation Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().
@@ -245,6 +247,11 @@ func (controller *translationManagerController) tableRecords(data translationMan
 				}),
 			}),
 			hb.Tbody().Children(lo.Map(data.recordList, func(translation cmsstore.TranslationInterface, _ int) hb.TagInterface {
+				site, siteFound := lo.Find(data.siteList, func(site cmsstore.SiteInterface) bool {
+					return site.ID() == translation.SiteID()
+				})
+
+				siteName := lo.IfF(siteFound, func() string { return site.Name() }).Else("none")
 
 				translationName := translation.Name()
 
@@ -282,6 +289,10 @@ func (controller *translationManagerController) tableRecords(data translationMan
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
 						Child(hb.Div().Child(translationLink)).
+						Child(hb.Div().
+							Style("font-size: 11px;").
+							HTML("Site: ").
+							HTML(siteName)).
 						Child(hb.Div().
 							Style("font-size: 11px;").
 							HTML("Ref: ").
@@ -451,7 +462,18 @@ func (controller *translationManagerController) prepareData(r *http.Request) (da
 
 	if err != nil {
 		controller.ui.Logger().Error("At translationManagerController > prepareData", "error", err.Error())
-		return data, "error retrieving web translations"
+		return data, "error retrieving translations"
+	}
+
+	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
+	if err != nil {
+		controller.ui.Logger().Error("At translationManagerController > prepareData", "error", err.Error())
+		return data, "error retrieving sites"
 	}
 
 	data.recordList = recordList
@@ -511,6 +533,7 @@ func (controller *translationManagerController) fetchRecordList(data translation
 type translationManagerControllerData struct {
 	request           *http.Request
 	action            string
+	siteList          []cmsstore.SiteInterface
 	page              string
 	pageInt           int
 	perPage           int

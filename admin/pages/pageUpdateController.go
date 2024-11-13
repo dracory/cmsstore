@@ -125,6 +125,8 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 			Name: "Edit Page",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID}),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonSave := hb.Button().
@@ -149,7 +151,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Text(data.page.Status())
 
 	pageTitle := hb.Heading1().
-		Text("Edit page:").
+		Text("Edit Page:").
 		Text(" ").
 		Text(data.page.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
@@ -257,6 +259,14 @@ func (controller pageUpdateController) form(data pageUpdateControllerData) hb.Ta
 				ShowConfirmButton: false,
 				ShowCancelButton:  false,
 			}).ToHTML(),
+		})
+	}
+
+	if data.formRedirectURL != "" {
+		formpageUpdate.AddField(&form.Field{
+			Type: form.FORM_FIELD_TYPE_RAW,
+			Value: hb.Script(`window.location.href = "` + data.formRedirectURL + `";`).
+				ToHTML(),
 		})
 	}
 
@@ -604,164 +614,169 @@ setTimeout(function () {
 }
 
 func (c pageUpdateController) fieldsSettings(data pageUpdateControllerData) []form.FieldInterface {
-	fieldsSettings := []form.FieldInterface{
-		&form.Field{
-			Label: "Status",
-			Name:  "page_status",
-			Type:  form.FORM_FIELD_TYPE_SELECT,
-			Value: data.formStatus,
-			Help:  "The status of this webpage. Published pages will be displayed on the website.",
-			Options: []form.FieldOption{
+	fieldEditor := &form.Field{
+		Label: "Editor",
+		Name:  "page_editor",
+		Type:  form.FORM_FIELD_TYPE_SELECT,
+		Value: data.formEditor,
+		Help:  "The content editor that will be used while editing this webpage content. Once set, this should not be changed, or the content may be lost. If left empty, the default editor (textarea) will be used. Note you will need to save and refresh to activate",
+		OptionsF: func() []form.FieldOption {
+			options := []form.FieldOption{
 				{
 					Value: "- not selected -",
 					Key:   "",
 				},
+			}
+
+			options = append(options, form.FieldOption{
+				Value: "CodeMirror (HTML Source Editor)",
+				Key:   types.WEBPAGE_EDITOR_CODEMIRROR,
+			})
+
+			if len(c.ui.BlockEditorDefinitions()) > 0 {
+				options = append(options, form.FieldOption{
+					Value: "BlockEditor (Visual Editor using Blocks)",
+					Key:   types.WEBPAGE_EDITOR_BLOCKEDITOR,
+				})
+			}
+
+			options = append(options, form.FieldOption{
+				Value: "Markdown (Simple Textarea)",
+				Key:   types.WEBPAGE_EDITOR_MARKDOWN,
+			})
+
+			options = append(options, form.FieldOption{
+				Value: "HTML Area (WYSIWYG)",
+				Key:   types.WEBPAGE_EDITOR_HTMLAREA,
+			})
+
+			options = append(options, form.FieldOption{
+				Value: "Text Area",
+				Key:   types.WEBPAGE_EDITOR_TEXTAREA,
+			})
+
+			return options
+		},
+	}
+
+	fieldMemo := form.NewField(form.FieldOptions{
+		Label: "Admin Notes (Internal)",
+		Name:  "page_memo",
+		Type:  form.FORM_FIELD_TYPE_TEXTAREA,
+		Value: data.formMemo,
+		Help:  "Admin notes for this page. These notes will not be visible to the public.",
+	})
+
+	fieldPageID := &form.Field{
+		Label:    "Page Reference / ID",
+		Name:     "page_id",
+		Type:     form.FORM_FIELD_TYPE_STRING,
+		Value:    data.pageID,
+		Readonly: true,
+		Help:     "The reference number (ID) of the page. This is used to identify the page in the system and should not be changed.",
+	}
+
+	fieldPageName := &form.Field{
+		Label: "Page Name",
+		Name:  "page_name",
+		Type:  form.FORM_FIELD_TYPE_STRING,
+		Value: data.formName,
+		Help:  "The name of the page as displayed in the admin panel. This is not vsible to the page vistors",
+	}
+
+	fieldSiteID := &form.Field{
+		Label: "Belongs to Site",
+		Name:  "page_site_id",
+		Type:  form.FORM_FIELD_TYPE_SELECT,
+		Value: data.formSiteID,
+		Help:  "The site that this page belongs to",
+		OptionsF: func() []form.FieldOption {
+			options := []form.FieldOption{
 				{
-					Value: "Draft",
-					Key:   cmsstore.PAGE_STATUS_DRAFT,
+					Value: "- no site selected -",
+					Key:   "",
 				},
-				{
-					Value: "Published",
-					Key:   cmsstore.PAGE_STATUS_ACTIVE,
-				},
-				{
-					Value: "Unpublished",
-					Key:   cmsstore.PAGE_STATUS_INACTIVE,
-				},
+			}
+			for _, site := range data.siteList {
+				name := site.Name()
+				status := site.Status()
+				options = append(options, form.FieldOption{
+					Value: name + " (" + status + ")",
+					Key:   site.ID(),
+				})
+			}
+			return options
+		},
+	}
+
+	fieldStatus := &form.Field{
+		Label: "Status",
+		Name:  "page_status",
+		Type:  form.FORM_FIELD_TYPE_SELECT,
+		Value: data.formStatus,
+		Help:  "The status of this webpage. Published pages will be displayed on the website.",
+		Options: []form.FieldOption{
+			{
+				Value: "- not selected -",
+				Key:   "",
+			},
+			{
+				Value: "Draft",
+				Key:   cmsstore.PAGE_STATUS_DRAFT,
+			},
+			{
+				Value: "Published",
+				Key:   cmsstore.PAGE_STATUS_ACTIVE,
+			},
+			{
+				Value: "Unpublished",
+				Key:   cmsstore.PAGE_STATUS_INACTIVE,
 			},
 		},
-		&form.Field{
-			Label: "Template ID",
-			Name:  "page_template_id",
-			Type:  form.FORM_FIELD_TYPE_SELECT,
-			Value: data.formTemplateID,
-			Help:  "The template that this page content will be displayed in. This feature is useful if you want to implement consistent layouts. Leaving the template empty will display the page content as it is, standalone",
-			OptionsF: func() []form.FieldOption {
-				options := []form.FieldOption{
-					{
-						Value: "- not template selected, page content will be displayed as it is -",
-						Key:   "",
-					},
-				}
-				for _, template := range data.templateList {
-					name := template.Name()
-					options = append(options, form.FieldOption{
-						Value: name,
-						Key:   template.ID(),
-					})
-				}
-				return options
+	}
 
-			},
-		},
-		// {
-		// 	Label: "Image URL",
-		// 	Name:  "page_image_url",
-		// 	Type:  form.FORM_FIELD_TYPE_IMAGE,
-		// 	Value: data.formImageUrl,
-		// 	Help:  "The image that will be displayed on the blog page. If left empty, the default image will be used.",
-		// },
-		// {
-		// 	Label: "Featured",
-		// 	Name:  "page_featured",
-		// 	Type:  form.FORM_FIELD_TYPE_SELECT,
-		// 	Value: data.formFeatured,
-		// 	Help:  "Is this blog page featured? Featured pages will be displayed on the home page.",
-		// 	Options: []form.FieldOption{
-		// 		{
-		// 			Value: "- not selected -",
-		// 			Key:   "",
-		// 		},
-		// 		{
-		// 			Value: "No",
-		// 			Key:   "no",
-		// 		},
-		// 		{
-		// 			Value: "Yes",
-		// 			Key:   "yes",
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	Label: "Published At",
-		// 	Name:  "page_published_at",
-		// 	Type:  form.FORM_FIELD_TYPE_DATETIME,
-		// 	Value: data.formPublishedAt,
-		// 	Help:  "The date this blog page was published.",
-		// },
-		&form.Field{
-			Label: "Editor",
-			Name:  "page_editor",
-			Type:  form.FORM_FIELD_TYPE_SELECT,
-			Value: data.formEditor,
-			Help:  "The content editor that will be used while editing this webpage content. Once set, this should not be changed, or the content may be lost. If left empty, the default editor (textarea) will be used. Note you will need to save and refresh to activate",
-			OptionsF: func() []form.FieldOption {
-				options := []form.FieldOption{
-					{
-						Value: "- not selected -",
-						Key:   "",
-					},
-				}
-
+	fieldTemplateID := &form.Field{
+		Label: "Template ID",
+		Name:  "page_template_id",
+		Type:  form.FORM_FIELD_TYPE_SELECT,
+		Value: data.formTemplateID,
+		Help:  "The template that this page content will be displayed in. This feature is useful if you want to implement consistent layouts. Leaving the template empty will display the page content as it is, standalone",
+		OptionsF: func() []form.FieldOption {
+			options := []form.FieldOption{
+				{
+					Value: "- not template selected, page content will be displayed as it is -",
+					Key:   "",
+				},
+			}
+			for _, template := range data.templateList {
+				name := template.Name()
 				options = append(options, form.FieldOption{
-					Value: "CodeMirror (HTML Source Editor)",
-					Key:   types.WEBPAGE_EDITOR_CODEMIRROR,
+					Value: name,
+					Key:   template.ID(),
 				})
+			}
+			return options
 
-				if len(c.ui.BlockEditorDefinitions()) > 0 {
-					options = append(options, form.FieldOption{
-						Value: "BlockEditor (Visual Editor using Blocks)",
-						Key:   types.WEBPAGE_EDITOR_BLOCKEDITOR,
-					})
-				}
-
-				options = append(options, form.FieldOption{
-					Value: "Markdown (Simple Textarea)",
-					Key:   types.WEBPAGE_EDITOR_MARKDOWN,
-				})
-
-				options = append(options, form.FieldOption{
-					Value: "HTML Area (WYSIWYG)",
-					Key:   types.WEBPAGE_EDITOR_HTMLAREA,
-				})
-
-				options = append(options, form.FieldOption{
-					Value: "Text Area",
-					Key:   types.WEBPAGE_EDITOR_TEXTAREA,
-				})
-
-				return options
-			},
 		},
-		&form.Field{
-			Label: "Webpage Name",
-			Name:  "page_name",
-			Type:  form.FORM_FIELD_TYPE_STRING,
-			Value: data.formName,
-			Help:  "The name of the page as displayed in the admin panel. This is not vsible to the page vistors",
-		},
-		// {
-		// 	Label: "Admin Notes",
-		// 	Name:  "page_memo",
-		// 	Type:  form.FORM_FIELD_TYPE_TEXTAREA,
-		// 	Value: data.formMemo,
-		// 	Help:  "Admin notes for this blogpage. These notes will not be visible to the public.",
-		// },
-		&form.Field{
-			Label:    "Webpage ID",
-			Name:     "page_id",
-			Type:     form.FORM_FIELD_TYPE_STRING,
-			Value:    data.pageID,
-			Readonly: true,
-			Help:     "The reference number (ID) of the webpage. This is used to identify the webpage in the system and should not be changed.",
-		},
-		&form.Field{
-			Label:    "View",
-			Name:     "view",
-			Type:     form.FORM_FIELD_TYPE_HIDDEN,
-			Value:    data.view,
-			Readonly: true,
-		},
+	}
+
+	fieldView := &form.Field{
+		Label:    "View",
+		Name:     "view",
+		Type:     form.FORM_FIELD_TYPE_HIDDEN,
+		Value:    data.view,
+		Readonly: true,
+	}
+
+	fieldsSettings := []form.FieldInterface{
+		fieldStatus,
+		fieldTemplateID,
+		fieldEditor,
+		fieldPageName,
+		fieldSiteID,
+		fieldMemo,
+		fieldPageID,
+		fieldView,
 	}
 
 	return fieldsSettings
@@ -772,16 +787,14 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 	data.formCanonicalURL = utils.Req(r, "page_canonical_url", "")
 	data.formContent = utils.Req(r, "page_content", "")
 	data.formEditor = utils.Req(r, "page_editor", "")
-	data.formFeatured = utils.Req(r, "page_featured", "")
-	data.formImageUrl = utils.Req(r, "page_image_url", "")
 	data.formMemo = utils.Req(r, "page_memo", "")
 	data.formMetaDescription = utils.Req(r, "page_meta_description", "")
 	data.formMetaKeywords = utils.Req(r, "page_meta_keywords", "")
 	data.formMetaRobots = utils.Req(r, "page_meta_robots", "")
 	data.formName = utils.Req(r, "page_name", "")
-	data.formPublishedAt = utils.Req(r, "page_published_at", "")
 	data.formSummary = utils.Req(r, "page_summary", "")
 	data.formStatus = utils.Req(r, "page_status", "")
+	data.formSiteID = utils.Req(r, "page_site_id", "")
 	data.formTitle = utils.Req(r, "page_title", "")
 	data.formTemplateID = utils.Req(r, "page_template_id", "")
 
@@ -804,11 +817,9 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 		// data.formPublishedAt = lo.Substring(strings.ReplaceAll(data.formPublishedAt, " ", "T")+":00", 0, 19)
 		// publishedAt := lo.Ternary(data.formPublishedAt == "", sb.NULL_DATE, carbon.Parse(data.formPublishedAt).ToDateTimeString(carbon.UTC))
 		data.page.SetEditor(data.formEditor)
-		// data.page.SetFeatured(data.formFeatured)
-		// data.page.SetImageUrl(data.formImageUrl)
-		// data.page.SetMemo(data.formMemo)
+		data.page.SetMemo(data.formMemo)
 		data.page.SetName(data.formName)
-		// data.page.SetPublishedAt(publishedAt)
+		data.page.SetSiteID(data.formSiteID)
 		data.page.SetStatus(data.formStatus)
 		data.page.SetTemplateID(data.formTemplateID)
 	}
@@ -829,14 +840,52 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 	err := controller.ui.Store().PageUpdate(data.page)
 
 	if err != nil {
-		//config.LogStore.ErrorWithContext("At pageUpdateController > prepareDataAndValidate", err.Error())
+		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate", "error", err.Error())
+		data.formErrorMessage = "System error. Saving page failed. " + err.Error()
+		return data, ""
+	}
+
+	err = controller.movePageBlocks(data.page.ID(), data.page.SiteID())
+
+	if err != nil {
+		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate", "error", err.Error())
 		data.formErrorMessage = "System error. Saving page failed. " + err.Error()
 		return data, ""
 	}
 
 	data.formSuccessMessage = "page saved successfully"
 
+	data.formRedirectURL = shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
+		"page_id": data.pageID,
+		"view":    data.view,
+	})
+
 	return data, ""
+}
+
+func (controller pageUpdateController) movePageBlocks(pageID string, siteID string) error {
+	blocks, err := controller.ui.Store().BlockList(cmsstore.BlockQuery().
+		SetPageID(pageID))
+
+	if err != nil {
+		return err
+	}
+
+	for _, block := range blocks {
+		if block.SiteID() == siteID {
+			continue // already in the right site
+		}
+
+		block.SetSiteID(siteID)
+
+		err := controller.ui.Store().BlockUpdate(block)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (data pageUpdateControllerData, errorMessage string) {
@@ -874,9 +923,22 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	data.formMetaRobots = data.page.MetaRobots()
 	data.formName = data.page.Name()
 	data.formMemo = data.page.Memo()
+	data.formSiteID = data.page.SiteID()
 	data.formStatus = data.page.Status()
 	data.formTemplateID = data.page.TemplateID()
 	data.formTitle = data.page.Title()
+
+	siteList, err := controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
+	if err != nil {
+		return data, "Site list failed to be retrieved" + err.Error()
+	}
+
+	data.siteList = siteList
 
 	templateList, err := controller.ui.Store().TemplateList(cmsstore.TemplateQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
@@ -904,22 +966,22 @@ type pageUpdateControllerData struct {
 	page    cmsstore.PageInterface
 	view    string
 
+	siteList     []cmsstore.SiteInterface
 	templateList []cmsstore.TemplateInterface
 
 	formErrorMessage    string
+	formRedirectURL     string
 	formSuccessMessage  string
 	formAlias           string
 	formCanonicalURL    string
 	formContent         string
 	formName            string
 	formEditor          string
-	formFeatured        string
-	formImageUrl        string
 	formMemo            string
 	formMetaDescription string
 	formMetaKeywords    string
 	formMetaRobots      string
-	formPublishedAt     string
+	formSiteID          string
 	formStatus          string
 	formTemplateID      string
 	formSummary         string

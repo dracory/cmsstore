@@ -1,6 +1,11 @@
 package shared
 
-import urlpkg "net/url"
+import (
+	"net/http"
+	urlpkg "net/url"
+
+	"github.com/gouniverse/utils"
+)
 
 func URL(endpoint string, path string, params map[string]string) string {
 	if params == nil {
@@ -9,6 +14,22 @@ func URL(endpoint string, path string, params map[string]string) string {
 	params["path"] = path
 
 	url := endpoint + query(params)
+	return url
+}
+
+func URLR(r *http.Request, path string, params map[string]string) string {
+	endpoint := Endpoint(r)
+	filterSiteID := utils.Req(r, "filter_site_id", "")
+
+	if params == nil {
+		params = map[string]string{}
+	}
+
+	params["path"] = path
+	params["filter_site_id"] = filterSiteID
+
+	url := endpoint + query(params)
+
 	return url
 }
 

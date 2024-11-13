@@ -83,6 +83,8 @@ func (controller translationUpdateController) page(data translationUpdateControl
 			Name: "Edit Translation",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{"translation_id": data.translationID}),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonSave := hb.Button().
@@ -107,7 +109,7 @@ func (controller translationUpdateController) page(data translationUpdateControl
 		Text(data.translation.Status())
 
 	pageTitle := hb.Heading1().
-		Text("CMS. Edit Translation:").
+		Text("Edit Translation:").
 		Text(" ").
 		Text(data.translation.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
@@ -467,7 +469,7 @@ func (controller translationUpdateController) saveTranslation(r *http.Request, d
 	err := controller.ui.Store().TranslationUpdate(data.translation)
 
 	if err != nil {
-		//config.LogStore.ErrorWithContext("At translationUpdateController > prepareDataAndValidate", err.Error())
+		controller.ui.Logger().Error("At translationUpdateController > prepareDataAndValidate", "error", err.Error())
 		data.formErrorMessage = "System error. Saving translation failed. " + err.Error()
 		return data, ""
 	}

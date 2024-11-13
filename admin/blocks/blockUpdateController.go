@@ -11,6 +11,7 @@ import (
 	"github.com/gouniverse/form"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
+	"github.com/gouniverse/sb"
 	"github.com/gouniverse/utils"
 )
 
@@ -105,6 +106,8 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 			Name: "Edit Block",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{"block_id": data.blockID}),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonSave := hb.Button().
@@ -233,6 +236,14 @@ func (controller blockUpdateController) form(data blockUpdateControllerData) hb.
 		})
 	}
 
+	if data.formRedirectURL != "" {
+		formpageUpdate.AddField(&form.Field{
+			Type: form.FORM_FIELD_TYPE_RAW,
+			Value: hb.Script(`window.location.href = "` + data.formRedirectURL + `";`).
+				ToHTML(),
+		})
+	}
+
 	return formpageUpdate.Build()
 }
 
@@ -300,61 +311,97 @@ setTimeout(function () {
 }
 
 func (controller blockUpdateController) fieldsSettings(data blockUpdateControllerData) []form.FieldInterface {
-	fieldsSettings := []form.FieldInterface{
-		form.NewField(form.FieldOptions{
-			Label: "Status",
-			Name:  "block_status",
-			Type:  form.FORM_FIELD_TYPE_SELECT,
-			Value: data.formStatus,
-			Help:  "The status of this webpage. Published pages will be displayed on the webblock.",
-			Options: []form.FieldOption{
+	fieldSiteID := &form.Field{
+		Label: "Belongs to Site",
+		Name:  "block_site_id",
+		Type:  form.FORM_FIELD_TYPE_SELECT,
+		Value: data.formSiteID,
+		Help:  "The site that this block belongs to",
+		OptionsF: func() []form.FieldOption {
+			options := []form.FieldOption{
 				{
-					Value: "- not selected -",
+					Value: "- no site selected -",
 					Key:   "",
 				},
-				{
-					Value: "Draft",
-					Key:   cmsstore.BLOCK_STATUS_DRAFT,
-				},
-				{
-					Value: "Published",
-					Key:   cmsstore.BLOCK_STATUS_ACTIVE,
-				},
-				{
-					Value: "Unpublished",
-					Key:   cmsstore.BLOCK_STATUS_INACTIVE,
-				},
+			}
+			for _, site := range data.siteList {
+				name := site.Name()
+				status := site.Status()
+				options = append(options, form.FieldOption{
+					Value: name + " (" + status + ")",
+					Key:   site.ID(),
+				})
+			}
+			return options
+		},
+	}
+
+	fieldStatus := form.NewField(form.FieldOptions{
+		Label: "Status",
+		Name:  "block_status",
+		Type:  form.FORM_FIELD_TYPE_SELECT,
+		Value: data.formStatus,
+		Help:  "The status of this block. Published blocks will be displayed on the site.",
+		Options: []form.FieldOption{
+			{
+				Value: "- not selected -",
+				Key:   "",
 			},
-		}),
-		form.NewField(form.FieldOptions{
-			Label: "Block Name (Internal)",
-			Name:  "block_name",
-			Type:  form.FORM_FIELD_TYPE_STRING,
-			Value: data.formName,
-			Help:  "The name of the block as displayed in the admin panel. This is not vsible to the block vistors",
-		}),
-		form.NewField(form.FieldOptions{
-			Label: "Admin Notes (Internal)",
-			Name:  "block_memo",
-			Type:  form.FORM_FIELD_TYPE_TEXTAREA,
-			Value: data.formMemo,
-			Help:  "Admin notes for this block. These notes will not be visible to the public.",
-		}),
-		form.NewField(form.FieldOptions{
-			Label:    "Webblock ID",
-			Name:     "block_id",
-			Type:     form.FORM_FIELD_TYPE_STRING,
-			Value:    data.blockID,
-			Readonly: true,
-			Help:     "The reference number (ID) of the webblock. This is used to identify the webblock in the system and should not be changed.",
-		}),
-		form.NewField(form.FieldOptions{
-			Label:    "View",
-			Name:     "view",
-			Type:     form.FORM_FIELD_TYPE_HIDDEN,
-			Value:    data.view,
-			Readonly: true,
-		}),
+			{
+				Value: "Draft",
+				Key:   cmsstore.BLOCK_STATUS_DRAFT,
+			},
+			{
+				Value: "Published",
+				Key:   cmsstore.BLOCK_STATUS_ACTIVE,
+			},
+			{
+				Value: "Unpublished",
+				Key:   cmsstore.BLOCK_STATUS_INACTIVE,
+			},
+		},
+	})
+
+	fieldBlockName := form.NewField(form.FieldOptions{
+		Label: "Block Name (Internal)",
+		Name:  "block_name",
+		Type:  form.FORM_FIELD_TYPE_STRING,
+		Value: data.formName,
+		Help:  "The name of the block as displayed in the admin panel. This is not vsible to the block vistors",
+	})
+
+	fieldMemo := form.NewField(form.FieldOptions{
+		Label: "Admin Notes (Internal)",
+		Name:  "block_memo",
+		Type:  form.FORM_FIELD_TYPE_TEXTAREA,
+		Value: data.formMemo,
+		Help:  "Admin notes for this block. These notes will not be visible to the public.",
+	})
+
+	fieldBlockID := form.NewField(form.FieldOptions{
+		Label:    "Block Reference / ID",
+		Name:     "block_id",
+		Type:     form.FORM_FIELD_TYPE_STRING,
+		Value:    data.blockID,
+		Readonly: true,
+		Help:     "The reference number (ID) of the block. This is used to identify the block in the system and should not be changed.",
+	})
+
+	fieldView := form.NewField(form.FieldOptions{
+		Label:    "View",
+		Name:     "view",
+		Type:     form.FORM_FIELD_TYPE_HIDDEN,
+		Value:    data.view,
+		Readonly: true,
+	})
+
+	fieldsSettings := []form.FieldInterface{
+		fieldStatus,
+		fieldBlockName,
+		fieldSiteID,
+		fieldMemo,
+		fieldBlockID,
+		fieldView,
 	}
 
 	return fieldsSettings
@@ -364,6 +411,7 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 	data.formContent = utils.Req(r, "block_content", "")
 	data.formMemo = utils.Req(r, "block_memo", "")
 	data.formName = utils.Req(r, "block_name", "")
+	data.formSiteID = utils.Req(r, "block_site_id", "")
 	data.formStatus = utils.Req(r, "block_status", "")
 	data.formTitle = utils.Req(r, "block_title", "")
 
@@ -377,6 +425,7 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 	if data.view == VIEW_SETTINGS {
 		data.block.SetMemo(data.formMemo)
 		data.block.SetName(data.formName)
+		data.block.SetSiteID(data.formSiteID)
 		data.block.SetStatus(data.formStatus)
 	}
 
@@ -393,6 +442,11 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 	}
 
 	data.formSuccessMessage = "block saved successfully"
+
+	data.formRedirectURL = shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{
+		"block_id": data.blockID,
+		"view":     data.view,
+	})
 
 	return data, ""
 }
@@ -423,9 +477,20 @@ func (controller blockUpdateController) prepareDataAndValidate(r *http.Request) 
 		return data, "block not found"
 	}
 
+	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
+	if err != nil {
+		return data, "Site list failed to be retrieved" + err.Error()
+	}
+
 	data.formContent = data.block.Content()
 	data.formName = data.block.Name()
 	data.formMemo = data.block.Memo()
+	data.formSiteID = data.block.SiteID()
 	data.formStatus = data.block.Status()
 
 	if r.Method != http.MethodPost {
@@ -442,11 +507,15 @@ type blockUpdateControllerData struct {
 	block   cmsstore.BlockInterface
 	view    string
 
+	siteList []cmsstore.SiteInterface
+
 	formErrorMessage   string
+	formRedirectURL    string
 	formSuccessMessage string
 	formContent        string
 	formName           string
 	formMemo           string
+	formSiteID         string
 	formStatus         string
 	formTitle          string
 }

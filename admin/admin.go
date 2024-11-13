@@ -16,7 +16,6 @@ import (
 	adminTranslations "github.com/gouniverse/cmsstore/admin/translations"
 
 	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/hb"
 	"github.com/gouniverse/responses"
 	"github.com/gouniverse/utils"
 )
@@ -170,9 +169,9 @@ func (a *admin) translationRoutes() map[string]func(w http.ResponseWriter, r *ht
 	return translationsRoutes
 }
 
-func (a *admin) adminBreadcrumbs(r *http.Request, pageBreadcrumbs []shared.Breadcrumb) hb.TagInterface {
-	return shared.AdminBreadcrumbs(r, pageBreadcrumbs)
-}
+// func (a *admin) adminBreadcrumbs(r *http.Request, pageBreadcrumbs []shared.Breadcrumb) hb.TagInterface {
+// 	return shared.AdminBreadcrumbs(r, pageBreadcrumbs)
+// }
 
 func (a *admin) uiConfig() shared.UiConfig {
 	return shared.UiConfig{

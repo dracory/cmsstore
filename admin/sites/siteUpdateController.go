@@ -88,6 +88,8 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 			Name: "Edit Site",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{"site_id": data.siteID}),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: nil,
 	})
 
 	buttonSave := hb.Button().
@@ -284,6 +286,14 @@ func (controller siteUpdateController) form(data siteUpdateControllerData) hb.Ta
 		})
 	}
 
+	if data.formRedirectURL != "" {
+		formpageUpdate.AddField(&form.Field{
+			Type: form.FORM_FIELD_TYPE_RAW,
+			Value: hb.Script(`window.location.href = "` + data.formRedirectURL + `";`).
+				ToHTML(),
+		})
+	}
+
 	return formpageUpdate.Build()
 }
 
@@ -346,6 +356,11 @@ func (controller siteUpdateController) saveSite(r *http.Request, data siteUpdate
 	}
 
 	data.formSuccessMessage = "site saved successfully"
+
+	data.formRedirectURL = shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{
+		"site_id": data.siteID,
+		"view":    data.view,
+	})
 
 	return data, ""
 }
@@ -418,6 +433,7 @@ type siteUpdateControllerData struct {
 	view    string
 
 	formErrorMessage   string
+	formRedirectURL    string
 	formSuccessMessage string
 	formHandler        string
 	formName           string

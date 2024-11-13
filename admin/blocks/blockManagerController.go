@@ -213,6 +213,8 @@ func (controller *blockManagerController) page(data blockManagerControllerData) 
 			Name: "Block Manager",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, nil),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonPageNew := hb.Button().
@@ -264,6 +266,11 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 				}),
 			}),
 			hb.Tbody().Children(lo.Map(data.recordList, func(block cmsstore.BlockInterface, _ int) hb.TagInterface {
+				site, siteFound := lo.Find(data.siteList, func(site cmsstore.SiteInterface) bool {
+					return site.ID() == block.SiteID()
+				})
+
+				siteName := lo.IfF(siteFound, func() string { return site.Name() }).Else("none")
 
 				blockName := block.Name()
 
@@ -301,6 +308,10 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
 						Child(hb.Div().Child(blockLink)).
+						Child(hb.Div().
+							Style("font-size: 11px;").
+							HTML("Site: ").
+							HTML(siteName)).
 						Child(hb.Div().
 							Style("font-size: 11px;").
 							HTML("Ref: ").
@@ -476,6 +487,17 @@ func (controller *blockManagerController) prepareData(r *http.Request) (data blo
 	data.recordList = recordList
 	data.recordCount = recordCount
 
+	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
+	if err != nil {
+		controller.ui.Logger().Error("At translationManagerController > prepareData", "error", err.Error())
+		return data, "error retrieving sites"
+	}
+
 	return data, ""
 }
 
@@ -562,13 +584,17 @@ func (controller *blockManagerController) fetchRecordList(data blockManagerContr
 }
 
 type blockManagerControllerData struct {
-	request         *http.Request
-	action          string
-	page            string
-	pageInt         int
-	perPage         int
-	sortOrder       string
-	sortBy          string
+	request *http.Request
+	action  string
+
+	page      string
+	pageInt   int
+	perPage   int
+	sortOrder string
+	sortBy    string
+
+	siteList []cmsstore.SiteInterface
+
 	formStatus      string
 	formName        string
 	formCreatedFrom string

@@ -11,6 +11,7 @@ import (
 	"github.com/gouniverse/form"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
+	"github.com/gouniverse/sb"
 	"github.com/gouniverse/utils"
 )
 
@@ -105,6 +106,8 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 			Name: "Edit Template",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{"template_id": data.templateID}),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonSave := hb.Button().
@@ -236,6 +239,14 @@ func (controller templateUpdateController) form(data templateUpdateControllerDat
 		})
 	}
 
+	if data.formRedirectURL != "" {
+		formpageUpdate.AddField(&form.Field{
+			Type: form.FORM_FIELD_TYPE_RAW,
+			Value: hb.Script(`window.location.href = "` + data.formRedirectURL + `";`).
+				ToHTML(),
+		})
+	}
+
 	return formpageUpdate.Build()
 }
 
@@ -310,61 +321,97 @@ setTimeout(function () {
 }
 
 func (controller templateUpdateController) fieldsSettings(data templateUpdateControllerData) []form.FieldInterface {
-	fieldsSettings := []form.FieldInterface{
-		form.NewField(form.FieldOptions{
-			Label: "Status",
-			Name:  "template_status",
-			Type:  form.FORM_FIELD_TYPE_SELECT,
-			Value: data.formStatus,
-			Help:  "The status of this webpage. Published pages will be displayed on the webtemplate.",
-			Options: []form.FieldOption{
+	fieldMemo := form.NewField(form.FieldOptions{
+		Label: "Admin Notes (Internal)",
+		Name:  "template_memo",
+		Type:  form.FORM_FIELD_TYPE_TEXTAREA,
+		Value: data.formMemo,
+		Help:  "Admin notes for this template. These notes will not be visible to the public.",
+	})
+
+	fieldSiteID := &form.Field{
+		Label: "Belongs to Site",
+		Name:  "page_site_id",
+		Type:  form.FORM_FIELD_TYPE_SELECT,
+		Value: data.formSiteID,
+		Help:  "The site that this page belongs to",
+		OptionsF: func() []form.FieldOption {
+			options := []form.FieldOption{
 				{
-					Value: "- not selected -",
+					Value: "- no site selected -",
 					Key:   "",
 				},
-				{
-					Value: "Draft",
-					Key:   cmsstore.TEMPLATE_STATUS_DRAFT,
-				},
-				{
-					Value: "Published",
-					Key:   cmsstore.TEMPLATE_STATUS_ACTIVE,
-				},
-				{
-					Value: "Unpublished",
-					Key:   cmsstore.TEMPLATE_STATUS_INACTIVE,
-				},
+			}
+			for _, site := range data.siteList {
+				name := site.Name()
+				status := site.Status()
+				options = append(options, form.FieldOption{
+					Value: name + " (" + status + ")",
+					Key:   site.ID(),
+				})
+			}
+			return options
+		},
+	}
+
+	fieldStatus := form.NewField(form.FieldOptions{
+		Label: "Status",
+		Name:  "template_status",
+		Type:  form.FORM_FIELD_TYPE_SELECT,
+		Value: data.formStatus,
+		Help:  "The status of this webpage. Published pages will be displayed on the webtemplate.",
+		Options: []form.FieldOption{
+			{
+				Value: "- not selected -",
+				Key:   "",
 			},
-		}),
-		form.NewField(form.FieldOptions{
-			Label: "Template Name (Internal)",
-			Name:  "template_name",
-			Type:  form.FORM_FIELD_TYPE_STRING,
-			Value: data.formName,
-			Help:  "The name of the template as displayed in the admin panel. This is not vsible to the template vistors",
-		}),
-		form.NewField(form.FieldOptions{
-			Label: "Admin Notes (Internal)",
-			Name:  "template_memo",
-			Type:  form.FORM_FIELD_TYPE_TEXTAREA,
-			Value: data.formMemo,
-			Help:  "Admin notes for this template. These notes will not be visible to the public.",
-		}),
-		form.NewField(form.FieldOptions{
-			Label:    "Webtemplate ID",
-			Name:     "template_id",
-			Type:     form.FORM_FIELD_TYPE_STRING,
-			Value:    data.templateID,
-			Readonly: true,
-			Help:     "The reference number (ID) of the webtemplate. This is used to identify the webtemplate in the system and should not be changed.",
-		}),
-		form.NewField(form.FieldOptions{
-			Label:    "View",
-			Name:     "view",
-			Type:     form.FORM_FIELD_TYPE_HIDDEN,
-			Value:    data.view,
-			Readonly: true,
-		}),
+			{
+				Value: "Draft",
+				Key:   cmsstore.TEMPLATE_STATUS_DRAFT,
+			},
+			{
+				Value: "Published",
+				Key:   cmsstore.TEMPLATE_STATUS_ACTIVE,
+			},
+			{
+				Value: "Unpublished",
+				Key:   cmsstore.TEMPLATE_STATUS_INACTIVE,
+			},
+		},
+	})
+
+	fieldTemplateID := form.NewField(form.FieldOptions{
+		Label:    "Template ID",
+		Name:     "template_id",
+		Type:     form.FORM_FIELD_TYPE_STRING,
+		Value:    data.templateID,
+		Readonly: true,
+		Help:     "The reference number (ID) of the template. This is used to identify the template in the system and should not be changed.",
+	})
+
+	fieldTemplateName := form.NewField(form.FieldOptions{
+		Label: "Template Name (Internal)",
+		Name:  "template_name",
+		Type:  form.FORM_FIELD_TYPE_STRING,
+		Value: data.formName,
+		Help:  "The name of the template as displayed in the admin panel. This is not vsible to the template vistors",
+	})
+
+	fieldView := form.NewField(form.FieldOptions{
+		Label:    "View",
+		Name:     "view",
+		Type:     form.FORM_FIELD_TYPE_HIDDEN,
+		Value:    data.view,
+		Readonly: true,
+	})
+
+	fieldsSettings := []form.FieldInterface{
+		fieldStatus,
+		fieldTemplateName,
+		fieldSiteID,
+		fieldMemo,
+		fieldTemplateID,
+		fieldView,
 	}
 
 	return fieldsSettings
@@ -387,6 +434,7 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 	if data.view == VIEW_SETTINGS {
 		data.template.SetMemo(data.formMemo)
 		data.template.SetName(data.formName)
+		data.template.SetSiteID(data.formSiteID)
 		data.template.SetStatus(data.formStatus)
 	}
 
@@ -397,14 +445,51 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 	err := controller.ui.Store().TemplateUpdate(data.template)
 
 	if err != nil {
-		//config.LogStore.ErrorWithContext("At templateUpdateController > prepareDataAndValidate", err.Error())
+		controller.ui.Logger().Error("At templateUpdateController > prepareDataAndValidate", "error", err.Error())
+		data.formErrorMessage = "System error. Saving template failed. " + err.Error()
+		return data, ""
+	}
+
+	err = controller.moveTemplateBlocks(data.template.ID(), data.formSiteID)
+
+	if err != nil {
+		controller.ui.Logger().Error("At templateUpdateController > prepareDataAndValidate", "error", err.Error())
 		data.formErrorMessage = "System error. Saving template failed. " + err.Error()
 		return data, ""
 	}
 
 	data.formSuccessMessage = "template saved successfully"
+	data.formRedirectURL = shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
+		"template_id": data.template.ID(),
+		"view":        data.view,
+	})
 
 	return data, ""
+}
+
+func (controller templateUpdateController) moveTemplateBlocks(templateID string, siteID string) error {
+	blocks, err := controller.ui.Store().BlockList(cmsstore.BlockQuery().
+		SetPageID(templateID))
+
+	if err != nil {
+		return err
+	}
+
+	for _, block := range blocks {
+		if block.SiteID() == siteID {
+			continue // already in the right site
+		}
+
+		block.SetSiteID(siteID)
+
+		err := controller.ui.Store().BlockUpdate(block)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (controller templateUpdateController) prepareDataAndValidate(r *http.Request) (data templateUpdateControllerData, errorMessage string) {
@@ -433,9 +518,22 @@ func (controller templateUpdateController) prepareDataAndValidate(r *http.Reques
 		return data, "template not found"
 	}
 
+	siteList, err := controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
+	if err != nil {
+		return data, "Site list failed to be retrieved" + err.Error()
+	}
+
+	data.siteList = siteList
+
 	data.formContent = data.template.Content()
 	data.formName = data.template.Name()
 	data.formMemo = data.template.Memo()
+	data.formSiteID = data.template.SiteID()
 	data.formStatus = data.template.Status()
 
 	if r.Method != http.MethodPost {
@@ -452,11 +550,15 @@ type templateUpdateControllerData struct {
 	template   cmsstore.TemplateInterface
 	view       string
 
+	siteList []cmsstore.SiteInterface
+
 	formErrorMessage   string
+	formRedirectURL    string
 	formSuccessMessage string
 	formContent        string
 	formName           string
 	formMemo           string
+	formSiteID         string
 	formStatus         string
 	formTitle          string
 }

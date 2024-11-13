@@ -196,6 +196,8 @@ func (controller *menuManagerController) page(data menuManagerControllerData) hb
 			Name: "Menu Manager",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, nil),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonPageNew := hb.Button().
@@ -207,7 +209,7 @@ func (controller *menuManagerController) page(data menuManagerControllerData) hb
 		HxSwap("beforeend")
 
 	title := hb.Heading1().
-		HTML("CMS. Menu Manager").
+		HTML("Menu Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().
@@ -245,6 +247,11 @@ func (controller *menuManagerController) tableRecords(data menuManagerController
 				}),
 			}),
 			hb.Tbody().Children(lo.Map(data.recordList, func(menu cmsstore.MenuInterface, _ int) hb.TagInterface {
+				site, siteFound := lo.Find(data.siteList, func(site cmsstore.SiteInterface) bool {
+					return site.ID() == menu.SiteID()
+				})
+
+				siteName := lo.IfF(siteFound, func() string { return site.Name() }).Else("none")
 
 				menuName := menu.Name()
 
@@ -282,6 +289,10 @@ func (controller *menuManagerController) tableRecords(data menuManagerController
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
 						Child(hb.Div().Child(menuLink)).
+						Child(hb.Div().
+							Style("font-size: 11px;").
+							HTML("Site: ").
+							HTML(siteName)).
 						Child(hb.Div().
 							Style("font-size: 11px;").
 							HTML("Ref: ").
@@ -457,6 +468,17 @@ func (controller *menuManagerController) prepareData(r *http.Request) (data menu
 	data.recordList = recordList
 	data.recordCount = recordCount
 
+	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
+	if err != nil {
+		controller.ui.Logger().Error("At translationManagerController > prepareData", "error", err.Error())
+		return data, "error retrieving sites"
+	}
+
 	return data, ""
 }
 
@@ -509,13 +531,16 @@ func (controller *menuManagerController) fetchRecordList(data menuManagerControl
 }
 
 type menuManagerControllerData struct {
-	request         *http.Request
-	action          string
-	page            string
-	pageInt         int
-	perPage         int
-	sortOrder       string
-	sortBy          string
+	request   *http.Request
+	action    string
+	page      string
+	pageInt   int
+	perPage   int
+	sortOrder string
+	sortBy    string
+
+	siteList []cmsstore.SiteInterface
+
 	formStatus      string
 	formName        string
 	formCreatedFrom string

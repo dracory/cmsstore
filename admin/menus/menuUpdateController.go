@@ -126,6 +126,8 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 			Name: "Edit Menu",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{"menu_id": data.menuID}),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonSave := hb.Button().

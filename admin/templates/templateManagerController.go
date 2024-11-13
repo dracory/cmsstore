@@ -196,6 +196,8 @@ func (controller *templateManagerController) page(data templateManagerController
 			Name: "Template Manager",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, nil),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonPageNew := hb.Button().
@@ -207,7 +209,7 @@ func (controller *templateManagerController) page(data templateManagerController
 		HxSwap("beforeend")
 
 	title := hb.Heading1().
-		HTML("CMS. Template Manager").
+		HTML("Template Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().
@@ -245,6 +247,11 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 				}),
 			}),
 			hb.Tbody().Children(lo.Map(data.recordList, func(template cmsstore.TemplateInterface, _ int) hb.TagInterface {
+				site, siteFound := lo.Find(data.siteList, func(site cmsstore.SiteInterface) bool {
+					return site.ID() == template.SiteID()
+				})
+
+				siteName := lo.IfF(siteFound, func() string { return site.Name() }).Else("none")
 
 				templateName := template.Name()
 
@@ -282,6 +289,10 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
 						Child(hb.Div().Child(templateLink)).
+						Child(hb.Div().
+							Style("font-size: 11px;").
+							HTML("Site: ").
+							HTML(siteName)).
 						Child(hb.Div().
 							Style("font-size: 11px;").
 							HTML("Ref: ").
@@ -457,6 +468,17 @@ func (controller *templateManagerController) prepareData(r *http.Request) (data 
 	data.recordList = recordList
 	data.recordCount = recordCount
 
+	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
+	if err != nil {
+		controller.ui.Logger().Error("At translationManagerController > prepareData", "error", err.Error())
+		return data, "error retrieving sites"
+	}
+
 	return data, ""
 }
 
@@ -509,12 +531,16 @@ func (controller *templateManagerController) fetchRecordList(data templateManage
 }
 
 type templateManagerControllerData struct {
-	request         *http.Request
-	action          string
-	page            string
-	pageInt         int
-	perPage         int
-	sortOrder       string
+	request *http.Request
+	action  string
+
+	page      string
+	pageInt   int
+	perPage   int
+	sortOrder string
+
+	siteList []cmsstore.SiteInterface
+
 	sortBy          string
 	formStatus      string
 	formName        string

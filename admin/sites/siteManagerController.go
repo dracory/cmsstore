@@ -203,6 +203,8 @@ func (controller *siteManagerController) page(data siteManagerControllerData) hb
 			Name: "Site Manager",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteManager, nil),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: nil,
 	})
 
 	buttonPageNew := hb.Button().
@@ -214,7 +216,7 @@ func (controller *siteManagerController) page(data siteManagerControllerData) hb
 		HxSwap("beforeend")
 
 	title := hb.Heading1().
-		HTML("CMS. Site Manager").
+		HTML("Site Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().

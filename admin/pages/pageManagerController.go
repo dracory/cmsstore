@@ -228,6 +228,8 @@ func (controller *pageManagerController) page(data pageManagerControllerData) hb
 			Name: "Page Manager",
 			URL:  shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, nil),
 		},
+	}, struct{ SiteList []cmsstore.SiteInterface }{
+		SiteList: data.siteList,
 	})
 
 	buttonPageNew := hb.Button().
@@ -239,7 +241,7 @@ func (controller *pageManagerController) page(data pageManagerControllerData) hb
 		HxSwap("beforeend")
 
 	pageTitle := hb.Heading1().
-		HTML("CMS. Page Manager").
+		HTML("Page Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().
@@ -279,9 +281,13 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 				}),
 			}),
 			hb.Tbody().Children(lo.Map(data.recordList, func(page cmsstore.PageInterface, _ int) hb.TagInterface {
+				site, siteFound := lo.Find(data.siteList, func(site cmsstore.SiteInterface) bool {
+					return site.ID() == page.SiteID()
+				})
 
 				pageName := page.Name()
 				pageAlias := page.Alias()
+				siteName := lo.IfF(siteFound, func() string { return site.Name() }).Else("none")
 
 				siteLink := hb.Hyperlink().
 					Text(pageName).
@@ -314,15 +320,13 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 					HxTarget("body").
 					HxSwap("beforeend")
 
-				// buttonImpersonate := hb.Hyperlink().
-				// 	Class("btn btn-warning me-2").
-				// 	Child(hb.I().Class("bi bi-shuffle")).
-				// 	Title("Impersonate").
-				// 	Href(links.NewAdminLinks().UsersUserImpersonate(map[string]string{"site_id": site.ID()}))
-
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
 						Child(hb.Div().Child(siteLink)).
+						Child(hb.Div().
+							Style("font-size: 11px;").
+							HTML("Site: ").
+							HTML(siteName)).
 						Child(hb.Div().
 							Style("font-size: 11px;").
 							HTML("Alias: ").
@@ -499,6 +503,12 @@ func (controller *pageManagerController) prepareData(r *http.Request) (data page
 		return data, "error retrieving web sites"
 	}
 
+	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC).
+		SetOffset(0).
+		SetLimit(100))
+
 	data.recordList = recordList
 	data.recordCount = recordCount
 
@@ -578,4 +588,5 @@ type pageManagerControllerData struct {
 	formSiteID      string
 	recordList      []cmsstore.PageInterface
 	recordCount     int64
+	siteList        []cmsstore.SiteInterface
 }
