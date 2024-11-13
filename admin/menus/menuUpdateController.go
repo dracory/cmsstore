@@ -81,8 +81,14 @@ func (controller *menuUpdateController) treeEditorHandle(r *http.Request, data m
 		return hb.Div().Text(`ERROR: ` + err.Error())
 	}
 
+	menuItemsJson := utils.Req(r, "menu_items", "")
+
+	if menuItemsJson == "" {
+		menuItemsJson = data.formMenuItemsJSON
+	}
+
 	treeControl := &treeControl{
-		treeJSON:         data.formMenuItemsJSON,
+		treeJSON:         menuItemsJson,
 		targetTextareaID: "menu_items",
 		renderURL: shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
 			"menu_id": data.menuID,
@@ -262,10 +268,11 @@ func (c menuUpdateController) fieldsMenuItems(data menuUpdateControllerData) []f
 				ToHTML(),
 		}),
 		form.NewField(form.FieldOptions{
-			Label: "Menu Items",
-			Name:  "menu_items",
-			Type:  form.FORM_FIELD_TYPE_TEXTAREA,
-			Value: data.formMenuItemsJSON,
+			Label:     "Menu Items",
+			Name:      "menu_items",
+			Type:      form.FORM_FIELD_TYPE_TEXTAREA,
+			Invisible: true,
+			Value:     data.formMenuItemsJSON,
 		}),
 		form.NewField(form.FieldOptions{
 			Label:    "Menu ID",

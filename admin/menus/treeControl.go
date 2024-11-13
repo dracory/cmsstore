@@ -257,14 +257,14 @@ func (t *treeControl) renderNode(tree Tree, node Node, level int) hb.TagInterfac
 		HxSwap(`beforeend`)
 
 	padding := lo.Ternary(isRoot, 0, 20)
-	backgroundOpacity := `0.` + utils.ToString(10+level*5)
+	backgroundOpacity := `0.0` + (utils.ToString(1 + level*2))
 
 	nodeView := hb.Div().
 		Class("tree-node").
 		ClassIf(isRoot, "tree-node-root").
-		Style(`border: 1px solid blue; border-radius: 10px; margin: 5px 0px; padding: 5px`).
+		Style(`border: 1px solid lavender; border-radius: 10px; margin: 5px 0px; padding: 5px`).
 		Style("margin-left: " + utils.ToString(padding) + "px;").
-		Style("background-color: rgba(0, 0, 255, " + backgroundOpacity + ");").
+		Style("background-color: rgba(0, 149, 182, " + backgroundOpacity + ");").
 		Child(icon).
 		Child(hb.Span().
 			Class("tree-node-name").
