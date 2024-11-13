@@ -1,11 +1,15 @@
 package shared
 
 import (
+	"net/http"
+
 	"github.com/gouniverse/hb"
 	"github.com/samber/lo"
 )
 
-func AdminBreadcrumbs(adminHomeURL string, endpoint string, pageBreadcrumbs []Breadcrumb) hb.TagInterface {
+func AdminBreadcrumbs(r *http.Request, pageBreadcrumbs []Breadcrumb) hb.TagInterface {
+	adminHomeURL := AdminHomeURL(r)
+	endpoint := Endpoint(r)
 	adminHomeBreadcrumb := lo.If(adminHomeURL != "", Breadcrumb{
 		Name: "Home",
 		URL:  adminHomeURL,

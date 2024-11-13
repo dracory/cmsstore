@@ -2,13 +2,15 @@ package shared
 
 import (
 	"log/slog"
+	"net/http"
 
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/hb"
 	"github.com/spf13/cast"
 )
 
-func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, endpoint string) hb.TagInterface {
+func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Request) hb.TagInterface {
+	endpoint := Endpoint(r)
 	linkHome := hb.NewHyperlink().
 		HTML("Dashboard").
 		Href(URL(endpoint, PathHome, nil)).
@@ -17,10 +19,10 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, endpoint st
 		HTML("Blocks ").
 		Href(URL(endpoint, PathBlocksBlockManager, nil)).
 		Class("nav-link")
-	// linkMenus := hb.NewHyperlink().
-	// 	HTML("Menus ").
-	// 	Href(endpoint + "?path=" + PathMenusMenuManager).
-	// 	Class("nav-link")
+	linkMenus := hb.NewHyperlink().
+		HTML("Menus ").
+		Href(URL(endpoint, PathMenusMenuManager, nil)).
+		Class("nav-link")
 	linkPages := hb.Hyperlink().
 		HTML("Pages ").
 		Href(URL(endpoint, PathPagesPageManager, nil)).
@@ -58,6 +60,13 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, endpoint st
 	if err != nil {
 		logger.Error(err.Error())
 		blocksCount = -1
+	}
+
+	menusCount, err := store.MenuCount(cmsstore.MenuQuery())
+
+	if err != nil {
+		logger.Error(err.Error())
+		menusCount = -1
 	}
 
 	pagesCount, err := store.PageCount(cmsstore.PageQuery())
@@ -106,9 +115,15 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, endpoint st
 				Class("badge bg-secondary").
 				HTML(cast.ToString(pagesCount)))))
 
-	// if cms.menusEnabled {
-	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkMenus.AddChild(hb.NewSpan().Class("badge bg-secondary").HTML(strconv.FormatInt(menusCount, 10)))))
-	// }
+	if store.MenusEnabled() {
+		ulNav.Child(hb.
+			LI().
+			Class("nav-item").
+			Child(linkMenus.
+				Child(hb.NewSpan().
+					Class("badge bg-secondary").
+					HTML(cast.ToString(menusCount)))))
+	}
 
 	ulNav.Child(hb.
 		LI().
@@ -122,13 +137,15 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, endpoint st
 	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkWidgets.AddChild(hb.NewSpan().Class("badge bg-secondary").HTML(strconv.FormatInt(widgetsCount, 10)))))
 	// }
 
-	ulNav.Child(hb.
-		LI().
-		Class("nav-item").
-		Child(linkTranslations.
-			Child(hb.NewSpan().
-				Class("badge bg-secondary ms-1").
-				HTML(cast.ToString(translationsCount)))))
+	if store.TranslationsEnabled() {
+		ulNav.Child(hb.
+			LI().
+			Class("nav-item").
+			Child(linkTranslations.
+				Child(hb.NewSpan().
+					Class("badge bg-secondary ms-1").
+					HTML(cast.ToString(translationsCount)))))
+	}
 
 	// if cms.settingsEnabled {
 	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").AddChild(linkSettings))

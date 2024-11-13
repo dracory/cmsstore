@@ -114,16 +114,16 @@ func (controller pageUpdateController) script() string {
 }
 
 func (controller pageUpdateController) page(data pageUpdateControllerData) hb.TagInterface {
-	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), data.request)
 
-	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
+	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Page Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, nil),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, nil),
 		},
 		{
 			Name: "Edit Page",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID}),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID}),
 		},
 	})
 
@@ -132,14 +132,14 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormpageUpdate").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID})).
+		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{"page_id": data.pageID})).
 		HxTarget("#FormpageUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, nil))
+		Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -179,7 +179,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_CONTENT, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
 					"page_id": data.pageID,
 					"view":    VIEW_CONTENT,
 				})).
@@ -187,7 +187,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SEO, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
 					"page_id": data.pageID,
 					"view":    VIEW_SEO,
 				})).
@@ -195,7 +195,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
 					"page_id": data.pageID,
 					"view":    VIEW_SETTINGS,
 				})).
@@ -507,7 +507,7 @@ func (c pageUpdateController) fieldsContent(data pageUpdateControllerData) (fiel
 			// ID:    "blockeditor" + uid.HumanUid(),
 			Name:  fieldContent.Name,
 			Value: value,
-			HandleEndpoint: shared.URL(c.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
+			HandleEndpoint: shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
 				"page_id": data.pageID,
 				"action":  ACTION_BLOCKEDITOR_HANDLE,
 			}),
@@ -840,6 +840,7 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 }
 
 func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (data pageUpdateControllerData, errorMessage string) {
+	data.request = r
 	data.action = utils.Req(r, "action", "")
 	data.pageID = utils.Req(r, "page_id", "")
 	data.view = utils.Req(r, "view", VIEW_CONTENT)
@@ -897,10 +898,11 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 }
 
 type pageUpdateControllerData struct {
-	action string
-	pageID string
-	page   cmsstore.PageInterface
-	view   string
+	request *http.Request
+	action  string
+	pageID  string
+	page    cmsstore.PageInterface
+	view    string
 
 	templateList []cmsstore.TemplateInterface
 

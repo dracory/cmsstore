@@ -22,6 +22,7 @@ type menuCreateController struct {
 }
 
 type menuCreateControllerData struct {
+	request        *http.Request
 	siteList       []cmsstore.SiteInterface
 	siteID         string
 	name           string
@@ -64,7 +65,7 @@ func (controller menuCreateController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *menuCreateController) modal(data menuCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuCreate, nil)
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormMenuCreate",
@@ -160,6 +161,7 @@ func (controller *menuCreateController) modal(data menuCreateControllerData) hb.
 }
 
 func (controller *menuCreateController) prepareDataAndValidate(r *http.Request) (data menuCreateControllerData, errorMessage string) {
+	data.request = r
 	data.name = strings.TrimSpace(utils.Req(r, "menu_name", ""))
 	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
 

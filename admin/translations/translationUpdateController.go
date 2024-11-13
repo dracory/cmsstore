@@ -72,16 +72,16 @@ func (controller *translationUpdateController) Handler(w http.ResponseWriter, r 
 }
 
 func (controller translationUpdateController) page(data translationUpdateControllerData) hb.TagInterface {
-	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), data.request)
 
-	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
+	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Translation Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationManager, nil),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, nil),
 		},
 		{
 			Name: "Edit Translation",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationUpdate, map[string]string{"translation_id": data.translationID}),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{"translation_id": data.translationID}),
 		},
 	})
 
@@ -90,14 +90,14 @@ func (controller translationUpdateController) page(data translationUpdateControl
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormTranslationUpdate").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationUpdate, map[string]string{"translation_id": data.translationID})).
+		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{"translation_id": data.translationID})).
 		HxTarget("#FormTranslationUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationManager, nil))
+		Href(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -136,7 +136,7 @@ func (controller translationUpdateController) page(data translationUpdateControl
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_CONTENT, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{
 					"translation_id": data.translationID,
 					"view":           VIEW_CONTENT,
 				})).
@@ -144,7 +144,7 @@ func (controller translationUpdateController) page(data translationUpdateControl
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{
 					"translation_id": data.translationID,
 					"view":           VIEW_SETTINGS,
 				})).
@@ -474,7 +474,7 @@ func (controller translationUpdateController) saveTranslation(r *http.Request, d
 
 	data.formSuccessMessage = "translation saved successfully"
 	if refreshPage {
-		data.formRedirectURL = shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationUpdate, map[string]string{
+		data.formRedirectURL = shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationUpdate, map[string]string{
 			"translation_id": data.translationID,
 			"view":           data.view,
 		})
@@ -484,6 +484,7 @@ func (controller translationUpdateController) saveTranslation(r *http.Request, d
 }
 
 func (controller translationUpdateController) prepareDataAndValidate(r *http.Request) (data translationUpdateControllerData, errorMessage string) {
+	data.request = r
 	data.action = utils.Req(r, "action", "")
 	data.translationID = utils.Req(r, "translation_id", "")
 	data.view = utils.Req(r, "view", "")
@@ -542,6 +543,7 @@ func (controller translationUpdateController) prepareDataAndValidate(r *http.Req
 }
 
 type translationUpdateControllerData struct {
+	request       *http.Request
 	action        string
 	translationID string
 	translation   cmsstore.TranslationInterface

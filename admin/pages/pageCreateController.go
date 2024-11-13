@@ -27,6 +27,7 @@ type pageCreateController struct {
 }
 
 type pageCreateControllerData struct {
+	request        *http.Request
 	siteList       []cmsstore.SiteInterface
 	siteID         string
 	name           string
@@ -69,7 +70,7 @@ func (controller pageCreateController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *pageCreateController) modal(data pageCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathPagesPageCreate, nil)
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathPagesPageCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormPageCreate",
@@ -165,6 +166,7 @@ func (controller *pageCreateController) modal(data pageCreateControllerData) hb.
 }
 
 func (controller *pageCreateController) prepareDataAndValidate(r *http.Request) (data pageCreateControllerData, errorMessage string) {
+	data.request = r
 	data.name = strings.TrimSpace(utils.Req(r, "page_name", ""))
 	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
 

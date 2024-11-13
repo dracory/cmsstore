@@ -22,6 +22,7 @@ var _ router.HTMLControllerInterface = (*menuDeleteController)(nil)
 // == CONSTRUCTOR =============================================================
 
 type menuDeleteControllerData struct {
+	request        *http.Request
 	menuID         string
 	menu           cmsstore.MenuInterface
 	successMessage string
@@ -59,7 +60,7 @@ func (controller menuDeleteController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *menuDeleteController) modal(data menuDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuDelete, map[string]string{
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuDelete, map[string]string{
 		"menu_id": data.menuID,
 	})
 
@@ -129,6 +130,7 @@ func (controller *menuDeleteController) modal(data menuDeleteControllerData) hb.
 }
 
 func (controller *menuDeleteController) prepareDataAndValidate(r *http.Request) (data menuDeleteControllerData, errorMessage string) {
+	data.request = r
 	data.menuID = utils.Req(r, "menu_id", "")
 
 	if data.menuID == "" {

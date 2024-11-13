@@ -1,5 +1,6 @@
 package shared
 
+const KeyAdminHomeURL = "admin_home_uRL"
 const KeyEndpoint = "endpoint"
 const PathHome = "/"
 

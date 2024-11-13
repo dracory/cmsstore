@@ -7,15 +7,12 @@ import (
 	"github.com/gouniverse/blockeditor"
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/hb"
 	"github.com/gouniverse/responses"
 )
 
 func UI(config shared.UiConfig) UiInterface {
 	return ui{
 		blockEditorDefinitions: config.BlockEditorDefinitions,
-		adminBreadcrumbs:       config.AdminBreadcrumbs,
-		endpoint:               config.Endpoint,
 		layout:                 config.Layout,
 		logger:                 config.Logger,
 		store:                  config.Store,
@@ -33,8 +30,6 @@ type UiInterface interface {
 
 type ui struct {
 	blockEditorDefinitions []blockeditor.BlockDefinition
-	adminBreadcrumbs       func(endpoint string, breadcrumbs []shared.Breadcrumb) hb.TagInterface
-	endpoint               string
 	layout                 func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
@@ -45,20 +40,8 @@ type ui struct {
 	store  cmsstore.StoreInterface
 }
 
-// func (ui ui) AdminHomeURL() string {
-// 	return ui.adminHomeURL
-// }
-
-func (ui ui) AdminBreadcrumbs(endpoint string, breadcrumbs []shared.Breadcrumb) hb.TagInterface {
-	return ui.adminBreadcrumbs(endpoint, breadcrumbs)
-}
-
 func (ui ui) BlockEditorDefinitions() []blockeditor.BlockDefinition {
 	return ui.blockEditorDefinitions
-}
-
-func (ui ui) Endpoint() string {
-	return ui.endpoint
 }
 
 func (ui ui) Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {

@@ -22,6 +22,7 @@ type translationCreateController struct {
 }
 
 type translationCreateControllerData struct {
+	request        *http.Request
 	siteList       []cmsstore.SiteInterface
 	siteID         string
 	name           string
@@ -64,7 +65,7 @@ func (controller translationCreateController) Handler(w http.ResponseWriter, r *
 }
 
 func (controller *translationCreateController) modal(data translationCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationCreate, nil)
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormTranslationCreate",
@@ -160,6 +161,7 @@ func (controller *translationCreateController) modal(data translationCreateContr
 }
 
 func (controller *translationCreateController) prepareDataAndValidate(r *http.Request) (data translationCreateControllerData, errorMessage string) {
+	data.request = r
 	data.name = strings.TrimSpace(utils.Req(r, "translation_name", ""))
 	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
 

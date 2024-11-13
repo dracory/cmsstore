@@ -77,16 +77,16 @@ func (controller *siteUpdateController) Handler(w http.ResponseWriter, r *http.R
 }
 
 func (controller siteUpdateController) page(data siteUpdateControllerData) hb.TagInterface {
-	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), data.request)
 
-	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
+	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Site Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteManager, nil),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteManager, nil),
 		},
 		{
 			Name: "Edit Site",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{"site_id": data.siteID}),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{"site_id": data.siteID}),
 		},
 	})
 
@@ -95,14 +95,14 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormpageUpdate").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{"site_id": data.siteID})).
+		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{"site_id": data.siteID})).
 		HxTarget("#FormpageUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteManager, nil))
+		Href(shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -141,7 +141,7 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{
 					"site_id": data.siteID,
 					"view":    VIEW_SETTINGS,
 				})).
@@ -149,7 +149,7 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SEO, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{
 					"site_id": data.siteID,
 					"view":    VIEW_SEO,
 				})).
@@ -214,12 +214,12 @@ func (controller siteUpdateController) form(data siteUpdateControllerData) hb.Ta
 					"site_domain_name": domainName,
 				}
 			}),
-			RepeaterAddUrl: shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{
+			RepeaterAddUrl: shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{
 				"site_id": data.siteID,
 				"view":    VIEW_SETTINGS,
 				"action":  ACTION_REPEATER_ADD,
 			}),
-			RepeaterRemoveUrl: shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteUpdate, map[string]string{
+			RepeaterRemoveUrl: shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteUpdate, map[string]string{
 				"site_id": data.siteID,
 				"view":    VIEW_SETTINGS,
 				"action":  ACTION_REPEATER_DELETE,
@@ -351,6 +351,7 @@ func (controller siteUpdateController) saveSite(r *http.Request, data siteUpdate
 }
 
 func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (data siteUpdateControllerData, errorMessage string) {
+	data.request = r
 	data.action = utils.Req(r, "action", "")
 	data.siteID = utils.Req(r, "site_id", "")
 	data.view = utils.Req(r, "view", "")
@@ -410,10 +411,11 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 }
 
 type siteUpdateControllerData struct {
-	action string
-	siteID string
-	site   cmsstore.SiteInterface
-	view   string
+	request *http.Request
+	action  string
+	siteID  string
+	site    cmsstore.SiteInterface
+	view    string
 
 	formErrorMessage   string
 	formSuccessMessage string

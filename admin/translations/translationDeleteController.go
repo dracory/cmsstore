@@ -22,6 +22,7 @@ var _ router.HTMLControllerInterface = (*translationDeleteController)(nil)
 // == CONSTRUCTOR =============================================================
 
 type translationDeleteControllerData struct {
+	request        *http.Request
 	translationID  string
 	translation    cmsstore.TranslationInterface
 	successMessage string
@@ -59,7 +60,7 @@ func (controller translationDeleteController) Handler(w http.ResponseWriter, r *
 }
 
 func (controller *translationDeleteController) modal(data translationDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathTranslationsTranslationDelete, map[string]string{
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathTranslationsTranslationDelete, map[string]string{
 		"translation_id": data.translationID,
 	})
 
@@ -129,6 +130,7 @@ func (controller *translationDeleteController) modal(data translationDeleteContr
 }
 
 func (controller *translationDeleteController) prepareDataAndValidate(r *http.Request) (data translationDeleteControllerData, errorMessage string) {
+	data.request = r
 	data.translationID = utils.Req(r, "translation_id", "")
 
 	if data.translationID == "" {

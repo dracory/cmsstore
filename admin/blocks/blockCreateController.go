@@ -22,6 +22,7 @@ type blockCreateController struct {
 }
 
 type blockCreateControllerData struct {
+	request        *http.Request
 	siteList       []cmsstore.SiteInterface
 	siteID         string
 	pageID         string
@@ -66,7 +67,7 @@ func (controller blockCreateController) Handler(w http.ResponseWriter, r *http.R
 }
 
 func (controller *blockCreateController) modal(data blockCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockCreate, nil)
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormBlockCreate",
@@ -162,6 +163,7 @@ func (controller *blockCreateController) modal(data blockCreateControllerData) h
 }
 
 func (controller *blockCreateController) prepareDataAndValidate(r *http.Request) (data blockCreateControllerData, errorMessage string) {
+	data.request = r
 	data.name = strings.TrimSpace(utils.Req(r, "block_name", ""))
 	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
 	data.pageID = strings.TrimSpace(utils.Req(r, "page_id", ""))         // empty for now

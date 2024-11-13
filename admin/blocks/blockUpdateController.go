@@ -94,15 +94,16 @@ func (controller *blockUpdateController) Handler(w http.ResponseWriter, r *http.
 }
 
 func (controller blockUpdateController) page(data blockUpdateControllerData) hb.TagInterface {
-	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
-	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), data.request)
+
+	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Block Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, nil),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, nil),
 		},
 		{
 			Name: "Edit Block",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{"block_id": data.blockID}),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{"block_id": data.blockID}),
 		},
 	})
 
@@ -111,14 +112,14 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormBlockUpdate").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{"block_id": data.blockID})).
+		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{"block_id": data.blockID})).
 		HxTarget("#FormBlockUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, nil))
+		Href(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -157,7 +158,7 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_CONTENT, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{
 					"block_id": data.blockID,
 					"view":     VIEW_CONTENT,
 				})).
@@ -165,7 +166,7 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{
 					"block_id": data.blockID,
 					"view":     VIEW_SETTINGS,
 				})).
@@ -397,6 +398,7 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 }
 
 func (controller blockUpdateController) prepareDataAndValidate(r *http.Request) (data blockUpdateControllerData, errorMessage string) {
+	data.request = r
 	data.action = utils.Req(r, "action", "")
 	data.blockID = utils.Req(r, "block_id", "")
 	data.view = utils.Req(r, "view", "")
@@ -434,6 +436,7 @@ func (controller blockUpdateController) prepareDataAndValidate(r *http.Request) 
 }
 
 type blockUpdateControllerData struct {
+	request *http.Request
 	action  string
 	blockID string
 	block   cmsstore.BlockInterface

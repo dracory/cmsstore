@@ -2,7 +2,6 @@ package admin
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"maps"
 	"net/http"
@@ -22,42 +21,7 @@ import (
 	"github.com/gouniverse/utils"
 )
 
-type AdminOptions struct {
-	BlockEditorDefinitions []blockeditor.BlockDefinition
-	FuncLayout             func(title string, body string, options struct {
-		Styles     []string
-		StyleURLs  []string
-		Scripts    []string
-		ScriptURLs []string
-	}) string
-	Logger       *slog.Logger
-	Store        cmsstore.StoreInterface
-	AdminHomeURL string
-}
-
-func New(options AdminOptions) (*admin, error) {
-	if options.Store == nil {
-		return nil, errors.New(shared.ERROR_STORE_IS_NIL)
-	}
-
-	if options.Logger == nil {
-		return nil, errors.New(shared.ERROR_LOGGER_IS_NIL)
-	}
-
-	return &admin{
-		blockEditorDefinitions: options.BlockEditorDefinitions,
-		logger:                 options.Logger,
-		store:                  options.Store,
-		funcLayout:             options.FuncLayout,
-		adminHomeURL:           options.AdminHomeURL,
-	}, nil
-}
-
-type Admin interface {
-	Handle(w http.ResponseWriter, r *http.Request)
-}
-
-var _ Admin = (*admin)(nil)
+// == TYPE ====================================================================
 
 type admin struct {
 	blockEditorDefinitions []blockeditor.BlockDefinition
@@ -72,6 +36,12 @@ type admin struct {
 	adminHomeURL string
 }
 
+// == INTERFACE IMPLEMENTATION CHECK ==========================================
+
+var _ shared.Admin = (*admin)(nil)
+
+// == INTERFACE IMPLEMENTATION ================================================
+
 func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
 	path := utils.Req(r, "path", "home")
 
@@ -80,10 +50,13 @@ func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.WithValue(r.Context(), shared.KeyEndpoint, r.URL.Path)
+	ctx = context.WithValue(ctx, shared.KeyAdminHomeURL, a.adminHomeURL)
 
 	routeFunc := a.getRoute(path)
 	routeFunc(w, r.WithContext(ctx))
 }
+
+// == PRIVATE METHODS =========================================================
 
 func (a *admin) getRoute(route string) func(w http.ResponseWriter, r *http.Request) {
 
@@ -138,72 +111,40 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 
 func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	blockRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathBlocksBlockCreate: func(w http.ResponseWriter, r *http.Request) {
-			adminBlocks.UI(a.uiConfig(r)).BlockCreate(w, r)
-		},
-		shared.PathBlocksBlockDelete: func(w http.ResponseWriter, r *http.Request) {
-			adminBlocks.UI(a.uiConfig(r)).BlockDelete(w, r)
-		},
-		shared.PathBlocksBlockManager: func(w http.ResponseWriter, r *http.Request) {
-			adminBlocks.UI(a.uiConfig(r)).BlockManager(w, r)
-		},
-		shared.PathBlocksBlockUpdate: func(w http.ResponseWriter, r *http.Request) {
-			adminBlocks.UI(a.uiConfig(r)).BlockUpdate(w, r)
-		},
+		shared.PathBlocksBlockCreate:  adminBlocks.UI(a.uiConfig()).BlockCreate,
+		shared.PathBlocksBlockDelete:  adminBlocks.UI(a.uiConfig()).BlockDelete,
+		shared.PathBlocksBlockManager: adminBlocks.UI(a.uiConfig()).BlockManager,
+		shared.PathBlocksBlockUpdate:  adminBlocks.UI(a.uiConfig()).BlockUpdate,
 	}
 	return blockRoutes
 }
 
 func (a *admin) menuRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	menuRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathMenusMenuCreate: func(w http.ResponseWriter, r *http.Request) {
-			adminMenus.UI(a.uiConfig(r)).MenuCreate(w, r)
-		},
-		shared.PathMenusMenuDelete: func(w http.ResponseWriter, r *http.Request) {
-			adminMenus.UI(a.uiConfig(r)).MenuDelete(w, r)
-		},
-		shared.PathMenusMenuManager: func(w http.ResponseWriter, r *http.Request) {
-			adminMenus.UI(a.uiConfig(r)).MenuManager(w, r)
-		},
-		shared.PathMenusMenuUpdate: func(w http.ResponseWriter, r *http.Request) {
-			adminMenus.UI(a.uiConfig(r)).MenuUpdate(w, r)
-		},
+		shared.PathMenusMenuCreate:  adminMenus.UI(a.uiConfig()).MenuCreate,
+		shared.PathMenusMenuDelete:  adminMenus.UI(a.uiConfig()).MenuDelete,
+		shared.PathMenusMenuManager: adminMenus.UI(a.uiConfig()).MenuManager,
+		shared.PathMenusMenuUpdate:  adminMenus.UI(a.uiConfig()).MenuUpdate,
 	}
 	return menuRoutes
 }
 
 func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	pageRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathPagesPageCreate: func(w http.ResponseWriter, r *http.Request) {
-			adminPages.UI(a.uiConfig(r)).PageCreate(w, r)
-		},
-		shared.PathPagesPageDelete: func(w http.ResponseWriter, r *http.Request) {
-			adminPages.UI(a.uiConfig(r)).PageDelete(w, r)
-		},
-		shared.PathPagesPageManager: func(w http.ResponseWriter, r *http.Request) {
-			adminPages.UI(a.uiConfig(r)).PageManager(w, r)
-		},
-		shared.PathPagesPageUpdate: func(w http.ResponseWriter, r *http.Request) {
-			adminPages.UI(a.uiConfig(r)).PageUpdate(w, r)
-		},
+		shared.PathPagesPageCreate:  adminPages.UI(a.uiConfig()).PageCreate,
+		shared.PathPagesPageDelete:  adminPages.UI(a.uiConfig()).PageDelete,
+		shared.PathPagesPageManager: adminPages.UI(a.uiConfig()).PageManager,
+		shared.PathPagesPageUpdate:  adminPages.UI(a.uiConfig()).PageUpdate,
 	}
 	return pageRoutes
 }
 
 func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	siteRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathSitesSiteCreate: func(w http.ResponseWriter, r *http.Request) {
-			adminSites.UI(a.uiConfig(r)).SiteCreate(w, r)
-		},
-		shared.PathSitesSiteDelete: func(w http.ResponseWriter, r *http.Request) {
-			adminSites.UI(a.uiConfig(r)).SiteDelete(w, r)
-		},
-		shared.PathSitesSiteUpdate: func(w http.ResponseWriter, r *http.Request) {
-			adminSites.UI(a.uiConfig(r)).SiteUpdate(w, r)
-		},
-		shared.PathSitesSiteManager: func(w http.ResponseWriter, r *http.Request) {
-			adminSites.UI(a.uiConfig(r)).SiteManager(w, r)
-		},
+		shared.PathSitesSiteCreate:  adminSites.UI(a.uiConfig()).SiteCreate,
+		shared.PathSitesSiteDelete:  adminSites.UI(a.uiConfig()).SiteDelete,
+		shared.PathSitesSiteUpdate:  adminSites.UI(a.uiConfig()).SiteUpdate,
+		shared.PathSitesSiteManager: adminSites.UI(a.uiConfig()).SiteManager,
 	}
 
 	return siteRoutes
@@ -211,49 +152,31 @@ func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) templateRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	templateRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathTemplatesTemplateCreate: func(w http.ResponseWriter, r *http.Request) {
-			adminTemplates.UI(a.uiConfig(r)).TemplateCreate(w, r)
-		},
-		shared.PathTemplatesTemplateDelete: func(w http.ResponseWriter, r *http.Request) {
-			adminTemplates.UI(a.uiConfig(r)).TemplateDelete(w, r)
-		},
-		shared.PathTemplatesTemplateManager: func(w http.ResponseWriter, r *http.Request) {
-			adminTemplates.UI(a.uiConfig(r)).TemplateManager(w, r)
-		},
-		shared.PathTemplatesTemplateUpdate: func(w http.ResponseWriter, r *http.Request) {
-			adminTemplates.UI(a.uiConfig(r)).TemplateUpdate(w, r)
-		},
+		shared.PathTemplatesTemplateCreate:  adminTemplates.UI(a.uiConfig()).TemplateCreate,
+		shared.PathTemplatesTemplateDelete:  adminTemplates.UI(a.uiConfig()).TemplateDelete,
+		shared.PathTemplatesTemplateManager: adminTemplates.UI(a.uiConfig()).TemplateManager,
+		shared.PathTemplatesTemplateUpdate:  adminTemplates.UI(a.uiConfig()).TemplateUpdate,
 	}
 	return templateRoutes
 }
 
 func (a *admin) translationRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	translationsRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathTranslationsTranslationCreate: func(w http.ResponseWriter, r *http.Request) {
-			adminTranslations.UI(a.uiConfig(r)).TranslationCreate(w, r)
-		},
-		shared.PathTranslationsTranslationDelete: func(w http.ResponseWriter, r *http.Request) {
-			adminTranslations.UI(a.uiConfig(r)).TranslationDelete(w, r)
-		},
-		shared.PathTranslationsTranslationManager: func(w http.ResponseWriter, r *http.Request) {
-			adminTranslations.UI(a.uiConfig(r)).TranslationManager(w, r)
-		},
-		shared.PathTranslationsTranslationUpdate: func(w http.ResponseWriter, r *http.Request) {
-			adminTranslations.UI(a.uiConfig(r)).TranslationUpdate(w, r)
-		},
+		shared.PathTranslationsTranslationCreate:  adminTranslations.UI(a.uiConfig()).TranslationCreate,
+		shared.PathTranslationsTranslationDelete:  adminTranslations.UI(a.uiConfig()).TranslationDelete,
+		shared.PathTranslationsTranslationManager: adminTranslations.UI(a.uiConfig()).TranslationManager,
+		shared.PathTranslationsTranslationUpdate:  adminTranslations.UI(a.uiConfig()).TranslationUpdate,
 	}
 	return translationsRoutes
 }
 
-func (a *admin) adminBreadcrumbs(endpoint string, pageBreadcrumbs []shared.Breadcrumb) hb.TagInterface {
-	return shared.AdminBreadcrumbs(a.adminHomeURL, endpoint, pageBreadcrumbs)
+func (a *admin) adminBreadcrumbs(r *http.Request, pageBreadcrumbs []shared.Breadcrumb) hb.TagInterface {
+	return shared.AdminBreadcrumbs(r, pageBreadcrumbs)
 }
 
-func (a *admin) uiConfig(r *http.Request) shared.UiConfig {
+func (a *admin) uiConfig() shared.UiConfig {
 	return shared.UiConfig{
 		BlockEditorDefinitions: a.blockEditorDefinitions,
-		AdminBreadcrumbs:       a.adminBreadcrumbs,
-		Endpoint:               shared.Endpoint(r),
 		Layout:                 a.render,
 		Logger:                 a.logger,
 		Store:                  a.store,

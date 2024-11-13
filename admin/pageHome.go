@@ -11,8 +11,8 @@ import (
 )
 
 func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
-	adminHeader := shared.AdminHeader(a.store, a.logger, shared.Endpoint(r))
-	adminBreadcrumbs := a.adminBreadcrumbs(shared.Endpoint(r), []shared.Breadcrumb{})
+	adminHeader := shared.AdminHeader(a.store, a.logger, r)
+	adminBreadcrumbs := a.adminBreadcrumbs(r, []shared.Breadcrumb{})
 
 	pagesCount, errPagesCount := a.store.PageCount(cmsstore.PageQuery())
 

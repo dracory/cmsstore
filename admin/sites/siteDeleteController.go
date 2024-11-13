@@ -22,6 +22,7 @@ var _ router.HTMLControllerInterface = (*siteDeleteController)(nil)
 // == CONSTRUCTOR =============================================================
 
 type siteDeleteControllerData struct {
+	request        *http.Request
 	siteID         string
 	site           cmsstore.SiteInterface
 	successMessage string
@@ -59,7 +60,7 @@ func (controller siteDeleteController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteDelete, map[string]string{
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteDelete, map[string]string{
 		"site_id": data.siteID,
 	})
 
@@ -129,6 +130,7 @@ func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.
 }
 
 func (controller *siteDeleteController) prepareDataAndValidate(r *http.Request) (data siteDeleteControllerData, errorMessage string) {
+	data.request = r
 	data.siteID = utils.Req(r, "site_id", "")
 
 	if data.siteID == "" {

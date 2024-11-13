@@ -94,16 +94,16 @@ func (controller *templateUpdateController) Handler(w http.ResponseWriter, r *ht
 }
 
 func (controller templateUpdateController) page(data templateUpdateControllerData) hb.TagInterface {
-	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), data.request)
 
-	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
+	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Template Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, nil),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, nil),
 		},
 		{
 			Name: "Edit Template",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateUpdate, map[string]string{"template_id": data.templateID}),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{"template_id": data.templateID}),
 		},
 	})
 
@@ -112,14 +112,14 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Child(hb.I().Class("bi bi-save").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Save").
 		HxInclude("#FormTemplateUpdate").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateUpdate, map[string]string{"template_id": data.templateID})).
+		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{"template_id": data.templateID})).
 		HxTarget("#FormTemplateUpdate")
 
 	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ms-2 float-end").
 		Child(hb.I().Class("bi bi-chevron-left").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("Back").
-		Href(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, nil))
+		Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, nil))
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
@@ -158,7 +158,7 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_CONTENT, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
 					"template_id": data.templateID,
 					"view":        VIEW_CONTENT,
 				})).
@@ -166,7 +166,7 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
-				Href(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateUpdate, map[string]string{
+				Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
 					"template_id": data.templateID,
 					"view":        VIEW_SETTINGS,
 				})).
@@ -408,6 +408,7 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 }
 
 func (controller templateUpdateController) prepareDataAndValidate(r *http.Request) (data templateUpdateControllerData, errorMessage string) {
+	data.request = r
 	data.action = utils.Req(r, "action", "")
 	data.templateID = utils.Req(r, "template_id", "")
 	data.view = utils.Req(r, "view", "")
@@ -445,6 +446,7 @@ func (controller templateUpdateController) prepareDataAndValidate(r *http.Reques
 }
 
 type templateUpdateControllerData struct {
+	request    *http.Request
 	action     string
 	templateID string
 	template   cmsstore.TemplateInterface

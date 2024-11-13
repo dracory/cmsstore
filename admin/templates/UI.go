@@ -12,11 +12,10 @@ import (
 
 func UI(config shared.UiConfig) UiInterface {
 	return ui{
-		endpoint:         config.Endpoint,
-		adminBreadcrumbs: config.AdminBreadcrumbs,
-		layout:           config.Layout,
-		logger:           config.Logger,
-		store:            config.Store,
+
+		layout: config.Layout,
+		logger: config.Logger,
+		store:  config.Store,
 	}
 }
 
@@ -29,10 +28,10 @@ type UiInterface interface {
 }
 
 type ui struct {
-	endpoint         string
-	adminHeader      hb.TagInterface
-	adminBreadcrumbs func(endpoint string, breadcrumbs []shared.Breadcrumb) hb.TagInterface
-	layout           func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	endpoint    string
+	adminHeader hb.TagInterface
+
+	layout func(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
@@ -44,10 +43,6 @@ type ui struct {
 
 func (ui ui) AdminHeader() hb.TagInterface {
 	return ui.adminHeader
-}
-
-func (ui ui) AdminBreadcrumbs(endpoint string, breadcrumbs []shared.Breadcrumb) hb.TagInterface {
-	return ui.adminBreadcrumbs(endpoint, breadcrumbs)
 }
 
 func (ui ui) Endpoint() string {

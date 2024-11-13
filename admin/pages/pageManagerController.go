@@ -96,7 +96,7 @@ func (controller *pageManagerController) onModalRecordFilterShow(data pageManage
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, nil),
+		ActionURL: shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
@@ -221,12 +221,12 @@ func (controller *pageManagerController) onModalRecordFilterShow(data pageManage
 }
 
 func (controller *pageManagerController) page(data pageManagerControllerData) hb.TagInterface {
-	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), data.request)
 
-	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
+	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Page Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, nil),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, nil),
 		},
 	})
 
@@ -234,7 +234,7 @@ func (controller *pageManagerController) page(data pageManagerControllerData) hb
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("New Page").
-		HxGet(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageCreate, nil)).
+		HxGet(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
@@ -285,7 +285,7 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 
 				siteLink := hb.Hyperlink().
 					Text(pageName).
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
+					Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
 						"page_id": page.ID(),
 					}))
 
@@ -300,7 +300,7 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageUpdate, map[string]string{
+					Href(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageUpdate, map[string]string{
 						"page_id": page.ID(),
 					}))
 
@@ -308,7 +308,7 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageDelete, map[string]string{
+					HxGet(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageDelete, map[string]string{
 						"page_id": page.ID(),
 					})).
 					HxTarget("body").
@@ -367,7 +367,7 @@ func (controller *pageManagerController) sortableColumnLabel(data pageManagerCon
 		direction = sb.ASC
 	}
 
-	link := shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, map[string]string{
+	link := shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, map[string]string{
 		"page":      "0",
 		"by":        columnName,
 		"sort":      direction,
@@ -404,7 +404,7 @@ func (controller *pageManagerController) tableFilter(data pageManagerControllerD
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, map[string]string{
+		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, map[string]string{
 			"action":       ActionModalPageFilterShow,
 			"name":         data.formName,
 			"status":       data.formStatus,
@@ -453,7 +453,7 @@ func (controller *pageManagerController) tableFilter(data pageManagerControllerD
 }
 
 func (controller *pageManagerController) tablePagination(data pageManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(controller.ui.Endpoint(), shared.PathPagesPageManager, map[string]string{
+	url := shared.URL(shared.Endpoint(data.request), shared.PathPagesPageManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,

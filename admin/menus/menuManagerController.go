@@ -88,7 +88,7 @@ func (controller *menuManagerController) onModalRecordFilterShow(data menuManage
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuManager, nil),
+		ActionURL: shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
@@ -189,12 +189,12 @@ func (controller *menuManagerController) onModalRecordFilterShow(data menuManage
 }
 
 func (controller *menuManagerController) page(data menuManagerControllerData) hb.TagInterface {
-	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), data.request)
 
-	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
+	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Menu Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuManager, nil),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, nil),
 		},
 	})
 
@@ -202,7 +202,7 @@ func (controller *menuManagerController) page(data menuManagerControllerData) hb
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("New Menu").
-		HxGet(shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuCreate, nil)).
+		HxGet(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
@@ -250,7 +250,7 @@ func (controller *menuManagerController) tableRecords(data menuManagerController
 
 				menuLink := hb.Hyperlink().
 					Text(menuName).
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuUpdate, map[string]string{
+					Href(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
 						"menu_id": menu.ID(),
 					}))
 
@@ -265,7 +265,7 @@ func (controller *menuManagerController) tableRecords(data menuManagerController
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuUpdate, map[string]string{
+					Href(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuUpdate, map[string]string{
 						"menu_id": menu.ID(),
 					}))
 
@@ -273,7 +273,7 @@ func (controller *menuManagerController) tableRecords(data menuManagerController
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuDelete, map[string]string{
+					HxGet(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuDelete, map[string]string{
 						"menu_id": menu.ID(),
 					})).
 					HxTarget("body").
@@ -322,7 +322,7 @@ func (controller *menuManagerController) sortableColumnLabel(data menuManagerCon
 		direction = sb.ASC
 	}
 
-	link := shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuManager, map[string]string{
+	link := shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, map[string]string{
 		"page":      "0",
 		"by":        columnName,
 		"sort":      direction,
@@ -359,7 +359,7 @@ func (controller *menuManagerController) tableFilter(data menuManagerControllerD
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuManager, map[string]string{
+		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, map[string]string{
 			"action":       ActionModalPageFilterShow,
 			"name":         data.formName,
 			"status":       data.formStatus,
@@ -408,7 +408,7 @@ func (controller *menuManagerController) tableFilter(data menuManagerControllerD
 }
 
 func (controller *menuManagerController) tablePagination(data menuManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(controller.ui.Endpoint(), shared.PathMenusMenuManager, map[string]string{
+	url := shared.URL(shared.Endpoint(data.request), shared.PathMenusMenuManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,

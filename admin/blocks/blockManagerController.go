@@ -88,7 +88,7 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, nil),
+		ActionURL: shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
@@ -206,12 +206,12 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 }
 
 func (controller *blockManagerController) page(data blockManagerControllerData) hb.TagInterface {
-	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), data.request)
 
-	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
+	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Block Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, nil),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, nil),
 		},
 	})
 
@@ -219,7 +219,7 @@ func (controller *blockManagerController) page(data blockManagerControllerData) 
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("New Block").
-		HxGet(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockCreate, nil)).
+		HxGet(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
@@ -269,7 +269,7 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 
 				blockLink := hb.Hyperlink().
 					Text(blockName).
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{
+					Href(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{
 						"block_id": block.ID(),
 					}))
 
@@ -284,7 +284,7 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockUpdate, map[string]string{
+					Href(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockUpdate, map[string]string{
 						"block_id": block.ID(),
 					}))
 
@@ -292,7 +292,7 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockDelete, map[string]string{
+					HxGet(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockDelete, map[string]string{
 						"block_id": block.ID(),
 					})).
 					HxTarget("body").
@@ -341,7 +341,7 @@ func (controller *blockManagerController) sortableColumnLabel(data blockManagerC
 		direction = sb.ASC
 	}
 
-	link := shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, map[string]string{
+	link := shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, map[string]string{
 		"page":      "0",
 		"by":        columnName,
 		"sort":      direction,
@@ -378,7 +378,7 @@ func (controller *blockManagerController) tableFilter(data blockManagerControlle
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, map[string]string{
+		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, map[string]string{
 			"action":       ActionModalPageFilterShow,
 			"name":         data.formName,
 			"status":       data.formStatus,
@@ -427,7 +427,7 @@ func (controller *blockManagerController) tableFilter(data blockManagerControlle
 }
 
 func (controller *blockManagerController) tablePagination(data blockManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockManager, map[string]string{
+	url := shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,

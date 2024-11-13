@@ -22,6 +22,7 @@ var _ router.HTMLControllerInterface = (*templateDeleteController)(nil)
 // == CONSTRUCTOR =============================================================
 
 type templateDeleteControllerData struct {
+	request        *http.Request
 	templateID     string
 	template       cmsstore.TemplateInterface
 	successMessage string
@@ -59,7 +60,7 @@ func (controller templateDeleteController) Handler(w http.ResponseWriter, r *htt
 }
 
 func (controller *templateDeleteController) modal(data templateDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateDelete, map[string]string{
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateDelete, map[string]string{
 		"template_id": data.templateID,
 	})
 
@@ -129,6 +130,7 @@ func (controller *templateDeleteController) modal(data templateDeleteControllerD
 }
 
 func (controller *templateDeleteController) prepareDataAndValidate(r *http.Request) (data templateDeleteControllerData, errorMessage string) {
+	data.request = r
 	data.templateID = utils.Req(r, "template_id", "")
 
 	if data.templateID == "" {

@@ -22,6 +22,7 @@ var _ router.HTMLControllerInterface = (*pageCreateController)(nil)
 // == CONSTRUCTOR =============================================================
 
 type pageDeleteControllerData struct {
+	request        *http.Request
 	pageID         string
 	page           cmsstore.PageInterface
 	successMessage string
@@ -59,7 +60,7 @@ func (controller pageDeleteController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *pageDeleteController) modal(data pageDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathPagesPageDelete, map[string]string{
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathPagesPageDelete, map[string]string{
 		"page_id": data.pageID,
 	})
 
@@ -129,6 +130,7 @@ func (controller *pageDeleteController) modal(data pageDeleteControllerData) hb.
 }
 
 func (controller *pageDeleteController) prepareDataAndValidate(r *http.Request) (data pageDeleteControllerData, errorMessage string) {
+	data.request = r
 	data.pageID = utils.Req(r, "page_id", "")
 
 	if data.pageID == "" {

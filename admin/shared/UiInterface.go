@@ -5,13 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/hb"
 )
 
 type UiInterface interface {
-	Endpoint() string
-	AdminBreadcrumbs(endpoint string, breadcrumbs []Breadcrumb) hb.TagInterface
-	// AdminHeader() hb.TagInterface
+	// Endpoint() string
 	Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
 		Styles     []string
 		StyleURLs  []string

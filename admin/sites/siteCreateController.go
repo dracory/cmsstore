@@ -24,6 +24,7 @@ type siteCreateController struct {
 }
 
 type siteCreateControllerData struct {
+	request        *http.Request
 	name           string
 	successMessage string
 }
@@ -64,7 +65,7 @@ func (controller siteCreateController) Handler(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *siteCreateController) modal(data siteCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathSitesSiteCreate, nil)
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathSitesSiteCreate, nil)
 
 	formGroupName := bs.FormGroup().
 		Class("mb-3").
@@ -133,6 +134,7 @@ func (controller *siteCreateController) modal(data siteCreateControllerData) hb.
 }
 
 func (controller *siteCreateController) prepareDataAndValidate(r *http.Request) (data siteCreateControllerData, errorMessage string) {
+	data.request = r
 	data.name = strings.TrimSpace(utils.Req(r, "site_name", ""))
 
 	if r.Method != http.MethodPost {

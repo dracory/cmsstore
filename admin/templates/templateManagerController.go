@@ -88,7 +88,7 @@ func (controller *templateManagerController) onModalRecordFilterShow(data templa
 	filterForm := form.NewForm(form.FormOptions{
 		ID:        "FormFilters",
 		Method:    http.MethodGet,
-		ActionURL: shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, nil),
+		ActionURL: shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, nil),
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Status",
@@ -189,12 +189,12 @@ func (controller *templateManagerController) onModalRecordFilterShow(data templa
 }
 
 func (controller *templateManagerController) page(data templateManagerControllerData) hb.TagInterface {
-	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), controller.ui.Endpoint())
+	adminHeader := shared.AdminHeader(controller.ui.Store(), controller.ui.Logger(), data.request)
 
-	breadcrumbs := controller.ui.AdminBreadcrumbs(controller.ui.Endpoint(), []shared.Breadcrumb{
+	breadcrumbs := shared.AdminBreadcrumbs(data.request, []shared.Breadcrumb{
 		{
 			Name: "Template Manager",
-			URL:  shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, nil),
+			URL:  shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, nil),
 		},
 	})
 
@@ -202,7 +202,7 @@ func (controller *templateManagerController) page(data templateManagerController
 		Class("btn btn-primary float-end").
 		Child(hb.I().Class("bi bi-plus-circle").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
 		HTML("New Template").
-		HxGet(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateCreate, nil)).
+		HxGet(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateCreate, nil)).
 		HxTarget("body").
 		HxSwap("beforeend")
 
@@ -250,7 +250,7 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 
 				templateLink := hb.Hyperlink().
 					Text(templateName).
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateUpdate, map[string]string{
+					Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
 						"template_id": template.ID(),
 					}))
 
@@ -265,7 +265,7 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 					Class("btn btn-primary me-2").
 					Child(hb.I().Class("bi bi-pencil-square")).
 					Title("Edit").
-					Href(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateUpdate, map[string]string{
+					Href(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateUpdate, map[string]string{
 						"template_id": template.ID(),
 					}))
 
@@ -273,7 +273,7 @@ func (controller *templateManagerController) tableRecords(data templateManagerCo
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
 					Title("Delete").
-					HxGet(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateDelete, map[string]string{
+					HxGet(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateDelete, map[string]string{
 						"template_id": template.ID(),
 					})).
 					HxTarget("body").
@@ -322,7 +322,7 @@ func (controller *templateManagerController) sortableColumnLabel(data templateMa
 		direction = sb.ASC
 	}
 
-	link := shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, map[string]string{
+	link := shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, map[string]string{
 		"page":        "0",
 		"by":          columnName,
 		"sort":        direction,
@@ -359,7 +359,7 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 		Style("margin-bottom: 2px; margin-left:2px; margin-right:2px;").
 		Child(hb.I().Class("bi bi-filter me-2")).
 		Text("Filters").
-		HxPost(shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, map[string]string{
+		HxPost(shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, map[string]string{
 			"action":       ActionModalPageFilterShow,
 			"name":         data.formName,
 			"status":       data.formStatus,
@@ -408,7 +408,7 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 }
 
 func (controller *templateManagerController) tablePagination(data templateManagerControllerData, count int, page int, perPage int) hb.TagInterface {
-	url := shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateManager, map[string]string{
+	url := shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
 		"created_from": data.formCreatedFrom,

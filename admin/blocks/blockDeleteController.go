@@ -22,6 +22,7 @@ var _ router.HTMLControllerInterface = (*blockDeleteController)(nil)
 // == CONSTRUCTOR =============================================================
 
 type blockDeleteControllerData struct {
+	request        *http.Request
 	blockID        string
 	block          cmsstore.BlockInterface
 	successMessage string
@@ -59,7 +60,7 @@ func (controller blockDeleteController) Handler(w http.ResponseWriter, r *http.R
 }
 
 func (controller *blockDeleteController) modal(data blockDeleteControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathBlocksBlockDelete, map[string]string{
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathBlocksBlockDelete, map[string]string{
 		"block_id": data.blockID,
 	})
 
@@ -129,6 +130,7 @@ func (controller *blockDeleteController) modal(data blockDeleteControllerData) h
 }
 
 func (controller *blockDeleteController) prepareDataAndValidate(r *http.Request) (data blockDeleteControllerData, errorMessage string) {
+	data.request = r
 	data.blockID = utils.Req(r, "block_id", "")
 
 	if data.blockID == "" {

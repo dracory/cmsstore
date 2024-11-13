@@ -22,6 +22,7 @@ type templateCreateController struct {
 }
 
 type templateCreateControllerData struct {
+	request        *http.Request
 	siteList       []cmsstore.SiteInterface
 	siteID         string
 	name           string
@@ -64,7 +65,7 @@ func (controller templateCreateController) Handler(w http.ResponseWriter, r *htt
 }
 
 func (controller *templateCreateController) modal(data templateCreateControllerData) hb.TagInterface {
-	submitUrl := shared.URL(controller.ui.Endpoint(), shared.PathTemplatesTemplateCreate, nil)
+	submitUrl := shared.URL(shared.Endpoint(data.request), shared.PathTemplatesTemplateCreate, nil)
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormTemplateCreate",
@@ -160,6 +161,7 @@ func (controller *templateCreateController) modal(data templateCreateControllerD
 }
 
 func (controller *templateCreateController) prepareDataAndValidate(r *http.Request) (data templateCreateControllerData, errorMessage string) {
+	data.request = r
 	data.name = strings.TrimSpace(utils.Req(r, "template_name", ""))
 	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
 
