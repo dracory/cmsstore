@@ -406,7 +406,11 @@ func (controller *menuManagerController) tableFilter(data menuManagerControllerD
 	}
 
 	if data.formMenuID != "" {
-		description = append(description, hb.Span().Text("and ID: "+data.formMenuID).ToHTML())
+		description = append(description, hb.Span().Text("and menu id: "+data.formMenuID).ToHTML())
+	}
+
+	if data.formSiteID != "" {
+		description = append(description, shared.FilterDescriptionSite(controller.ui.Store(), data.formSiteID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {

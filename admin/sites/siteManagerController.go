@@ -409,7 +409,7 @@ func (controller *siteManagerController) tableFilter(data siteManagerControllerD
 	}
 
 	if data.formSiteID != "" {
-		description = append(description, hb.Span().Text("and ID: "+data.formSiteID).ToHTML())
+		description = append(description, hb.Span().Text("and site id: "+data.formSiteID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {

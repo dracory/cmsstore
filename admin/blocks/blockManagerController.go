@@ -427,6 +427,10 @@ func (controller *blockManagerController) tableFilter(data blockManagerControlle
 		description = append(description, hb.Span().Text("and ID: "+data.formBlockID).ToHTML())
 	}
 
+	if data.formSiteID != "" {
+		description = append(description, shared.FilterDescriptionSite(controller.ui.Store(), data.formSiteID).ToHTML())
+	}
+
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
 		description = append(description, hb.Span().Text("and created between: "+data.formCreatedFrom+" and "+data.formCreatedTo).ToHTML())
 	} else if data.formCreatedFrom != "" {

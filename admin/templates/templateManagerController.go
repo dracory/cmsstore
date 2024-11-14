@@ -409,7 +409,7 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 	}
 
 	if data.formSiteID != "" {
-		description = append(description, hb.Span().Text("and site ID: "+data.formSiteID).ToHTML())
+		description = append(description, shared.FilterDescriptionSite(controller.ui.Store(), data.formSiteID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
