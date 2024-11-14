@@ -322,6 +322,15 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 					HxTarget("body").
 					HxSwap("beforeend")
 
+				viewURL, err := shared.PageURL(data.request, controller.ui.Store(), page.SiteID(), page.Alias())
+				buttonView := hb.Wrap().
+					ChildIf(err == nil, (hb.Hyperlink().
+						Class("btn btn-primary me-2").
+						Child(hb.I().Class("bi bi-eye")).
+						Title("View").
+						Href(viewURL).
+						Target("_blank")))
+
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
 						Child(hb.Div().Child(siteLink)).
@@ -349,7 +358,7 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 							HTML(page.UpdatedAtCarbon().Format("d M Y"))),
 					hb.TD().
 						Child(buttonEdit).
-						// Child(buttonImpersonate).
+						Child(buttonView).
 						Child(buttonDelete),
 				})
 			})),
@@ -436,7 +445,7 @@ func (controller *pageManagerController) tableFilter(data pageManagerControllerD
 	}
 
 	if data.formSiteID != "" {
-		description = append(description, hb.Span().Text("and ID: "+data.formSiteID).ToHTML())
+		description = append(description, shared.FilterDescriptionSite(controller.ui.Store(), data.formSiteID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {

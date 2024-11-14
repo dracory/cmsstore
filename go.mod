@@ -22,7 +22,7 @@ require (
 	github.com/gouniverse/sb v0.6.0
 	github.com/gouniverse/ui v0.10.0
 	github.com/gouniverse/uid v1.5.0
-	github.com/gouniverse/utils v1.45.2
+	github.com/gouniverse/utils v1.45.3
 	github.com/lib/pq v1.10.9
 	github.com/samber/lo v1.47.0
 	github.com/spf13/cast v1.7.0
@@ -59,7 +59,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
-	github.com/mingrammer/cfmt v1.1.0 // indirect
+	github.com/mingrammer/cfmt v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
