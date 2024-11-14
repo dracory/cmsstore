@@ -16,11 +16,12 @@ type Config struct {
 	CacheExpireSeconds  int
 }
 
-func New(config Config) frontend {
+func New(config Config) FrontendInterface {
 	if config.CacheEnabled && config.CacheExpireSeconds <= 0 {
 		config.CacheExpireSeconds = 10 * 60 // 10 minutes
 	}
-	return frontend{
+
+	frontend := frontend{
 		blockEditorRenderer: config.BlockEditorRenderer,
 		logger:              config.Logger,
 		shortcodes:          config.Shortcodes,
@@ -28,4 +29,8 @@ func New(config Config) frontend {
 		cacheEnabled:        config.CacheEnabled,
 		cacheExpireSeconds:  config.CacheExpireSeconds,
 	}
+
+	go frontend.warmUpCache()
+
+	return &frontend
 }

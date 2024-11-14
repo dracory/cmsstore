@@ -4,7 +4,9 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/gouniverse/cms/types"
 	"github.com/gouniverse/cmsstore"
@@ -12,6 +14,7 @@ import (
 	"github.com/gouniverse/shortcode"
 	"github.com/gouniverse/ui"
 	"github.com/gouniverse/utils"
+	"github.com/mingrammer/cfmt"
 	"github.com/samber/lo"
 )
 
@@ -24,6 +27,8 @@ type frontend struct {
 	cacheExpireSeconds  int
 }
 
+var _ FrontendInterface = (*frontend)(nil)
+
 // Handler is the main handler for the CMS frontend.
 //
 // It handles the routing of the request to the appropriate page.
@@ -33,6 +38,14 @@ type frontend struct {
 // it's not present in the HTML.
 func (frontend *frontend) Handler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(frontend.StringHandler(w, r)))
+}
+
+func (frontend *frontend) warmUpCache() error {
+	frontend.fetchActiveSites()
+	for range time.Tick(time.Second * 60) {
+		frontend.warmUpCache()
+	}
+	return nil
 }
 
 // FrontendHandlerRenderAsString is the same as FrontendHandler but returns a string
@@ -48,6 +61,7 @@ func (frontend *frontend) Handler(w http.ResponseWriter, r *http.Request) {
 // If the language is not valid, it will use the default language for the translations.
 func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) string {
 	domain := r.Host
+	path := r.URL.Path
 
 	uri := r.RequestURI
 
@@ -66,7 +80,7 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 	// 	}
 	// }
 
-	site, err := frontend.fetchSiteByDomainName(domain)
+	site, siteEnpoint, err := frontend.findSiteAndEndpointByDomainAndPath(domain, path)
 
 	if err != nil {
 		frontend.logger.Error(`At StringHandler`, "error", err.Error())
@@ -77,7 +91,9 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 		return `Domain not supported: ` + domain
 	}
 
-	return frontend.PageRenderHtmlBySiteAndAlias(r, site.ID(), r.URL.Path, language)
+	calculatedPath := strings.TrimPrefix(domain+path, siteEnpoint)
+
+	return frontend.PageRenderHtmlBySiteAndAlias(r, site.ID(), calculatedPath, language)
 }
 
 // fetchBlockContent returns the content of the block specified by the ID
@@ -210,7 +226,121 @@ func (frontend *frontend) fetchPageBySiteAndAlias(siteID string, alias string) (
 	return page, nil
 }
 
-func (frontend *frontend) fetchSiteByDomainName(domain string) (cmsstore.SiteInterface, error) {
+func (frontend *frontend) fetchActiveSites() ([]cmsstore.SiteInterface, error) {
+	key := "sites_active"
+	if frontend.cacheEnabled && inMemCache.Has(key) {
+		sites, err := inMemCache.Get(key)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return sites.([]cmsstore.SiteInterface), err
+	}
+
+	sites, err := frontend.store.SiteList(cmsstore.SiteQuery().
+		SetStatus(cmsstore.SITE_STATUS_ACTIVE).
+		SetColumns([]string{cmsstore.COLUMN_ID, cmsstore.COLUMN_DOMAIN_NAMES}))
+
+	if err != nil {
+		if frontend.cacheEnabled {
+			inMemCache.Set(key, []cmsstore.SiteInterface{}, frontend.cacheExpireSeconds)
+		}
+		return nil, err
+	}
+
+	if frontend.cacheEnabled {
+		inMemCache.Set(key, sites, frontend.cacheExpireSeconds)
+	}
+
+	return sites, nil
+}
+
+// findSiteAndEndpointByDomainAndPath returns the site and site endpoint
+// for the given domain and path
+//
+// Note! a site endpoint can be a domain, subdomain or subdirectory
+//
+// Business Logic:
+// - fetches active sites
+// - maps the site endpoints to sites
+// - sorts site endpoints by length (longest first)
+// - matches the site endpoint as a prefix in the full page path (domain + path)
+// - returns the site and site endpoint
+// - results are cached in memory, to not fetch the same data multiple times
+func (frontend *frontend) findSiteAndEndpointByDomainAndPath(domain string, path string) (site cmsstore.SiteInterface, endpoint string, err error) {
+	key1 := "find_site_and_endpoint_site" + domain + path
+	key2 := "find_site_and_endpoint_endpoint" + domain + path
+	if frontend.cacheEnabled && inMemCache.Has(key1) && inMemCache.Has(key2) {
+		cfmt.Successln("FOUND site and endpoint found in cache")
+
+		site, err := inMemCache.Get(key1)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		endpoint, err := inMemCache.Get(key2)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return site.(cmsstore.SiteInterface), endpoint.(string), nil
+	}
+
+	sites, err := frontend.fetchActiveSites()
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	domainNamesSiteMap := map[string]cmsstore.SiteInterface{}
+
+	for _, site := range sites {
+		domainNames, err := site.DomainNames()
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, domainName := range domainNames {
+			domainNamesSiteMap[domainName] = site
+		}
+	}
+
+	pagePath := domain + path
+
+	keys := lo.Keys(domainNamesSiteMap)
+
+	// sort keys by length desc
+	sort.Slice(keys, func(i, j int) bool {
+		return len(keys[i]) > len(keys[j])
+	})
+
+	// find the website, starting with the longest key
+	for _, siteEndpoint := range keys {
+		if strings.HasPrefix(pagePath, siteEndpoint) {
+			if frontend.cacheEnabled {
+				inMemCache.Set(key1, domainNamesSiteMap[siteEndpoint], frontend.cacheExpireSeconds)
+				inMemCache.Set(key2, siteEndpoint, frontend.cacheExpireSeconds)
+			}
+			return domainNamesSiteMap[siteEndpoint], siteEndpoint, nil
+		}
+	}
+
+	if frontend.cacheEnabled {
+		inMemCache.Set(key1, nil, frontend.cacheExpireSeconds)
+		inMemCache.Set(key2, "", frontend.cacheExpireSeconds)
+	}
+
+	return nil, "", nil
+}
+
+// fetchSiteByDomainNameV1 fetches a site by domain name
+// returns the site or an error
+// DEPRECATED. Only supported regular domains and subdomains, not subdirectories
+func (frontend *frontend) fetchSiteByDomainNameV1(domain string) (cmsstore.SiteInterface, error) {
 	key := "site_domain:" + domain
 
 	if frontend.cacheEnabled && inMemCache.Has(key) {
