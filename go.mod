@@ -9,18 +9,18 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/golang-module/carbon/v2 v2.4.1
 	github.com/gouniverse/api v1.6.0
-	github.com/gouniverse/blockeditor v0.19.0
+	github.com/gouniverse/blockeditor v0.20.0
 	github.com/gouniverse/bs v0.13.0
 	github.com/gouniverse/cdn v1.5.0
 	github.com/gouniverse/cms v1.7.3
 	github.com/gouniverse/dataobject v0.3.0
-	github.com/gouniverse/form v0.15.0
+	github.com/gouniverse/form v0.15.1
 	github.com/gouniverse/hb v1.78.1
 	github.com/gouniverse/maputils v0.7.0
 	github.com/gouniverse/responses v0.6.0
 	github.com/gouniverse/router v1.4.0
 	github.com/gouniverse/sb v0.6.0
-	github.com/gouniverse/ui v0.10.0
+	github.com/gouniverse/ui v0.12.0
 	github.com/gouniverse/uid v1.5.0
 	github.com/gouniverse/utils v1.45.3
 	github.com/lib/pq v1.10.9
