@@ -1,7 +1,11 @@
 #
 # This task file allows you to:
-#  1. Serve the application for development
-#  2. Deploy to cloud run
+#  1. Build a coverage report
+#  2. Install errcheck
+#  3. Run errcheck
+#  4. Install nilaway
+#  5. Run nilaway
+#  6. Run tests
 #
 # Task file usage: https://taskfile.dev
 #
@@ -9,7 +13,7 @@
 version: '3'
 
 vars:
-  APPNAME: Welcome to the CmsStore Module
+  APPNAME: CmsStore Module
 
 tasks:
   # ========================== #
@@ -23,11 +27,12 @@ tasks:
         - echo "=                                                              ="
         - echo "= Select an option from the list below                         ="
         - echo "=                                                              ="
-        - echo "= 1. To run tests type 'task test'                             ="
-        - echo "= 2. To create coverage report type 'task cover'               ="
-        - echo "= 3. To check for nils 'task nilaway:install', 'task nilaway'  ="
-        - echo "= 4. To start development type 'task dev'                      ="
-        - echo "= 5. To deploy to live type 'task deploy'                      ="
+        - echo "= 1. To run coverage report type 'task cover'                  ="
+        - echo "= 2. To install err check type 'task errcheck:install'         ="
+        - echo "= 3. To run err check type 'task errcheck'                     ="
+        - echo "= 4. To install nils check type 'task nilaway:install'         ="
+        - echo "= 4. To run nils check type 'task nilaway'                     ="
+        - echo "= 5. To run tests type 'task test'                             ="
         - echo "=                                                              ="
         - echo "================================================================"
     silent: true
@@ -39,8 +44,8 @@ tasks:
     desc: Builds a coverage report
     cmds:
       - echo "Generating cover report..."
-      - go test ./... -coverprofile=tmp/coverage.out  -covermode=count
-      - go tool cover -html=tmp/coverage.out
+      - go test ./... -coverprofile=coverage.out  -covermode=count
+      - go tool cover -html=coverage.out
       # Eventually add to workflow! - $GOPATH/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
       - echo "Done!"
     silent: true
@@ -48,13 +53,15 @@ tasks:
   errcheck:install:
     desc: Install errcheck or update to latest
     cmds:
-      - echo "installing/updating errcheck..."
+      - echo "Installing/updating errcheck..."
       - go install github.com/kisielk/errcheck@latest
+      - echo "Done!"
+    silent: true
 
   errcheck:
     desc: Tests for errors
     cmds:
-      - echo "testing for errors..."
+      - echo "Checking for errors..."
       - errcheck ./...
       - echo "Done!"
     silent: true
@@ -64,11 +71,13 @@ tasks:
     cmds:
       - echo "installing/updating nilaway..."
       - go install go.uber.org/nilaway/cmd/nilaway@latest
+      - echo "Done!"
+    silent: true
 
   nilaway:
     desc: Tests for nils
     cmds:
-      - echo "testing for nils..."
+      - echo "Checking for nils..."
       - nilaway ./...
       - echo "Done!"
     silent: true
