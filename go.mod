@@ -1,6 +1,6 @@
 module github.com/gouniverse/cmsstore
 
-go 1.23.1
+go 1.23.3
 
 // replace github.com/gouniverse/form => ../../modules/form
 
@@ -14,20 +14,22 @@ require (
 	github.com/gouniverse/cdn v1.5.0
 	github.com/gouniverse/cms v1.7.3
 	github.com/gouniverse/dataobject v0.3.0
-	github.com/gouniverse/form v0.15.1
-	github.com/gouniverse/hb v1.78.1
+	github.com/gouniverse/form v0.15.2
+	github.com/gouniverse/hb v1.78.2
 	github.com/gouniverse/maputils v0.7.0
 	github.com/gouniverse/responses v0.6.0
 	github.com/gouniverse/router v1.4.0
-	github.com/gouniverse/sb v0.6.0
-	github.com/gouniverse/ui v0.12.0
+	github.com/gouniverse/sb v0.7.0
+	github.com/gouniverse/ui v0.12.1
 	github.com/gouniverse/uid v1.5.0
 	github.com/gouniverse/utils v1.45.3
 	github.com/lib/pq v1.10.9
 	github.com/samber/lo v1.47.0
 	github.com/spf13/cast v1.7.0
-	modernc.org/sqlite v1.33.1
+	modernc.org/sqlite v1.34.1
 )
+
+require github.com/gouniverse/base v0.0.5 // indirect
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -76,7 +78,7 @@ require (
 	golang.org/x/text v0.20.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	modernc.org/gc/v3 v3.0.0-20241004144649-1aea3fae8852 // indirect
-	modernc.org/libc v1.61.0 // indirect
+	modernc.org/libc v1.61.2 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/strutil v1.2.0 // indirect
