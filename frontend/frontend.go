@@ -746,15 +746,11 @@ func (frontend *frontend) ContentRenderTranslationByIdOrHandle(content string, t
 }
 
 // TemplateRenderHtmlByID builds the HTML of a template based on its ID
-func (frontend *frontend) TemplateRenderHtmlByID(r *http.Request, templateID string, options struct {
-	PageContent         string
-	PageCanonicalURL    string
-	PageMetaDescription string
-	PageMetaKeywords    string
-	PageMetaRobots      string
-	PageTitle           string
-	Language            string
-}) (string, error) {
+func (frontend *frontend) TemplateRenderHtmlByID(
+	r *http.Request,
+	templateID string,
+	options TemplateRenderHtmlByIDOptions,
+) (string, error) {
 	if templateID == "" {
 		return "", errors.New("template id is empty")
 	}
