@@ -20,7 +20,7 @@ require (
 	github.com/gouniverse/responses v0.6.0
 	github.com/gouniverse/router v1.4.0
 	github.com/gouniverse/sb v0.7.0
-	github.com/gouniverse/ui v0.12.1
+	github.com/gouniverse/ui v0.14.0
 	github.com/gouniverse/uid v1.5.0
 	github.com/gouniverse/utils v1.45.3
 	github.com/lib/pq v1.10.9

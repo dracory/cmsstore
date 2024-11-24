@@ -406,7 +406,7 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(r *http.Request, siteID s
 			return "Malformed block content"
 		}
 
-		blocks, err := ui.BlocksFromJson(pageContent)
+		blocks, err := ui.UnmarshalJsonToBlocks(pageContent)
 
 		if err != nil {
 			return "Error parsing block content"
