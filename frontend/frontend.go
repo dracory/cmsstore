@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"regexp"
@@ -742,4 +743,43 @@ func (frontend *frontend) ContentRenderTranslationByIdOrHandle(content string, t
 	// content = strings.ReplaceAll(content, "[[ TRANSLATION_"+translationID+" ]]", translation)
 
 	// return content, nil
+}
+
+// TemplateRenderHtmlByID builds the HTML of a template based on its ID
+func (frontend *frontend) TemplateRenderHtmlByID(r *http.Request, templateID string, options struct {
+	PageContent         string
+	PageCanonicalURL    string
+	PageMetaDescription string
+	PageMetaKeywords    string
+	PageMetaRobots      string
+	PageTitle           string
+	Language            string
+}) (string, error) {
+	if templateID == "" {
+		return "", errors.New("template id is empty")
+	}
+
+	template, err := frontend.store.TemplateFindByID(templateID)
+
+	if err != nil {
+		return "", err
+	}
+
+	if template == nil {
+		return "", errors.New("template not found")
+	}
+
+	if !template.IsActive() {
+		return "", errors.New("template " + templateID + " is not active")
+	}
+
+	content := template.Content()
+
+	html, err := frontend.renderContentToHtml(r, content, options)
+
+	if err != nil {
+		return "", err
+	}
+
+	return html, nil
 }
