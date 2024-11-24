@@ -65,6 +65,54 @@ tasks:
       - errcheck ./...
       - echo "Done!"
     silent: true
+
+  gocritic:install:
+    desc: Install gocritic or update to latest
+    cmds:
+      - echo "Installing/updating gocritic..."
+      - go install github.com/go-critic/go-critic/cmd/gocritic@latest
+      - echo "Done!"
+    silent: true
+
+  gocritic:
+    desc: Tests for errors
+    cmds:
+      - echo "Checking for errors..."
+      - gocritic check -enableAll -disable=ifElseChain ./...
+      - echo "Done!"
+    silent: true
+
+  golangci-lint:install:
+    desc: Install golangci-lint or update to latest
+    cmds:
+      - echo "Installing/updating golangci-lint..."
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - echo "Done!"
+    silent: true
+
+  golangci-lint:
+    desc: Tests for errors
+    cmds:
+      - echo "Checking for errors..."
+      - golangci-lint run ./...
+      - echo "Done!"
+    silent: true
+
+  gosec:install:
+    desc: Install gosec or update to latest
+    cmds:
+      - echo "Installing/updating gosec..."
+      - go install github.com/securego/gosec/v2/cmd/gosec@latest
+      - echo "Done!"
+    silent: true
+
+  gosec:
+    desc: Tests for security
+    cmds:
+      - echo "Checking for security..."
+      - gosec ./...
+      - echo "Done!"
+    silent: true
     
   nilaway:install:
     desc: Install nilaway or update to latest
