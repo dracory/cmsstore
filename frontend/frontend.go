@@ -397,22 +397,8 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(r *http.Request, siteID s
 	pageEditor := page.Editor()
 	pageTemplateID := page.TemplateID()
 
-	if pageEditor == cmsstore.PAGE_EDITOR_BLOCKAREA {
-		if frontend.blockEditorRenderer == nil {
-			return "Block editor not configured"
-		}
-
-		if !utils.IsJSON(pageContent) {
-			return "Malformed block content"
-		}
-
-		blocks, err := ui.UnmarshalJsonToBlocks(pageContent)
-
-		if err != nil {
-			return "Error parsing block content"
-		}
-
-		pageContent = frontend.blockEditorRenderer(blocks)
+	if pageEditor == cmsstore.PAGE_EDITOR_BLOCKEDITOR {
+		pageContent = frontend.convertBlockJsonToHtml(pageContent)
 	}
 
 	if pageTemplateID == "" {
@@ -456,6 +442,24 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(r *http.Request, siteID s
 	}
 
 	return html
+}
+
+func (frontend *frontend) convertBlockJsonToHtml(blocksJson string) string {
+	if frontend.blockEditorRenderer == nil {
+		return "Block editor not configured"
+	}
+
+	if !utils.IsJSON(blocksJson) {
+		return "Malformed block content"
+	}
+
+	blocks, err := ui.UnmarshalJsonToBlocks(blocksJson)
+
+	if err != nil {
+		return "Error parsing block content"
+	}
+
+	return frontend.blockEditorRenderer(blocks)
 }
 
 // renderContentToHtml renders the content to HTML
