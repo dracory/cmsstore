@@ -110,20 +110,10 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		opts.DbDriverName = database.DatabaseType(opts.DB)
 	}
 
-	versionStore, err := versionstore.NewStore(versionstore.NewStoreOptions{
-		TableName:          opts.VersioningTableName,
-		DB:                 opts.DB,
-		AutomigrateEnabled: opts.AutomigrateEnabled,
-		DebugEnabled:       opts.DebugEnabled,
-		// Logger:             nil,
-	})
+	versionStore, err := initializeVersioningStore(opts)
 
 	if err != nil {
 		return nil, err
-	}
-
-	if versionStore == nil {
-		return nil, errors.New("cms store: version store is nil")
 	}
 
 	store := &store{
@@ -158,10 +148,40 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 			return nil, err
 		}
 
-		if err := versionStore.AutoMigrate(); err != nil {
-			return nil, err
+		if opts.VersioningEnabled {
+			if err := versionStore.AutoMigrate(); err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	return store, nil
+}
+
+func initializeVersioningStore(opts NewStoreOptions) (versionstore.StoreInterface, error) {
+	if !opts.VersioningEnabled {
+		return nil, nil
+	}
+
+	if opts.VersioningTableName == "" {
+		return nil, errors.New("cms store: VersioningTableName is required")
+	}
+
+	versionStore, err := versionstore.NewStore(versionstore.NewStoreOptions{
+		TableName:          opts.VersioningTableName,
+		DB:                 opts.DB,
+		AutomigrateEnabled: opts.AutomigrateEnabled,
+		DebugEnabled:       opts.DebugEnabled,
+		// Logger:             nil,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if versionStore == nil {
+		return nil, errors.New("cms store: version store is nil")
+	}
+
+	return versionStore, nil
 }
