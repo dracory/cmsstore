@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gouniverse/cms/types"
+	// "github.com/gouniverse/cms/types"
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/shortcode"
@@ -397,7 +397,7 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(r *http.Request, siteID s
 	pageEditor := page.Editor()
 	pageTemplateID := page.TemplateID()
 
-	if pageEditor == types.WEBPAGE_EDITOR_BLOCKEDITOR {
+	if pageEditor == cmsstore.PAGE_EDITOR_BLOCKAREA {
 		if frontend.blockEditorRenderer == nil {
 			return "Block editor not configured"
 		}

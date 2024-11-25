@@ -8,7 +8,6 @@ import (
 	"github.com/gouniverse/blockeditor"
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cdn"
-	"github.com/gouniverse/cms/types"
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/form"
@@ -489,13 +488,13 @@ func (c pageUpdateController) fieldsContent(data pageUpdateControllerData) (fiel
 		Options: []form.FieldOption{},
 	}
 
-	if editor == types.WEBPAGE_EDITOR_CODEMIRROR {
+	if editor == cmsstore.PAGE_EDITOR_BLOCKAREA {
 		//fieldContent.Type = form.FORM_FIELD_TYPE_CODEMIRROR
 		fieldContent.Options = []form.FieldOption{}
 	}
 
 	// For HTML Area editor, configure the Trumbowyg editor
-	if editor == types.WEBPAGE_EDITOR_HTMLAREA {
+	if editor == cmsstore.PAGE_EDITOR_HTMLAREA {
 		htmlAreaFieldOptions := []form.FieldOption{
 			{
 				Key: "config",
@@ -525,7 +524,7 @@ func (c pageUpdateController) fieldsContent(data pageUpdateControllerData) (fiel
 		fieldContent.Options = htmlAreaFieldOptions
 	}
 
-	if editor == types.WEBPAGE_EDITOR_BLOCKEDITOR {
+	if editor == cmsstore.PAGE_EDITOR_BLOCKEDITOR {
 		value := fieldContent.Value
 
 		if value == "" {
@@ -576,7 +575,7 @@ func (c pageUpdateController) fieldsContent(data pageUpdateControllerData) (fiel
 		},
 	}
 
-	if editor == types.WEBPAGE_EDITOR_MARKDOWN {
+	if editor == cmsstore.PAGE_EDITOR_MARKDOWN {
 		contentScript := hb.Script(`
 setTimeout(() => {
 	const textArea = document.querySelector('textarea[name="page_content"]');
@@ -591,7 +590,7 @@ setTimeout(() => {
 		})
 	}
 
-	if editor == types.WEBPAGE_EDITOR_CODEMIRROR {
+	if editor == cmsstore.PAGE_EDITOR_CODEMIRROR {
 		contentScript := hb.Script(`
 function codeMirrorSelector() {
 	return 'textarea[name="page_content"]';
@@ -649,29 +648,29 @@ func (c pageUpdateController) fieldsSettings(data pageUpdateControllerData) []fo
 
 			options = append(options, form.FieldOption{
 				Value: "CodeMirror (HTML Source Editor)",
-				Key:   types.WEBPAGE_EDITOR_CODEMIRROR,
+				Key:   cmsstore.PAGE_EDITOR_CODEMIRROR,
 			})
 
 			if len(c.ui.BlockEditorDefinitions()) > 0 {
 				options = append(options, form.FieldOption{
 					Value: "BlockEditor (Visual Editor using Blocks)",
-					Key:   types.WEBPAGE_EDITOR_BLOCKEDITOR,
+					Key:   cmsstore.PAGE_EDITOR_BLOCKEDITOR,
 				})
 			}
 
 			options = append(options, form.FieldOption{
 				Value: "Markdown (Simple Textarea)",
-				Key:   types.WEBPAGE_EDITOR_MARKDOWN,
+				Key:   cmsstore.PAGE_EDITOR_MARKDOWN,
 			})
 
 			options = append(options, form.FieldOption{
 				Value: "HTML Area (WYSIWYG)",
-				Key:   types.WEBPAGE_EDITOR_HTMLAREA,
+				Key:   cmsstore.PAGE_EDITOR_HTMLAREA,
 			})
 
 			options = append(options, form.FieldOption{
 				Value: "Text Area",
-				Key:   types.WEBPAGE_EDITOR_TEXTAREA,
+				Key:   cmsstore.PAGE_EDITOR_TEXTAREA,
 			})
 
 			return options

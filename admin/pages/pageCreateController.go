@@ -2,11 +2,6 @@ package admin
 
 import (
 	"net/http"
-
-	// "project/config"
-	// "project/controllers/admin/cms/shared"
-	// "project/internal/helpers"
-	// "project/pkg/cmsstore"
 	"strings"
 
 	"github.com/gouniverse/bs"

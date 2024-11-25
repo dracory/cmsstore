@@ -4,13 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	// "project/config"
-	// "project/controllers/admin/cms/shared"
-	// "project/internal/helpers"
-	// "project/internal/layouts"
-	// "project/internal/links"
-	// "project/pkg/cmsstore"
-
 	"github.com/gouniverse/api"
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cdn"
