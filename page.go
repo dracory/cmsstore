@@ -65,6 +65,21 @@ func (o *page) IsSoftDeleted() bool {
 	return o.SoftDeletedAtCarbon().Compare("<", carbon.Now(carbon.UTC))
 }
 
+func (o *page) MarshalToVersioning() (string, error) {
+	versionedData := map[string]string{}
+
+	for k, v := range o.Data() {
+		if k == COLUMN_CREATED_AT ||
+			k == COLUMN_UPDATED_AT ||
+			k == COLUMN_SOFT_DELETED_AT {
+			continue
+		}
+		versionedData[k] = v
+	}
+
+	return utils.ToJSON(versionedData)
+}
+
 // == SETTERS AND GETTERS =====================================================
 
 func (o *page) Alias() string {

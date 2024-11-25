@@ -9,10 +9,11 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/golang-module/carbon/v2 v2.4.1
 	github.com/gouniverse/api v1.6.0
-	github.com/gouniverse/blockeditor v0.20.0
+	github.com/gouniverse/base v0.0.5
+	github.com/gouniverse/blockeditor v0.21.0
 	github.com/gouniverse/bs v0.13.0
 	github.com/gouniverse/cdn v1.5.0
-	github.com/gouniverse/cms v1.7.3
+	github.com/gouniverse/cms v1.8.1
 	github.com/gouniverse/dataobject v0.3.0
 	github.com/gouniverse/form v0.15.2
 	github.com/gouniverse/hb v1.78.2
@@ -29,7 +30,7 @@ require (
 	modernc.org/sqlite v1.34.1
 )
 
-require github.com/gouniverse/base v0.0.5 // indirect
+require github.com/goravel/framework v1.14.8 // indirect
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -51,6 +52,7 @@ require (
 	github.com/gouniverse/crypto v0.2.0 // indirect
 	github.com/gouniverse/envenc v0.8.0 // indirect
 	github.com/gouniverse/shortcode v0.4.0
+	github.com/gouniverse/versionstore v0.2.0
 	github.com/gouniverse/webserver v0.1.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jedib0t/go-pretty v4.3.0+incompatible // indirect

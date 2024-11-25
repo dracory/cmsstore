@@ -26,6 +26,7 @@ type UiInterface interface {
 	PageManager(w http.ResponseWriter, r *http.Request)
 	PageDelete(w http.ResponseWriter, r *http.Request)
 	PageUpdate(w http.ResponseWriter, r *http.Request)
+	PageVersioning(w http.ResponseWriter, r *http.Request)
 }
 
 type ui struct {
@@ -81,6 +82,12 @@ func (ui ui) PageDelete(w http.ResponseWriter, r *http.Request) {
 
 func (ui ui) PageUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewPageUpdateController(ui)
+	html := controller.Handler(w, r)
+	responses.HTMLResponse(w, r, html)
+}
+
+func (ui ui) PageVersioning(w http.ResponseWriter, r *http.Request) {
+	controller := NewPageVersioningController(ui)
 	html := controller.Handler(w, r)
 	responses.HTMLResponse(w, r, html)
 }

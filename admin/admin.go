@@ -130,10 +130,11 @@ func (a *admin) menuRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	pageRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathPagesPageCreate:  adminPages.UI(a.uiConfig()).PageCreate,
-		shared.PathPagesPageDelete:  adminPages.UI(a.uiConfig()).PageDelete,
-		shared.PathPagesPageManager: adminPages.UI(a.uiConfig()).PageManager,
-		shared.PathPagesPageUpdate:  adminPages.UI(a.uiConfig()).PageUpdate,
+		shared.PathPagesPageCreate:     adminPages.UI(a.uiConfig()).PageCreate,
+		shared.PathPagesPageDelete:     adminPages.UI(a.uiConfig()).PageDelete,
+		shared.PathPagesPageManager:    adminPages.UI(a.uiConfig()).PageManager,
+		shared.PathPagesPageUpdate:     adminPages.UI(a.uiConfig()).PageUpdate,
+		shared.PathPagesPageVersioning: adminPages.UI(a.uiConfig()).PageVersioning,
 	}
 	return pageRoutes
 }

@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gouniverse/api"
@@ -15,6 +16,8 @@ import (
 	"github.com/gouniverse/router"
 	"github.com/gouniverse/sb"
 	"github.com/gouniverse/utils"
+	"github.com/gouniverse/versionstore"
+	"github.com/mingrammer/cfmt"
 	"github.com/samber/lo"
 )
 
@@ -22,6 +25,7 @@ const VIEW_SETTINGS = "settings"
 const VIEW_CONTENT = "content"
 const VIEW_SEO = "seo"
 const ACTION_BLOCKEDITOR_HANDLE = "blockeditor_handle"
+const ACTION_VERSION_HISTORY_SHOW = "action_version_history_show"
 
 // == CONTROLLER ==============================================================
 
@@ -49,6 +53,9 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 
 	if data.action == ACTION_BLOCKEDITOR_HANDLE {
 		return blockeditor.Handle(w, r, controller.ui.BlockEditorDefinitions())
+	}
+
+	if data.action == ACTION_VERSION_HISTORY_SHOW {
 	}
 
 	if r.Method == http.MethodPost {
@@ -150,12 +157,24 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		ClassIf(data.page.Status() == cmsstore.PAGE_STATUS_DRAFT, "bg-warning").
 		Text(data.page.Status())
 
+	buttonVersion := hb.Button().
+		Class("btn btn-primary ms-2 float-end").
+		Child(hb.I().Class("bi bi-code-slash").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
+		HTML("Version History").
+		HxGet(shared.URLR(data.request, shared.PathPagesPageVersioning, map[string]string{
+			"page_id": data.pageID,
+			"action":  ACTION_VERSION_HISTORY_SHOW,
+		})).
+		HxTarget("body").
+		HxSwap("beforeend")
+
 	pageTitle := hb.Heading1().
 		Text("Edit Page:").
 		Text(" ").
 		Text(data.page.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).
+		Child(buttonVersion).
 		Child(buttonCancel)
 
 	card := hb.Div().
@@ -837,7 +856,15 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 		data.page.SetMetaRobots(data.formMetaRobots)
 	}
 
-	err := controller.ui.Store().PageUpdate(data.page)
+	err := controller.createVersioning(data.page)
+
+	if err != nil {
+		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate > createVersioning", "error", err.Error())
+		data.formErrorMessage = "System error. Saving page failed. " + err.Error()
+		return data, ""
+	}
+
+	err = controller.ui.Store().PageUpdate(data.page)
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -848,7 +875,7 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 	err = controller.movePageBlocks(data.page.ID(), data.page.SiteID())
 
 	if err != nil {
-		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate", "error", err.Error())
+		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate > movePageBlocks", "error", err.Error())
 		data.formErrorMessage = "System error. Saving page failed. " + err.Error()
 		return data, ""
 	}
@@ -863,6 +890,75 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 	return data, ""
 }
 
+func (controller pageUpdateController) createVersioning(page cmsstore.PageInterface) error {
+	if !controller.ui.Store().VersioningEnabled() {
+		return nil
+	}
+
+	if page == nil {
+		return errors.New("page is nil")
+	}
+
+	lastVersioningList, err := controller.ui.Store().VersioningList(cmsstore.NewVersioningQuery().
+		SetEntityType(cmsstore.VERSIONING_TYPE_PAGE).
+		SetEntityID(page.ID()).
+		SetOrderBy(versionstore.COLUMN_CREATED_AT).
+		SetSortOrder(sb.DESC).
+		SetLimit(1))
+
+	if err != nil {
+		return err
+	}
+
+	content, err := page.MarshalToVersioning()
+
+	if err != nil {
+		return err
+	}
+
+	if controller.isLastVersioningSame(content, lastVersioningList) {
+		return nil // nothing to do
+	}
+
+	entityID := page.ID()
+
+	return controller.ui.Store().VersioningCreate(cmsstore.NewVersioning().
+		SetEntityID(entityID).
+		SetEntityType(cmsstore.VERSIONING_TYPE_PAGE).
+		SetContent(content))
+}
+
+func (controller pageUpdateController) isLastVersioningSame(
+	pageVersioningContent string,
+	lastVersioningList []cmsstore.VersioningInterface,
+) bool {
+	lastVersioning := lo.IfF[cmsstore.VersioningInterface](len(lastVersioningList) > 0, func() cmsstore.VersioningInterface {
+		return lastVersioningList[0]
+	}).ElseF(func() cmsstore.VersioningInterface {
+		return nil
+	})
+
+	if lastVersioning == nil {
+		return false
+	}
+
+	lastVersioningContent := lastVersioning.Content()
+
+	if lastVersioningContent == pageVersioningContent {
+		cfmt.Infoln("No changes detected")
+		return true
+	}
+
+	cfmt.Infoln("Changes detected")
+
+	// cfmt.Infoln("last versioning content", lastVersioningContent)
+	// cfmt.Warningln("new versioning content", pageVersioningContent)
+
+	return false
+}
+
+// movePageBlocks moves all blocks from the current site to the new site
+// if the page is moved to a different site
 func (controller pageUpdateController) movePageBlocks(pageID string, siteID string) error {
 	blocks, err := controller.ui.Store().BlockList(cmsstore.BlockQuery().
 		SetPageID(pageID))
@@ -888,6 +984,22 @@ func (controller pageUpdateController) movePageBlocks(pageID string, siteID stri
 	return nil
 }
 
+// prepareDataAndValidate prepares the data and validates it
+//
+// Business Logic:
+// - checks if the page exists
+// - checks if the view is valid, and sets the default if not provided
+// - retrieves the site list
+// - retrieves the template list
+// - if its a GET request, returns the data, (form data is from the database)
+// - if its a POST request, saves the page and returns the data (form data is from the POST request)
+//
+// Parameters:
+// - r *http.Request - the HTTP request object
+//
+// Returns:
+// - data pageUpdateControllerData - the data for the current controller request
+// - errorMessage string - the error message, or emty string if no error
 func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (data pageUpdateControllerData, errorMessage string) {
 	data.request = r
 	data.action = utils.Req(r, "action", "")

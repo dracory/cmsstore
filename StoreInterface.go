@@ -1,7 +1,9 @@
 package cmsstore
 
+import "context"
+
 type StoreInterface interface {
-	AutoMigrate() error
+	AutoMigrate(ctx context.Context, opts ...Option) error
 	EnableDebug(debug bool)
 
 	BlockCreate(block BlockInterface) error
@@ -86,4 +88,16 @@ type StoreInterface interface {
 	TranslationUpdate(translation TranslationInterface) error
 	TranslationLanguageDefault() string
 	TranslationLanguages() map[string]string
+
+	// Versioning
+	VersioningEnabled() bool
+	VersioningCreate(versioning VersioningInterface) error
+	// VersioningCount(options VersioningQueryInterface) (int64, error)
+	VersioningDelete(versioning VersioningInterface) error
+	VersioningDeleteByID(id string) error
+	VersioningFindByID(versioningID string) (VersioningInterface, error)
+	VersioningList(query VersioningQueryInterface) ([]VersioningInterface, error)
+	VersioningSoftDelete(versioning VersioningInterface) error
+	VersioningSoftDeleteByID(id string) error
+	VersioningUpdate(versioning VersioningInterface) error
 }
