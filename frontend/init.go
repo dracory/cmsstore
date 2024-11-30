@@ -1,11 +1,24 @@
 package frontend
 
-import "github.com/gouniverse/cmsstore/shared"
+import (
+	"time"
+
+	"github.com/jellydator/ttlcache/v3"
+	"github.com/mingrammer/cfmt"
+)
 
 type LanguageKey struct{}
 
-var inMemCache shared.CacheInterface
+func init() {}
 
-func init() {
-	inMemCache = shared.Cache()
+func initCache() *ttlcache.Cache[string, any] {
+	cfmt.Successln("InMemCache Initialized")
+
+	inMemCache := ttlcache.New[string, any](
+		ttlcache.WithTTL[string, any](30 * time.Minute),
+	)
+
+	go inMemCache.Start()
+
+	return inMemCache
 }

@@ -30,7 +30,16 @@ func New(config Config) FrontendInterface {
 		cacheExpireSeconds:  config.CacheExpireSeconds,
 	}
 
-	go frontend.warmUpCache()
+	if config.CacheEnabled {
+		cache := initCache()
+
+		if cache != nil {
+			frontend.cache = cache
+
+			go frontend.warmUpCache()
+		}
+
+	}
 
 	return &frontend
 }

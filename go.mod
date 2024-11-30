@@ -27,7 +27,10 @@ require (
 	modernc.org/sqlite v1.34.1
 )
 
-require github.com/stretchr/testify v1.10.0 // indirect
+require (
+	github.com/stretchr/testify v1.10.0 // indirect
+	golang.org/x/sync v0.9.0 // indirect
+)
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -53,6 +56,7 @@ require (
 	github.com/gouniverse/webserver v0.1.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jedib0t/go-pretty v4.3.0+incompatible // indirect
+	github.com/jellydator/ttlcache/v3 v3.3.0
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
@@ -64,6 +68,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect

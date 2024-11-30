@@ -15,7 +15,7 @@ import (
 	"github.com/gouniverse/shortcode"
 	"github.com/gouniverse/ui"
 	"github.com/gouniverse/utils"
-	"github.com/mingrammer/cfmt"
+	"github.com/jellydator/ttlcache/v3"
 	"github.com/samber/lo"
 )
 
@@ -26,9 +26,51 @@ type frontend struct {
 	store               cmsstore.StoreInterface
 	cacheEnabled        bool
 	cacheExpireSeconds  int
+	cache               *ttlcache.Cache[string, any]
 }
 
 var _ FrontendInterface = (*frontend)(nil)
+
+func (frontend *frontend) CacheHas(key string) bool {
+	if !frontend.cacheEnabled {
+		return false
+	}
+
+	if frontend.cache == nil {
+		return false
+	}
+
+	return frontend.cache.Has(key)
+}
+
+func (frontend *frontend) CacheGet(key string) any {
+	if !frontend.cacheEnabled {
+		return nil
+	}
+
+	if frontend.cache == nil {
+		return nil
+	}
+
+	item := frontend.cache.Get(key)
+
+	if item == nil {
+		return nil
+	}
+
+	return item.Value()
+}
+
+func (frontend *frontend) CacheSet(key string, value any, expireSeconds int) {
+	if !frontend.cacheEnabled {
+		return
+	}
+
+	if frontend.cache == nil {
+		return
+	}
+	frontend.cache.Set(key, value, time.Duration(expireSeconds)*time.Second)
+}
 
 // Handler is the main handler for the CMS frontend.
 //
@@ -116,30 +158,25 @@ func (frontend *frontend) fetchBlockContent(blockID string) (string, error) {
 
 	key := "block_content_" + blockID
 
-	if frontend.cacheEnabled && inMemCache.Has(key) {
-		// cfmt.Successln("block found in cache: " + key)
-		blockContent, err := inMemCache.Get(key)
+	if frontend.CacheHas(key) {
+		blockContent := frontend.CacheGet(key)
 
-		if err != nil {
-			return "", err
+		if blockContent == nil {
+			return "", nil
 		}
 
-		return blockContent.(string), err
+		return blockContent.(string), nil
 	}
 
 	block, err := frontend.store.BlockFindByID(blockID)
 
 	if err != nil {
-		if frontend.cacheEnabled {
-			inMemCache.Set(key, "", frontend.cacheExpireSeconds)
-		}
+		frontend.CacheSet(key, "", 10) // 10 seconds only, error
 		return "", err
 	}
 
 	if block == nil {
-		if frontend.cacheEnabled {
-			inMemCache.Set(key, "", frontend.cacheExpireSeconds)
-		}
+		frontend.CacheSet(key, "", frontend.cacheExpireSeconds)
 		return "", nil
 	}
 
@@ -149,9 +186,7 @@ func (frontend *frontend) fetchBlockContent(blockID string) (string, error) {
 		content = block.Content()
 	}
 
-	if frontend.cacheEnabled {
-		inMemCache.Set(key, content, frontend.cacheExpireSeconds)
-	}
+	frontend.CacheSet(key, content, frontend.cacheExpireSeconds)
 
 	return content, nil
 }
@@ -159,15 +194,14 @@ func (frontend *frontend) fetchBlockContent(blockID string) (string, error) {
 func (frontend *frontend) fetchPageAliasMapBySite(siteID string) (map[string]string, error) {
 	key := "page_alias_map_site:" + siteID
 
-	if frontend.cacheEnabled && inMemCache.Has(key) {
-		// cfmt.Successln("page alias map found in cache: " + key)
-		pageAliasMap, err := inMemCache.Get(key)
+	if frontend.CacheHas(key) {
+		pageAliasMap := frontend.CacheGet(key)
 
-		if err != nil {
-			return nil, err
+		if pageAliasMap == nil {
+			return map[string]string{}, nil
 		}
 
-		return pageAliasMap.(map[string]string), err
+		return pageAliasMap.(map[string]string), nil
 	}
 
 	pages, err := frontend.store.PageList(cmsstore.PageQuery().
@@ -184,9 +218,7 @@ func (frontend *frontend) fetchPageAliasMapBySite(siteID string) (map[string]str
 		pageAliasMap[page.ID()] = page.Alias()
 	}
 
-	if frontend.cacheEnabled {
-		inMemCache.Set(key, pageAliasMap, frontend.cacheExpireSeconds)
-	}
+	frontend.CacheSet(key, pageAliasMap, frontend.cacheExpireSeconds)
 
 	return pageAliasMap, nil
 }
@@ -194,15 +226,14 @@ func (frontend *frontend) fetchPageAliasMapBySite(siteID string) (map[string]str
 func (frontend *frontend) fetchPageBySiteAndAlias(siteID string, alias string) (cmsstore.PageInterface, error) {
 	key := "page_site:" + siteID + ":alias:" + alias
 
-	if frontend.cacheEnabled && inMemCache.Has(key) {
-		// cfmt.Successln("page found in cache: " + key)
-		page, err := inMemCache.Get(key)
+	if frontend.CacheHas(key) {
+		page := frontend.CacheGet(key)
 
-		if err != nil {
-			return nil, err
+		if page == nil {
+			return nil, nil
 		}
 
-		return page.(cmsstore.PageInterface), err
+		return page.(cmsstore.PageInterface), nil
 	}
 
 	pages, err := frontend.store.PageList(cmsstore.PageQuery().
@@ -220,23 +251,22 @@ func (frontend *frontend) fetchPageBySiteAndAlias(siteID string, alias string) (
 		page = pages[0]
 	}
 
-	if frontend.cacheEnabled {
-		inMemCache.Set(key, page, frontend.cacheExpireSeconds)
-	}
+	frontend.CacheSet(key, page, frontend.cacheExpireSeconds)
 
 	return page, nil
 }
 
 func (frontend *frontend) fetchActiveSites() ([]cmsstore.SiteInterface, error) {
 	key := "sites_active"
-	if frontend.cacheEnabled && inMemCache.Has(key) {
-		sites, err := inMemCache.Get(key)
 
-		if err != nil {
-			return nil, err
+	if frontend.CacheHas(key) {
+		sites := frontend.CacheGet(key)
+
+		if sites == nil {
+			return []cmsstore.SiteInterface{}, nil
 		}
 
-		return sites.([]cmsstore.SiteInterface), err
+		return sites.([]cmsstore.SiteInterface), nil
 	}
 
 	sites, err := frontend.store.SiteList(cmsstore.SiteQuery().
@@ -244,15 +274,11 @@ func (frontend *frontend) fetchActiveSites() ([]cmsstore.SiteInterface, error) {
 		SetColumns([]string{cmsstore.COLUMN_ID, cmsstore.COLUMN_DOMAIN_NAMES}))
 
 	if err != nil {
-		if frontend.cacheEnabled {
-			inMemCache.Set(key, []cmsstore.SiteInterface{}, frontend.cacheExpireSeconds)
-		}
+		frontend.CacheSet(key, []cmsstore.SiteInterface{}, 10) // 10 seconds only, error
 		return nil, err
 	}
 
-	if frontend.cacheEnabled {
-		inMemCache.Set(key, sites, frontend.cacheExpireSeconds)
-	}
+	frontend.CacheSet(key, sites, frontend.cacheExpireSeconds)
 
 	return sites, nil
 }
@@ -272,19 +298,18 @@ func (frontend *frontend) fetchActiveSites() ([]cmsstore.SiteInterface, error) {
 func (frontend *frontend) findSiteAndEndpointByDomainAndPath(domain string, path string) (site cmsstore.SiteInterface, endpoint string, err error) {
 	key1 := "find_site_and_endpoint_site" + domain + path
 	key2 := "find_site_and_endpoint_endpoint" + domain + path
-	if frontend.cacheEnabled && inMemCache.Has(key1) && inMemCache.Has(key2) {
-		cfmt.Successln("FOUND site and endpoint found in cache")
 
-		site, err := inMemCache.Get(key1)
+	if frontend.CacheHas(key1) && frontend.CacheHas(key2) {
+		site := frontend.CacheGet(key1)
 
-		if err != nil {
-			return nil, "", err
+		if site == nil {
+			return nil, "", nil
 		}
 
-		endpoint, err := inMemCache.Get(key2)
+		endpoint := frontend.CacheGet(key2)
 
-		if err != nil {
-			return nil, "", err
+		if endpoint == nil {
+			return nil, "", nil
 		}
 
 		return site.(cmsstore.SiteInterface), endpoint.(string), nil
@@ -322,18 +347,16 @@ func (frontend *frontend) findSiteAndEndpointByDomainAndPath(domain string, path
 	// find the website, starting with the longest key
 	for _, siteEndpoint := range keys {
 		if strings.HasPrefix(pagePath, siteEndpoint) {
-			if frontend.cacheEnabled {
-				inMemCache.Set(key1, domainNamesSiteMap[siteEndpoint], frontend.cacheExpireSeconds)
-				inMemCache.Set(key2, siteEndpoint, frontend.cacheExpireSeconds)
-			}
+
+			frontend.CacheSet(key1, domainNamesSiteMap[siteEndpoint], frontend.cacheExpireSeconds)
+			frontend.CacheSet(key2, siteEndpoint, frontend.cacheExpireSeconds)
+
 			return domainNamesSiteMap[siteEndpoint], siteEndpoint, nil
 		}
 	}
 
-	if frontend.cacheEnabled {
-		inMemCache.Set(key1, nil, frontend.cacheExpireSeconds)
-		inMemCache.Set(key2, "", frontend.cacheExpireSeconds)
-	}
+	frontend.CacheSet(key1, nil, 10) // 10 seconds only, not found
+	frontend.CacheSet(key2, "", 10)  // 10 seconds only, not found
 
 	return nil, "", nil
 }
@@ -344,29 +367,24 @@ func (frontend *frontend) findSiteAndEndpointByDomainAndPath(domain string, path
 func (frontend *frontend) fetchSiteByDomainNameV1(domain string) (cmsstore.SiteInterface, error) {
 	key := "site_domain:" + domain
 
-	if frontend.cacheEnabled && inMemCache.Has(key) {
-		// cfmt.Successln("site found in cache: " + key)
-		site, err := inMemCache.Get(key)
+	if frontend.CacheHas(key) {
+		site := frontend.CacheGet(key)
 
-		if err != nil {
-			return nil, err
+		if site == nil {
+			return nil, nil
 		}
 
-		return site.(cmsstore.SiteInterface), err
+		return site.(cmsstore.SiteInterface), nil
 	}
 
 	site, err := frontend.store.SiteFindByDomainName(domain)
 
 	if err != nil {
-		if frontend.cacheEnabled {
-			inMemCache.Set(key, nil, frontend.cacheExpireSeconds)
-		}
+		frontend.CacheSet(key, nil, 10) // 10 seconds only, error
 		return nil, err
 	}
 
-	if frontend.cacheEnabled {
-		inMemCache.Set(key, site, frontend.cacheExpireSeconds)
-	}
+	frontend.CacheSet(key, site, frontend.cacheExpireSeconds)
 
 	return site, err
 }

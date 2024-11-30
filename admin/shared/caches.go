@@ -13,13 +13,21 @@ func CachedSitesActive(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface,
 
 	key := "sites_active"
 	if InMemCache.Has(key) {
-		sites, err := InMemCache.Get(key)
+		item := InMemCache.Get(key)
 
-		if err != nil {
-			return nil, err
+		if item == nil {
+			return []cmsstore.SiteInterface{}, nil
 		}
 
-		return sites.([]cmsstore.SiteInterface), err
+		return item.Value().([]cmsstore.SiteInterface), nil
+
+		// sites, err := InMemCache.Get(key)
+
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		// return sites.([]cmsstore.SiteInterface), err
 	}
 
 	sites, err := store.SiteList(cmsstore.SiteQuery().
@@ -43,13 +51,13 @@ func CachedSiteList(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, er
 	key := "site_list"
 
 	if InMemCache.Has(key) {
-		sites, err := InMemCache.Get(key)
+		item := InMemCache.Get(key)
 
-		if err != nil {
-			return nil, err
+		if item == nil {
+			return []cmsstore.SiteInterface{}, nil
 		}
 
-		return sites.([]cmsstore.SiteInterface), err
+		return item.Value().([]cmsstore.SiteInterface), nil
 	}
 
 	sites, err := store.SiteList(cmsstore.SiteQuery().

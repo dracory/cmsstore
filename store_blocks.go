@@ -160,6 +160,10 @@ func (store *store) BlockFindByID(id string) (block BlockInterface, err error) {
 }
 
 func (store *store) BlockList(query BlockQueryInterface) ([]BlockInterface, error) {
+	if query == nil {
+		return []BlockInterface{}, nil
+	}
+
 	q, columns, err := store.blockSelectQuery(query)
 
 	if err != nil {
