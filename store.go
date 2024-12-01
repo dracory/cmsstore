@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/gouniverse/base/database"
 	"github.com/gouniverse/versionstore"
 )
 
@@ -163,23 +164,23 @@ func (store *store) VersioningEnabled() bool {
 }
 
 func (store *store) VersioningCreate(version VersioningInterface) error {
-	return store.versioningStore.VersionCreate(version)
+	return store.versioningStore.VersionCreate(store.toQuerableContext(context.Background()), version)
 }
 
 func (store *store) VersioningDelete(version VersioningInterface) error {
-	return store.versioningStore.VersionDelete(version)
+	return store.versioningStore.VersionDelete(store.toQuerableContext(context.Background()), version)
 }
 
 func (store *store) VersioningDeleteByID(id string) error {
-	return store.versioningStore.VersionDeleteByID(id)
+	return store.versioningStore.VersionDeleteByID(store.toQuerableContext(context.Background()), id)
 }
 
 func (store *store) VersioningFindByID(versioningID string) (VersioningInterface, error) {
-	return store.versioningStore.VersionFindByID(versioningID)
+	return store.versioningStore.VersionFindByID(store.toQuerableContext(context.Background()), versioningID)
 }
 
 func (store *store) VersioningList(query VersioningQueryInterface) ([]VersioningInterface, error) {
-	list, err := store.versioningStore.VersionList(query)
+	list, err := store.versioningStore.VersionList(store.toQuerableContext(context.Background()), query)
 
 	if err != nil {
 		return nil, err
@@ -195,13 +196,22 @@ func (store *store) VersioningList(query VersioningQueryInterface) ([]Versioning
 }
 
 func (store *store) VersioningSoftDelete(versioning VersioningInterface) error {
-	return store.versioningStore.VersionSoftDelete(versioning)
+	return store.versioningStore.VersionSoftDelete(store.toQuerableContext(context.Background()), versioning)
 }
 
 func (store *store) VersioningSoftDeleteByID(id string) error {
-	return store.versioningStore.VersionSoftDeleteByID(id)
+	return store.versioningStore.VersionSoftDeleteByID(store.toQuerableContext(context.Background()), id)
 }
 
 func (store *store) VersioningUpdate(version VersioningInterface) error {
-	return store.versioningStore.VersionUpdate(version)
+	ctx := store.toQuerableContext(context.Background())
+	return store.versioningStore.VersionUpdate(ctx, version)
+}
+
+func (store *store) toQuerableContext(context context.Context) database.QueryableContext {
+	if database.IsQueryableContext(context) {
+		return context.(database.QueryableContext)
+	}
+
+	return database.Context(context, store.db)
 }
