@@ -1,17 +1,11 @@
 package shared
 
-import (
-	"time"
+// var InMemCache *ttlcache.Cache[string, any]
 
-	"github.com/jellydator/ttlcache/v3"
-)
+// func init() {
+// 	InMemCache := ttlcache.New[string, any](
+// 		ttlcache.WithTTL[string, any](30 * time.Minute),
+// 	)
 
-var InMemCache *ttlcache.Cache[string, any]
-
-func init() {
-	InMemCache := ttlcache.New[string, any](
-		ttlcache.WithTTL[string, any](30 * time.Minute),
-	)
-
-	go InMemCache.Start() // starts automatic expired item deletion
-}
+// 	go InMemCache.Start() // starts automatic expired item deletion
+// }

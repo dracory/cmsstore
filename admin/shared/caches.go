@@ -11,35 +11,27 @@ import (
 func CachedSitesActive(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, error) {
 	const cacheExpireSeconds = 2 * 60 // 2 minutes
 
-	key := "sites_active"
-	if InMemCache.Has(key) {
-		item := InMemCache.Get(key)
+	// key := "sites_active"
+	// if InMemCache.Has(key) {
+	// 	item := InMemCache.Get(key)
 
-		if item == nil {
-			return []cmsstore.SiteInterface{}, nil
-		}
+	// 	if item == nil {
+	// 		return []cmsstore.SiteInterface{}, nil
+	// 	}
 
-		return item.Value().([]cmsstore.SiteInterface), nil
-
-		// sites, err := InMemCache.Get(key)
-
-		// if err != nil {
-		// 	return nil, err
-		// }
-
-		// return sites.([]cmsstore.SiteInterface), err
-	}
+	// 	return item.Value().([]cmsstore.SiteInterface), nil
+	// }
 
 	sites, err := store.SiteList(cmsstore.SiteQuery().
 		SetStatus(cmsstore.SITE_STATUS_ACTIVE).
 		SetColumns([]string{cmsstore.COLUMN_ID, cmsstore.COLUMN_DOMAIN_NAMES}))
 
 	if err != nil {
-		InMemCache.Set(key, []cmsstore.SiteInterface{}, cacheExpireSeconds)
+		// InMemCache.Set(key, []cmsstore.SiteInterface{}, cacheExpireSeconds)
 		return nil, err
 	}
 
-	InMemCache.Set(key, sites, cacheExpireSeconds)
+	// InMemCache.Set(key, sites, cacheExpireSeconds)
 
 	return sites, nil
 }
@@ -48,17 +40,17 @@ func CachedSitesActive(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface,
 func CachedSiteList(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, error) {
 	const cacheExpireSeconds = 2 * 60 // 2 minutes
 
-	key := "site_list"
+	// key := "site_list"
 
-	if InMemCache.Has(key) {
-		item := InMemCache.Get(key)
+	// if InMemCache.Has(key) {
+	// 	item := InMemCache.Get(key)
 
-		if item == nil {
-			return []cmsstore.SiteInterface{}, nil
-		}
+	// 	if item == nil {
+	// 		return []cmsstore.SiteInterface{}, nil
+	// 	}
 
-		return item.Value().([]cmsstore.SiteInterface), nil
-	}
+	// 	return item.Value().([]cmsstore.SiteInterface), nil
+	// }
 
 	sites, err := store.SiteList(cmsstore.SiteQuery().
 		SetColumns([]string{
@@ -68,11 +60,11 @@ func CachedSiteList(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, er
 		}))
 
 	if err != nil {
-		InMemCache.Set(key, []cmsstore.SiteInterface{}, cacheExpireSeconds)
+		// InMemCache.Set(key, []cmsstore.SiteInterface{}, cacheExpireSeconds)
 		return nil, err
 	}
 
-	InMemCache.Set(key, sites, cacheExpireSeconds)
+	// InMemCache.Set(key, sites, cacheExpireSeconds)
 
 	return sites, nil
 }
@@ -103,12 +95,12 @@ func CachedSiteURL(r *http.Request, store cmsstore.StoreInterface, siteID string
 		return "", err
 	}
 
-	key := "site_url:" + siteID
+	// key := "site_url:" + siteID
 
 	domains, err := site.DomainNames()
 
 	if err != nil {
-		InMemCache.Set(key, "", cacheExpireSeconds)
+		// InMemCache.Set(key, "", cacheExpireSeconds)
 
 		return "", err
 	}
@@ -120,12 +112,12 @@ func CachedSiteURL(r *http.Request, store cmsstore.StoreInterface, siteID string
 			url = "http://" + domains[0]
 		}
 
-		InMemCache.Set(key, url, cacheExpireSeconds)
+		// InMemCache.Set(key, url, cacheExpireSeconds)
 
 		return url, nil
 	}
 
-	InMemCache.Set(key, "", cacheExpireSeconds)
+	// InMemCache.Set(key, "", cacheExpireSeconds)
 
 	return "", nil
 }
