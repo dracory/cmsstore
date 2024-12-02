@@ -480,7 +480,7 @@ func (controller *siteManagerController) prepareData(r *http.Request) (data site
 		return data, "error retrieving web sites"
 	}
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).
@@ -526,13 +526,13 @@ func (controller *siteManagerController) fetchRecordList(data siteManagerControl
 		query = query.SetNameLike(data.formName)
 	}
 
-	recordList, err := controller.ui.Store().SiteList(query)
+	recordList, err := controller.ui.Store().SiteList(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.SiteInterface{}, 0, err
 	}
 
-	recordCount, err = controller.ui.Store().SiteCount(query)
+	recordCount, err = controller.ui.Store().SiteCount(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.SiteInterface{}, 0, err

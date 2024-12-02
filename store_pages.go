@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strconv"
@@ -8,11 +9,12 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/dromara/carbon/v2"
+	"github.com/gouniverse/base/database"
 	"github.com/gouniverse/sb"
 	"github.com/samber/lo"
 )
 
-func (store *store) PageCount(options PageQueryInterface) (int64, error) {
+func (store *store) PageCount(ctx context.Context, options PageQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
 	q, _, err := store.pageSelectQuery(options)
@@ -34,8 +36,8 @@ func (store *store) PageCount(options PageQueryInterface) (int64, error) {
 		log.Println(sqlStr)
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-	mapped, err := db.SelectToMapString(sqlStr, params...)
+	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
+
 	if err != nil {
 		return -1, err
 	}
@@ -56,7 +58,11 @@ func (store *store) PageCount(options PageQueryInterface) (int64, error) {
 	return i, nil
 }
 
-func (store *store) PageCreate(page PageInterface) error {
+func (store *store) PageCreate(ctx context.Context, page PageInterface) error {
+	if page == nil {
+		return errors.New("page is nil")
+	}
+
 	page.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	page.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
@@ -80,7 +86,7 @@ func (store *store) PageCreate(page PageInterface) error {
 		return errors.New("pagestore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	if err != nil {
 		return err
@@ -91,15 +97,15 @@ func (store *store) PageCreate(page PageInterface) error {
 	return nil
 }
 
-func (store *store) PageDelete(page PageInterface) error {
+func (store *store) PageDelete(ctx context.Context, page PageInterface) error {
 	if page == nil {
 		return errors.New("page is nil")
 	}
 
-	return store.PageDeleteByID(page.ID())
+	return store.PageDeleteByID(ctx, page.ID())
 }
 
-func (store *store) PageDeleteByID(id string) error {
+func (store *store) PageDeleteByID(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("page id is empty")
 	}
@@ -118,17 +124,17 @@ func (store *store) PageDeleteByID(id string) error {
 		log.Println(sqlStr)
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	return err
 }
 
-func (store *store) PageFindByHandle(handle string) (page PageInterface, err error) {
+func (store *store) PageFindByHandle(ctx context.Context, handle string) (page PageInterface, err error) {
 	if handle == "" {
 		return nil, errors.New("page handle is empty")
 	}
 
-	list, err := store.PageList(PageQuery().
+	list, err := store.PageList(ctx, PageQuery().
 		SetHandle(handle).
 		SetLimit(1))
 
@@ -143,12 +149,12 @@ func (store *store) PageFindByHandle(handle string) (page PageInterface, err err
 	return nil, nil
 }
 
-func (store *store) PageFindByID(id string) (page PageInterface, err error) {
+func (store *store) PageFindByID(ctx context.Context, id string) (page PageInterface, err error) {
 	if id == "" {
 		return nil, errors.New("page id is empty")
 	}
 
-	list, err := store.PageList(PageQuery().SetID(id).SetLimit(1))
+	list, err := store.PageList(ctx, PageQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -161,7 +167,7 @@ func (store *store) PageFindByID(id string) (page PageInterface, err error) {
 	return nil, nil
 }
 
-func (store *store) PageList(query PageQueryInterface) ([]PageInterface, error) {
+func (store *store) PageList(ctx context.Context, query PageQueryInterface) ([]PageInterface, error) {
 	q, columns, err := store.pageSelectQuery(query)
 
 	if err != nil {
@@ -188,7 +194,7 @@ func (store *store) PageList(query PageQueryInterface) ([]PageInterface, error) 
 		return []PageInterface{}, errors.New("pagestore: database is nil")
 	}
 
-	modelMaps, err := db.SelectToMapString(sqlStr)
+	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
 
 	if err != nil {
 		return []PageInterface{}, err
@@ -204,27 +210,27 @@ func (store *store) PageList(query PageQueryInterface) ([]PageInterface, error) 
 	return list, nil
 }
 
-func (store *store) PageSoftDelete(page PageInterface) error {
+func (store *store) PageSoftDelete(ctx context.Context, page PageInterface) error {
 	if page == nil {
 		return errors.New("page is nil")
 	}
 
 	page.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	return store.PageUpdate(page)
+	return store.PageUpdate(ctx, page)
 }
 
-func (store *store) PageSoftDeleteByID(id string) error {
-	page, err := store.PageFindByID(id)
+func (store *store) PageSoftDeleteByID(ctx context.Context, id string) error {
+	page, err := store.PageFindByID(ctx, id)
 
 	if err != nil {
 		return err
 	}
 
-	return store.PageSoftDelete(page)
+	return store.PageSoftDelete(ctx, page)
 }
 
-func (store *store) PageUpdate(page PageInterface) error {
+func (store *store) PageUpdate(ctx context.Context, page PageInterface) error {
 	if page == nil {
 		return errors.New("page is nil")
 	}
@@ -258,7 +264,7 @@ func (store *store) PageUpdate(page PageInterface) error {
 		return errors.New("pagestore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	page.MarkAsNotDirty()
 

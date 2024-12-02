@@ -163,24 +163,24 @@ func (store *store) VersioningEnabled() bool {
 	return store.versioningEnabled
 }
 
-func (store *store) VersioningCreate(version VersioningInterface) error {
-	return store.versioningStore.VersionCreate(store.toQuerableContext(context.Background()), version)
+func (store *store) VersioningCreate(ctx context.Context, version VersioningInterface) error {
+	return store.versioningStore.VersionCreate(store.toQuerableContext(ctx), version)
 }
 
-func (store *store) VersioningDelete(version VersioningInterface) error {
-	return store.versioningStore.VersionDelete(store.toQuerableContext(context.Background()), version)
+func (store *store) VersioningDelete(ctx context.Context, version VersioningInterface) error {
+	return store.versioningStore.VersionDelete(store.toQuerableContext(ctx), version)
 }
 
-func (store *store) VersioningDeleteByID(id string) error {
-	return store.versioningStore.VersionDeleteByID(store.toQuerableContext(context.Background()), id)
+func (store *store) VersioningDeleteByID(ctx context.Context, id string) error {
+	return store.versioningStore.VersionDeleteByID(store.toQuerableContext(ctx), id)
 }
 
-func (store *store) VersioningFindByID(versioningID string) (VersioningInterface, error) {
-	return store.versioningStore.VersionFindByID(store.toQuerableContext(context.Background()), versioningID)
+func (store *store) VersioningFindByID(ctx context.Context, versioningID string) (VersioningInterface, error) {
+	return store.versioningStore.VersionFindByID(store.toQuerableContext(ctx), versioningID)
 }
 
-func (store *store) VersioningList(query VersioningQueryInterface) ([]VersioningInterface, error) {
-	list, err := store.versioningStore.VersionList(store.toQuerableContext(context.Background()), query)
+func (store *store) VersioningList(ctx context.Context, query VersioningQueryInterface) ([]VersioningInterface, error) {
+	list, err := store.versioningStore.VersionList(store.toQuerableContext(ctx), query)
 
 	if err != nil {
 		return nil, err
@@ -195,17 +195,16 @@ func (store *store) VersioningList(query VersioningQueryInterface) ([]Versioning
 	return newlist, nil
 }
 
-func (store *store) VersioningSoftDelete(versioning VersioningInterface) error {
-	return store.versioningStore.VersionSoftDelete(store.toQuerableContext(context.Background()), versioning)
+func (store *store) VersioningSoftDelete(ctx context.Context, versioning VersioningInterface) error {
+	return store.versioningStore.VersionSoftDelete(store.toQuerableContext(ctx), versioning)
 }
 
-func (store *store) VersioningSoftDeleteByID(id string) error {
-	return store.versioningStore.VersionSoftDeleteByID(store.toQuerableContext(context.Background()), id)
+func (store *store) VersioningSoftDeleteByID(ctx context.Context, id string) error {
+	return store.versioningStore.VersionSoftDeleteByID(store.toQuerableContext(ctx), id)
 }
 
-func (store *store) VersioningUpdate(version VersioningInterface) error {
-	ctx := store.toQuerableContext(context.Background())
-	return store.versioningStore.VersionUpdate(ctx, version)
+func (store *store) VersioningUpdate(ctx context.Context, version VersioningInterface) error {
+	return store.versioningStore.VersionUpdate(store.toQuerableContext(ctx), version)
 }
 
 func (store *store) toQuerableContext(context context.Context) database.QueryableContext {

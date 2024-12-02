@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"slices"
@@ -268,7 +269,7 @@ func (controller *pageVersioningController) prepareDataAndValidate(r *http.Reque
 		return data, "page id is required"
 	}
 
-	page, err := controller.ui.Store().PageFindByID(data.pageID)
+	page, err := controller.ui.Store().PageFindByID(data.request.Context(), data.pageID)
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageVersioningController > prepareDataAndValidate", "error", err.Error())
@@ -279,7 +280,7 @@ func (controller *pageVersioningController) prepareDataAndValidate(r *http.Reque
 		return data, "Page not found"
 	}
 
-	data.versionings, err = controller.ui.Store().VersioningList(cmsstore.NewVersioningQuery().
+	data.versionings, err = controller.ui.Store().VersioningList(data.request.Context(), cmsstore.NewVersioningQuery().
 		SetEntityType(cmsstore.VERSIONING_TYPE_PAGE).
 		SetEntityID(data.pageID).
 		SetOrderBy(cmsstore.COLUMN_CREATED_AT).
@@ -291,7 +292,7 @@ func (controller *pageVersioningController) prepareDataAndValidate(r *http.Reque
 	}
 
 	if data.versioningID != "" {
-		data.versioning, err = controller.ui.Store().VersioningFindByID(data.versioningID)
+		data.versioning, err = controller.ui.Store().VersioningFindByID(data.request.Context(), data.versioningID)
 
 		if err != nil {
 			controller.ui.Logger().Error("At pageVersioningController > prepareDataAndValidate", "error", err.Error())
@@ -316,14 +317,14 @@ func (controller *pageVersioningController) prepareDataAndValidate(r *http.Reque
 		return data, "No revision attributes were selected. Aborted"
 	}
 
-	controller.restoreRevisionAttributes(page, data.versioning, attrs)
+	controller.restoreRevisionAttributes(data.request.Context(), page, data.versioning, attrs)
 
 	data.successMessage = "revision attributes restored successfully."
 
 	return data, ""
 }
 
-func (controller *pageVersioningController) restoreRevisionAttributes(page cmsstore.PageInterface, versioning cmsstore.VersioningInterface, attrs []string) error {
+func (controller *pageVersioningController) restoreRevisionAttributes(ctx context.Context, page cmsstore.PageInterface, versioning cmsstore.VersioningInterface, attrs []string) error {
 	if page == nil {
 		return errors.New("page is nil")
 	}
@@ -394,7 +395,7 @@ func (controller *pageVersioningController) restoreRevisionAttributes(page cmsst
 		}
 	}
 
-	err = controller.ui.Store().PageUpdate(page)
+	err = controller.ui.Store().PageUpdate(ctx, page)
 
 	if err != nil {
 		return err

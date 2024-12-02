@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strconv"
@@ -8,11 +9,12 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/dromara/carbon/v2"
+	"github.com/gouniverse/base/database"
 	"github.com/gouniverse/sb"
 	"github.com/samber/lo"
 )
 
-func (store *store) SiteCount(options SiteQueryInterface) (int64, error) {
+func (store *store) SiteCount(ctx context.Context, options SiteQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
 	q, _, err := store.siteSelectQuery(options)
@@ -34,8 +36,8 @@ func (store *store) SiteCount(options SiteQueryInterface) (int64, error) {
 		log.Println(sqlStr)
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-	mapped, err := db.SelectToMapString(sqlStr, params...)
+	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
+
 	if err != nil {
 		return -1, err
 	}
@@ -56,7 +58,11 @@ func (store *store) SiteCount(options SiteQueryInterface) (int64, error) {
 	return i, nil
 }
 
-func (store *store) SiteCreate(site SiteInterface) error {
+func (store *store) SiteCreate(ctx context.Context, site SiteInterface) error {
+	if site == nil {
+		return errors.New("site is nil")
+	}
+
 	site.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	site.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
@@ -80,7 +86,7 @@ func (store *store) SiteCreate(site SiteInterface) error {
 		return errors.New("sitestore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	if err != nil {
 		return err
@@ -91,15 +97,15 @@ func (store *store) SiteCreate(site SiteInterface) error {
 	return nil
 }
 
-func (store *store) SiteDelete(site SiteInterface) error {
+func (store *store) SiteDelete(ctx context.Context, site SiteInterface) error {
 	if site == nil {
 		return errors.New("site is nil")
 	}
 
-	return store.SiteDeleteByID(site.ID())
+	return store.SiteDeleteByID(ctx, site.ID())
 }
 
-func (store *store) SiteDeleteByID(id string) error {
+func (store *store) SiteDeleteByID(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("site id is empty")
 	}
@@ -118,17 +124,17 @@ func (store *store) SiteDeleteByID(id string) error {
 		log.Println(sqlStr)
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	return err
 }
 
-func (store *store) SiteFindByDomainName(domainName string) (site SiteInterface, err error) {
+func (store *store) SiteFindByDomainName(ctx context.Context, domainName string) (site SiteInterface, err error) {
 	if domainName == "" {
 		return nil, errors.New("site domain is empty")
 	}
 
-	list, err := store.SiteList(SiteQuery().
+	list, err := store.SiteList(ctx, SiteQuery().
 		SetDomainName(domainName).
 		SetLimit(1))
 
@@ -143,12 +149,12 @@ func (store *store) SiteFindByDomainName(domainName string) (site SiteInterface,
 	return nil, nil
 }
 
-func (store *store) SiteFindByHandle(handle string) (site SiteInterface, err error) {
+func (store *store) SiteFindByHandle(ctx context.Context, handle string) (site SiteInterface, err error) {
 	if handle == "" {
 		return nil, errors.New("site handle is empty")
 	}
 
-	list, err := store.SiteList(SiteQuery().
+	list, err := store.SiteList(ctx, SiteQuery().
 		SetHandle(handle).
 		SetLimit(1))
 
@@ -163,12 +169,12 @@ func (store *store) SiteFindByHandle(handle string) (site SiteInterface, err err
 	return nil, nil
 }
 
-func (store *store) SiteFindByID(id string) (site SiteInterface, err error) {
+func (store *store) SiteFindByID(ctx context.Context, id string) (site SiteInterface, err error) {
 	if id == "" {
 		return nil, errors.New("site id is empty")
 	}
 
-	list, err := store.SiteList(SiteQuery().SetID(id).SetLimit(1))
+	list, err := store.SiteList(ctx, SiteQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -181,7 +187,7 @@ func (store *store) SiteFindByID(id string) (site SiteInterface, err error) {
 	return nil, nil
 }
 
-func (store *store) SiteList(query SiteQueryInterface) ([]SiteInterface, error) {
+func (store *store) SiteList(ctx context.Context, query SiteQueryInterface) ([]SiteInterface, error) {
 	q, columns, err := store.siteSelectQuery(query)
 
 	if err != nil {
@@ -202,13 +208,7 @@ func (store *store) SiteList(query SiteQueryInterface) ([]SiteInterface, error) 
 		return []SiteInterface{}, errors.New("sitestore: database is nil")
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-
-	if db == nil {
-		return []SiteInterface{}, errors.New("sitestore: database is nil")
-	}
-
-	modelMaps, err := db.SelectToMapString(sqlStr)
+	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
 
 	if err != nil {
 		return []SiteInterface{}, err
@@ -224,27 +224,27 @@ func (store *store) SiteList(query SiteQueryInterface) ([]SiteInterface, error) 
 	return list, nil
 }
 
-func (store *store) SiteSoftDelete(site SiteInterface) error {
+func (store *store) SiteSoftDelete(ctx context.Context, site SiteInterface) error {
 	if site == nil {
 		return errors.New("site is nil")
 	}
 
 	site.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	return store.SiteUpdate(site)
+	return store.SiteUpdate(ctx, site)
 }
 
-func (store *store) SiteSoftDeleteByID(id string) error {
-	site, err := store.SiteFindByID(id)
+func (store *store) SiteSoftDeleteByID(ctx context.Context, id string) error {
+	site, err := store.SiteFindByID(ctx, id)
 
 	if err != nil {
 		return err
 	}
 
-	return store.SiteSoftDelete(site)
+	return store.SiteSoftDelete(ctx, site)
 }
 
-func (store *store) SiteUpdate(site SiteInterface) error {
+func (store *store) SiteUpdate(ctx context.Context, site SiteInterface) error {
 	if site == nil {
 		return errors.New("site is nil")
 	}
@@ -278,7 +278,7 @@ func (store *store) SiteUpdate(site SiteInterface) error {
 		return errors.New("sitestore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	site.MarkAsNotDirty()
 

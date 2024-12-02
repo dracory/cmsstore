@@ -410,7 +410,7 @@ func (controller *translationManagerController) tableFilter(data translationMana
 	}
 
 	if data.formSiteID != "" {
-		description = append(description, shared.FilterDescriptionSite(controller.ui.Store(), data.formSiteID).ToHTML())
+		description = append(description, shared.FilterDescriptionSite(data.request.Context(), controller.ui.Store(), data.formSiteID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
@@ -482,7 +482,7 @@ func (controller *translationManagerController) prepareData(r *http.Request) (da
 		return data, "error retrieving translations"
 	}
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).
@@ -536,13 +536,13 @@ func (controller *translationManagerController) fetchRecordList(data translation
 		query.SetSiteID(data.formSiteID)
 	}
 
-	recordList, err := controller.ui.Store().TranslationList(query)
+	recordList, err := controller.ui.Store().TranslationList(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.TranslationInterface{}, 0, err
 	}
 
-	recordCount, err = controller.ui.Store().TranslationCount(query)
+	recordCount, err = controller.ui.Store().TranslationCount(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.TranslationInterface{}, 0, err

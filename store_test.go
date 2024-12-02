@@ -26,3 +26,25 @@ func initDB(filepath string) *sql.DB {
 
 	return db
 }
+
+func initStore(filepath string) (StoreInterface, error) {
+	db := initDB(filepath)
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table",
+		PageTableName:      "page_table",
+		SiteTableName:      "site_table",
+		TemplateTableName:  "template_table",
+		MenusEnabled:       true,
+		MenuTableName:      "menu_table",
+		MenuItemTableName:  "menu_item_table",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return store, nil
+}

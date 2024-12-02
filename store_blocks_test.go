@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -28,6 +29,8 @@ func TestStoreBlockCreate(t *testing.T) {
 		t.Fatal("unexpected nil store")
 	}
 
+	ctx := context.Background()
+
 	block := NewBlock().
 		SetSiteID("Site1").
 		SetPageID("").
@@ -35,7 +38,7 @@ func TestStoreBlockCreate(t *testing.T) {
 		SetParentID("").
 		SetSequenceInt(0)
 
-	err = store.BlockCreate(block)
+	err = store.BlockCreate(ctx, block)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -58,6 +61,8 @@ func TestStoreBlockFindByHandle(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
+	ctx := context.Background()
+
 	block := NewBlock().
 		SetSiteID("Site1").
 		SetPageID("").
@@ -77,12 +82,12 @@ func TestStoreBlockFindByHandle(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.BlockCreate(block)
+	err = store.BlockCreate(ctx, block)
 	if err != nil {
 		t.Error("unexpected error:", err)
 	}
 
-	blockFound, errFind := store.BlockFindByHandle(block.Handle())
+	blockFound, errFind := store.BlockFindByHandle(ctx, block.Handle())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -147,12 +152,13 @@ func TestStoreBlockFindByID(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.BlockCreate(block)
+	ctx := context.Background()
+	err = store.BlockCreate(ctx, block)
 	if err != nil {
 		t.Error("unexpected error:", err)
 	}
 
-	blockFound, errFind := store.BlockFindByID(block.ID())
+	blockFound, errFind := store.BlockFindByID(ctx, block.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -210,13 +216,14 @@ func TestStoreBlockSoftDelete(t *testing.T) {
 		SetParentID("").
 		SetSequenceInt(0)
 
-	err = store.BlockCreate(block)
+	ctx := context.Background()
+	err = store.BlockCreate(ctx, block)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.BlockSoftDeleteByID(block.ID())
+	err = store.BlockSoftDeleteByID(ctx, block.ID())
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -226,7 +233,7 @@ func TestStoreBlockSoftDelete(t *testing.T) {
 		t.Fatal("Block MUST NOT be soft deleted")
 	}
 
-	blockFound, errFind := store.BlockFindByID(block.ID())
+	blockFound, errFind := store.BlockFindByID(ctx, block.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -236,7 +243,7 @@ func TestStoreBlockSoftDelete(t *testing.T) {
 		t.Fatal("Block MUST be nil")
 	}
 
-	blockFindWithSoftDeleted, err := store.BlockList(BlockQuery().
+	blockFindWithSoftDeleted, err := store.BlockList(ctx, BlockQuery().
 		SetID(block.ID()).
 		SetSoftDeleteIncluded(true).
 		SetLimit(1))
@@ -285,19 +292,20 @@ func TestStoreBlockDelete(t *testing.T) {
 		SetParentID("").
 		SetSequenceInt(0)
 
-	err = store.BlockCreate(block)
+	ctx := context.Background()
+	err = store.BlockCreate(ctx, block)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.BlockDeleteByID(block.ID())
+	err = store.BlockDeleteByID(ctx, block.ID())
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	blockFindWithDeleted, err := store.BlockList(BlockQuery().
+	blockFindWithDeleted, err := store.BlockList(ctx, BlockQuery().
 		SetID(block.ID()).
 		SetLimit(1).
 		SetSoftDeleteIncluded(true))
@@ -339,7 +347,9 @@ func TestStoreBlockUpdate(t *testing.T) {
 		SetSequenceInt(0).
 		SetStatus(PAGE_STATUS_ACTIVE)
 
-	err = store.BlockCreate(block)
+	ctx := context.Background()
+
+	err = store.BlockCreate(ctx, block)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -357,13 +367,13 @@ func TestStoreBlockUpdate(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.BlockUpdate(block)
+	err = store.BlockUpdate(ctx, block)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	blockFound, errFind := store.BlockFindByID(block.ID())
+	blockFound, errFind := store.BlockFindByID(ctx, block.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)

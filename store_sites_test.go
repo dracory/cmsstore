@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -30,7 +31,8 @@ func TestStoreSiteCreate(t *testing.T) {
 
 	site := NewSite()
 
-	err = store.SiteCreate(site)
+	ctx := context.Background()
+	err = store.SiteCreate(ctx, site)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -67,12 +69,13 @@ func TestStoreSiteFindByHandle(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.SiteCreate(site)
+	ctx := context.Background()
+	err = store.SiteCreate(ctx, site)
 	if err != nil {
 		t.Error("unexpected error:", err)
 	}
 
-	siteFound, errFind := store.SiteFindByHandle(site.Handle())
+	siteFound, errFind := store.SiteFindByHandle(ctx, site.Handle())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -132,12 +135,13 @@ func TestStoreSiteFindByID(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.SiteCreate(site)
+	ctx := context.Background()
+	err = store.SiteCreate(ctx, site)
 	if err != nil {
 		t.Error("unexpected error:", err)
 	}
 
-	siteFound, errFind := store.SiteFindByID(site.ID())
+	siteFound, errFind := store.SiteFindByID(ctx, site.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -190,13 +194,14 @@ func TestStoreSiteSoftDelete(t *testing.T) {
 
 	site := NewSite()
 
-	err = store.SiteCreate(site)
+	ctx := context.Background()
+	err = store.SiteCreate(ctx, site)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.SiteSoftDeleteByID(site.ID())
+	err = store.SiteSoftDeleteByID(ctx, site.ID())
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -206,7 +211,7 @@ func TestStoreSiteSoftDelete(t *testing.T) {
 		t.Fatal("Site MUST NOT be soft deleted")
 	}
 
-	siteFound, errFind := store.SiteFindByID(site.ID())
+	siteFound, errFind := store.SiteFindByID(ctx, site.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -216,7 +221,7 @@ func TestStoreSiteSoftDelete(t *testing.T) {
 		t.Fatal("Site MUST be nil")
 	}
 
-	siteFindWithSoftDeleted, err := store.SiteList(SiteQuery().
+	siteFindWithSoftDeleted, err := store.SiteList(ctx, SiteQuery().
 		SetSoftDeletedIncluded(true).
 		SetID(site.ID()).
 		SetLimit(1))
@@ -260,19 +265,20 @@ func TestStoreSiteDelete(t *testing.T) {
 
 	site := NewSite()
 
-	err = store.SiteCreate(site)
+	ctx := context.Background()
+	err = store.SiteCreate(ctx, site)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.SiteDeleteByID(site.ID())
+	err = store.SiteDeleteByID(ctx, site.ID())
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	siteFindWithDeleted, err := store.SiteList(SiteQuery().
+	siteFindWithDeleted, err := store.SiteList(ctx, SiteQuery().
 		SetSoftDeletedIncluded(true).
 		SetID(site.ID()).
 		SetLimit(1))
@@ -309,7 +315,8 @@ func TestStoreSiteUpdate(t *testing.T) {
 	site := NewSite().
 		SetStatus(PAGE_STATUS_ACTIVE)
 
-	err = store.SiteCreate(site)
+	ctx := context.Background()
+	err = store.SiteCreate(ctx, site)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -327,13 +334,13 @@ func TestStoreSiteUpdate(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.SiteUpdate(site)
+	err = store.SiteUpdate(ctx, site)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	siteFound, errFind := store.SiteFindByID(site.ID())
+	siteFound, errFind := store.SiteFindByID(ctx, site.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)

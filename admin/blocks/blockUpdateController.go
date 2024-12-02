@@ -433,7 +433,7 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 		data.block.SetContent(data.formContent)
 	}
 
-	err := controller.ui.Store().BlockUpdate(data.block)
+	err := controller.ui.Store().BlockUpdate(r.Context(), data.block)
 
 	if err != nil {
 		//config.LogStore.ErrorWithContext("At blockUpdateController > prepareDataAndValidate", err.Error())
@@ -466,7 +466,7 @@ func (controller blockUpdateController) prepareDataAndValidate(r *http.Request) 
 	}
 
 	var err error
-	data.block, err = controller.ui.Store().BlockFindByID(data.blockID)
+	data.block, err = controller.ui.Store().BlockFindByID(r.Context(), data.blockID)
 
 	if err != nil {
 		controller.ui.Logger().Error("At blockUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -477,7 +477,7 @@ func (controller blockUpdateController) prepareDataAndValidate(r *http.Request) 
 		return data, "block not found"
 	}
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).

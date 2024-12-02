@@ -148,7 +148,7 @@ func (controller *siteCreateController) prepareDataAndValidate(r *http.Request) 
 	site := cmsstore.NewSite()
 	site.SetName(data.name)
 
-	err := controller.ui.Store().SiteCreate(site)
+	err := controller.ui.Store().SiteCreate(r.Context(), site)
 
 	if err != nil {
 		controller.ui.Logger().Error("At siteCreateController > prepareDataAndValidate", "error", err.Error())

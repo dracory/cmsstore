@@ -443,7 +443,7 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 		data.template.SetContent(data.formContent)
 	}
 
-	err := controller.ui.Store().TemplateUpdate(data.template)
+	err := controller.ui.Store().TemplateUpdate(d.request.Context(), data.template)
 
 	if err != nil {
 		controller.ui.Logger().Error("At templateUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -451,7 +451,7 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 		return data, ""
 	}
 
-	err = controller.moveTemplateBlocks(data.template.ID(), data.formSiteID)
+	err = controller.moveTemplateBlocks(r, data.template.ID(), data.formSiteID)
 
 	if err != nil {
 		controller.ui.Logger().Error("At templateUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -468,8 +468,8 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 	return data, ""
 }
 
-func (controller templateUpdateController) moveTemplateBlocks(templateID string, siteID string) error {
-	blocks, err := controller.ui.Store().BlockList(cmsstore.BlockQuery().
+func (controller templateUpdateController) moveTemplateBlocks(request *http.Request, templateID string, siteID string) error {
+	blocks, err := controller.ui.Store().BlockList(request.Context(), cmsstore.BlockQuery().
 		SetPageID(templateID))
 
 	if err != nil {
@@ -483,7 +483,7 @@ func (controller templateUpdateController) moveTemplateBlocks(templateID string,
 
 		block.SetSiteID(siteID)
 
-		err := controller.ui.Store().BlockUpdate(block)
+		err := controller.ui.Store().BlockUpdate(request.Context(), block)
 
 		if err != nil {
 			return err
@@ -508,7 +508,7 @@ func (controller templateUpdateController) prepareDataAndValidate(r *http.Reques
 	}
 
 	var err error
-	data.template, err = controller.ui.Store().TemplateFindByID(data.templateID)
+	data.template, err = controller.ui.Store().TemplateFindByID(r.Context(), data.templateID)
 
 	if err != nil {
 		controller.ui.Logger().Error("At templateUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -519,7 +519,7 @@ func (controller templateUpdateController) prepareDataAndValidate(r *http.Reques
 		return data, "template not found"
 	}
 
-	siteList, err := controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	siteList, err := controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).

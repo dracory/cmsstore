@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -30,7 +31,8 @@ func TestStoreTemplateCreate(t *testing.T) {
 
 	template := NewTemplate().SetSiteID("Site1")
 
-	err = store.TemplateCreate(template)
+	ctx := context.Background()
+	err = store.TemplateCreate(ctx, template)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -68,12 +70,13 @@ func TestStoreTemplateFindByHandle(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.TemplateCreate(template)
+	ctx := context.Background()
+	err = store.TemplateCreate(ctx, template)
 	if err != nil {
 		t.Error("unexpected error:", err)
 	}
 
-	templateFound, errFind := store.TemplateFindByHandle(template.Handle())
+	templateFound, errFind := store.TemplateFindByHandle(ctx, template.Handle())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -134,12 +137,13 @@ func TestStoreTemplateFindByID(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.TemplateCreate(template)
+	ctx := context.Background()
+	err = store.TemplateCreate(ctx, template)
 	if err != nil {
 		t.Error("unexpected error:", err)
 	}
 
-	templateFound, errFind := store.TemplateFindByID(template.ID())
+	templateFound, errFind := store.TemplateFindByID(ctx, template.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -193,13 +197,14 @@ func TestStoreTemplateSoftDelete(t *testing.T) {
 	template := NewTemplate().
 		SetSiteID("Site1")
 
-	err = store.TemplateCreate(template)
+	ctx := context.Background()
+	err = store.TemplateCreate(ctx, template)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.TemplateSoftDeleteByID(template.ID())
+	err = store.TemplateSoftDeleteByID(ctx, template.ID())
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -209,7 +214,7 @@ func TestStoreTemplateSoftDelete(t *testing.T) {
 		t.Fatal("Template MUST NOT be soft deleted")
 	}
 
-	templateFound, errFind := store.TemplateFindByID(template.ID())
+	templateFound, errFind := store.TemplateFindByID(ctx, template.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -219,7 +224,7 @@ func TestStoreTemplateSoftDelete(t *testing.T) {
 		t.Fatal("Template MUST be nil")
 	}
 
-	templateFindWithSoftDeleted, err := store.TemplateList(TemplateQuery().
+	templateFindWithSoftDeleted, err := store.TemplateList(ctx, TemplateQuery().
 		SetSoftDeletedIncluded(true).
 		SetID(template.ID()).
 		SetLimit(1))
@@ -264,19 +269,20 @@ func TestStoreTemplateDelete(t *testing.T) {
 	template := NewTemplate().
 		SetSiteID("Site1")
 
-	err = store.TemplateCreate(template)
+	ctx := context.Background()
+	err = store.TemplateCreate(ctx, template)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.TemplateDeleteByID(template.ID())
+	err = store.TemplateDeleteByID(ctx, template.ID())
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	templateFindWithDeleted, err := store.TemplateList(TemplateQuery().
+	templateFindWithDeleted, err := store.TemplateList(ctx, TemplateQuery().
 		SetSoftDeletedIncluded(true).
 		SetID(template.ID()).
 		SetLimit(1))
@@ -314,7 +320,8 @@ func TestStoreTemplateUpdate(t *testing.T) {
 		SetSiteID("Site1").
 		SetStatus(PAGE_STATUS_ACTIVE)
 
-	err = store.TemplateCreate(template)
+	ctx := context.Background()
+	err = store.TemplateCreate(ctx, template)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -332,13 +339,13 @@ func TestStoreTemplateUpdate(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.TemplateUpdate(template)
+	err = store.TemplateUpdate(ctx, template)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	templateFound, errFind := store.TemplateFindByID(template.ID())
+	templateFound, errFind := store.TemplateFindByID(ctx, template.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)

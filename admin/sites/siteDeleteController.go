@@ -137,7 +137,7 @@ func (controller *siteDeleteController) prepareDataAndValidate(r *http.Request) 
 		return data, "site id is required"
 	}
 
-	site, err := controller.ui.Store().SiteFindByID(data.siteID)
+	site, err := controller.ui.Store().SiteFindByID(r.Context(), data.siteID)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At siteDeleteController > prepareDataAndValidate", "error", err.Error())
@@ -154,7 +154,7 @@ func (controller *siteDeleteController) prepareDataAndValidate(r *http.Request) 
 		return data, ""
 	}
 
-	err = controller.ui.Store().SiteSoftDelete(site)
+	err = controller.ui.Store().SiteSoftDelete(r.Context(), site)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At siteDeleteController > prepareDataAndValidate", "error", err.Error())

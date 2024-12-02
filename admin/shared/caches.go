@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -8,7 +9,7 @@ import (
 )
 
 // CachedSitesActive returns a list of active sites, caching the result for 2 minutes
-func CachedSitesActive(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, error) {
+func CachedSitesActive(ctx context.Context, store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, error) {
 	const cacheExpireSeconds = 2 * 60 // 2 minutes
 
 	// key := "sites_active"
@@ -22,7 +23,7 @@ func CachedSitesActive(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface,
 	// 	return item.Value().([]cmsstore.SiteInterface), nil
 	// }
 
-	sites, err := store.SiteList(cmsstore.SiteQuery().
+	sites, err := store.SiteList(ctx, cmsstore.SiteQuery().
 		SetStatus(cmsstore.SITE_STATUS_ACTIVE).
 		SetColumns([]string{cmsstore.COLUMN_ID, cmsstore.COLUMN_DOMAIN_NAMES}))
 
@@ -37,7 +38,7 @@ func CachedSitesActive(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface,
 }
 
 // CachedSiteList returns a list of all sites, caching the result for 2 minutes
-func CachedSiteList(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, error) {
+func CachedSiteList(ctx context.Context, store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, error) {
 	const cacheExpireSeconds = 2 * 60 // 2 minutes
 
 	// key := "site_list"
@@ -52,7 +53,7 @@ func CachedSiteList(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, er
 	// 	return item.Value().([]cmsstore.SiteInterface), nil
 	// }
 
-	sites, err := store.SiteList(cmsstore.SiteQuery().
+	sites, err := store.SiteList(ctx, cmsstore.SiteQuery().
 		SetColumns([]string{
 			cmsstore.COLUMN_ID,
 			cmsstore.COLUMN_DOMAIN_NAMES,
@@ -70,8 +71,8 @@ func CachedSiteList(store cmsstore.StoreInterface) ([]cmsstore.SiteInterface, er
 }
 
 // CachedSiteFindByID returns a site by ID, caching the result for 2 minutes
-func CachedSiteByID(store cmsstore.StoreInterface, siteID string) (cmsstore.SiteInterface, error) {
-	list, err := CachedSiteList(store)
+func CachedSiteByID(ctx context.Context, store cmsstore.StoreInterface, siteID string) (cmsstore.SiteInterface, error) {
+	list, err := CachedSiteList(ctx, store)
 
 	if err != nil {
 		return nil, err
@@ -89,7 +90,7 @@ func CachedSiteByID(store cmsstore.StoreInterface, siteID string) (cmsstore.Site
 // CachedSiteURL returns a site URL, caching the result for 2 minutes
 func CachedSiteURL(r *http.Request, store cmsstore.StoreInterface, siteID string) (string, error) {
 	const cacheExpireSeconds = 2 * 60 // 2 minutes
-	site, err := CachedSiteByID(store, siteID)
+	site, err := CachedSiteByID(r.Context(), store, siteID)
 
 	if err != nil {
 		return "", err

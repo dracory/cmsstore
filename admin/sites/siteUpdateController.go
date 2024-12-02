@@ -386,7 +386,7 @@ func (controller siteUpdateController) saveSite(r *http.Request, data siteUpdate
 		// nothing here yet
 	}
 
-	err := controller.ui.Store().SiteUpdate(data.site)
+	err := controller.ui.Store().SiteUpdate(data.request.Context(), data.site)
 
 	if err != nil {
 		//config.LogStore.ErrorWithContext("At siteUpdateController > prepareDataAndValidate", err.Error())
@@ -419,7 +419,7 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 		return data, "site id is required"
 	}
 
-	data.site, err = controller.ui.Store().SiteFindByID(data.siteID)
+	data.site, err = controller.ui.Store().SiteFindByID(data.request.Context(), data.siteID)
 
 	if err != nil {
 		controller.ui.Logger().Error("At siteUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -430,7 +430,7 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 		return data, "site not found"
 	}
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).

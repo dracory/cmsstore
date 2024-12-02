@@ -137,7 +137,7 @@ func (controller *menuDeleteController) prepareDataAndValidate(r *http.Request) 
 		return data, "menu id is required"
 	}
 
-	menu, err := controller.ui.Store().MenuFindByID(data.menuID)
+	menu, err := controller.ui.Store().MenuFindByID(r.Context(), data.menuID)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At menuDeleteController > prepareDataAndValidate", "error", err.Error())
@@ -154,7 +154,7 @@ func (controller *menuDeleteController) prepareDataAndValidate(r *http.Request) 
 		return data, ""
 	}
 
-	err = controller.ui.Store().MenuSoftDelete(menu)
+	err = controller.ui.Store().MenuSoftDelete(r.Context(), menu)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At menuDeleteController > prepareDataAndValidate", "error", err.Error())

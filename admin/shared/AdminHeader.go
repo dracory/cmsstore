@@ -47,42 +47,42 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Req
 		Href(URLR(r, PathTranslationsTranslationManager, nil)).
 		Class("nav-link")
 
-	templatesCount, err := store.TemplateCount(cmsstore.TemplateQuery())
+	templatesCount, err := store.TemplateCount(r.Context(), cmsstore.TemplateQuery())
 
 	if err != nil {
 		logger.Error(err.Error())
 		templatesCount = -1
 	}
 
-	blocksCount, err := store.BlockCount(cmsstore.BlockQuery())
+	blocksCount, err := store.BlockCount(r.Context(), cmsstore.BlockQuery())
 
 	if err != nil {
 		logger.Error(err.Error())
 		blocksCount = -1
 	}
 
-	menusCount, err := store.MenuCount(cmsstore.MenuQuery())
+	menusCount, err := store.MenuCount(r.Context(), cmsstore.MenuQuery())
 
 	if err != nil {
 		logger.Error(err.Error())
 		menusCount = -1
 	}
 
-	pagesCount, err := store.PageCount(cmsstore.PageQuery())
+	pagesCount, err := store.PageCount(r.Context(), cmsstore.PageQuery())
 
 	if err != nil {
 		logger.Error(err.Error())
 		pagesCount = -1
 	}
 
-	sitesCount, err := store.SiteCount(cmsstore.SiteQuery())
+	sitesCount, err := store.SiteCount(r.Context(), cmsstore.SiteQuery())
 
 	if err != nil {
 		logger.Error(err.Error())
 		sitesCount = -1
 	}
 
-	translationsCount, err := store.TranslationCount(cmsstore.TranslationQuery())
+	translationsCount, err := store.TranslationCount(r.Context(), cmsstore.TranslationQuery())
 
 	if err != nil {
 		logger.Error(err.Error())

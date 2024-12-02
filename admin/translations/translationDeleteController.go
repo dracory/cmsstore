@@ -137,7 +137,7 @@ func (controller *translationDeleteController) prepareDataAndValidate(r *http.Re
 		return data, "translation id is required"
 	}
 
-	translation, err := controller.ui.Store().TranslationFindByID(data.translationID)
+	translation, err := controller.ui.Store().TranslationFindByID(r.Context(), data.translationID)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At translationDeleteController > prepareDataAndValidate", "error", err.Error())
@@ -154,7 +154,7 @@ func (controller *translationDeleteController) prepareDataAndValidate(r *http.Re
 		return data, ""
 	}
 
-	err = controller.ui.Store().TranslationSoftDelete(translation)
+	err = controller.ui.Store().TranslationSoftDelete(r.Context(), translation)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At translationDeleteController > prepareDataAndValidate", "error", err.Error())

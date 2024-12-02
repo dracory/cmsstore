@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -855,7 +856,7 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 		data.page.SetMetaRobots(data.formMetaRobots)
 	}
 
-	err := controller.createVersioning(data.page)
+	err := controller.createVersioning(data.request.Context(), data.page)
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate > createVersioning", "error", err.Error())
@@ -863,7 +864,7 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 		return data, ""
 	}
 
-	err = controller.ui.Store().PageUpdate(data.page)
+	err = controller.ui.Store().PageUpdate(data.request.Context(), data.page)
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -871,7 +872,7 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 		return data, ""
 	}
 
-	err = controller.movePageBlocks(data.page.ID(), data.page.SiteID())
+	err = controller.movePageBlocks(r, data.page.ID(), data.page.SiteID())
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate > movePageBlocks", "error", err.Error())
@@ -889,7 +890,7 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 	return data, ""
 }
 
-func (controller pageUpdateController) createVersioning(page cmsstore.PageInterface) error {
+func (controller pageUpdateController) createVersioning(ctx context.Context, page cmsstore.PageInterface) error {
 	if !controller.ui.Store().VersioningEnabled() {
 		return nil
 	}
@@ -898,7 +899,7 @@ func (controller pageUpdateController) createVersioning(page cmsstore.PageInterf
 		return errors.New("page is nil")
 	}
 
-	lastVersioningList, err := controller.ui.Store().VersioningList(cmsstore.NewVersioningQuery().
+	lastVersioningList, err := controller.ui.Store().VersioningList(ctx, cmsstore.NewVersioningQuery().
 		SetEntityType(cmsstore.VERSIONING_TYPE_PAGE).
 		SetEntityID(page.ID()).
 		SetOrderBy(versionstore.COLUMN_CREATED_AT).
@@ -921,7 +922,7 @@ func (controller pageUpdateController) createVersioning(page cmsstore.PageInterf
 
 	entityID := page.ID()
 
-	return controller.ui.Store().VersioningCreate(cmsstore.NewVersioning().
+	return controller.ui.Store().VersioningCreate(ctx, cmsstore.NewVersioning().
 		SetEntityID(entityID).
 		SetEntityType(cmsstore.VERSIONING_TYPE_PAGE).
 		SetContent(content))
@@ -958,8 +959,8 @@ func (controller pageUpdateController) isLastVersioningSame(
 
 // movePageBlocks moves all blocks from the current site to the new site
 // if the page is moved to a different site
-func (controller pageUpdateController) movePageBlocks(pageID string, siteID string) error {
-	blocks, err := controller.ui.Store().BlockList(cmsstore.BlockQuery().
+func (controller pageUpdateController) movePageBlocks(request *http.Request, pageID string, siteID string) error {
+	blocks, err := controller.ui.Store().BlockList(request.Context(), cmsstore.BlockQuery().
 		SetPageID(pageID))
 
 	if err != nil {
@@ -973,7 +974,7 @@ func (controller pageUpdateController) movePageBlocks(pageID string, siteID stri
 
 		block.SetSiteID(siteID)
 
-		err := controller.ui.Store().BlockUpdate(block)
+		err := controller.ui.Store().BlockUpdate(request.Context(), block)
 
 		if err != nil {
 			return err
@@ -1014,7 +1015,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	var err error
-	data.page, err = controller.ui.Store().PageFindByID(data.pageID)
+	data.page, err = controller.ui.Store().PageFindByID(r.Context(), data.pageID)
 
 	if err != nil {
 		return data, err.Error()
@@ -1039,7 +1040,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	data.formTemplateID = data.page.TemplateID()
 	data.formTitle = data.page.Title()
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).
@@ -1049,7 +1050,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 		return data, "Site list failed to be retrieved" + err.Error()
 	}
 
-	templateList, err := controller.ui.Store().TemplateList(cmsstore.TemplateQuery().
+	templateList, err := controller.ui.Store().TemplateList(data.request.Context(), cmsstore.TemplateQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).

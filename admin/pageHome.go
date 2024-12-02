@@ -12,7 +12,7 @@ import (
 )
 
 func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
-	siteList, err := a.store.SiteList(cmsstore.SiteQuery().
+	siteList, err := a.store.SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).
@@ -27,25 +27,25 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 		SiteList: siteList,
 	})
 
-	pagesCount, errPagesCount := a.store.PageCount(cmsstore.PageQuery())
+	pagesCount, errPagesCount := a.store.PageCount(r.Context(), cmsstore.PageQuery())
 
 	if errPagesCount != nil {
 		pagesCount = 0
 	}
 
-	sitesCount, errSitesCount := a.store.SiteCount(cmsstore.SiteQuery())
+	sitesCount, errSitesCount := a.store.SiteCount(r.Context(), cmsstore.SiteQuery())
 
 	if errSitesCount != nil {
 		sitesCount = 0
 	}
 
-	templatesCount, errTemplatesCount := a.store.TemplateCount(cmsstore.TemplateQuery())
+	templatesCount, errTemplatesCount := a.store.TemplateCount(r.Context(), cmsstore.TemplateQuery())
 
 	if errTemplatesCount != nil {
 		templatesCount = 0
 	}
 
-	blocksCount, errBlocksCount := a.store.BlockCount(cmsstore.BlockQuery())
+	blocksCount, errBlocksCount := a.store.BlockCount(r.Context(), cmsstore.BlockQuery())
 
 	if errBlocksCount != nil {
 		blocksCount = 0

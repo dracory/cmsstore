@@ -1,6 +1,8 @@
 package cmsstore
 
 import (
+	"context"
+
 	"github.com/dromara/carbon/v2"
 	"github.com/gouniverse/versionstore"
 )
@@ -317,6 +319,106 @@ type SiteInterface interface {
 	IsActive() bool
 	IsInactive() bool
 	IsSoftDeleted() bool
+}
+
+type StoreInterface interface {
+	AutoMigrate(ctx context.Context, opts ...Option) error
+	EnableDebug(debug bool)
+
+	BlockCreate(ctx context.Context, block BlockInterface) error
+	BlockCount(ctx context.Context, options BlockQueryInterface) (int64, error)
+	BlockDelete(ctx context.Context, block BlockInterface) error
+	BlockDeleteByID(ctx context.Context, id string) error
+	BlockFindByHandle(ctx context.Context, blockHandle string) (BlockInterface, error)
+	BlockFindByID(ctx context.Context, blockID string) (BlockInterface, error)
+	BlockList(ctx context.Context, query BlockQueryInterface) ([]BlockInterface, error)
+	BlockSoftDelete(ctx context.Context, block BlockInterface) error
+	BlockSoftDeleteByID(ctx context.Context, id string) error
+	BlockUpdate(ctx context.Context, block BlockInterface) error
+
+	MenusEnabled() bool
+
+	MenuCreate(ctx context.Context, menu MenuInterface) error
+	MenuCount(ctx context.Context, options MenuQueryInterface) (int64, error)
+	MenuDelete(ctx context.Context, menu MenuInterface) error
+	MenuDeleteByID(ctx context.Context, id string) error
+	MenuFindByHandle(ctx context.Context, menuHandle string) (MenuInterface, error)
+	MenuFindByID(ctx context.Context, menuID string) (MenuInterface, error)
+	MenuList(ctx context.Context, query MenuQueryInterface) ([]MenuInterface, error)
+	MenuSoftDelete(ctx context.Context, menu MenuInterface) error
+	MenuSoftDeleteByID(ctx context.Context, id string) error
+	MenuUpdate(ctx context.Context, menu MenuInterface) error
+
+	MenuItemCreate(ctx context.Context, menuItem MenuItemInterface) error
+	MenuItemCount(ctx context.Context, options MenuItemQueryInterface) (int64, error)
+	MenuItemDelete(ctx context.Context, menuItem MenuItemInterface) error
+	MenuItemDeleteByID(ctx context.Context, id string) error
+	MenuItemFindByID(ctx context.Context, menuItemID string) (MenuItemInterface, error)
+	MenuItemList(ctx context.Context, query MenuItemQueryInterface) ([]MenuItemInterface, error)
+	MenuItemSoftDelete(ctx context.Context, menuItem MenuItemInterface) error
+	MenuItemSoftDeleteByID(ctx context.Context, id string) error
+	MenuItemUpdate(ctx context.Context, menuItem MenuItemInterface) error
+
+	PageCreate(ctx context.Context, page PageInterface) error
+	PageCount(ctx context.Context, options PageQueryInterface) (int64, error)
+	PageDelete(ctx context.Context, page PageInterface) error
+	PageDeleteByID(ctx context.Context, id string) error
+	PageFindByHandle(ctx context.Context, pageHandle string) (PageInterface, error)
+	PageFindByID(ctx context.Context, pageID string) (PageInterface, error)
+	PageList(ctx context.Context, query PageQueryInterface) ([]PageInterface, error)
+	PageSoftDelete(ctx context.Context, page PageInterface) error
+	PageSoftDeleteByID(ctx context.Context, id string) error
+	PageUpdate(ctx context.Context, page PageInterface) error
+
+	SiteCreate(ctx context.Context, site SiteInterface) error
+	SiteCount(ctx context.Context, options SiteQueryInterface) (int64, error)
+	SiteDelete(ctx context.Context, site SiteInterface) error
+	SiteDeleteByID(ctx context.Context, id string) error
+	SiteFindByDomainName(ctx context.Context, siteDomainName string) (SiteInterface, error)
+	SiteFindByHandle(ctx context.Context, siteHandle string) (SiteInterface, error)
+	SiteFindByID(ctx context.Context, siteID string) (SiteInterface, error)
+	SiteList(ctx context.Context, query SiteQueryInterface) ([]SiteInterface, error)
+	SiteSoftDelete(ctx context.Context, site SiteInterface) error
+	SiteSoftDeleteByID(ctx context.Context, id string) error
+	SiteUpdate(ctx context.Context, site SiteInterface) error
+
+	TemplateCreate(ctx context.Context, template TemplateInterface) error
+	TemplateCount(ctx context.Context, options TemplateQueryInterface) (int64, error)
+	TemplateDelete(ctx context.Context, template TemplateInterface) error
+	TemplateDeleteByID(ctx context.Context, id string) error
+	TemplateFindByHandle(ctx context.Context, templateHandle string) (TemplateInterface, error)
+	TemplateFindByID(ctx context.Context, templateID string) (TemplateInterface, error)
+	TemplateList(ctx context.Context, query TemplateQueryInterface) ([]TemplateInterface, error)
+	TemplateSoftDelete(ctx context.Context, template TemplateInterface) error
+	TemplateSoftDeleteByID(ctx context.Context, id string) error
+	TemplateUpdate(ctx context.Context, template TemplateInterface) error
+
+	TranslationsEnabled() bool
+
+	TranslationCreate(ctx context.Context, translation TranslationInterface) error
+	TranslationCount(ctx context.Context, options TranslationQueryInterface) (int64, error)
+	TranslationDelete(ctx context.Context, translation TranslationInterface) error
+	TranslationDeleteByID(ctx context.Context, id string) error
+	TranslationFindByHandle(ctx context.Context, translationHandle string) (TranslationInterface, error)
+	TranslationFindByID(ctx context.Context, translationID string) (TranslationInterface, error)
+	TranslationList(ctx context.Context, query TranslationQueryInterface) ([]TranslationInterface, error)
+	TranslationSoftDelete(ctx context.Context, translation TranslationInterface) error
+	TranslationSoftDeleteByID(ctx context.Context, id string) error
+	TranslationUpdate(ctx context.Context, translation TranslationInterface) error
+	TranslationLanguageDefault() string
+	TranslationLanguages() map[string]string
+
+	// Versioning
+	VersioningEnabled() bool
+	VersioningCreate(ctx context.Context, versioning VersioningInterface) error
+	// VersioningCount(options VersioningQueryInterface) (int64, error)
+	VersioningDelete(ctx context.Context, versioning VersioningInterface) error
+	VersioningDeleteByID(ctx context.Context, id string) error
+	VersioningFindByID(ctx context.Context, versioningID string) (VersioningInterface, error)
+	VersioningList(ctx context.Context, query VersioningQueryInterface) ([]VersioningInterface, error)
+	VersioningSoftDelete(ctx context.Context, versioning VersioningInterface) error
+	VersioningSoftDeleteByID(ctx context.Context, id string) error
+	VersioningUpdate(ctx context.Context, versioning VersioningInterface) error
 }
 
 type TemplateInterface interface {

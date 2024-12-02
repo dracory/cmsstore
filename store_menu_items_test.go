@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -9,19 +10,8 @@ import (
 )
 
 func TestStoreMenuItemCreate(t *testing.T) {
-	db := initDB(":memory:")
 
-	store, err := NewStore(NewStoreOptions{
-		DB:                 db,
-		BlockTableName:     "block_table_create",
-		PageTableName:      "page_table_create",
-		SiteTableName:      "site_table_create",
-		TemplateTableName:  "template_table_create",
-		MenusEnabled:       true,
-		MenuTableName:      "menu_table_create",
-		MenuItemTableName:  "menu_item_table_create",
-		AutomigrateEnabled: true,
-	})
+	store, err := initStore(":memory:")
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -36,7 +26,8 @@ func TestStoreMenuItemCreate(t *testing.T) {
 		SetParentID("0").
 		SetSequence("0")
 
-	err = store.MenuItemCreate(menuItem)
+	ctx := context.Background()
+	err = store.MenuItemCreate(ctx, menuItem)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -78,12 +69,13 @@ func TestStoreMenuItemFindByID(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.MenuItemCreate(menuItem)
+	ctx := context.Background()
+	err = store.MenuItemCreate(ctx, menuItem)
 	if err != nil {
 		t.Error("unexpected error:", err)
 	}
 
-	menuItemFound, errFind := store.MenuItemFindByID(menuItem.ID())
+	menuItemFound, errFind := store.MenuItemFindByID(ctx, menuItem.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -142,13 +134,14 @@ func TestStoreMenuItemSoftDelete(t *testing.T) {
 		SetParentID("0").
 		SetSequence("0")
 
-	err = store.MenuItemCreate(menuItem)
+	ctx := context.Background()
+	err = store.MenuItemCreate(ctx, menuItem)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.MenuItemSoftDeleteByID(menuItem.ID())
+	err = store.MenuItemSoftDeleteByID(ctx, menuItem.ID())
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
@@ -158,7 +151,7 @@ func TestStoreMenuItemSoftDelete(t *testing.T) {
 		t.Fatal("MenuItem MUST NOT be soft deleted")
 	}
 
-	menuItemFound, errFind := store.MenuItemFindByID(menuItem.ID())
+	menuItemFound, errFind := store.MenuItemFindByID(ctx, menuItem.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -168,7 +161,7 @@ func TestStoreMenuItemSoftDelete(t *testing.T) {
 		t.Fatal("MenuItem MUST be nil")
 	}
 
-	menuItemFindWithSoftDeleted, err := store.MenuItemList(MenuItemQuery().
+	menuItemFindWithSoftDeleted, err := store.MenuItemList(ctx, MenuItemQuery().
 		SetSoftDeletedIncluded(true).
 		SetID(menuItem.ID()).
 		SetLimit(1))
@@ -218,19 +211,20 @@ func TestStoreMenuItemDelete(t *testing.T) {
 		SetParentID("0").
 		SetSequence("0")
 
-	err = store.MenuItemCreate(menuItem)
+	ctx := context.Background()
+	err = store.MenuItemCreate(ctx, menuItem)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.MenuItemDeleteByID(menuItem.ID())
+	err = store.MenuItemDeleteByID(ctx, menuItem.ID())
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	menuItemFindWithDeleted, err := store.MenuItemList(MenuItemQuery().
+	menuItemFindWithDeleted, err := store.MenuItemList(ctx, MenuItemQuery().
 		SetSoftDeletedIncluded(true).
 		SetID(menuItem.ID()).
 		SetLimit(1))
@@ -273,13 +267,14 @@ func TestStoreMenuItemUpdate(t *testing.T) {
 		SetParentID("0").
 		SetSequence("0")
 
-	err = store.MenuItemCreate(menuItem)
+	ctx := context.Background()
+	err = store.MenuItemCreate(ctx, menuItem)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	menuItem.SetStatus(PAGE_STATUS_INACTIVE)
+	menuItem.SetStatus(MENU_ITEM_STATUS_INACTIVE)
 
 	err = menuItem.SetMetas(map[string]string{
 		"education_1": "Education 1",
@@ -291,13 +286,13 @@ func TestStoreMenuItemUpdate(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	err = store.MenuItemUpdate(menuItem)
+	err = store.MenuItemUpdate(ctx, menuItem)
 
 	if err != nil {
 		t.Fatal("unexpected error:", err)
 	}
 
-	menuItemFound, errFind := store.MenuItemFindByID(menuItem.ID())
+	menuItemFound, errFind := store.MenuItemFindByID(ctx, menuItem.ID())
 
 	if errFind != nil {
 		t.Fatal("unexpected error:", errFind)
@@ -307,7 +302,7 @@ func TestStoreMenuItemUpdate(t *testing.T) {
 		t.Fatal("MenuItem MUST NOT be nil")
 	}
 
-	if menuItemFound.Status() != PAGE_STATUS_INACTIVE {
+	if menuItemFound.Status() != MENU_ITEM_STATUS_INACTIVE {
 		t.Fatal("Status MUST be INACTIVE, found: ", menuItemFound.Status())
 	}
 

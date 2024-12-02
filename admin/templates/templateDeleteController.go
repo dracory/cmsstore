@@ -137,7 +137,7 @@ func (controller *templateDeleteController) prepareDataAndValidate(r *http.Reque
 		return data, "template id is required"
 	}
 
-	template, err := controller.ui.Store().TemplateFindByID(data.templateID)
+	template, err := controller.ui.Store().TemplateFindByID(r.Context(), data.templateID)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At templateDeleteController > prepareDataAndValidate", "error", err.Error())
@@ -154,7 +154,7 @@ func (controller *templateDeleteController) prepareDataAndValidate(r *http.Reque
 		return data, ""
 	}
 
-	err = controller.ui.Store().TemplateSoftDelete(template)
+	err = controller.ui.Store().TemplateSoftDelete(r.Context(), template)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At templateDeleteController > prepareDataAndValidate", "error", err.Error())

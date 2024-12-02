@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -84,7 +85,7 @@ func (frontend *frontend) Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (frontend *frontend) warmUpCache() error {
-	frontend.fetchActiveSites()
+	frontend.fetchActiveSites(context.Background())
 	for range time.Tick(time.Second * 60) {
 		frontend.warmUpCache()
 	}
@@ -123,7 +124,7 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 	// 	}
 	// }
 
-	site, siteEnpoint, err := frontend.findSiteAndEndpointByDomainAndPath(domain, path)
+	site, siteEnpoint, err := frontend.findSiteAndEndpointByDomainAndPath(r.Context(), domain, path)
 
 	if err != nil {
 		frontend.logger.Error(`At StringHandler`, "error", err.Error())
@@ -151,7 +152,7 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 //
 // Returns:
 // - content: the content of the block
-func (frontend *frontend) fetchBlockContent(blockID string) (string, error) {
+func (frontend *frontend) fetchBlockContent(ctx context.Context, blockID string) (string, error) {
 	if blockID == "" {
 		return "", nil
 	}
@@ -168,7 +169,7 @@ func (frontend *frontend) fetchBlockContent(blockID string) (string, error) {
 		return blockContent.(string), nil
 	}
 
-	block, err := frontend.store.BlockFindByID(blockID)
+	block, err := frontend.store.BlockFindByID(ctx, blockID)
 
 	if err != nil {
 		frontend.CacheSet(key, "", 10) // 10 seconds only, error
@@ -191,7 +192,7 @@ func (frontend *frontend) fetchBlockContent(blockID string) (string, error) {
 	return content, nil
 }
 
-func (frontend *frontend) fetchPageAliasMapBySite(siteID string) (map[string]string, error) {
+func (frontend *frontend) fetchPageAliasMapBySite(ctx context.Context, siteID string) (map[string]string, error) {
 	key := "page_alias_map_site:" + siteID
 
 	if frontend.CacheHas(key) {
@@ -204,7 +205,7 @@ func (frontend *frontend) fetchPageAliasMapBySite(siteID string) (map[string]str
 		return pageAliasMap.(map[string]string), nil
 	}
 
-	pages, err := frontend.store.PageList(cmsstore.PageQuery().
+	pages, err := frontend.store.PageList(ctx, cmsstore.PageQuery().
 		SetSiteID(siteID).
 		SetColumns([]string{"id", "alias"}))
 
@@ -223,7 +224,7 @@ func (frontend *frontend) fetchPageAliasMapBySite(siteID string) (map[string]str
 	return pageAliasMap, nil
 }
 
-func (frontend *frontend) fetchPageBySiteAndAlias(siteID string, alias string) (cmsstore.PageInterface, error) {
+func (frontend *frontend) fetchPageBySiteAndAlias(ctx context.Context, siteID string, alias string) (cmsstore.PageInterface, error) {
 	key := "page_site:" + siteID + ":alias:" + alias
 
 	if frontend.CacheHas(key) {
@@ -236,7 +237,7 @@ func (frontend *frontend) fetchPageBySiteAndAlias(siteID string, alias string) (
 		return page.(cmsstore.PageInterface), nil
 	}
 
-	pages, err := frontend.store.PageList(cmsstore.PageQuery().
+	pages, err := frontend.store.PageList(ctx, cmsstore.PageQuery().
 		SetSiteID(siteID).
 		SetAlias(alias).
 		SetLimit(1))
@@ -256,7 +257,7 @@ func (frontend *frontend) fetchPageBySiteAndAlias(siteID string, alias string) (
 	return page, nil
 }
 
-func (frontend *frontend) fetchActiveSites() ([]cmsstore.SiteInterface, error) {
+func (frontend *frontend) fetchActiveSites(ctx context.Context) ([]cmsstore.SiteInterface, error) {
 	key := "sites_active"
 
 	if frontend.CacheHas(key) {
@@ -269,7 +270,7 @@ func (frontend *frontend) fetchActiveSites() ([]cmsstore.SiteInterface, error) {
 		return sites.([]cmsstore.SiteInterface), nil
 	}
 
-	sites, err := frontend.store.SiteList(cmsstore.SiteQuery().
+	sites, err := frontend.store.SiteList(ctx, cmsstore.SiteQuery().
 		SetStatus(cmsstore.SITE_STATUS_ACTIVE).
 		SetColumns([]string{cmsstore.COLUMN_ID, cmsstore.COLUMN_DOMAIN_NAMES}))
 
@@ -295,7 +296,7 @@ func (frontend *frontend) fetchActiveSites() ([]cmsstore.SiteInterface, error) {
 // - matches the site endpoint as a prefix in the full page path (domain + path)
 // - returns the site and site endpoint
 // - results are cached in memory, to not fetch the same data multiple times
-func (frontend *frontend) findSiteAndEndpointByDomainAndPath(domain string, path string) (site cmsstore.SiteInterface, endpoint string, err error) {
+func (frontend *frontend) findSiteAndEndpointByDomainAndPath(ctx context.Context, domain string, path string) (site cmsstore.SiteInterface, endpoint string, err error) {
 	key1 := "find_site_and_endpoint_site" + domain + path
 	key2 := "find_site_and_endpoint_endpoint" + domain + path
 
@@ -315,7 +316,7 @@ func (frontend *frontend) findSiteAndEndpointByDomainAndPath(domain string, path
 		return site.(cmsstore.SiteInterface), endpoint.(string), nil
 	}
 
-	sites, err := frontend.fetchActiveSites()
+	sites, err := frontend.fetchActiveSites(ctx)
 
 	if err != nil {
 		return nil, "", err
@@ -364,34 +365,34 @@ func (frontend *frontend) findSiteAndEndpointByDomainAndPath(domain string, path
 // fetchSiteByDomainNameV1 fetches a site by domain name
 // returns the site or an error
 // DEPRECATED. Only supported regular domains and subdomains, not subdirectories
-func (frontend *frontend) fetchSiteByDomainNameV1(domain string) (cmsstore.SiteInterface, error) {
-	key := "site_domain:" + domain
+// func (frontend *frontend) fetchSiteByDomainNameV1(domain string) (cmsstore.SiteInterface, error) {
+// 	key := "site_domain:" + domain
 
-	if frontend.CacheHas(key) {
-		site := frontend.CacheGet(key)
+// 	if frontend.CacheHas(key) {
+// 		site := frontend.CacheGet(key)
 
-		if site == nil {
-			return nil, nil
-		}
+// 		if site == nil {
+// 			return nil, nil
+// 		}
 
-		return site.(cmsstore.SiteInterface), nil
-	}
+// 		return site.(cmsstore.SiteInterface), nil
+// 	}
 
-	site, err := frontend.store.SiteFindByDomainName(domain)
+// 	site, err := frontend.store.SiteFindByDomainName(domain)
 
-	if err != nil {
-		frontend.CacheSet(key, nil, 10) // 10 seconds only, error
-		return nil, err
-	}
+// 	if err != nil {
+// 		frontend.CacheSet(key, nil, 10) // 10 seconds only, error
+// 		return nil, err
+// 	}
 
-	frontend.CacheSet(key, site, frontend.cacheExpireSeconds)
+// 	frontend.CacheSet(key, site, frontend.cacheExpireSeconds)
 
-	return site, err
-}
+// 	return site, err
+// }
 
 // PageRenderHtmlByAlias builds the HTML of a page based on its alias
-func (frontend *frontend) PageRenderHtmlBySiteAndAlias(r *http.Request, siteID string, alias string, language string) string {
-	page, err := frontend.pageFindBySiteAndAlias(siteID, alias)
+func (frontend *frontend) PageRenderHtmlBySiteAndAlias(request *http.Request, siteID string, alias string, language string) string {
+	page, err := frontend.pageFindBySiteAndAlias(request.Context(), siteID, alias)
 
 	if err != nil {
 		frontend.logger.Error(`At PageRenderHtmlByAlias`, "error", err.Error())
@@ -424,7 +425,7 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(r *http.Request, siteID s
 	}
 
 	finalContent := lo.If(pageTemplateID == "", pageContent).ElseF(func() string {
-		template, err := frontend.store.TemplateFindByID(pageTemplateID)
+		template, err := frontend.store.TemplateFindByID(request.Context(), pageTemplateID)
 		if err != nil {
 			frontend.logger.Error(`At PageRenderHtmlByAlias`, "error", err.Error())
 			return pageContent
@@ -437,7 +438,7 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(r *http.Request, siteID s
 		return template.Content()
 	})
 
-	html, err := frontend.renderContentToHtml(r, finalContent, struct {
+	html, err := frontend.renderContentToHtml(request, finalContent, struct {
 		PageContent         string
 		PageCanonicalURL    string
 		PageMetaDescription string
@@ -520,7 +521,7 @@ func (frontend *frontend) renderContentToHtml(r *http.Request, content string, o
 		content = strings.ReplaceAll(content, "[[ "+key+" ]]", value)
 	}
 
-	content, err = frontend.contentRenderBlocks(content)
+	content, err = frontend.contentRenderBlocks(r.Context(), content)
 
 	if err != nil {
 		return "", err
@@ -552,9 +553,9 @@ func (frontend *frontend) renderContentToHtml(r *http.Request, content string, o
 //     in case of error
 //
 // =====================================================================
-func (frontend *frontend) pageFindBySiteAndAlias(siteID string, alias string) (cmsstore.PageInterface, error) {
+func (frontend *frontend) pageFindBySiteAndAlias(ctx context.Context, siteID string, alias string) (cmsstore.PageInterface, error) {
 	// Try to find by "alias"
-	page, err := frontend.fetchPageBySiteAndAlias(siteID, alias)
+	page, err := frontend.fetchPageBySiteAndAlias(ctx, siteID, alias)
 
 	if err != nil {
 		return nil, err
@@ -565,7 +566,7 @@ func (frontend *frontend) pageFindBySiteAndAlias(siteID string, alias string) (c
 	}
 
 	// Try to find by "/alias"
-	page, err = frontend.fetchPageBySiteAndAlias(siteID, "/"+alias)
+	page, err = frontend.fetchPageBySiteAndAlias(ctx, siteID, "/"+alias)
 
 	if err != nil {
 		return nil, err
@@ -575,7 +576,7 @@ func (frontend *frontend) pageFindBySiteAndAlias(siteID string, alias string) (c
 		return page, nil
 	}
 
-	page, err = frontend.pageFindBySiteAndAliasWithPatterns(siteID, alias)
+	page, err = frontend.pageFindBySiteAndAliasWithPatterns(ctx, siteID, alias)
 
 	if err != nil {
 		return nil, err
@@ -602,7 +603,7 @@ func (frontend *frontend) pageFindBySiteAndAlias(siteID string, alias string) (c
 //	:alpha
 //
 // =====================================================================
-func (frontend *frontend) pageFindBySiteAndAliasWithPatterns(siteID string, alias string) (cmsstore.PageInterface, error) {
+func (frontend *frontend) pageFindBySiteAndAliasWithPatterns(ctx context.Context, siteID string, alias string) (cmsstore.PageInterface, error) {
 	patterns := map[string]string{
 		":any":     "([^/]+)",
 		":num":     "([0-9]+)",
@@ -613,7 +614,7 @@ func (frontend *frontend) pageFindBySiteAndAliasWithPatterns(siteID string, alia
 		":alpha":   "([a-zA-Z0-9-_]+)",
 	}
 
-	pageAliasMap, err := frontend.fetchPageAliasMapBySite(siteID)
+	pageAliasMap, err := frontend.fetchPageAliasMapBySite(ctx, siteID)
 
 	if err != nil {
 		return nil, err
@@ -630,7 +631,7 @@ func (frontend *frontend) pageFindBySiteAndAliasWithPatterns(siteID string, alia
 
 		matcher := regexp.MustCompile("^" + pageAlias + "$")
 		if matcher.MatchString(alias) {
-			return frontend.store.PageFindByID(pageID)
+			return frontend.store.PageFindByID(ctx, pageID)
 		}
 	}
 
@@ -638,7 +639,7 @@ func (frontend *frontend) pageFindBySiteAndAliasWithPatterns(siteID string, alia
 }
 
 // RenderBlocks renders the blocks in a string
-func (frontend *frontend) contentRenderBlocks(content string) (string, error) {
+func (frontend *frontend) contentRenderBlocks(ctx context.Context, content string) (string, error) {
 	blockIDs := contentFindIdsByPatternPrefix(content, "BLOCK")
 
 	if len(blockIDs) == 0 {
@@ -648,7 +649,7 @@ func (frontend *frontend) contentRenderBlocks(content string) (string, error) {
 	var err error
 
 	for _, blockID := range blockIDs {
-		content, err = frontend.contentRenderBlockByID(content, blockID)
+		content, err = frontend.contentRenderBlockByID(ctx, content, blockID)
 
 		if err != nil {
 			return content, err
@@ -712,12 +713,12 @@ func contentFindIdsByPatternPrefix(content, prefix string) []string {
 //
 // Returns:
 // - content: the rendered content
-func (frontend *frontend) contentRenderBlockByID(content string, blockID string) (string, error) {
+func (frontend *frontend) contentRenderBlockByID(ctx context.Context, content string, blockID string) (string, error) {
 	if blockID == "" {
 		return content, nil
 	}
 
-	blockContent, err := frontend.fetchBlockContent(blockID)
+	blockContent, err := frontend.fetchBlockContent(ctx, blockID)
 
 	if err != nil {
 		return content, err
@@ -777,7 +778,7 @@ func (frontend *frontend) TemplateRenderHtmlByID(
 		return "", errors.New("template id is empty")
 	}
 
-	template, err := frontend.store.TemplateFindByID(templateID)
+	template, err := frontend.store.TemplateFindByID(r.Context(), templateID)
 
 	if err != nil {
 		return "", err

@@ -167,7 +167,7 @@ func (controller *templateCreateController) prepareDataAndValidate(r *http.Reque
 
 	var err error
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().SetOrderBy(cmsstore.COLUMN_NAME).SetSortOrder(sb.ASC))
+	data.siteList, err = controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().SetOrderBy(cmsstore.COLUMN_NAME).SetSortOrder(sb.ASC))
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
@@ -190,7 +190,7 @@ func (controller *templateCreateController) prepareDataAndValidate(r *http.Reque
 	template.SetSiteID(data.siteID)
 	template.SetName(data.name)
 
-	err = controller.ui.Store().TemplateCreate(template)
+	err = controller.ui.Store().TemplateCreate(r.Context(), template)
 
 	if err != nil {
 		controller.ui.Logger().Error("At templateCreateController > prepareDataAndValidate", "error", err.Error())

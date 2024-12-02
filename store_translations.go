@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strconv"
@@ -8,11 +9,16 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/dromara/carbon/v2"
+	"github.com/gouniverse/base/database"
 	"github.com/gouniverse/sb"
 	"github.com/samber/lo"
 )
 
-func (store *store) TranslationCount(options TranslationQueryInterface) (int64, error) {
+func (store *store) TranslationCount(ctx context.Context, options TranslationQueryInterface) (int64, error) {
+	if store.db == nil {
+		return -1, errors.New("cms store: db is nil")
+	}
+
 	options.SetCountOnly(true)
 
 	q, _, err := store.translationSelectQuery(options)
@@ -34,8 +40,8 @@ func (store *store) TranslationCount(options TranslationQueryInterface) (int64, 
 		log.Println(sqlStr)
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-	mapped, err := db.SelectToMapString(sqlStr, params...)
+	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
+
 	if err != nil {
 		return -1, err
 	}
@@ -56,10 +62,15 @@ func (store *store) TranslationCount(options TranslationQueryInterface) (int64, 
 	return i, nil
 }
 
-func (store *store) TranslationCreate(translation TranslationInterface) error {
+func (store *store) TranslationCreate(ctx context.Context, translation TranslationInterface) error {
+	if store.db == nil {
+		return errors.New("translationstore: database is nil")
+	}
+
 	if translation == nil {
 		return errors.New("translation is nil")
 	}
+
 	if translation.CreatedAt() == "" {
 		translation.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	}
@@ -84,11 +95,7 @@ func (store *store) TranslationCreate(translation TranslationInterface) error {
 		log.Println(sqlStr)
 	}
 
-	if store.db == nil {
-		return errors.New("translationstore: database is nil")
-	}
-
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	if err != nil {
 		return err
@@ -99,15 +106,23 @@ func (store *store) TranslationCreate(translation TranslationInterface) error {
 	return nil
 }
 
-func (store *store) TranslationDelete(translation TranslationInterface) error {
+func (store *store) TranslationDelete(ctx context.Context, translation TranslationInterface) error {
+	if store.db == nil {
+		return errors.New("cmsstore: database is nil")
+	}
+
 	if translation == nil {
 		return errors.New("translation is nil")
 	}
 
-	return store.TranslationDeleteByID(translation.ID())
+	return store.TranslationDeleteByID(ctx, translation.ID())
 }
 
-func (store *store) TranslationDeleteByID(id string) error {
+func (store *store) TranslationDeleteByID(ctx context.Context, id string) error {
+	if store.db == nil {
+		return errors.New("cmsstore: database is nil")
+	}
+
 	if id == "" {
 		return errors.New("translation id is empty")
 	}
@@ -126,18 +141,22 @@ func (store *store) TranslationDeleteByID(id string) error {
 		log.Println(sqlStr)
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	return err
 }
 
-func (store *store) TranslationFindByHandle(hadle string) (translation TranslationInterface, err error) {
-	if hadle == "" {
+func (store *store) TranslationFindByHandle(ctx context.Context, handle string) (translation TranslationInterface, err error) {
+	if store.db == nil {
+		return nil, errors.New("cmsstore: database is nil")
+	}
+
+	if handle == "" {
 		return nil, errors.New("translation handle is empty")
 	}
 
-	list, err := store.TranslationList(TranslationQuery().
-		SetHandle(hadle).
+	list, err := store.TranslationList(ctx, TranslationQuery().
+		SetHandle(handle).
 		SetLimit(1))
 
 	if err != nil {
@@ -151,12 +170,16 @@ func (store *store) TranslationFindByHandle(hadle string) (translation Translati
 	return nil, nil
 }
 
-func (store *store) TranslationFindByID(id string) (translation TranslationInterface, err error) {
+func (store *store) TranslationFindByID(ctx context.Context, id string) (translation TranslationInterface, err error) {
+	if store.db == nil {
+		return nil, errors.New("cmsstore: database is nil")
+	}
+
 	if id == "" {
 		return nil, errors.New("translation id is empty")
 	}
 
-	list, err := store.TranslationList(TranslationQuery().SetID(id).SetLimit(1))
+	list, err := store.TranslationList(ctx, TranslationQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -177,7 +200,11 @@ func (store *store) TranslationLanguages() map[string]string {
 	return store.translationLanguages
 }
 
-func (store *store) TranslationList(query TranslationQueryInterface) ([]TranslationInterface, error) {
+func (store *store) TranslationList(ctx context.Context, query TranslationQueryInterface) ([]TranslationInterface, error) {
+	if store.db == nil {
+		return []TranslationInterface{}, errors.New("cmsstore: database is nil")
+	}
+
 	q, columns, err := store.translationSelectQuery(query)
 
 	if err != nil {
@@ -204,7 +231,7 @@ func (store *store) TranslationList(query TranslationQueryInterface) ([]Translat
 		return []TranslationInterface{}, errors.New("translationstore: database is nil")
 	}
 
-	modelMaps, err := db.SelectToMapString(sqlStr)
+	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
 
 	if err != nil {
 		return []TranslationInterface{}, err
@@ -220,27 +247,43 @@ func (store *store) TranslationList(query TranslationQueryInterface) ([]Translat
 	return list, nil
 }
 
-func (store *store) TranslationSoftDelete(translation TranslationInterface) error {
+func (store *store) TranslationSoftDelete(ctx context.Context, translation TranslationInterface) error {
+	if store.db == nil {
+		return errors.New("cmsstore: database is nil")
+	}
+
 	if translation == nil {
 		return errors.New("translation is nil")
 	}
 
 	translation.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	return store.TranslationUpdate(translation)
+	return store.TranslationUpdate(ctx, translation)
 }
 
-func (store *store) TranslationSoftDeleteByID(id string) error {
-	translation, err := store.TranslationFindByID(id)
+func (store *store) TranslationSoftDeleteByID(ctx context.Context, id string) error {
+	if store.db == nil {
+		return errors.New("cmsstore: database is nil")
+	}
+
+	if id == "" {
+		return errors.New("translation id is empty")
+	}
+
+	translation, err := store.TranslationFindByID(ctx, id)
 
 	if err != nil {
 		return err
 	}
 
-	return store.TranslationSoftDelete(translation)
+	return store.TranslationSoftDelete(ctx, translation)
 }
 
-func (store *store) TranslationUpdate(translation TranslationInterface) error {
+func (store *store) TranslationUpdate(ctx context.Context, translation TranslationInterface) error {
+	if store.db == nil {
+		return errors.New("cmsstore: database is nil")
+	}
+
 	if translation == nil {
 		return errors.New("translation is nil")
 	}
@@ -270,15 +313,15 @@ func (store *store) TranslationUpdate(translation TranslationInterface) error {
 		log.Println(sqlStr)
 	}
 
-	if store.db == nil {
-		return errors.New("translationstore: database is nil")
-	}
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
-	_, err := store.db.Exec(sqlStr, params...)
+	if err != nil {
+		return err
+	}
 
 	translation.MarkAsNotDirty()
 
-	return err
+	return nil
 }
 
 func (store *store) translationSelectQuery(options TranslationQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {

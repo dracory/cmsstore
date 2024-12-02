@@ -167,7 +167,7 @@ func (controller *menuCreateController) prepareDataAndValidate(r *http.Request) 
 
 	var err error
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().SetOrderBy(cmsstore.COLUMN_NAME).SetSortOrder(sb.ASC))
+	data.siteList, err = controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().SetOrderBy(cmsstore.COLUMN_NAME).SetSortOrder(sb.ASC))
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageCreateController > prepareDataAndValidate", "error", err.Error())
@@ -190,7 +190,7 @@ func (controller *menuCreateController) prepareDataAndValidate(r *http.Request) 
 	menu.SetSiteID(data.siteID)
 	menu.SetName(data.name)
 
-	err = controller.ui.Store().MenuCreate(menu)
+	err = controller.ui.Store().MenuCreate(r.Context(), menu)
 
 	if err != nil {
 		controller.ui.Logger().Error("At menuCreateController > prepareDataAndValidate", "error", err.Error())

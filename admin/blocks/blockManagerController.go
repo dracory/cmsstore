@@ -428,7 +428,7 @@ func (controller *blockManagerController) tableFilter(data blockManagerControlle
 	}
 
 	if data.formSiteID != "" {
-		description = append(description, shared.FilterDescriptionSite(controller.ui.Store(), data.formSiteID).ToHTML())
+		description = append(description, shared.FilterDescriptionSite(data.request.Context(), controller.ui.Store(), data.formSiteID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
@@ -503,7 +503,7 @@ func (controller *blockManagerController) prepareData(r *http.Request) (data blo
 	data.recordList = recordList
 	data.recordCount = recordCount
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).
@@ -574,13 +574,13 @@ func (controller *blockManagerController) fetchRecordList(data blockManagerContr
 	// 	return []cmsstore.BlockInterface{}, 0, err
 	// }
 
-	recordList, err := controller.ui.Store().BlockList(query)
+	recordList, err := controller.ui.Store().BlockList(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.BlockInterface{}, 0, err
 	}
 
-	recordCount, err = controller.ui.Store().BlockCount(query)
+	recordCount, err = controller.ui.Store().BlockCount(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.BlockInterface{}, 0, err

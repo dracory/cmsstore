@@ -171,7 +171,7 @@ func (controller *blockCreateController) prepareDataAndValidate(r *http.Request)
 
 	var err error
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC))
 
@@ -187,7 +187,7 @@ func (controller *blockCreateController) prepareDataAndValidate(r *http.Request)
 	return controller.saveBlock(r, data)
 }
 
-func (controller *blockCreateController) saveBlock(_ *http.Request, data blockCreateControllerData) (d blockCreateControllerData, errorMessage string) {
+func (controller *blockCreateController) saveBlock(r *http.Request, data blockCreateControllerData) (d blockCreateControllerData, errorMessage string) {
 	if data.siteID == "" {
 		return data, "site id is required"
 	}
@@ -204,7 +204,7 @@ func (controller *blockCreateController) saveBlock(_ *http.Request, data blockCr
 	block.SetParentID("")    // not needed here at the moment
 	block.SetSequenceInt(-1) // not needed here at the moment
 
-	err := controller.ui.Store().BlockCreate(block)
+	err := controller.ui.Store().BlockCreate(r.Context(), block)
 
 	if err != nil {
 		controller.ui.Logger().Error("At blockCreateController > prepareDataAndValidate", "error", err.Error())

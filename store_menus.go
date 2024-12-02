@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strconv"
@@ -8,11 +9,12 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/dromara/carbon/v2"
+	"github.com/gouniverse/base/database"
 	"github.com/gouniverse/sb"
 	"github.com/samber/lo"
 )
 
-func (store *store) MenuCount(options MenuQueryInterface) (int64, error) {
+func (store *store) MenuCount(ctx context.Context, options MenuQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
 	q, _, err := store.menuSelectQuery(options)
@@ -34,8 +36,8 @@ func (store *store) MenuCount(options MenuQueryInterface) (int64, error) {
 		log.Println(sqlStr)
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-	mapped, err := db.SelectToMapString(sqlStr, params...)
+	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
+
 	if err != nil {
 		return -1, err
 	}
@@ -56,7 +58,7 @@ func (store *store) MenuCount(options MenuQueryInterface) (int64, error) {
 	return i, nil
 }
 
-func (store *store) MenuCreate(menu MenuInterface) error {
+func (store *store) MenuCreate(ctx context.Context, menu MenuInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -92,7 +94,7 @@ func (store *store) MenuCreate(menu MenuInterface) error {
 		return errors.New("menustore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	if err != nil {
 		return err
@@ -103,7 +105,7 @@ func (store *store) MenuCreate(menu MenuInterface) error {
 	return nil
 }
 
-func (store *store) MenuDelete(menu MenuInterface) error {
+func (store *store) MenuDelete(ctx context.Context, menu MenuInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -112,10 +114,10 @@ func (store *store) MenuDelete(menu MenuInterface) error {
 		return errors.New("menu is nil")
 	}
 
-	return store.MenuDeleteByID(menu.ID())
+	return store.MenuDeleteByID(ctx, menu.ID())
 }
 
-func (store *store) MenuDeleteByID(id string) error {
+func (store *store) MenuDeleteByID(ctx context.Context, id string) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -138,22 +140,22 @@ func (store *store) MenuDeleteByID(id string) error {
 		log.Println(sqlStr)
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	return err
 }
 
-func (store *store) MenuFindByHandle(hadle string) (menu MenuInterface, err error) {
+func (store *store) MenuFindByHandle(ctx context.Context, handle string) (menu MenuInterface, err error) {
 	if !store.menusEnabled {
 		return nil, errors.New("menus are disabled")
 	}
 
-	if hadle == "" {
+	if handle == "" {
 		return nil, errors.New("menu handle is empty")
 	}
 
-	list, err := store.MenuList(MenuQuery().
-		SetHandle(hadle).
+	list, err := store.MenuList(ctx, MenuQuery().
+		SetHandle(handle).
 		SetLimit(1))
 
 	if err != nil {
@@ -167,7 +169,7 @@ func (store *store) MenuFindByHandle(hadle string) (menu MenuInterface, err erro
 	return nil, nil
 }
 
-func (store *store) MenuFindByID(id string) (menu MenuInterface, err error) {
+func (store *store) MenuFindByID(ctx context.Context, id string) (menu MenuInterface, err error) {
 	if !store.menusEnabled {
 		return nil, errors.New("menus are disabled")
 	}
@@ -176,7 +178,7 @@ func (store *store) MenuFindByID(id string) (menu MenuInterface, err error) {
 		return nil, errors.New("menu id is empty")
 	}
 
-	list, err := store.MenuList(MenuQuery().SetID(id).SetLimit(1))
+	list, err := store.MenuList(ctx, MenuQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -189,7 +191,7 @@ func (store *store) MenuFindByID(id string) (menu MenuInterface, err error) {
 	return nil, nil
 }
 
-func (store *store) MenuList(query MenuQueryInterface) ([]MenuInterface, error) {
+func (store *store) MenuList(ctx context.Context, query MenuQueryInterface) ([]MenuInterface, error) {
 	if !store.menusEnabled {
 		return []MenuInterface{}, errors.New("menus are disabled")
 	}
@@ -214,13 +216,7 @@ func (store *store) MenuList(query MenuQueryInterface) ([]MenuInterface, error) 
 		return []MenuInterface{}, errors.New("menustore: database is nil")
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-
-	if db == nil {
-		return []MenuInterface{}, errors.New("menustore: database is nil")
-	}
-
-	modelMaps, err := db.SelectToMapString(sqlStr)
+	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
 
 	if err != nil {
 		return []MenuInterface{}, err
@@ -236,7 +232,7 @@ func (store *store) MenuList(query MenuQueryInterface) ([]MenuInterface, error) 
 	return list, nil
 }
 
-func (store *store) MenuSoftDelete(menu MenuInterface) error {
+func (store *store) MenuSoftDelete(ctx context.Context, menu MenuInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -247,24 +243,24 @@ func (store *store) MenuSoftDelete(menu MenuInterface) error {
 
 	menu.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	return store.MenuUpdate(menu)
+	return store.MenuUpdate(ctx, menu)
 }
 
-func (store *store) MenuSoftDeleteByID(id string) error {
+func (store *store) MenuSoftDeleteByID(ctx context.Context, id string) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
 
-	menu, err := store.MenuFindByID(id)
+	menu, err := store.MenuFindByID(ctx, id)
 
 	if err != nil {
 		return err
 	}
 
-	return store.MenuSoftDelete(menu)
+	return store.MenuSoftDelete(ctx, menu)
 }
 
-func (store *store) MenuUpdate(menu MenuInterface) error {
+func (store *store) MenuUpdate(ctx context.Context, menu MenuInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -302,7 +298,7 @@ func (store *store) MenuUpdate(menu MenuInterface) error {
 		return errors.New("menustore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	menu.MarkAsNotDirty()
 

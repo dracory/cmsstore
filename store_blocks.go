@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strconv"
@@ -8,11 +9,16 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/dromara/carbon/v2"
+	"github.com/gouniverse/base/database"
 	"github.com/gouniverse/sb"
 	"github.com/samber/lo"
 )
 
-func (store *store) BlockCount(options BlockQueryInterface) (int64, error) {
+func (store *store) BlockCount(ctx context.Context, options BlockQueryInterface) (int64, error) {
+	if store.db == nil {
+		return -1, errors.New("cms store: db is nil")
+	}
+
 	options.SetCountOnly(true)
 
 	q, _, err := store.blockSelectQuery(options)
@@ -34,8 +40,8 @@ func (store *store) BlockCount(options BlockQueryInterface) (int64, error) {
 		log.Println(sqlStr)
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-	mapped, err := db.SelectToMapString(sqlStr, params...)
+	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
+
 	if err != nil {
 		return -1, err
 	}
@@ -56,7 +62,15 @@ func (store *store) BlockCount(options BlockQueryInterface) (int64, error) {
 	return i, nil
 }
 
-func (store *store) BlockCreate(block BlockInterface) error {
+func (store *store) BlockCreate(ctx context.Context, block BlockInterface) error {
+	if store.db == nil {
+		return errors.New("blockstore: database is nil")
+	}
+
+	if block == nil {
+		return errors.New("block is nil")
+	}
+
 	block.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	block.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
@@ -80,7 +94,7 @@ func (store *store) BlockCreate(block BlockInterface) error {
 		return errors.New("blockstore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	if err != nil {
 		return err
@@ -91,15 +105,23 @@ func (store *store) BlockCreate(block BlockInterface) error {
 	return nil
 }
 
-func (store *store) BlockDelete(block BlockInterface) error {
+func (store *store) BlockDelete(ctx context.Context, block BlockInterface) error {
+	if store.db == nil {
+		return errors.New("blockstore: database is nil")
+	}
+
 	if block == nil {
 		return errors.New("block is nil")
 	}
 
-	return store.BlockDeleteByID(block.ID())
+	return store.BlockDeleteByID(ctx, block.ID())
 }
 
-func (store *store) BlockDeleteByID(id string) error {
+func (store *store) BlockDeleteByID(ctx context.Context, id string) error {
+	if store.db == nil {
+		return errors.New("blockstore: database is nil")
+	}
+
 	if id == "" {
 		return errors.New("block id is empty")
 	}
@@ -118,17 +140,21 @@ func (store *store) BlockDeleteByID(id string) error {
 		log.Println(sqlStr)
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	return err
 }
 
-func (store *store) BlockFindByHandle(hadle string) (block BlockInterface, err error) {
-	if hadle == "" {
+func (store *store) BlockFindByHandle(ctx context.Context, handle string) (block BlockInterface, err error) {
+	if store.db == nil {
+		return nil, errors.New("blockstore: database is nil")
+	}
+
+	if handle == "" {
 		return nil, errors.New("block handle is empty")
 	}
 
-	list, err := store.BlockList(BlockQuery().SetHandle(hadle).SetLimit(1))
+	list, err := store.BlockList(ctx, BlockQuery().SetHandle(handle).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -141,12 +167,16 @@ func (store *store) BlockFindByHandle(hadle string) (block BlockInterface, err e
 	return nil, nil
 }
 
-func (store *store) BlockFindByID(id string) (block BlockInterface, err error) {
+func (store *store) BlockFindByID(ctx context.Context, id string) (block BlockInterface, err error) {
+	if store.db == nil {
+		return nil, errors.New("blockstore: database is nil")
+	}
+
 	if id == "" {
 		return nil, errors.New("block id is empty")
 	}
 
-	list, err := store.BlockList(BlockQuery().SetID(id).SetLimit(1))
+	list, err := store.BlockList(ctx, BlockQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -159,7 +189,11 @@ func (store *store) BlockFindByID(id string) (block BlockInterface, err error) {
 	return nil, nil
 }
 
-func (store *store) BlockList(query BlockQueryInterface) ([]BlockInterface, error) {
+func (store *store) BlockList(ctx context.Context, query BlockQueryInterface) ([]BlockInterface, error) {
+	if store.db == nil {
+		return []BlockInterface{}, errors.New("blockstore: database is nil")
+	}
+
 	if query == nil {
 		return []BlockInterface{}, nil
 	}
@@ -180,17 +214,7 @@ func (store *store) BlockList(query BlockQueryInterface) ([]BlockInterface, erro
 		log.Println(sqlStr)
 	}
 
-	if store.db == nil {
-		return []BlockInterface{}, errors.New("blockstore: database is nil")
-	}
-
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-
-	if db == nil {
-		return []BlockInterface{}, errors.New("blockstore: database is nil")
-	}
-
-	modelMaps, err := db.SelectToMapString(sqlStr)
+	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
 
 	if err != nil {
 		return []BlockInterface{}, err
@@ -206,27 +230,39 @@ func (store *store) BlockList(query BlockQueryInterface) ([]BlockInterface, erro
 	return list, nil
 }
 
-func (store *store) BlockSoftDelete(block BlockInterface) error {
+func (store *store) BlockSoftDelete(ctx context.Context, block BlockInterface) error {
+	if store.db == nil {
+		return errors.New("blockstore: database is nil")
+	}
+
 	if block == nil {
 		return errors.New("block is nil")
 	}
 
 	block.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	return store.BlockUpdate(block)
+	return store.BlockUpdate(ctx, block)
 }
 
-func (store *store) BlockSoftDeleteByID(id string) error {
-	block, err := store.BlockFindByID(id)
+func (store *store) BlockSoftDeleteByID(ctx context.Context, id string) error {
+	if store.db == nil {
+		return errors.New("blockstore: database is nil")
+	}
+
+	block, err := store.BlockFindByID(ctx, id)
 
 	if err != nil {
 		return err
 	}
 
-	return store.BlockSoftDelete(block)
+	return store.BlockSoftDelete(ctx, block)
 }
 
-func (store *store) BlockUpdate(block BlockInterface) error {
+func (store *store) BlockUpdate(ctx context.Context, block BlockInterface) error {
+	if store.db == nil {
+		return errors.New("blockstore: database is nil")
+	}
+
 	if block == nil {
 		return errors.New("block is nil")
 	}
@@ -260,7 +296,7 @@ func (store *store) BlockUpdate(block BlockInterface) error {
 		return errors.New("blockstore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	block.MarkAsNotDirty()
 

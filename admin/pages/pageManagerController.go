@@ -438,7 +438,7 @@ func (controller *pageManagerController) tableFilter(data pageManagerControllerD
 	}
 
 	if data.formSiteID != "" {
-		description = append(description, shared.FilterDescriptionSite(controller.ui.Store(), data.formSiteID).ToHTML())
+		description = append(description, shared.FilterDescriptionSite(data.request.Context(), controller.ui.Store(), data.formSiteID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
@@ -509,7 +509,7 @@ func (controller *pageManagerController) prepareData(r *http.Request) (data page
 		return data, "error retrieving web sites"
 	}
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).
@@ -562,13 +562,13 @@ func (controller *pageManagerController) fetchRecordList(data pageManagerControl
 		query = query.SetNameLike(data.formName)
 	}
 
-	recordList, err := controller.ui.Store().PageList(query)
+	recordList, err := controller.ui.Store().PageList(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.PageInterface{}, 0, err
 	}
 
-	recordCount, err = controller.ui.Store().PageCount(query)
+	recordCount, err = controller.ui.Store().PageCount(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.PageInterface{}, 0, err

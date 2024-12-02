@@ -137,7 +137,7 @@ func (controller *blockDeleteController) prepareDataAndValidate(r *http.Request)
 		return data, "block id is required"
 	}
 
-	block, err := controller.ui.Store().BlockFindByID(data.blockID)
+	block, err := controller.ui.Store().BlockFindByID(r.Context(), data.blockID)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At blockDeleteController > prepareDataAndValidate", "error", err.Error())
@@ -154,7 +154,7 @@ func (controller *blockDeleteController) prepareDataAndValidate(r *http.Request)
 		return data, ""
 	}
 
-	err = controller.ui.Store().BlockSoftDelete(block)
+	err = controller.ui.Store().BlockSoftDelete(r.Context(), block)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At blockDeleteController > prepareDataAndValidate", "error", err.Error())

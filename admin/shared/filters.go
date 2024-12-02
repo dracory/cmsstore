@@ -1,17 +1,19 @@
 package shared
 
 import (
+	"context"
+
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/hb"
 	"github.com/samber/lo"
 )
 
-func FilterDescriptionSite(store cmsstore.StoreInterface, siteID string) hb.TagInterface {
+func FilterDescriptionSite(ctx context.Context, store cmsstore.StoreInterface, siteID string) hb.TagInterface {
 	if siteID == "" {
 		return nil
 	}
 
-	siteList, err := CachedSiteList(store)
+	siteList, err := CachedSiteList(ctx, store)
 	if err != nil {
 		siteList = []cmsstore.SiteInterface{}
 	}

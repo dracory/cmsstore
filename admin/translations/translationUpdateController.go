@@ -466,7 +466,7 @@ func (controller translationUpdateController) saveTranslation(r *http.Request, d
 		data.translation.SetHandle(data.formHandle)
 	}
 
-	err := controller.ui.Store().TranslationUpdate(data.translation)
+	err := controller.ui.Store().TranslationUpdate(data.request.Context(), data.translation)
 
 	if err != nil {
 		controller.ui.Logger().Error("At translationUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -502,7 +502,7 @@ func (controller translationUpdateController) prepareDataAndValidate(r *http.Req
 	// 1. Fetch required data
 
 	var err error
-	data.translation, err = controller.ui.Store().TranslationFindByID(data.translationID)
+	data.translation, err = controller.ui.Store().TranslationFindByID(data.request.Context(), data.translationID)
 
 	if err != nil {
 		controller.ui.Logger().Error("At translationUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -513,7 +513,7 @@ func (controller translationUpdateController) prepareDataAndValidate(r *http.Req
 		return data, "translation not found"
 	}
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery())
+	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery())
 
 	if err != nil {
 		controller.ui.Logger().Error("At translationUpdateController > prepareDataAndValidate", "error", err.Error())

@@ -137,7 +137,7 @@ func (controller *pageDeleteController) prepareDataAndValidate(r *http.Request) 
 		return data, "page id is required"
 	}
 
-	page, err := controller.ui.Store().PageFindByID(data.pageID)
+	page, err := controller.ui.Store().PageFindByID(r.Context(), data.pageID)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At pageDeleteController > prepareDataAndValidate", "error", err.Error())
@@ -154,7 +154,7 @@ func (controller *pageDeleteController) prepareDataAndValidate(r *http.Request) 
 		return data, ""
 	}
 
-	err = controller.ui.Store().PageSoftDelete(page)
+	err = controller.ui.Store().PageSoftDelete(r.Context(), page)
 
 	if err != nil {
 		controller.ui.Logger().Error("Error. At pageDeleteController > prepareDataAndValidate", "error", err.Error())

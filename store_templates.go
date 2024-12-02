@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strconv"
@@ -8,11 +9,12 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/dromara/carbon/v2"
+	"github.com/gouniverse/base/database"
 	"github.com/gouniverse/sb"
 	"github.com/samber/lo"
 )
 
-func (store *store) TemplateCount(options TemplateQueryInterface) (int64, error) {
+func (store *store) TemplateCount(ctx context.Context, options TemplateQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
 	q, _, err := store.templateSelectQuery(options)
@@ -34,8 +36,8 @@ func (store *store) TemplateCount(options TemplateQueryInterface) (int64, error)
 		log.Println(sqlStr)
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-	mapped, err := db.SelectToMapString(sqlStr, params...)
+	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
+
 	if err != nil {
 		return -1, err
 	}
@@ -56,7 +58,7 @@ func (store *store) TemplateCount(options TemplateQueryInterface) (int64, error)
 	return i, nil
 }
 
-func (store *store) TemplateCreate(template TemplateInterface) error {
+func (store *store) TemplateCreate(ctx context.Context, template TemplateInterface) error {
 	if template == nil {
 		return errors.New("template is nil")
 	}
@@ -88,7 +90,7 @@ func (store *store) TemplateCreate(template TemplateInterface) error {
 		return errors.New("templatestore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	if err != nil {
 		return err
@@ -99,15 +101,15 @@ func (store *store) TemplateCreate(template TemplateInterface) error {
 	return nil
 }
 
-func (store *store) TemplateDelete(template TemplateInterface) error {
+func (store *store) TemplateDelete(ctx context.Context, template TemplateInterface) error {
 	if template == nil {
 		return errors.New("template is nil")
 	}
 
-	return store.TemplateDeleteByID(template.ID())
+	return store.TemplateDeleteByID(ctx, template.ID())
 }
 
-func (store *store) TemplateDeleteByID(id string) error {
+func (store *store) TemplateDeleteByID(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("template id is empty")
 	}
@@ -126,18 +128,18 @@ func (store *store) TemplateDeleteByID(id string) error {
 		log.Println(sqlStr)
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	return err
 }
 
-func (store *store) TemplateFindByHandle(hadle string) (template TemplateInterface, err error) {
-	if hadle == "" {
+func (store *store) TemplateFindByHandle(ctx context.Context, handle string) (template TemplateInterface, err error) {
+	if handle == "" {
 		return nil, errors.New("template handle is empty")
 	}
 
-	list, err := store.TemplateList(TemplateQuery().
-		SetHandle(hadle).
+	list, err := store.TemplateList(ctx, TemplateQuery().
+		SetHandle(handle).
 		SetLimit(1))
 
 	if err != nil {
@@ -151,12 +153,12 @@ func (store *store) TemplateFindByHandle(hadle string) (template TemplateInterfa
 	return nil, nil
 }
 
-func (store *store) TemplateFindByID(id string) (template TemplateInterface, err error) {
+func (store *store) TemplateFindByID(ctx context.Context, id string) (template TemplateInterface, err error) {
 	if id == "" {
 		return nil, errors.New("template id is empty")
 	}
 
-	list, err := store.TemplateList(TemplateQuery().SetID(id).SetLimit(1))
+	list, err := store.TemplateList(ctx, TemplateQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -169,7 +171,7 @@ func (store *store) TemplateFindByID(id string) (template TemplateInterface, err
 	return nil, nil
 }
 
-func (store *store) TemplateList(query TemplateQueryInterface) ([]TemplateInterface, error) {
+func (store *store) TemplateList(ctx context.Context, query TemplateQueryInterface) ([]TemplateInterface, error) {
 	q, columns, err := store.templateSelectQuery(query)
 
 	if err != nil {
@@ -190,13 +192,7 @@ func (store *store) TemplateList(query TemplateQueryInterface) ([]TemplateInterf
 		return []TemplateInterface{}, errors.New("templatestore: database is nil")
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-
-	if db == nil {
-		return []TemplateInterface{}, errors.New("templatestore: database is nil")
-	}
-
-	modelMaps, err := db.SelectToMapString(sqlStr)
+	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
 
 	if err != nil {
 		return []TemplateInterface{}, err
@@ -212,27 +208,31 @@ func (store *store) TemplateList(query TemplateQueryInterface) ([]TemplateInterf
 	return list, nil
 }
 
-func (store *store) TemplateSoftDelete(template TemplateInterface) error {
+func (store *store) TemplateSoftDelete(ctx context.Context, template TemplateInterface) error {
 	if template == nil {
 		return errors.New("template is nil")
 	}
 
 	template.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	return store.TemplateUpdate(template)
+	return store.TemplateUpdate(ctx, template)
 }
 
-func (store *store) TemplateSoftDeleteByID(id string) error {
-	template, err := store.TemplateFindByID(id)
+func (store *store) TemplateSoftDeleteByID(ctx context.Context, id string) error {
+	template, err := store.TemplateFindByID(ctx, id)
 
 	if err != nil {
 		return err
 	}
 
-	return store.TemplateSoftDelete(template)
+	return store.TemplateSoftDelete(ctx, template)
 }
 
-func (store *store) TemplateUpdate(template TemplateInterface) error {
+func (store *store) TemplateUpdate(ctx context.Context, template TemplateInterface) error {
+	if store.db == nil {
+		return errors.New("templatestore: database is nil")
+	}
+
 	if template == nil {
 		return errors.New("template is nil")
 	}
@@ -262,15 +262,15 @@ func (store *store) TemplateUpdate(template TemplateInterface) error {
 		log.Println(sqlStr)
 	}
 
-	if store.db == nil {
-		return errors.New("templatestore: database is nil")
-	}
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
-	_, err := store.db.Exec(sqlStr, params...)
+	if err != nil {
+		return err
+	}
 
 	template.MarkAsNotDirty()
 
-	return err
+	return nil
 }
 
 func (store *store) templateSelectQuery(options TemplateQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {

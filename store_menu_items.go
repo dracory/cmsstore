@@ -1,6 +1,7 @@
 package cmsstore
 
 import (
+	"context"
 	"errors"
 	"log"
 	"strconv"
@@ -8,11 +9,12 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/dromara/carbon/v2"
+	"github.com/gouniverse/base/database"
 	"github.com/gouniverse/sb"
 	"github.com/samber/lo"
 )
 
-func (store *store) MenuItemCount(options MenuItemQueryInterface) (int64, error) {
+func (store *store) MenuItemCount(ctx context.Context, options MenuItemQueryInterface) (int64, error) {
 	if !store.menusEnabled {
 		return -1, errors.New("menus are disabled")
 	}
@@ -38,8 +40,8 @@ func (store *store) MenuItemCount(options MenuItemQueryInterface) (int64, error)
 		log.Println(sqlStr)
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-	mapped, err := db.SelectToMapString(sqlStr, params...)
+	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
+
 	if err != nil {
 		return -1, err
 	}
@@ -60,7 +62,7 @@ func (store *store) MenuItemCount(options MenuItemQueryInterface) (int64, error)
 	return i, nil
 }
 
-func (store *store) MenuItemCreate(menuItem MenuItemInterface) error {
+func (store *store) MenuItemCreate(ctx context.Context, menuItem MenuItemInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -96,7 +98,7 @@ func (store *store) MenuItemCreate(menuItem MenuItemInterface) error {
 		return errors.New("menuItemstore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	if err != nil {
 		return err
@@ -107,7 +109,7 @@ func (store *store) MenuItemCreate(menuItem MenuItemInterface) error {
 	return nil
 }
 
-func (store *store) MenuItemDelete(menuItem MenuItemInterface) error {
+func (store *store) MenuItemDelete(ctx context.Context, menuItem MenuItemInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -116,10 +118,10 @@ func (store *store) MenuItemDelete(menuItem MenuItemInterface) error {
 		return errors.New("menuItem is nil")
 	}
 
-	return store.MenuItemDeleteByID(menuItem.ID())
+	return store.MenuItemDeleteByID(ctx, menuItem.ID())
 }
 
-func (store *store) MenuItemDeleteByID(id string) error {
+func (store *store) MenuItemDeleteByID(ctx context.Context, id string) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -142,12 +144,12 @@ func (store *store) MenuItemDeleteByID(id string) error {
 		log.Println(sqlStr)
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	return err
 }
 
-func (store *store) MenuItemFindByID(id string) (menuItem MenuItemInterface, err error) {
+func (store *store) MenuItemFindByID(ctx context.Context, id string) (menuItem MenuItemInterface, err error) {
 	if !store.menusEnabled {
 		return nil, errors.New("menus are disabled")
 	}
@@ -156,7 +158,7 @@ func (store *store) MenuItemFindByID(id string) (menuItem MenuItemInterface, err
 		return nil, errors.New("menuItem id is empty")
 	}
 
-	list, err := store.MenuItemList(MenuItemQuery().SetID(id).SetLimit(1))
+	list, err := store.MenuItemList(ctx, MenuItemQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
 		return nil, err
@@ -169,7 +171,7 @@ func (store *store) MenuItemFindByID(id string) (menuItem MenuItemInterface, err
 	return nil, nil
 }
 
-func (store *store) MenuItemList(query MenuItemQueryInterface) ([]MenuItemInterface, error) {
+func (store *store) MenuItemList(ctx context.Context, query MenuItemQueryInterface) ([]MenuItemInterface, error) {
 	if !store.menusEnabled {
 		return []MenuItemInterface{}, errors.New("menus are disabled")
 	}
@@ -194,13 +196,7 @@ func (store *store) MenuItemList(query MenuItemQueryInterface) ([]MenuItemInterf
 		return []MenuItemInterface{}, errors.New("menuItemstore: database is nil")
 	}
 
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-
-	if db == nil {
-		return []MenuItemInterface{}, errors.New("menuItemstore: database is nil")
-	}
-
-	modelMaps, err := db.SelectToMapString(sqlStr)
+	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
 
 	if err != nil {
 		return []MenuItemInterface{}, err
@@ -216,7 +212,7 @@ func (store *store) MenuItemList(query MenuItemQueryInterface) ([]MenuItemInterf
 	return list, nil
 }
 
-func (store *store) MenuItemSoftDelete(menuItem MenuItemInterface) error {
+func (store *store) MenuItemSoftDelete(ctx context.Context, menuItem MenuItemInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -227,24 +223,24 @@ func (store *store) MenuItemSoftDelete(menuItem MenuItemInterface) error {
 
 	menuItem.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	return store.MenuItemUpdate(menuItem)
+	return store.MenuItemUpdate(ctx, menuItem)
 }
 
-func (store *store) MenuItemSoftDeleteByID(id string) error {
+func (store *store) MenuItemSoftDeleteByID(ctx context.Context, id string) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
 
-	menuItem, err := store.MenuItemFindByID(id)
+	menuItem, err := store.MenuItemFindByID(ctx, id)
 
 	if err != nil {
 		return err
 	}
 
-	return store.MenuItemSoftDelete(menuItem)
+	return store.MenuItemSoftDelete(ctx, menuItem)
 }
 
-func (store *store) MenuItemUpdate(menuItem MenuItemInterface) error {
+func (store *store) MenuItemUpdate(ctx context.Context, menuItem MenuItemInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -282,7 +278,7 @@ func (store *store) MenuItemUpdate(menuItem MenuItemInterface) error {
 		return errors.New("menuItemstore: database is nil")
 	}
 
-	_, err := store.db.Exec(sqlStr, params...)
+	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
 
 	menuItem.MarkAsNotDirty()
 

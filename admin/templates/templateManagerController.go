@@ -409,7 +409,7 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 	}
 
 	if data.formSiteID != "" {
-		description = append(description, shared.FilterDescriptionSite(controller.ui.Store(), data.formSiteID).ToHTML())
+		description = append(description, shared.FilterDescriptionSite(data.request.Context(), controller.ui.Store(), data.formSiteID).ToHTML())
 	}
 
 	if data.formCreatedFrom != "" && data.formCreatedTo != "" {
@@ -482,7 +482,7 @@ func (controller *templateManagerController) prepareData(r *http.Request) (data 
 	data.recordList = recordList
 	data.recordCount = recordCount
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery().
+	data.siteList, err = controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC).
 		SetOffset(0).
@@ -533,13 +533,13 @@ func (controller *templateManagerController) fetchRecordList(data templateManage
 		query = query.SetNameLike(data.formName)
 	}
 
-	recordList, err := controller.ui.Store().TemplateList(query)
+	recordList, err := controller.ui.Store().TemplateList(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.TemplateInterface{}, 0, err
 	}
 
-	recordCount, err = controller.ui.Store().TemplateCount(query)
+	recordCount, err = controller.ui.Store().TemplateCount(data.request.Context(), query)
 
 	if err != nil {
 		return []cmsstore.TemplateInterface{}, 0, err

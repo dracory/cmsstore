@@ -71,7 +71,7 @@ func (controller *menuUpdateController) Handler(w http.ResponseWriter, r *http.R
 }
 
 func (controller *menuUpdateController) treeEditorHandle(r *http.Request, data menuUpdateControllerData) hb.TagInterface {
-	pageList, err := controller.ui.Store().PageList(cmsstore.PageQuery().
+	pageList, err := controller.ui.Store().PageList(r.Context(), cmsstore.PageQuery().
 		SetSiteID(data.menu.SiteID()).
 		SetOrderBy(cmsstore.COLUMN_NAME).
 		SetSortOrder(sb.ASC))
@@ -466,7 +466,7 @@ func (controller menuUpdateController) saveMenu(r *http.Request, data menuUpdate
 
 	}
 
-	err := controller.ui.Store().MenuUpdate(data.menu)
+	err := controller.ui.Store().MenuUpdate(d.request.Context(), data.menu)
 
 	if err != nil {
 		//config.LogStore.ErrorWithContext("At menuUpdateController > prepareDataAndValidate", err.Error())
@@ -503,7 +503,7 @@ func (controller menuUpdateController) saveMenuItems(data menuUpdateControllerDa
 	}
 
 	for _, node := range menuItemNodes {
-		menuItem, err := controller.ui.Store().MenuItemFindByID(node.ID)
+		menuItem, err := controller.ui.Store().MenuItemFindByID(data.request.Context(), node.ID)
 
 		if err != nil {
 			return err
@@ -520,7 +520,7 @@ func (controller menuUpdateController) saveMenuItems(data menuUpdateControllerDa
 			menuItem.SetURL(node.URL)
 			menuItem.SetTarget(node.Target)
 
-			err = controller.ui.Store().MenuItemCreate(menuItem)
+			err = controller.ui.Store().MenuItemCreate(data.request.Context(), menuItem)
 
 			if err != nil {
 				return err
@@ -551,7 +551,7 @@ func (controller menuUpdateController) saveMenuItems(data menuUpdateControllerDa
 			menuItem.SetTarget(node.Target)
 		}
 
-		err = controller.ui.Store().MenuItemUpdate(menuItem)
+		err = controller.ui.Store().MenuItemUpdate(data.request.Context(), menuItem)
 
 		if err != nil {
 			return err
@@ -559,7 +559,7 @@ func (controller menuUpdateController) saveMenuItems(data menuUpdateControllerDa
 	}
 
 	for _, id := range idsToRemove {
-		menuItem, err := controller.ui.Store().MenuItemFindByID(id)
+		menuItem, err := controller.ui.Store().MenuItemFindByID(data.request.Context(), id)
 
 		if err != nil {
 			return err
@@ -569,7 +569,7 @@ func (controller menuUpdateController) saveMenuItems(data menuUpdateControllerDa
 			continue // nothing to do, menu item not found
 		}
 
-		err = controller.ui.Store().MenuItemSoftDelete(menuItem)
+		err = controller.ui.Store().MenuItemSoftDelete(data.request.Context(), menuItem)
 
 		if err != nil {
 			return err
@@ -594,7 +594,7 @@ func (controller menuUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	var err error
-	data.menu, err = controller.ui.Store().MenuFindByID(data.menuID)
+	data.menu, err = controller.ui.Store().MenuFindByID(r.Context(), data.menuID)
 
 	if err != nil {
 		controller.ui.Logger().Error("At menuUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -605,14 +605,14 @@ func (controller menuUpdateController) prepareDataAndValidate(r *http.Request) (
 		return data, "menu not found"
 	}
 
-	data.siteList, err = controller.ui.Store().SiteList(cmsstore.SiteQuery())
+	data.siteList, err = controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery())
 
 	if err != nil {
 		controller.ui.Logger().Error("At translationUpdateController > prepareDataAndValidate", "error", err.Error())
 		return data, err.Error()
 	}
 
-	data.menuItemList, err = controller.ui.Store().MenuItemList(cmsstore.MenuItemQuery().
+	data.menuItemList, err = controller.ui.Store().MenuItemList(r.Context(), cmsstore.MenuItemQuery().
 		SetMenuID(data.menuID))
 
 	if err != nil {
