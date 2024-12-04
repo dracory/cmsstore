@@ -194,6 +194,10 @@ func (tree *Tree) Find(nodeID string) *Node {
 func (tree *Tree) FindNextSibling(nodeID string) *Node {
 	block := tree.Find(nodeID)
 
+	if block == nil {
+		return nil
+	}
+
 	children := tree.Children(block.ParentID)
 
 	_, index, found := lo.FindIndexOf(children, func(bExt Node) bool {
@@ -213,6 +217,10 @@ func (tree *Tree) FindNextSibling(nodeID string) *Node {
 
 func (tree *Tree) FindPreviousSibling(nodeID string) *Node {
 	block := tree.Find(nodeID)
+
+	if block == nil {
+		return nil
+	}
 
 	children := tree.Children(block.ParentID)
 
