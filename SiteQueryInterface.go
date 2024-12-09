@@ -1,22 +1,5 @@
 package cmsstore
 
-type SiteQueryOptions struct {
-	ID           string
-	IDIn         []string
-	Handle       string
-	NameLike     string
-	Status       string
-	StatusIn     []string
-	CreatedAtGte string
-	CreatedAtLte string
-	Offset       int
-	Limit        int
-	SortOrder    string
-	OrderBy      string
-	CountOnly    bool
-	WithDeleted  bool
-}
-
 type SiteQueryInterface interface {
 	Validate() error
 
