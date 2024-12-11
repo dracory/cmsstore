@@ -4,15 +4,15 @@ go 1.23.3
 
 require (
 	github.com/doug-martin/goqu/v9 v9.19.0
-	github.com/dromara/carbon/v2 v2.5.1
+	github.com/dromara/carbon/v2 v2.5.2
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/gouniverse/api v1.6.0
-	github.com/gouniverse/base v0.0.7
-	github.com/gouniverse/blockeditor v0.21.1
+	github.com/gouniverse/base v0.1.0
+	github.com/gouniverse/blockeditor v0.21.2
 	github.com/gouniverse/bs v0.13.0
 	github.com/gouniverse/cdn v1.5.0
 	github.com/gouniverse/dataobject v0.3.0
-	github.com/gouniverse/form v0.15.3
+	github.com/gouniverse/form v0.15.4
 	github.com/gouniverse/hb v1.80.1
 	github.com/gouniverse/maputils v0.7.0
 	github.com/gouniverse/responses v0.6.0
@@ -24,10 +24,10 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/samber/lo v1.47.0
 	github.com/spf13/cast v1.7.0
-	modernc.org/sqlite v1.34.1
+	modernc.org/sqlite v1.34.2
 )
 
-require golang.org/x/sync v0.9.0 // indirect
+require golang.org/x/sync v0.10.0 // indirect
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -45,7 +45,7 @@ require (
 	github.com/gouniverse/crypto v0.2.0 // indirect
 	github.com/gouniverse/envenc v0.8.0 // indirect
 	github.com/gouniverse/shortcode v0.4.0
-	github.com/gouniverse/versionstore v0.4.1
+	github.com/gouniverse/versionstore v0.4.2
 	github.com/gouniverse/webserver v0.1.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jedib0t/go-pretty v4.3.0+incompatible // indirect
@@ -64,15 +64,15 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	go.mongodb.org/mongo-driver v1.17.1 // indirect
-	golang.org/x/crypto v0.29.0 // indirect
-	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
-	golang.org/x/net v0.31.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/term v0.26.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/exp v0.0.0-20241210194714-1829a127f884 // indirect
+	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/term v0.27.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	modernc.org/gc/v3 v3.0.0-20241004144649-1aea3fae8852 // indirect
-	modernc.org/libc v1.61.3 // indirect
+	modernc.org/libc v1.61.4 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/strutil v1.2.0 // indirect
