@@ -8,8 +8,6 @@ import (
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/samber/lo"
-
-	globalShared "github.com/gouniverse/cmsstore/shared"
 )
 
 type AdminOptions struct {
@@ -36,10 +34,6 @@ type AdminOptions struct {
 
 	AdminHomeURL string
 
-	// middlewares holds a list of middlewares available to select from
-	// this is a beta feature, do not use in production yet
-	Middlewares []globalShared.MiddlewareInterface
-
 	// flags holds a map of feature flags for internal use
 	Flags map[string]bool
 }
@@ -59,7 +53,6 @@ func New(options AdminOptions) (*admin, error) {
 		store:                  options.Store,
 		funcLayout:             options.FuncLayout,
 		adminHomeURL:           options.AdminHomeURL,
-		middlewares:            lo.Ternary(options.Middlewares != nil, options.Middlewares, []globalShared.MiddlewareInterface{}),
 		flags:                  lo.Ternary(options.Flags != nil, options.Flags, map[string]bool{}),
 	}, nil
 }

@@ -682,7 +682,7 @@ func (c pageUpdateController) fieldsMiddlewares(data pageUpdateControllerData) [
 		},
 		Values: lo.Map(data.formMiddlewares, func(middlewareName string, _ int) map[string]string {
 			return map[string]string{
-				"page_middlewares": middlewareName,
+				"page_middleware": middlewareName,
 			}
 		}),
 		RepeaterAddUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
@@ -1138,15 +1138,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	data.formStatus = data.page.Status()
 	data.formTemplateID = data.page.TemplateID()
 	data.formTitle = data.page.Title()
-	m, err := utils.FromJSON(data.page.Meta("middlewares"), []string{})
-
-	if err == nil {
-		m = []string{}
-	}
-
-	if m != nil {
-		data.formMiddlewares = m.([]string)
-	}
+	data.formMiddlewares = controller.pageMiddlewaresFromMeta(data.page)
 
 	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
@@ -1226,6 +1218,25 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	return controller.savePage(r, data)
+}
+
+func (pageUpdateController) pageMiddlewaresFromMeta(page cmsstore.PageInterface) []string {
+	meta := page.Meta("middlewares")
+
+	if meta == "" {
+		return []string{}
+	}
+
+	m, err := utils.FromJSON(page.Meta("middlewares"), []string{})
+
+	if err != nil {
+		cfmt.Error(err)
+		return []string{}
+	}
+
+	return lo.Map(m.([]interface{}), func(v interface{}, _ int) string {
+		return v.(string)
+	})
 }
 
 func (controller pageUpdateController) requestMapToMiddlewares(r *http.Request) []string {

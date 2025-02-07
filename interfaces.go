@@ -419,6 +419,16 @@ type StoreInterface interface {
 	VersioningSoftDelete(ctx context.Context, versioning VersioningInterface) error
 	VersioningSoftDeleteByID(ctx context.Context, id string) error
 	VersioningUpdate(ctx context.Context, versioning VersioningInterface) error
+
+	Shortcodes() []ShortcodeInterface
+	AddShortcode(shortcode ShortcodeInterface)
+	AddShortcodes(shortcodes []ShortcodeInterface)
+	SetShortcodes(shortcodes []ShortcodeInterface)
+
+	Middlewares() []MiddlewareInterface
+	AddMiddleware(middleware MiddlewareInterface)
+	AddMiddlewares(middlewares []MiddlewareInterface)
+	SetMiddlewares(middlewares []MiddlewareInterface)
 }
 
 type TemplateInterface interface {

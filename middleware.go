@@ -1,4 +1,4 @@
-package shared
+package cmsstore
 
 import "net/http"
 

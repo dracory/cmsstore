@@ -66,6 +66,12 @@ type NewStoreOptions struct {
 
 	// VersioningTableName is the name of the versioning database table to be created/used
 	VersioningTableName string
+
+	// Shortcodes is a list of shortcodes to be registered
+	Shortcodes []ShortcodeInterface
+
+	// Middlewares is a list of middlewares to be registered
+	Middlewares []MiddlewareInterface
 }
 
 // NewStore creates a new block store
@@ -110,6 +116,14 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		opts.DbDriverName = database.DatabaseType(opts.DB)
 	}
 
+	if len(opts.Shortcodes) == 0 {
+		opts.Shortcodes = []ShortcodeInterface{}
+	}
+
+	if len(opts.Middlewares) == 0 {
+		opts.Middlewares = []MiddlewareInterface{}
+	}
+
 	versionStore, err := initializeVersioningStore(opts)
 
 	if err != nil {
@@ -139,6 +153,9 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		versioningEnabled:   opts.VersioningEnabled,
 		versioningTableName: opts.VersioningTableName,
 		versioningStore:     versionStore,
+
+		shortcodes:  opts.Shortcodes,
+		middlewares: opts.Middlewares,
 	}
 
 	if store.automigrateEnabled {

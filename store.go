@@ -35,6 +35,10 @@ type store struct {
 	versioningEnabled   bool
 	versioningTableName string
 	versioningStore     versionstore.StoreInterface
+
+	// Shortcodes
+	shortcodes  []ShortcodeInterface
+	middlewares []MiddlewareInterface
 }
 
 // == INTERFACE ===============================================================
@@ -205,6 +209,38 @@ func (store *store) VersioningSoftDeleteByID(ctx context.Context, id string) err
 
 func (store *store) VersioningUpdate(ctx context.Context, version VersioningInterface) error {
 	return store.versioningStore.VersionUpdate(store.toQuerableContext(ctx), version)
+}
+
+func (store *store) Shortcodes() []ShortcodeInterface {
+	return store.shortcodes
+}
+
+func (store *store) AddShortcode(shortcode ShortcodeInterface) {
+	store.shortcodes = append(store.shortcodes, shortcode)
+}
+
+func (store *store) AddShortcodes(shortcodes []ShortcodeInterface) {
+	store.shortcodes = append(store.shortcodes, shortcodes...)
+}
+
+func (store *store) SetShortcodes(shortcodes []ShortcodeInterface) {
+	store.shortcodes = shortcodes
+}
+
+func (store *store) Middlewares() []MiddlewareInterface {
+	return store.middlewares
+}
+
+func (store *store) AddMiddleware(middleware MiddlewareInterface) {
+	store.middlewares = append(store.middlewares, middleware)
+}
+
+func (store *store) AddMiddlewares(middlewares []MiddlewareInterface) {
+	store.middlewares = append(store.middlewares, middlewares...)
+}
+
+func (store *store) SetMiddlewares(middlewares []MiddlewareInterface) {
+	store.middlewares = middlewares
 }
 
 func (store *store) toQuerableContext(context context.Context) database.QueryableContext {
