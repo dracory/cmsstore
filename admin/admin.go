@@ -16,6 +16,7 @@ import (
 	adminTranslations "github.com/gouniverse/cmsstore/admin/translations"
 
 	"github.com/gouniverse/cmsstore"
+	globalShared "github.com/gouniverse/cmsstore/shared"
 	"github.com/gouniverse/responses"
 	"github.com/gouniverse/utils"
 )
@@ -33,6 +34,8 @@ type admin struct {
 	logger       *slog.Logger
 	store        cmsstore.StoreInterface
 	adminHomeURL string
+	middlewares  []globalShared.MiddlewareInterface
+	flags        map[string]bool
 }
 
 // == INTERFACE IMPLEMENTATION CHECK ==========================================

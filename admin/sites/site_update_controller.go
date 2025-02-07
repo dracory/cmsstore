@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/gouniverse/api"
+	"github.com/gouniverse/base/req"
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cdn"
 	"github.com/gouniverse/cmsstore"
@@ -230,6 +231,7 @@ func (controller siteUpdateController) form(data siteUpdateControllerData) hb.Ta
 func (siteUpdateController) fieldsSettings(data siteUpdateControllerData) []form.FieldInterface {
 	fieldDomainNames := form.NewRepeater(form.RepeaterOptions{
 		Label: "Domain Names",
+		Name:  "site_domain_names",
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Domain Name",
@@ -361,7 +363,7 @@ func (controller siteUpdateController) saveSite(r *http.Request, data siteUpdate
 	data.formName = utils.Req(r, "site_name", "")
 	data.formStatus = utils.Req(r, "site_status", "")
 	data.formTitle = utils.Req(r, "site_title", "")
-	data.formDomainNames = utils.ReqArray(r, "site_domain_name", []string{})
+	data.formDomainNames = controller.requestMapToDomainNames(r)
 
 	if data.view == VIEW_SETTINGS {
 		if data.formStatus == "" {
@@ -454,7 +456,7 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 		return data, ""
 	}
 
-	data.formDomainNames = utils.ReqArray(r, "site_domain_name", []string{})
+	data.formDomainNames = controller.requestMapToDomainNames(r)
 
 	if data.action == ACTION_REPEATER_ADD {
 		data.formDomainNames = append(data.formDomainNames, "")
@@ -506,6 +508,17 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	return controller.saveSite(r, data)
+}
+
+func (controller siteUpdateController) requestMapToDomainNames(r *http.Request) []string {
+	formDomainNames := req.Maps(r, "site_domain_names", []map[string]string{})
+	domainNames := []string{}
+
+	for _, formDomainName := range formDomainNames {
+		domainNames = append(domainNames, formDomainName["site_domain_name"])
+	}
+
+	return domainNames
 }
 
 type siteUpdateControllerData struct {

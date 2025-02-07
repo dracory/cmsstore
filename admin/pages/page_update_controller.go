@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"slices"
 
 	"github.com/gouniverse/api"
+	"github.com/gouniverse/base/req"
 	"github.com/gouniverse/blockeditor"
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cdn"
@@ -19,13 +21,19 @@ import (
 	"github.com/gouniverse/versionstore"
 	"github.com/mingrammer/cfmt"
 	"github.com/samber/lo"
+	"github.com/spf13/cast"
 )
 
 const VIEW_SETTINGS = "settings"
 const VIEW_CONTENT = "content"
+const VIEW_MIDDLEWARES = "middlewares"
 const VIEW_SEO = "seo"
 const ACTION_BLOCKEDITOR_HANDLE = "blockeditor_handle"
 const ACTION_VERSION_HISTORY_SHOW = "action_version_history_show"
+const ACTION_MIDDLEWARES_REPEATER_ADD = "action_middlewares_repeater_add"
+const ACTION_MIDDLEWARES_REPEATER_DELETE = "action_middlewares_repeater_delete"
+const ACTION_MIDDLEWARES_REPEATER_MOVE_UP = "action_middlewares_repeater_move_up"
+const ACTION_MIDDLEWARES_REPEATER_MOVE_DOWN = "action_middlewares_repeater_move_down"
 
 // == CONTROLLER ==============================================================
 
@@ -56,6 +64,22 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 	}
 
 	if data.action == ACTION_VERSION_HISTORY_SHOW {
+	}
+
+	if data.action == ACTION_MIDDLEWARES_REPEATER_ADD {
+		return controller.form(data).ToHTML()
+	}
+
+	if data.action == ACTION_MIDDLEWARES_REPEATER_DELETE {
+		return controller.form(data).ToHTML()
+	}
+
+	if data.action == ACTION_MIDDLEWARES_REPEATER_MOVE_UP {
+		return controller.form(data).ToHTML()
+	}
+
+	if data.action == ACTION_MIDDLEWARES_REPEATER_MOVE_DOWN {
+		return controller.form(data).ToHTML()
 	}
 
 	if r.Method == http.MethodPost {
@@ -186,6 +210,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 				Child(hb.Heading4().
 					HTMLIf(data.view == VIEW_CONTENT, "Page Contents").
 					HTMLIf(data.view == VIEW_SEO, "Page SEO").
+					HTMLIf(data.view == VIEW_MIDDLEWARES, "Page Middlewares").
 					HTMLIf(data.view == VIEW_SETTINGS, "Page Settings").
 					Style("margin-bottom:0;display:inline-block;")).
 				Child(buttonSave),
@@ -213,6 +238,14 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 					"view":    VIEW_SEO,
 				})).
 				HTML("SEO"))).
+		Child(bs.NavItem().
+			Child(bs.NavLink().
+				ClassIf(data.view == VIEW_MIDDLEWARES, "active").
+				Href(shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
+					"page_id": data.pageID,
+					"view":    VIEW_MIDDLEWARES,
+				})).
+				HTML("Middlewares"))).
 		Child(bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(data.view == VIEW_SETTINGS, "active").
@@ -248,16 +281,20 @@ func (controller pageUpdateController) form(data pageUpdateControllerData) hb.Ta
 		ID: "FormpageUpdate",
 	})
 
-	if data.view == VIEW_SETTINGS {
-		formpageUpdate.SetFields(fieldsSettings)
-	}
-
 	if data.view == VIEW_CONTENT {
 		formpageUpdate.SetFields(fieldsContent)
 	}
 
+	if data.view == VIEW_MIDDLEWARES {
+		formpageUpdate.SetFields(controller.fieldsMiddlewares(data))
+	}
+
 	if data.view == VIEW_SEO {
 		formpageUpdate.SetFields(fieldsSEO)
+	}
+
+	if data.view == VIEW_SETTINGS {
+		formpageUpdate.SetFields(fieldsSettings)
 	}
 
 	if data.formErrorMessage != "" {
@@ -632,6 +669,58 @@ setTimeout(function () {
 	return fieldsContent, ""
 }
 
+func (c pageUpdateController) fieldsMiddlewares(data pageUpdateControllerData) []form.FieldInterface {
+	fieldMiddlewares := form.NewRepeater(form.RepeaterOptions{
+		Label: "Middlewares",
+		Name:  "page_middlewares",
+		Fields: []form.FieldInterface{
+			form.NewField(form.FieldOptions{
+				Label: "Middleware",
+				Name:  "page_middleware",
+				Type:  form.FORM_FIELD_TYPE_STRING,
+			}),
+		},
+		Values: lo.Map(data.formMiddlewares, func(middlewareName string, _ int) map[string]string {
+			return map[string]string{
+				"page_middlewares": middlewareName,
+			}
+		}),
+		RepeaterAddUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
+			"page_id": data.pageID,
+			"view":    VIEW_MIDDLEWARES,
+			"action":  ACTION_MIDDLEWARES_REPEATER_ADD,
+		}),
+		RepeaterRemoveUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
+			"page_id": data.pageID,
+			"view":    VIEW_MIDDLEWARES,
+			"action":  ACTION_MIDDLEWARES_REPEATER_DELETE,
+		}),
+		RepeaterMoveUpUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
+			"page_id": data.pageID,
+			"view":    VIEW_MIDDLEWARES,
+			"action":  ACTION_MIDDLEWARES_REPEATER_MOVE_UP,
+		}),
+		RepeaterMoveDownUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
+			"page_id": data.pageID,
+			"view":    VIEW_MIDDLEWARES,
+			"action":  ACTION_MIDDLEWARES_REPEATER_MOVE_DOWN,
+		}),
+	})
+
+	fieldView := &form.Field{
+		Label:    "View",
+		Name:     "view",
+		Type:     form.FORM_FIELD_TYPE_HIDDEN,
+		Value:    VIEW_MIDDLEWARES,
+		Readonly: true,
+	}
+
+	return []form.FieldInterface{
+		fieldMiddlewares,
+		fieldView, // required
+	}
+}
+
 func (c pageUpdateController) fieldsSettings(data pageUpdateControllerData) []form.FieldInterface {
 	fieldEditor := &form.Field{
 		Label: "Editor",
@@ -795,7 +884,7 @@ func (c pageUpdateController) fieldsSettings(data pageUpdateControllerData) []fo
 		fieldSiteID,
 		fieldMemo,
 		fieldPageID,
-		fieldView,
+		fieldView, // required
 	}
 
 	return fieldsSettings
@@ -816,6 +905,7 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 	data.formSiteID = utils.Req(r, "page_site_id", "")
 	data.formTitle = utils.Req(r, "page_title", "")
 	data.formTemplateID = utils.Req(r, "page_template_id", "")
+	data.formMiddlewares = controller.requestMapToMiddlewares(r)
 
 	if data.view == VIEW_SETTINGS {
 		if data.formStatus == "" {
@@ -829,6 +919,15 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 			data.formErrorMessage = "Title is required"
 			return data, ""
 		}
+	}
+
+	if data.view == VIEW_MIDDLEWARES {
+		json, err := utils.ToJSON(data.formMiddlewares)
+		if err != nil {
+			data.formErrorMessage = "Could not save middlewares"
+			return data, ""
+		}
+		data.page.SetMeta("middlewares", json)
 	}
 
 	if data.view == VIEW_SETTINGS {
@@ -1002,9 +1101,9 @@ func (controller pageUpdateController) movePageBlocks(request *http.Request, pag
 // - errorMessage string - the error message, or emty string if no error
 func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (data pageUpdateControllerData, errorMessage string) {
 	data.request = r
-	data.action = utils.Req(r, "action", "")
-	data.pageID = utils.Req(r, "page_id", "")
-	data.view = utils.Req(r, "view", VIEW_CONTENT)
+	data.action = req.ValueOr(r, "action", "")
+	data.pageID = req.ValueOr(r, "page_id", "")
+	data.view = req.ValueOr(r, "view", VIEW_CONTENT)
 
 	if data.view == "" {
 		data.view = VIEW_CONTENT
@@ -1039,6 +1138,15 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	data.formStatus = data.page.Status()
 	data.formTemplateID = data.page.TemplateID()
 	data.formTitle = data.page.Title()
+	m, err := utils.FromJSON(data.page.Meta("middlewares"), []string{})
+
+	if err == nil {
+		m = []string{}
+	}
+
+	if m != nil {
+		data.formMiddlewares = m.([]string)
+	}
 
 	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
@@ -1066,7 +1174,69 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 		return data, ""
 	}
 
+	data.formMiddlewares = controller.requestMapToMiddlewares(r)
+
+	if data.action == ACTION_MIDDLEWARES_REPEATER_ADD {
+		data.formMiddlewares = append(data.formMiddlewares, "")
+		return data, ""
+	}
+
+	if data.action == ACTION_MIDDLEWARES_REPEATER_DELETE {
+		repeatableRemoveIndex := utils.Req(r, "repeatable_remove_index", "")
+
+		if repeatableRemoveIndex == "" {
+			return data, ""
+		}
+
+		data.formMiddlewares = slices.Delete(data.formMiddlewares, cast.ToInt(repeatableRemoveIndex), cast.ToInt(repeatableRemoveIndex)+1)
+
+		return data, ""
+	}
+
+	if data.action == ACTION_MIDDLEWARES_REPEATER_MOVE_UP {
+		repeatableMoveUpIndex := cast.ToInt(utils.Req(r, "repeatable_move_up_index", ""))
+
+		if repeatableMoveUpIndex == 0 {
+			return data, ""
+		}
+
+		current := data.formMiddlewares[repeatableMoveUpIndex]
+		upper := data.formMiddlewares[repeatableMoveUpIndex-1]
+
+		data.formMiddlewares[repeatableMoveUpIndex] = upper
+		data.formMiddlewares[repeatableMoveUpIndex-1] = current
+
+		return data, ""
+	}
+
+	if data.action == ACTION_MIDDLEWARES_REPEATER_MOVE_DOWN {
+		repeatableMoveDownIndex := cast.ToInt(utils.Req(r, "repeatable_move_down_index", ""))
+
+		if repeatableMoveDownIndex == len(data.formMiddlewares)-1 {
+			return data, ""
+		}
+
+		current := data.formMiddlewares[repeatableMoveDownIndex]
+		lower := data.formMiddlewares[repeatableMoveDownIndex+1]
+
+		data.formMiddlewares[repeatableMoveDownIndex] = lower
+		data.formMiddlewares[repeatableMoveDownIndex+1] = current
+
+		return data, ""
+	}
+
 	return controller.savePage(r, data)
+}
+
+func (controller pageUpdateController) requestMapToMiddlewares(r *http.Request) []string {
+	formMiddlewares := req.Maps(r, "page_middlewares", []map[string]string{})
+	middlewares := []string{}
+
+	for _, formMiddleware := range formMiddlewares {
+		middlewares = append(middlewares, formMiddleware["page_middleware"])
+	}
+
+	return middlewares
 }
 
 type pageUpdateControllerData struct {
@@ -1091,6 +1261,7 @@ type pageUpdateControllerData struct {
 	formMetaDescription string
 	formMetaKeywords    string
 	formMetaRobots      string
+	formMiddlewares     []string
 	formSiteID          string
 	formStatus          string
 	formTemplateID      string
