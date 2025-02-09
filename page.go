@@ -1,6 +1,8 @@
 package cmsstore
 
 import (
+	"strings"
+
 	"github.com/dromara/carbon/v2"
 	"github.com/gouniverse/dataobject"
 	"github.com/gouniverse/maputils"
@@ -35,6 +37,8 @@ func NewPage() PageInterface {
 	o.SetMetaKeywords("")
 	o.SetMetaRobots("")
 	o.SetMetas(map[string]string{})
+	o.SetMiddlewaresAfter([]string{})
+	o.SetMiddlewaresBefore([]string{})
 	o.SetName("")
 	o.SetStatus(PAGE_STATUS_DRAFT)
 	o.SetTemplateID("")
@@ -249,6 +253,36 @@ func (o *page) UpsertMetas(metas map[string]string) error {
 	}
 
 	return o.SetMetas(currentMetas)
+}
+
+func (o *page) MiddlewaresBefore() []string {
+	s := o.Get(COLUMN_MIDDLEWARES_BEFORE)
+	if s == "" {
+		return []string{}
+	}
+
+	return strings.Split(s, ",")
+}
+
+func (o *page) SetMiddlewaresBefore(middlewaresBefore []string) PageInterface {
+	s := strings.Join(middlewaresBefore, ",")
+	o.Set(COLUMN_MIDDLEWARES_BEFORE, s)
+	return o
+}
+
+func (o *page) MiddlewaresAfter() []string {
+	s := o.Get(COLUMN_MIDDLEWARES_AFTER)
+	if s == "" {
+		return []string{}
+	}
+
+	return strings.Split(s, ",")
+}
+
+func (o *page) SetMiddlewaresAfter(middlewaresAfter []string) PageInterface {
+	s := strings.Join(middlewaresAfter, ",")
+	o.Set(COLUMN_MIDDLEWARES_AFTER, s)
+	return o
 }
 
 func (o *page) Name() string {

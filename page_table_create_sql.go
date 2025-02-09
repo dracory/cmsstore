@@ -79,6 +79,14 @@ func (st *store) pageTableCreateSql() string {
 			Length: 40,
 		}).
 		Column(sb.Column{
+			Name: COLUMN_MIDDLEWARES_AFTER,
+			Type: sb.COLUMN_TYPE_TEXT,
+		}).
+		Column(sb.Column{
+			Name: COLUMN_MIDDLEWARES_BEFORE,
+			Type: sb.COLUMN_TYPE_TEXT,
+		}).
+		Column(sb.Column{
 			Name: COLUMN_METAS,
 			Type: sb.COLUMN_TYPE_TEXT,
 		}).

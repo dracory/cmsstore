@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 
 	// "github.com/gouniverse/cms/types"
 	"github.com/gouniverse/cmsstore"
@@ -17,6 +16,7 @@ import (
 	"github.com/gouniverse/ui"
 	"github.com/gouniverse/utils"
 	"github.com/jellydator/ttlcache/v3"
+	"github.com/mingrammer/cfmt"
 	"github.com/samber/lo"
 )
 
@@ -32,47 +32,6 @@ type frontend struct {
 
 var _ FrontendInterface = (*frontend)(nil)
 
-func (frontend *frontend) CacheHas(key string) bool {
-	if !frontend.cacheEnabled {
-		return false
-	}
-
-	if frontend.cache == nil {
-		return false
-	}
-
-	return frontend.cache.Has(key)
-}
-
-func (frontend *frontend) CacheGet(key string) any {
-	if !frontend.cacheEnabled {
-		return nil
-	}
-
-	if frontend.cache == nil {
-		return nil
-	}
-
-	item := frontend.cache.Get(key)
-
-	if item == nil {
-		return nil
-	}
-
-	return item.Value()
-}
-
-func (frontend *frontend) CacheSet(key string, value any, expireSeconds int) {
-	if !frontend.cacheEnabled {
-		return
-	}
-
-	if frontend.cache == nil {
-		return
-	}
-	frontend.cache.Set(key, value, time.Duration(expireSeconds)*time.Second)
-}
-
 // Handler is the main handler for the CMS frontend.
 //
 // It handles the routing of the request to the appropriate page.
@@ -82,14 +41,6 @@ func (frontend *frontend) CacheSet(key string, value any, expireSeconds int) {
 // it's not present in the HTML.
 func (frontend *frontend) Handler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(frontend.StringHandler(w, r)))
-}
-
-func (frontend *frontend) warmUpCache() error {
-	frontend.fetchActiveSites(context.Background())
-	for range time.Tick(time.Second * 60) {
-		frontend.warmUpCache()
-	}
-	return nil
 }
 
 // FrontendHandlerRenderAsString is the same as FrontendHandler but returns a string
@@ -137,7 +88,7 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 
 	calculatedPath := strings.TrimPrefix(domain+path, siteEnpoint)
 
-	return frontend.PageRenderHtmlBySiteAndAlias(r, site.ID(), calculatedPath, language)
+	return frontend.PageRenderHtmlBySiteAndAlias(w, r, site.ID(), calculatedPath, language)
 }
 
 // fetchBlockContent returns the content of the block specified by the ID
@@ -193,13 +144,13 @@ func (frontend *frontend) fetchBlockContent(ctx context.Context, blockID string)
 }
 
 func (frontend *frontend) fetchPageAliasMapBySite(ctx context.Context, siteID string) (map[string]string, error) {
-	key := "page_alias_map_site:" + siteID
+	cacheKey := "page_alias_map_site:" + siteID
 
-	if frontend.CacheHas(key) {
-		pageAliasMap := frontend.CacheGet(key)
+	if frontend.CacheHas(cacheKey) {
+		pageAliasMap := frontend.CacheGet(cacheKey)
 
 		if pageAliasMap == nil {
-			return map[string]string{}, nil
+			return map[string]string{}, nil // cache value is nil
 		}
 
 		return pageAliasMap.(map[string]string), nil
@@ -207,7 +158,7 @@ func (frontend *frontend) fetchPageAliasMapBySite(ctx context.Context, siteID st
 
 	pages, err := frontend.store.PageList(ctx, cmsstore.PageQuery().
 		SetSiteID(siteID).
-		SetColumns([]string{"id", "alias"}))
+		SetColumns([]string{cmsstore.COLUMN_ID, cmsstore.COLUMN_ALIAS}))
 
 	if err != nil {
 		return nil, err
@@ -219,19 +170,19 @@ func (frontend *frontend) fetchPageAliasMapBySite(ctx context.Context, siteID st
 		pageAliasMap[page.ID()] = page.Alias()
 	}
 
-	frontend.CacheSet(key, pageAliasMap, frontend.cacheExpireSeconds)
+	frontend.CacheSet(cacheKey, pageAliasMap, frontend.cacheExpireSeconds)
 
 	return pageAliasMap, nil
 }
 
 func (frontend *frontend) fetchPageBySiteAndAlias(ctx context.Context, siteID string, alias string) (cmsstore.PageInterface, error) {
-	key := "page_site:" + siteID + ":alias:" + alias
+	cacheKey := "page_site:" + siteID + ":alias:" + alias
 
-	if frontend.CacheHas(key) {
-		page := frontend.CacheGet(key)
+	if frontend.CacheHas(cacheKey) {
+		page := frontend.CacheGet(cacheKey)
 
 		if page == nil {
-			return nil, nil
+			return nil, nil // cache value is nil
 		}
 
 		return page.(cmsstore.PageInterface), nil
@@ -252,16 +203,18 @@ func (frontend *frontend) fetchPageBySiteAndAlias(ctx context.Context, siteID st
 		page = pages[0]
 	}
 
-	frontend.CacheSet(key, page, frontend.cacheExpireSeconds)
+	frontend.CacheSet(cacheKey, page, frontend.cacheExpireSeconds)
 
 	return page, nil
 }
 
+// fetchActiveSites fetches the active sites from the database and stores them
+// in the cache to avoid an extra database query every time this method is called
 func (frontend *frontend) fetchActiveSites(ctx context.Context) ([]cmsstore.SiteInterface, error) {
-	key := "sites_active"
+	cacheKey := "sites_active"
 
-	if frontend.CacheHas(key) {
-		sites := frontend.CacheGet(key)
+	if frontend.CacheHas(cacheKey) {
+		sites := frontend.CacheGet(cacheKey)
 
 		if sites == nil {
 			return []cmsstore.SiteInterface{}, nil
@@ -275,11 +228,11 @@ func (frontend *frontend) fetchActiveSites(ctx context.Context) ([]cmsstore.Site
 		SetColumns([]string{cmsstore.COLUMN_ID, cmsstore.COLUMN_DOMAIN_NAMES}))
 
 	if err != nil {
-		frontend.CacheSet(key, []cmsstore.SiteInterface{}, 10) // 10 seconds only, error
+		frontend.CacheSet(cacheKey, []cmsstore.SiteInterface{}, 10) // 10 seconds only, error
 		return nil, err
 	}
 
-	frontend.CacheSet(key, sites, frontend.cacheExpireSeconds)
+	frontend.CacheSet(cacheKey, sites, frontend.cacheExpireSeconds)
 
 	return sites, nil
 }
@@ -362,72 +315,52 @@ func (frontend *frontend) findSiteAndEndpointByDomainAndPath(ctx context.Context
 	return nil, "", nil
 }
 
-// fetchSiteByDomainNameV1 fetches a site by domain name
-// returns the site or an error
-// DEPRECATED. Only supported regular domains and subdomains, not subdirectories
-// func (frontend *frontend) fetchSiteByDomainNameV1(domain string) (cmsstore.SiteInterface, error) {
-// 	key := "site_domain:" + domain
-
-// 	if frontend.CacheHas(key) {
-// 		site := frontend.CacheGet(key)
-
-// 		if site == nil {
-// 			return nil, nil
-// 		}
-
-// 		return site.(cmsstore.SiteInterface), nil
-// 	}
-
-// 	site, err := frontend.store.SiteFindByDomainName(domain)
-
-// 	if err != nil {
-// 		frontend.CacheSet(key, nil, 10) // 10 seconds only, error
-// 		return nil, err
-// 	}
-
-// 	frontend.CacheSet(key, site, frontend.cacheExpireSeconds)
-
-// 	return site, err
-// }
-
-// PageRenderHtmlByAlias builds the HTML of a page based on its alias
-func (frontend *frontend) PageRenderHtmlBySiteAndAlias(request *http.Request, siteID string, alias string, language string) string {
-	page, err := frontend.pageFindBySiteAndAlias(request.Context(), siteID, alias)
-
+// PageRenderHtmlBySiteAndAlias generates and returns the HTML content of a page identified by its alias and site ID.
+//
+// It follows these steps:
+// 1. Fetch the page by site ID and alias.
+// 2. If the page is not found, log an error and return a "not found" message.
+// 3. Retrieve page attributes such as content, metadata, and editor type.
+// 4. If the page uses the block editor, convert its JSON content to HTML.
+// 5. Retrieve applicable middlewares from the page metadata.
+// 6. If a template is associated with the page, fetch and apply it.
+// 7. Render the final HTML using the collected page data.
+// 8. Apply middlewares to the rendered HTML and return the final output.
+//
+// Errors encountered during page retrieval, template fetching, or HTML rendering are logged appropriately.
+//
+// Parameters:
+// - w (http.ResponseWriter): The HTTP response writer.
+// - r (*http.Request): The HTTP request.
+// - siteID (string): The ID of the site where the page is located.
+// - alias (string): The unique alias used to identify the page within the site.
+// - language (string): The language code for rendering language-specific content.
+//
+// Returns:
+// - string: The fully rendered HTML of the page, including templates and middleware transformations.
+func (frontend *frontend) PageRenderHtmlBySiteAndAlias(w http.ResponseWriter, r *http.Request, siteID, alias, language string) string {
+	// Attempt to find the page by site ID and alias.
+	page, err := frontend.pageFindBySiteAndAlias(r.Context(), siteID, alias)
 	if err != nil {
-		frontend.logger.Error(`At PageRenderHtmlByAlias`, "error", err.Error())
-		return hb.NewDiv().
-			Text(`Page with alias '`).Text(alias).Text(`' not found`).
-			ToHTML()
+		frontend.logger.Error("PageRenderHtmlBySiteAndAlias: Error finding page", "alias", alias, "error", err)
+		return hb.NewDiv().Text("Error loading page").ToHTML()
 	}
-
 	if page == nil {
-		return hb.NewDiv().
-			Text(`Page with alias '`).Text(alias).Text(`' not found`).
-			ToHTML()
+		frontend.logger.Warn("PageRenderHtmlBySiteAndAlias: Page not found", "alias", alias)
+		return hb.NewDiv().Text("Page with alias '").Text(alias).Text("' not found").ToHTML()
 	}
 
+	// Retrieve page content and determine if block editor transformation is needed.
 	pageContent := page.Content()
-	pageTitle := page.Title()
-	pageMetaKeywords := page.MetaKeywords()
-	pageMetaDescription := page.MetaDescription()
-	pageMetaRobots := page.MetaRobots()
-	pageCanonicalURL := page.CanonicalUrl()
-	pageEditor := page.Editor()
-	pageTemplateID := page.TemplateID()
-
-	if pageEditor == cmsstore.PAGE_EDITOR_BLOCKEDITOR {
+	if page.Editor() == cmsstore.PAGE_EDITOR_BLOCKEDITOR {
 		pageContent = frontend.convertBlockJsonToHtml(pageContent)
 	}
 
-	if pageTemplateID == "" {
-		return pageContent
-	}
-
-	finalContent := lo.If(pageTemplateID == "", pageContent).ElseF(func() string {
-		template, err := frontend.store.TemplateFindByID(request.Context(), pageTemplateID)
+	// Determine if a template is associated with the page and apply it.
+	finalContent := lo.If(page.TemplateID() == "", pageContent).ElseF(func() string {
+		template, err := frontend.store.TemplateFindByID(r.Context(), page.TemplateID())
 		if err != nil {
-			frontend.logger.Error(`At PageRenderHtmlByAlias`, "error", err.Error())
+			frontend.logger.Error("PageRenderHtmlBySiteAndAlias: Template load error", "templateID", page.TemplateID(), "error", err)
 			return pageContent
 		}
 
@@ -438,7 +371,8 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(request *http.Request, si
 		return template.Content()
 	})
 
-	html, err := frontend.renderContentToHtml(request, finalContent, struct {
+	// Collect metadata to be passed into the template.
+	pageData := struct {
 		PageContent         string
 		PageCanonicalURL    string
 		PageMetaDescription string
@@ -448,19 +382,45 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(request *http.Request, si
 		Language            string
 	}{
 		PageContent:         pageContent,
-		PageCanonicalURL:    pageCanonicalURL,
-		PageMetaDescription: pageMetaDescription,
-		PageMetaKeywords:    pageMetaKeywords,
-		PageMetaRobots:      pageMetaRobots,
-		PageTitle:           pageTitle,
-	})
-
-	if err != nil {
-		frontend.logger.Error(`At PageRenderHtmlByAlias`, "error", err.Error())
-		return hb.NewDiv().Text(`error occurred`).ToHTML()
+		PageCanonicalURL:    page.CanonicalUrl(),
+		PageMetaDescription: page.MetaDescription(),
+		PageMetaKeywords:    page.MetaKeywords(),
+		PageMetaRobots:      page.MetaRobots(),
+		PageTitle:           page.Title(),
+		Language:            language,
 	}
 
-	return html
+	// Render the final HTML output based on the collected page data.
+	html, err := frontend.renderContentToHtml(r, finalContent, pageData)
+	if err != nil {
+		frontend.logger.Error("PageRenderHtmlBySiteAndAlias: Rendering error", "error", err)
+		return hb.NewDiv().Text("Error occurred").ToHTML()
+	}
+
+	pageMiddlewaresBefore := page.MiddlewaresBefore()
+	pageMiddlewaresAfter := page.MiddlewaresAfter()
+
+	// Apply middleware transformations to the rendered HTML before returning the final result.
+	return frontend.applyMiddlewares(w, r, html, pageMiddlewaresBefore, pageMiddlewaresAfter)
+}
+
+func (frontend *frontend) pageMiddlewaresFromMeta(page cmsstore.PageInterface) []string {
+	meta := page.Meta("middlewares")
+
+	if meta == "" {
+		return []string{}
+	}
+
+	m, err := utils.FromJSON(page.Meta("middlewares"), []string{})
+
+	if err != nil {
+		cfmt.Error(err)
+		return []string{}
+	}
+
+	return lo.Map(m.([]interface{}), func(v interface{}, _ int) string {
+		return v.(string)
+	})
 }
 
 func (frontend *frontend) convertBlockJsonToHtml(blocksJson string) string {

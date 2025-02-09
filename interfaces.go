@@ -247,6 +247,12 @@ type PageInterface interface {
 	SetMetas(metas map[string]string) error
 	UpsertMetas(metas map[string]string) error
 
+	MiddlewaresBefore() []string
+	SetMiddlewaresBefore(middlewaresBefore []string) PageInterface
+
+	MiddlewaresAfter() []string
+	SetMiddlewaresAfter(middlewaresAfter []string) PageInterface
+
 	Name() string
 	SetName(name string) PageInterface
 
