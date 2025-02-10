@@ -192,6 +192,30 @@ func (store *store) TranslationFindByID(ctx context.Context, id string) (transla
 	return nil, nil
 }
 
+func (store *store) TranslationFindByHandleOrID(ctx context.Context, handleOrID string, language string) (translation TranslationInterface, err error) {
+	if store.db == nil {
+		return nil, errors.New("cmsstore: database is nil")
+	}
+
+	if handleOrID == "" {
+		return nil, errors.New("translation id is empty")
+	}
+
+	list, err := store.TranslationList(ctx, TranslationQuery().
+		SetHandleOrID(handleOrID).
+		SetLimit(1))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(list) > 0 {
+		return list[0], nil
+	}
+
+	return nil, nil
+}
+
 func (store *store) TranslationLanguageDefault() string {
 	return store.translationLanguageDefault
 }
@@ -348,6 +372,13 @@ func (store *store) translationSelectQuery(options TranslationQueryInterface) (s
 
 	if options.HasHandle() {
 		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
+	}
+
+	if options.HasHandleOrID() {
+		q = q.Where(
+			goqu.C(COLUMN_HANDLE).Eq(options.HandleOrID()),
+			goqu.C(COLUMN_ID).Eq(options.HandleOrID()),
+		)
 	}
 
 	if options.HasID() {

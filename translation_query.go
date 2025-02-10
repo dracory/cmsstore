@@ -23,6 +23,14 @@ func (q *translationQuery) Validate() error {
 		return errors.New("translation query. created_at_lte cannot be empty")
 	}
 
+	if q.HasHandle() && q.Handle() == "" {
+		return errors.New("translation query. handle cannot be empty")
+	}
+
+	if q.HasHandleOrID() && q.HandleOrID() == "" {
+		return errors.New("translation query. handle_or_id cannot be empty")
+	}
+
 	if q.HasID() && q.ID() == "" {
 		return errors.New("translation query. id cannot be empty")
 	}
@@ -128,6 +136,19 @@ func (q *translationQuery) Handle() string {
 
 func (q *translationQuery) SetHandle(handle string) TranslationQueryInterface {
 	q.properties["handle"] = handle
+	return q
+}
+
+func (q *translationQuery) HasHandleOrID() bool {
+	return q.hasProperty("handle_or_id")
+}
+
+func (q *translationQuery) HandleOrID() string {
+	return q.properties["handle_or_id"].(string)
+}
+
+func (q *translationQuery) SetHandleOrID(handleOrID string) TranslationQueryInterface {
+	q.properties["handle_or_id"] = handleOrID
 	return q
 }
 

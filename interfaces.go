@@ -406,6 +406,7 @@ type StoreInterface interface {
 	TranslationDelete(ctx context.Context, translation TranslationInterface) error
 	TranslationDeleteByID(ctx context.Context, id string) error
 	TranslationFindByHandle(ctx context.Context, translationHandle string) (TranslationInterface, error)
+	TranslationFindByHandleOrID(ctx context.Context, translationHandleOrID string, language string) (TranslationInterface, error)
 	TranslationFindByID(ctx context.Context, translationID string) (TranslationInterface, error)
 	TranslationList(ctx context.Context, query TranslationQueryInterface) ([]TranslationInterface, error)
 	TranslationSoftDelete(ctx context.Context, translation TranslationInterface) error

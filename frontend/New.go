@@ -10,10 +10,10 @@ import (
 type Config struct {
 	BlockEditorRenderer func(blocks []ui.BlockInterface) string
 	Logger              *slog.Logger
-	Shortcodes          []cmsstore.ShortcodeInterface
-	Store               cmsstore.StoreInterface
-	CacheEnabled        bool
-	CacheExpireSeconds  int
+	// Shortcodes          []cmsstore.ShortcodeInterface
+	Store              cmsstore.StoreInterface
+	CacheEnabled       bool
+	CacheExpireSeconds int
 }
 
 func New(config Config) FrontendInterface {
@@ -24,10 +24,10 @@ func New(config Config) FrontendInterface {
 	frontend := frontend{
 		blockEditorRenderer: config.BlockEditorRenderer,
 		logger:              config.Logger,
-		shortcodes:          config.Shortcodes,
-		store:               config.Store,
-		cacheEnabled:        config.CacheEnabled,
-		cacheExpireSeconds:  config.CacheExpireSeconds,
+		// shortcodes:          config.Shortcodes,
+		store:              config.Store,
+		cacheEnabled:       config.CacheEnabled,
+		cacheExpireSeconds: config.CacheExpireSeconds,
 	}
 
 	if config.CacheEnabled {

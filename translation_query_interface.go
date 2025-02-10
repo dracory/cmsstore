@@ -22,6 +22,10 @@ type TranslationQueryInterface interface {
 	Handle() string
 	SetHandle(handle string) TranslationQueryInterface
 
+	HasHandleOrID() bool
+	HandleOrID() string
+	SetHandleOrID(handleOrID string) TranslationQueryInterface
+
 	HasID() bool
 	ID() string
 	SetID(id string) TranslationQueryInterface

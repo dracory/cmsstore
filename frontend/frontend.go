@@ -44,7 +44,7 @@ func (frontend *frontend) Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 // FrontendHandlerRenderAsString is the same as FrontendHandler but returns a string
-// instead of writing to the http.ResponseWriter.
+// instead of writing to the http.ResponseWriter directly.
 //
 // It handles the routing of the request to the appropriate page.
 //
@@ -339,69 +339,67 @@ func (frontend *frontend) findSiteAndEndpointByDomainAndPath(ctx context.Context
 // Returns:
 // - string: The fully rendered HTML of the page, including templates and middleware transformations.
 func (frontend *frontend) PageRenderHtmlBySiteAndAlias(w http.ResponseWriter, r *http.Request, siteID, alias, language string) string {
-	// Attempt to find the page by site ID and alias.
 	page, err := frontend.pageFindBySiteAndAlias(r.Context(), siteID, alias)
+
 	if err != nil {
 		frontend.logger.Error("PageRenderHtmlBySiteAndAlias: Error finding page", "alias", alias, "error", err)
 		return hb.NewDiv().Text("Error loading page").ToHTML()
 	}
+
 	if page == nil {
 		frontend.logger.Warn("PageRenderHtmlBySiteAndAlias: Page not found", "alias", alias)
 		return hb.NewDiv().Text("Page with alias '").Text(alias).Text("' not found").ToHTML()
 	}
 
-	// Retrieve page content and determine if block editor transformation is needed.
-	pageContent := page.Content()
-	if page.Editor() == cmsstore.PAGE_EDITOR_BLOCKEDITOR {
-		pageContent = frontend.convertBlockJsonToHtml(pageContent)
-	}
+	finalContent := frontend.pageOrTemplateContent(r, page)
 
-	// Determine if a template is associated with the page and apply it.
-	finalContent := lo.If(page.TemplateID() == "", pageContent).ElseF(func() string {
-		template, err := frontend.store.TemplateFindByID(r.Context(), page.TemplateID())
-		if err != nil {
-			frontend.logger.Error("PageRenderHtmlBySiteAndAlias: Template load error", "templateID", page.TemplateID(), "error", err)
-			return pageContent
-		}
-
-		if template == nil {
-			return pageContent
-		}
-
-		return template.Content()
-	})
-
-	// Collect metadata to be passed into the template.
-	pageData := struct {
-		PageContent         string
-		PageCanonicalURL    string
-		PageMetaDescription string
-		PageMetaKeywords    string
-		PageMetaRobots      string
-		PageTitle           string
-		Language            string
-	}{
-		PageContent:         pageContent,
+	html, err := frontend.renderContentToHtml(r, finalContent, TemplateRenderHtmlByIDOptions{
+		Language:            language,
+		PageContent:         page.Content(),
 		PageCanonicalURL:    page.CanonicalUrl(),
 		PageMetaDescription: page.MetaDescription(),
 		PageMetaKeywords:    page.MetaKeywords(),
 		PageMetaRobots:      page.MetaRobots(),
 		PageTitle:           page.Title(),
-		Language:            language,
-	}
+	})
 
-	// Render the final HTML output based on the collected page data.
-	html, err := frontend.renderContentToHtml(r, finalContent, pageData)
 	if err != nil {
 		frontend.logger.Error("PageRenderHtmlBySiteAndAlias: Rendering error", "error", err)
 		return hb.NewDiv().Text("Error occurred").ToHTML()
 	}
 
-	pageMiddlewaresBefore := page.MiddlewaresBefore()
-	pageMiddlewaresAfter := page.MiddlewaresAfter()
+	// Add page to the context
+	r = r.WithContext(context.WithValue(r.Context(), "page", page))
 
 	// Apply middleware transformations to the rendered HTML before returning the final result.
-	return frontend.applyMiddlewares(w, r, html, pageMiddlewaresBefore, pageMiddlewaresAfter)
+	return frontend.applyMiddlewares(w, r, html, page.MiddlewaresBefore(), page.MiddlewaresAfter())
+}
+
+func (frontend *frontend) pageOrTemplateContent(r *http.Request, page cmsstore.PageInterface) (pageContent string) {
+	pageContent = page.Content()
+
+	if page.Editor() == cmsstore.PAGE_EDITOR_BLOCKEDITOR {
+		pageContent = frontend.convertBlockJsonToHtml(pageContent)
+	}
+
+	if page.TemplateID() == "" {
+		return pageContent
+	}
+
+	// Fetch the template associated with the page.
+	template, err := frontend.store.TemplateFindByID(r.Context(), page.TemplateID())
+
+	if err != nil {
+		frontend.logger.Error("PageRenderHtmlBySiteAndAlias: Template load error", "templateID", page.TemplateID(), "error", err)
+		return "error loading template"
+	}
+
+	// If the template is not found, return the page content as is.
+	if template == nil {
+		return pageContent
+	}
+
+	return template.Content()
 }
 
 func (frontend *frontend) pageMiddlewaresFromMeta(page cmsstore.PageInterface) []string {
@@ -458,16 +456,12 @@ func (frontend *frontend) convertBlockJsonToHtml(blocksJson string) string {
 // Returns:
 // - html: the rendered HTML
 // - err: the error, if any, or nil otherwise
-func (frontend *frontend) renderContentToHtml(r *http.Request, content string, options struct {
-	PageContent         string
-	PageCanonicalURL    string
-	PageMetaDescription string
-	PageMetaKeywords    string
-	PageMetaRobots      string
-	PageTitle           string
-	Language            string
-}) (html string, err error) {
-	replacements := map[string]string{
+func (frontend *frontend) renderContentToHtml(
+	r *http.Request,
+	content string,
+	options TemplateRenderHtmlByIDOptions,
+) (html string, err error) {
+	replacementsKeywords := map[string]string{
 		"PageContent":         options.PageContent,
 		"PageCanonicalUrl":    options.PageCanonicalURL,
 		"PageMetaDescription": options.PageMetaDescription,
@@ -476,9 +470,9 @@ func (frontend *frontend) renderContentToHtml(r *http.Request, content string, o
 		"PageTitle":           options.PageTitle,
 	}
 
-	for key, value := range replacements {
-		content = strings.ReplaceAll(content, "[["+key+"]]", value)
-		content = strings.ReplaceAll(content, "[[ "+key+" ]]", value)
+	for keyWord, value := range replacementsKeywords {
+		content = strings.ReplaceAll(content, "[["+keyWord+"]]", value)
+		content = strings.ReplaceAll(content, "[[ "+keyWord+" ]]", value)
 	}
 
 	content, err = frontend.contentRenderBlocks(r.Context(), content)
@@ -495,7 +489,7 @@ func (frontend *frontend) renderContentToHtml(r *http.Request, content string, o
 
 	language := lo.If(options.Language == "", "en").Else(options.Language)
 
-	content, err = frontend.contentRenderTranslations(content, language)
+	content, err = frontend.contentRenderTranslations(r.Context(), content, language)
 
 	if err != nil {
 		return "", err
@@ -620,7 +614,7 @@ func (frontend *frontend) contentRenderBlocks(ctx context.Context, content strin
 }
 
 // contentRenderTranslations renders the translations in a string
-func (frontend *frontend) contentRenderTranslations(content string, language string) (string, error) {
+func (frontend *frontend) contentRenderTranslations(ctx context.Context, content string, language string) (string, error) {
 	translationIDs := contentFindIdsByPatternPrefix(content, "TRANSLATION")
 
 	if len(translationIDs) == 0 {
@@ -629,7 +623,7 @@ func (frontend *frontend) contentRenderTranslations(content string, language str
 
 	var err error
 	for _, translationID := range translationIDs {
-		content, err = frontend.ContentRenderTranslationByIdOrHandle(content, translationID, language)
+		content, err = frontend.ContentRenderTranslationByHandleOrId(ctx, content, translationID, language)
 
 		if err != nil {
 			return content, err
@@ -705,27 +699,31 @@ func (frontend *frontend) ContentRenderShortcodes(req *http.Request, content str
 	return content, nil
 }
 
-// ContentRenderTranslationByIdOrHandle renders the translation specified by the ID in a content
+// ContentRenderTranslationByHandleOrId renders the translation specified by the ID in a content
 // if the blockID is empty or not found the initial content is returned
-func (frontend *frontend) ContentRenderTranslationByIdOrHandle(content string, translationID string, language string) (string, error) {
+func (frontend *frontend) ContentRenderTranslationByHandleOrId(ctx context.Context, content string, translationID string, language string) (string, error) {
+	if translationID == "" {
+		return content, nil
+	}
+
+	translation, err := frontend.store.TranslationFindByHandleOrID(ctx, translationID, language)
+
+	if err != nil {
+		return "", err
+	}
+
+	translationMap, err := translation.Content()
+
+	if err != nil {
+		return "", err
+	}
+
+	languageTranslation := lo.ValueOr(translationMap, language, "")
+
+	content = strings.ReplaceAll(content, "[[TRANSLATION_"+translationID+"]]", languageTranslation)
+	content = strings.ReplaceAll(content, "[[ TRANSLATION_"+translationID+" ]]", languageTranslation)
+
 	return content, nil
-
-	// Will be implemented once translations are transferred
-
-	// if translationID == "" {
-	// 	return content, nil
-	// }
-
-	// translation, err := frontend.store.TranslationFindByIdOrHandle(translationID, language)
-
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	// content = strings.ReplaceAll(content, "[[TRANSLATION_"+translationID+"]]", translation)
-	// content = strings.ReplaceAll(content, "[[ TRANSLATION_"+translationID+" ]]", translation)
-
-	// return content, nil
 }
 
 // TemplateRenderHtmlByID builds the HTML of a template based on its ID

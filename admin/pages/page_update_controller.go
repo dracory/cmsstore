@@ -30,10 +30,15 @@ const VIEW_MIDDLEWARES = "middlewares"
 const VIEW_SEO = "seo"
 const ACTION_BLOCKEDITOR_HANDLE = "blockeditor_handle"
 const ACTION_VERSION_HISTORY_SHOW = "action_version_history_show"
+const ACTION_MIDDLEWARES_BEFORE_REPEATER_ADD = "action_middlewares_before_repeater_add"
+const ACTION_MIDDLEWARES_BEFORE_REPEATER_DELETE = "action_middlewares_before_repeater_delete"
+const ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_UP = "action_middlewares_before_repeater_move_up"
+const ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_DOWN = "action_middlewares_before_repeater_move_down"
+const ACTION_MIDDLEWARES_AFTER_REPEATER_ADD = "action_middlewares_after_repeater_add"
+const ACTION_MIDDLEWARES_AFTER_REPEATER_DELETE = "action_middlewares_after_repeater_delete"
+const ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_UP = "action_middlewares_after_repeater_move_up"
+const ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_DOWN = "action_middlewares_after_repeater_move_down"
 const ACTION_MIDDLEWARES_REPEATER_ADD = "action_middlewares_repeater_add"
-const ACTION_MIDDLEWARES_REPEATER_DELETE = "action_middlewares_repeater_delete"
-const ACTION_MIDDLEWARES_REPEATER_MOVE_UP = "action_middlewares_repeater_move_up"
-const ACTION_MIDDLEWARES_REPEATER_MOVE_DOWN = "action_middlewares_repeater_move_down"
 
 // == CONTROLLER ==============================================================
 
@@ -66,19 +71,35 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 	if data.action == ACTION_VERSION_HISTORY_SHOW {
 	}
 
-	if data.action == ACTION_MIDDLEWARES_REPEATER_ADD {
+	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_ADD {
 		return controller.form(data).ToHTML()
 	}
 
-	if data.action == ACTION_MIDDLEWARES_REPEATER_DELETE {
+	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_DELETE {
 		return controller.form(data).ToHTML()
 	}
 
-	if data.action == ACTION_MIDDLEWARES_REPEATER_MOVE_UP {
+	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_UP {
 		return controller.form(data).ToHTML()
 	}
 
-	if data.action == ACTION_MIDDLEWARES_REPEATER_MOVE_DOWN {
+	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_DOWN {
+		return controller.form(data).ToHTML()
+	}
+
+	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_ADD {
+		return controller.form(data).ToHTML()
+	}
+
+	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_DELETE {
+		return controller.form(data).ToHTML()
+	}
+
+	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_UP {
+		return controller.form(data).ToHTML()
+	}
+
+	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_DOWN {
 		return controller.form(data).ToHTML()
 	}
 
@@ -670,9 +691,9 @@ setTimeout(function () {
 }
 
 func (c pageUpdateController) fieldsMiddlewares(data pageUpdateControllerData) []form.FieldInterface {
-	fieldMiddlewares := form.NewRepeater(form.RepeaterOptions{
-		Label: "Middlewares",
-		Name:  "page_middlewares",
+	fieldMiddlewaresBefore := form.NewRepeater(form.RepeaterOptions{
+		Label: "Middlewares Executed Before Page Content",
+		Name:  "page_middlewares_before",
 		Fields: []form.FieldInterface{
 			form.NewField(form.FieldOptions{
 				Label: "Middleware",
@@ -680,7 +701,7 @@ func (c pageUpdateController) fieldsMiddlewares(data pageUpdateControllerData) [
 				Type:  form.FORM_FIELD_TYPE_STRING,
 			}),
 		},
-		Values: lo.Map(data.formMiddlewares, func(middlewareName string, _ int) map[string]string {
+		Values: lo.Map(data.formMiddlewaresBefore, func(middlewareName string, _ int) map[string]string {
 			return map[string]string{
 				"page_middleware": middlewareName,
 			}
@@ -688,22 +709,59 @@ func (c pageUpdateController) fieldsMiddlewares(data pageUpdateControllerData) [
 		RepeaterAddUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
 			"page_id": data.pageID,
 			"view":    VIEW_MIDDLEWARES,
-			"action":  ACTION_MIDDLEWARES_REPEATER_ADD,
+			"action":  ACTION_MIDDLEWARES_BEFORE_REPEATER_ADD,
 		}),
 		RepeaterRemoveUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
 			"page_id": data.pageID,
 			"view":    VIEW_MIDDLEWARES,
-			"action":  ACTION_MIDDLEWARES_REPEATER_DELETE,
+			"action":  ACTION_MIDDLEWARES_BEFORE_REPEATER_DELETE,
 		}),
 		RepeaterMoveUpUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
 			"page_id": data.pageID,
 			"view":    VIEW_MIDDLEWARES,
-			"action":  ACTION_MIDDLEWARES_REPEATER_MOVE_UP,
+			"action":  ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_UP,
 		}),
 		RepeaterMoveDownUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
 			"page_id": data.pageID,
 			"view":    VIEW_MIDDLEWARES,
-			"action":  ACTION_MIDDLEWARES_REPEATER_MOVE_DOWN,
+			"action":  ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_DOWN,
+		}),
+	})
+
+	formMiddlewaresAfter := form.NewRepeater(form.RepeaterOptions{
+		Label: "Middlewares Executed After Page Content",
+		Name:  "page_middlewares_after",
+		Fields: []form.FieldInterface{
+			form.NewField(form.FieldOptions{
+				Label: "Middleware",
+				Name:  "page_middleware",
+				Type:  form.FORM_FIELD_TYPE_STRING,
+			}),
+		},
+		Values: lo.Map(data.formMiddlewaresAfter, func(middlewareName string, _ int) map[string]string {
+			return map[string]string{
+				"page_middleware": middlewareName,
+			}
+		}),
+		RepeaterAddUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
+			"page_id": data.pageID,
+			"view":    VIEW_MIDDLEWARES,
+			"action":  ACTION_MIDDLEWARES_AFTER_REPEATER_ADD,
+		}),
+		RepeaterRemoveUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
+			"page_id": data.pageID,
+			"view":    VIEW_MIDDLEWARES,
+			"action":  ACTION_MIDDLEWARES_AFTER_REPEATER_DELETE,
+		}),
+		RepeaterMoveUpUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
+			"page_id": data.pageID,
+			"view":    VIEW_MIDDLEWARES,
+			"action":  ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_UP,
+		}),
+		RepeaterMoveDownUrl: shared.URLR(data.request, shared.PathPagesPageUpdate, map[string]string{
+			"page_id": data.pageID,
+			"view":    VIEW_MIDDLEWARES,
+			"action":  ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_DOWN,
 		}),
 	})
 
@@ -715,8 +773,30 @@ func (c pageUpdateController) fieldsMiddlewares(data pageUpdateControllerData) [
 		Readonly: true,
 	}
 
+	fieldSeparator := &form.Field{
+		Label: "Separator",
+		Name:  "separator",
+		Type:  form.FORM_FIELD_TYPE_RAW,
+		Value: hb.HR().ToHTML(),
+	}
+
+	fieldInfo := &form.Field{
+		Label: "Info",
+		Name:  "info",
+		Type:  form.FORM_FIELD_TYPE_RAW,
+		Value: hb.Div().
+			Class(`alert alert-info`).
+			Text(`You can add middlewares here that will be executed before or after the page content.`).
+			Text(`Before middlewares can be used i.e. to authenticate the user.`).
+			Text(`After middlewares can be used to change the page content after it has been generated.`).
+			ToHTML(),
+	}
+
 	return []form.FieldInterface{
-		fieldMiddlewares,
+		fieldInfo,
+		fieldMiddlewaresBefore,
+		fieldSeparator,
+		formMiddlewaresAfter,
 		fieldView, // required
 	}
 }
@@ -905,7 +985,8 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 	data.formSiteID = utils.Req(r, "page_site_id", "")
 	data.formTitle = utils.Req(r, "page_title", "")
 	data.formTemplateID = utils.Req(r, "page_template_id", "")
-	data.formMiddlewares = controller.requestMapToMiddlewares(r)
+	data.formMiddlewaresAfter = controller.requestMapToMiddlewaresAfter(r)
+	data.formMiddlewaresBefore = controller.requestMapToMiddlewaresBefore(r)
 
 	if data.view == VIEW_SETTINGS {
 		if data.formStatus == "" {
@@ -922,12 +1003,8 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 	}
 
 	if data.view == VIEW_MIDDLEWARES {
-		json, err := utils.ToJSON(data.formMiddlewares)
-		if err != nil {
-			data.formErrorMessage = "Could not save middlewares"
-			return data, ""
-		}
-		data.page.SetMeta("middlewares", json)
+		data.page.SetMiddlewaresAfter(data.formMiddlewaresAfter)
+		data.page.SetMiddlewaresBefore(data.formMiddlewaresBefore)
 	}
 
 	if data.view == VIEW_SETTINGS {
@@ -1138,7 +1215,8 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	data.formStatus = data.page.Status()
 	data.formTemplateID = data.page.TemplateID()
 	data.formTitle = data.page.Title()
-	data.formMiddlewares = controller.pageMiddlewaresFromMeta(data.page)
+	data.formMiddlewaresAfter = data.page.MiddlewaresAfter()
+	data.formMiddlewaresBefore = data.page.MiddlewaresBefore()
 
 	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
@@ -1166,53 +1244,103 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 		return data, ""
 	}
 
-	data.formMiddlewares = controller.requestMapToMiddlewares(r)
+	data.formMiddlewaresAfter = controller.requestMapToMiddlewaresAfter(r)
+	data.formMiddlewaresBefore = controller.requestMapToMiddlewaresBefore(r)
 
-	if data.action == ACTION_MIDDLEWARES_REPEATER_ADD {
-		data.formMiddlewares = append(data.formMiddlewares, "")
+	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_ADD {
+		data.formMiddlewaresAfter = append(data.formMiddlewaresAfter, "")
 		return data, ""
 	}
 
-	if data.action == ACTION_MIDDLEWARES_REPEATER_DELETE {
+	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_DELETE {
 		repeatableRemoveIndex := utils.Req(r, "repeatable_remove_index", "")
 
 		if repeatableRemoveIndex == "" {
 			return data, ""
 		}
 
-		data.formMiddlewares = slices.Delete(data.formMiddlewares, cast.ToInt(repeatableRemoveIndex), cast.ToInt(repeatableRemoveIndex)+1)
+		data.formMiddlewaresAfter = slices.Delete(data.formMiddlewaresAfter, cast.ToInt(repeatableRemoveIndex), cast.ToInt(repeatableRemoveIndex)+1)
 
 		return data, ""
 	}
 
-	if data.action == ACTION_MIDDLEWARES_REPEATER_MOVE_UP {
+	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_UP {
 		repeatableMoveUpIndex := cast.ToInt(utils.Req(r, "repeatable_move_up_index", ""))
 
 		if repeatableMoveUpIndex == 0 {
 			return data, ""
 		}
 
-		current := data.formMiddlewares[repeatableMoveUpIndex]
-		upper := data.formMiddlewares[repeatableMoveUpIndex-1]
+		current := data.formMiddlewaresAfter[repeatableMoveUpIndex]
+		upper := data.formMiddlewaresAfter[repeatableMoveUpIndex-1]
 
-		data.formMiddlewares[repeatableMoveUpIndex] = upper
-		data.formMiddlewares[repeatableMoveUpIndex-1] = current
+		data.formMiddlewaresAfter[repeatableMoveUpIndex] = upper
+		data.formMiddlewaresAfter[repeatableMoveUpIndex-1] = current
 
 		return data, ""
 	}
 
-	if data.action == ACTION_MIDDLEWARES_REPEATER_MOVE_DOWN {
+	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_DOWN {
 		repeatableMoveDownIndex := cast.ToInt(utils.Req(r, "repeatable_move_down_index", ""))
 
-		if repeatableMoveDownIndex == len(data.formMiddlewares)-1 {
+		if repeatableMoveDownIndex == len(data.formMiddlewaresAfter)-1 {
 			return data, ""
 		}
 
-		current := data.formMiddlewares[repeatableMoveDownIndex]
-		lower := data.formMiddlewares[repeatableMoveDownIndex+1]
+		current := data.formMiddlewaresAfter[repeatableMoveDownIndex]
+		lower := data.formMiddlewaresAfter[repeatableMoveDownIndex+1]
 
-		data.formMiddlewares[repeatableMoveDownIndex] = lower
-		data.formMiddlewares[repeatableMoveDownIndex+1] = current
+		data.formMiddlewaresAfter[repeatableMoveDownIndex] = lower
+		data.formMiddlewaresAfter[repeatableMoveDownIndex+1] = current
+
+		return data, ""
+	}
+
+	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_ADD {
+		data.formMiddlewaresBefore = append(data.formMiddlewaresBefore, "")
+		return data, ""
+	}
+
+	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_DELETE {
+		repeatableRemoveIndex := utils.Req(r, "repeatable_remove_index", "")
+
+		if repeatableRemoveIndex == "" {
+			return data, ""
+		}
+
+		data.formMiddlewaresBefore = slices.Delete(data.formMiddlewaresBefore, cast.ToInt(repeatableRemoveIndex), cast.ToInt(repeatableRemoveIndex)+1)
+
+		return data, ""
+	}
+
+	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_UP {
+		repeatableMoveUpIndex := cast.ToInt(utils.Req(r, "repeatable_move_up_index", ""))
+
+		if repeatableMoveUpIndex == 0 {
+			return data, ""
+		}
+
+		current := data.formMiddlewaresBefore[repeatableMoveUpIndex]
+		upper := data.formMiddlewaresBefore[repeatableMoveUpIndex-1]
+
+		data.formMiddlewaresBefore[repeatableMoveUpIndex] = upper
+		data.formMiddlewaresBefore[repeatableMoveUpIndex-1] = current
+
+		return data, ""
+	}
+
+	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_DOWN {
+		repeatableMoveDownIndex := cast.ToInt(utils.Req(r, "repeatable_move_down_index", ""))
+
+		if repeatableMoveDownIndex == len(data.formMiddlewaresBefore)-1 {
+			return data, ""
+		}
+
+		current := data.formMiddlewaresBefore[repeatableMoveDownIndex]
+		lower := data.formMiddlewaresBefore[repeatableMoveDownIndex+1]
+
+		data.formMiddlewaresBefore[repeatableMoveDownIndex] = lower
+		data.formMiddlewaresBefore[repeatableMoveDownIndex+1] = current
 
 		return data, ""
 	}
@@ -1220,27 +1348,38 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	return controller.savePage(r, data)
 }
 
-func (pageUpdateController) pageMiddlewaresFromMeta(page cmsstore.PageInterface) []string {
-	meta := page.Meta("middlewares")
+// func (pageUpdateController) pageMiddlewaresFromMeta(page cmsstore.PageInterface) []string {
+// 	meta := page.Meta("middlewares")
 
-	if meta == "" {
-		return []string{}
+// 	if meta == "" {
+// 		return []string{}
+// 	}
+
+// 	m, err := utils.FromJSON(page.Meta("middlewares"), []string{})
+
+// 	if err != nil {
+// 		cfmt.Error(err)
+// 		return []string{}
+// 	}
+
+// 	return lo.Map(m.([]interface{}), func(v interface{}, _ int) string {
+// 		return v.(string)
+// 	})
+// }
+
+func (controller pageUpdateController) requestMapToMiddlewaresBefore(r *http.Request) []string {
+	formMiddlewares := req.Maps(r, "page_middlewares_before", []map[string]string{})
+	middlewares := []string{}
+
+	for _, formMiddleware := range formMiddlewares {
+		middlewares = append(middlewares, formMiddleware["page_middleware"])
 	}
 
-	m, err := utils.FromJSON(page.Meta("middlewares"), []string{})
-
-	if err != nil {
-		cfmt.Error(err)
-		return []string{}
-	}
-
-	return lo.Map(m.([]interface{}), func(v interface{}, _ int) string {
-		return v.(string)
-	})
+	return middlewares
 }
 
-func (controller pageUpdateController) requestMapToMiddlewares(r *http.Request) []string {
-	formMiddlewares := req.Maps(r, "page_middlewares", []map[string]string{})
+func (controller pageUpdateController) requestMapToMiddlewaresAfter(r *http.Request) []string {
+	formMiddlewares := req.Maps(r, "page_middlewares_after", []map[string]string{})
 	middlewares := []string{}
 
 	for _, formMiddleware := range formMiddlewares {
@@ -1260,22 +1399,23 @@ type pageUpdateControllerData struct {
 	siteList     []cmsstore.SiteInterface
 	templateList []cmsstore.TemplateInterface
 
-	formErrorMessage    string
-	formRedirectURL     string
-	formSuccessMessage  string
-	formAlias           string
-	formCanonicalURL    string
-	formContent         string
-	formName            string
-	formEditor          string
-	formMemo            string
-	formMetaDescription string
-	formMetaKeywords    string
-	formMetaRobots      string
-	formMiddlewares     []string
-	formSiteID          string
-	formStatus          string
-	formTemplateID      string
-	formSummary         string
-	formTitle           string
+	formErrorMessage      string
+	formRedirectURL       string
+	formSuccessMessage    string
+	formAlias             string
+	formCanonicalURL      string
+	formContent           string
+	formName              string
+	formEditor            string
+	formMemo              string
+	formMetaDescription   string
+	formMetaKeywords      string
+	formMetaRobots        string
+	formMiddlewaresAfter  []string
+	formMiddlewaresBefore []string
+	formSiteID            string
+	formStatus            string
+	formTemplateID        string
+	formSummary           string
+	formTitle             string
 }
