@@ -1,0 +1,3 @@
+## Project Overview
+
+This project, Cms Store, is a modular Go-based content management system (CMS) designed for easy integration into existing Go applications. Unlike traditional CMSs requiring full installations, Cms Store can be added as a module dependency, simplifying updates and removal.  It's fully self-contained, requiring no additional packages or dependencies. Key features include multi-site support, templates, pages, blocks, menus, translations, custom entity types, middleware support, and widget support.  It is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) (see https://www.gnu.org/licenses/agpl-3.0.en.html for details). A commercial license is available for commercial use; contact https://lesichkov.co.uk/contact for details.

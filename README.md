@@ -14,9 +14,75 @@ For commercial use, please use my [contact page](https://lesichkov.co.uk/contact
 
 ## Introduction
 
-This package allows to build user interfaces based on blocks.
+All of the existing GoLang CMSs require a full installations from scratch. 
+Its impossible to just add them to an exiting Go application, and even when added
+feel like you don't get what you hoped for.
+
+This package allows to add a content management system as a module dependency,
+which can be easily updated or removed as required to ANY Go app.
+It is fully self contained, and does not require any additional packages
+or dependencies. Removal is also a breeze just remove the module.
 
 ## Installation
+
 ```
 go get -u github.com/gouniverse/cmsstore
+```
+
+## Features
+
+- Multi-site
+- Templates
+- Pages
+- Blocks
+- Menus
+- Translations
+- Custom Entity Types
+- Supports middleware
+- Supports wigets
+
+## Simplest Initialization
+
+The simplest initialization involves providing a database instance.  Note that this minimal setup has limited capabilities; features like database migrations are not automatically run.
+
+```go
+// Establish database connection.  Replace with your actual database connection details.
+db, err := mainDb(utils.Env("DB_DRIVER"), utils.Env("DB_HOST"), utils.Env("DB_PORT"), utils.Env("DB_DATABASE"), utils.Env("DB_USERNAME"), utils.Env("DB_PASSWORD"))
+if err != nil {
+	log.Panic("Database is NIL: " + err.Error())
+	return
+}
+if db == nil {
+	log.Panic("Database is NIL")
+	return
+}
+
+// Configure store options.  Customize table names as needed.  All table names are prefixed with `cms_`.
+opts := cmsstore.NewStoreOptions{
+    DB: db,
+    BlockTableName: "cms_blocks", // Name of the database table for blocks
+    PageTableName: "cms_pages",   // Name of the database table for pages
+    SiteTableName: "cms_sites",   // Name of the database table for sites
+    TemplateTableName: "cms_templates", // Name of the database table for templates
+    MenusEnabled: true,       // Enable menu functionality
+    MenuTableName: "cms_menus",   // Name of the database table for menus
+    MenuItemTableName: "cms_menu_items", // Name of the database table for menu items
+    TranslationsEnabled: true, // Enable translation functionality
+    TranslationTableName: "cms_translations", // Name of the database table for translations
+    TranslationLanguageDefault: "en", // Default language code
+    TranslationLanguages: map[string]string{"en": "English"}, // Supported languages
+    VersioningEnabled: true,   // Enable versioning functionality
+    VersioningTableName: "cms_versions", // Name of the database table for versions
+}
+
+// Create a new store instance with the specified options.
+store, err := cmsstore.NewStore(opts)
+if err != nil {
+    log.Panic(err)
+}
+
+// Create a new CMS instance using the created store.
+myCms, errCms := cms.NewCms(cms.Config{
+	Store: store,
+})
 ```
