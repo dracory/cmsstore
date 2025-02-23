@@ -23,6 +23,7 @@ type MiddlewareInterface interface {
 	Handler() func(next http.Handler) http.Handler
 }
 
+// Middleware creates a new middleware instance.
 func Middleware() *middleware {
 	m := new(middleware)
 	m.properties = map[string]any{}
@@ -35,8 +36,7 @@ type middleware struct {
 	properties map[string]any
 }
 
-// Identifier is a unique identifier for internal use (e.g., "auth_before").
-// Must be unique. Cannot be changed after creation.
+// Identifier returns the unique identifier for the middleware.
 func (m *middleware) Identifier() string {
 	if m.hasProperty("identifier") {
 		return m.properties["identifier"].(string)
@@ -45,13 +45,13 @@ func (m *middleware) Identifier() string {
 	return ""
 }
 
-// SetIdentifier sets the identifier of the middleware.
+// SetIdentifier sets the unique identifier for the middleware.
 func (m *middleware) SetIdentifier(identifier string) *middleware {
 	m.properties["identifier"] = identifier
 	return m
 }
 
-// Name is a human-friendly label for display purposes (e.g., "Authentication Middleware").
+// Name returns the human-friendly label for the middleware.
 func (m *middleware) Name() string {
 	if m.hasProperty("name") {
 		return m.properties["name"].(string)
@@ -60,13 +60,13 @@ func (m *middleware) Name() string {
 	return ""
 }
 
-// SetName sets the name of the middleware.
+// SetName sets the human-friendly label for the middleware.
 func (m *middleware) SetName(name string) *middleware {
 	m.properties["name"] = name
 	return m
 }
 
-// Description provides details about the middleware’s functionality.
+// Description returns the details about the middleware’s functionality.
 func (m *middleware) Description() string {
 	if m.hasProperty("description") {
 		return m.properties["description"].(string)
@@ -75,7 +75,7 @@ func (m *middleware) Description() string {
 	return ""
 }
 
-// SetDescription sets the description of the middleware.
+// SetDescription sets the details about the middleware’s functionality.
 func (m *middleware) SetDescription(description string) *middleware {
 	m.properties["description"] = description
 	return m
@@ -98,6 +98,7 @@ func (m *middleware) SetHandler(handler func(next http.Handler) http.Handler) *m
 	return m
 }
 
+// hasProperty checks if the middleware has a property with the given key.
 func (m *middleware) hasProperty(key string) bool {
 	_, ok := m.properties[key]
 	return ok

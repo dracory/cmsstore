@@ -14,11 +14,11 @@ import (
 	"github.com/samber/lo"
 )
 
+// MenuCount returns the count of menus that match the provided query options.
 func (store *store) MenuCount(ctx context.Context, options MenuQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
 	q, _, err := store.menuSelectQuery(options)
-
 	if err != nil {
 		return -1, err
 	}
@@ -27,7 +27,6 @@ func (store *store) MenuCount(ctx context.Context, options MenuQueryInterface) (
 		Limit(1).
 		Select(goqu.COUNT(goqu.Star()).As("count")).
 		ToSQL()
-
 	if errSql != nil {
 		return -1, nil
 	}
@@ -37,7 +36,6 @@ func (store *store) MenuCount(ctx context.Context, options MenuQueryInterface) (
 	}
 
 	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
-
 	if err != nil {
 		return -1, err
 	}
@@ -47,17 +45,15 @@ func (store *store) MenuCount(ctx context.Context, options MenuQueryInterface) (
 	}
 
 	countStr := mapped[0]["count"]
-
 	i, err := strconv.ParseInt(countStr, 10, 64)
-
 	if err != nil {
 		return -1, err
-
 	}
 
 	return i, nil
 }
 
+// MenuCreate creates a new menu in the database.
 func (store *store) MenuCreate(ctx context.Context, menu MenuInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -69,7 +65,6 @@ func (store *store) MenuCreate(ctx context.Context, menu MenuInterface) error {
 	if menu.CreatedAt() == "" {
 		menu.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	}
-
 	if menu.UpdatedAt() == "" {
 		menu.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	}
@@ -81,7 +76,6 @@ func (store *store) MenuCreate(ctx context.Context, menu MenuInterface) error {
 		Prepared(true).
 		Rows(data).
 		ToSQL()
-
 	if errSql != nil {
 		return errSql
 	}
@@ -95,7 +89,6 @@ func (store *store) MenuCreate(ctx context.Context, menu MenuInterface) error {
 	}
 
 	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
-
 	if err != nil {
 		return err
 	}
@@ -105,6 +98,7 @@ func (store *store) MenuCreate(ctx context.Context, menu MenuInterface) error {
 	return nil
 }
 
+// MenuDelete deletes a menu from the database by its ID.
 func (store *store) MenuDelete(ctx context.Context, menu MenuInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -117,6 +111,7 @@ func (store *store) MenuDelete(ctx context.Context, menu MenuInterface) error {
 	return store.MenuDeleteByID(ctx, menu.ID())
 }
 
+// MenuDeleteByID deletes a menu from the database by its ID.
 func (store *store) MenuDeleteByID(ctx context.Context, id string) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -131,7 +126,6 @@ func (store *store) MenuDeleteByID(ctx context.Context, id string) error {
 		Prepared(true).
 		Where(goqu.C("id").Eq(id)).
 		ToSQL()
-
 	if errSql != nil {
 		return errSql
 	}
@@ -145,6 +139,7 @@ func (store *store) MenuDeleteByID(ctx context.Context, id string) error {
 	return err
 }
 
+// MenuFindByHandle finds a menu by its handle.
 func (store *store) MenuFindByHandle(ctx context.Context, handle string) (menu MenuInterface, err error) {
 	if !store.menusEnabled {
 		return nil, errors.New("menus are disabled")
@@ -157,7 +152,6 @@ func (store *store) MenuFindByHandle(ctx context.Context, handle string) (menu M
 	list, err := store.MenuList(ctx, MenuQuery().
 		SetHandle(handle).
 		SetLimit(1))
-
 	if err != nil {
 		return nil, err
 	}
@@ -169,6 +163,7 @@ func (store *store) MenuFindByHandle(ctx context.Context, handle string) (menu M
 	return nil, nil
 }
 
+// MenuFindByID finds a menu by its ID.
 func (store *store) MenuFindByID(ctx context.Context, id string) (menu MenuInterface, err error) {
 	if !store.menusEnabled {
 		return nil, errors.New("menus are disabled")
@@ -179,7 +174,6 @@ func (store *store) MenuFindByID(ctx context.Context, id string) (menu MenuInter
 	}
 
 	list, err := store.MenuList(ctx, MenuQuery().SetID(id).SetLimit(1))
-
 	if err != nil {
 		return nil, err
 	}
@@ -191,19 +185,18 @@ func (store *store) MenuFindByID(ctx context.Context, id string) (menu MenuInter
 	return nil, nil
 }
 
+// MenuList returns a list of menus that match the provided query options.
 func (store *store) MenuList(ctx context.Context, query MenuQueryInterface) ([]MenuInterface, error) {
 	if !store.menusEnabled {
 		return []MenuInterface{}, errors.New("menus are disabled")
 	}
 
 	q, columns, err := store.menuSelectQuery(query)
-
 	if err != nil {
 		return []MenuInterface{}, err
 	}
 
 	sqlStr, _, errSql := q.Select(columns...).ToSQL()
-
 	if errSql != nil {
 		return []MenuInterface{}, nil
 	}
@@ -217,13 +210,11 @@ func (store *store) MenuList(ctx context.Context, query MenuQueryInterface) ([]M
 	}
 
 	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
-
 	if err != nil {
 		return []MenuInterface{}, err
 	}
 
 	list := []MenuInterface{}
-
 	lo.ForEach(modelMaps, func(modelMap map[string]string, index int) {
 		model := NewMenuFromExistingData(modelMap)
 		list = append(list, model)
@@ -232,6 +223,7 @@ func (store *store) MenuList(ctx context.Context, query MenuQueryInterface) ([]M
 	return list, nil
 }
 
+// MenuSoftDelete marks a menu as soft-deleted by setting the soft_deleted_at timestamp.
 func (store *store) MenuSoftDelete(ctx context.Context, menu MenuInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -246,13 +238,13 @@ func (store *store) MenuSoftDelete(ctx context.Context, menu MenuInterface) erro
 	return store.MenuUpdate(ctx, menu)
 }
 
+// MenuSoftDeleteByID marks a menu as soft-deleted by its ID.
 func (store *store) MenuSoftDeleteByID(ctx context.Context, id string) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
 
 	menu, err := store.MenuFindByID(ctx, id)
-
 	if err != nil {
 		return err
 	}
@@ -260,6 +252,7 @@ func (store *store) MenuSoftDeleteByID(ctx context.Context, id string) error {
 	return store.MenuSoftDelete(ctx, menu)
 }
 
+// MenuUpdate updates an existing menu in the database.
 func (store *store) MenuUpdate(ctx context.Context, menu MenuInterface) error {
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -272,7 +265,6 @@ func (store *store) MenuUpdate(ctx context.Context, menu MenuInterface) error {
 	menu.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
 	dataChanged := menu.DataChanged()
-
 	delete(dataChanged, COLUMN_ID) // ID is not updateable
 
 	if len(dataChanged) < 1 {
@@ -285,7 +277,6 @@ func (store *store) MenuUpdate(ctx context.Context, menu MenuInterface) error {
 		Set(dataChanged).
 		Where(goqu.C(COLUMN_ID).Eq(menu.ID())).
 		ToSQL()
-
 	if errSql != nil {
 		return errSql
 	}
@@ -299,12 +290,16 @@ func (store *store) MenuUpdate(ctx context.Context, menu MenuInterface) error {
 	}
 
 	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+	if err != nil {
+		return err
+	}
 
 	menu.MarkAsNotDirty()
 
-	return err
+	return nil
 }
 
+// menuSelectQuery constructs a SQL query for selecting menus based on the provided query options.
 func (store *store) menuSelectQuery(options MenuQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	if options == nil {
 		return nil, nil, errors.New("menu query cannot be nil")
@@ -379,7 +374,6 @@ func (store *store) menuSelectQuery(options MenuQueryInterface) (selectDataset *
 	}
 
 	columns = []any{}
-
 	for _, column := range options.Columns() {
 		columns = append(columns, column)
 	}

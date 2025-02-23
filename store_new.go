@@ -1,3 +1,5 @@
+// Package cmsstore provides functionality to create and manage a CMS store,
+// handling various components like blocks, menus, pages, templates, and translations.
 package cmsstore
 
 import (
@@ -10,7 +12,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// NewStoreOptions define the options for creating a new block store
+// NewStoreOptions defines the options for creating a new block store
 type NewStoreOptions struct {
 	// Context is the context used if the AutoMigrateEnabled option is true
 	// If not set, a background context is used
@@ -74,62 +76,61 @@ type NewStoreOptions struct {
 	Middlewares []MiddlewareInterface
 }
 
-// NewStore creates a new block store
+// NewStore creates a new CMS store based on the provided options.
 func NewStore(opts NewStoreOptions) (StoreInterface, error) {
+	// Validate required options
 	if opts.BlockTableName == "" {
 		return nil, errors.New("cms store: BlockTableName is required")
 	}
-
 	if opts.PageTableName == "" {
 		return nil, errors.New("cms store: PageTableName is required")
 	}
-
 	if opts.SiteTableName == "" {
 		return nil, errors.New("cms store: SiteTableName is required")
 	}
-
 	if opts.TemplateTableName == "" {
 		return nil, errors.New("cms store: TemplateTableName is required")
 	}
-
 	if opts.MenusEnabled && opts.MenuTableName == "" {
 		return nil, errors.New("cms store: MenuTableName is required")
 	}
-
 	if opts.MenusEnabled && opts.MenuItemTableName == "" {
 		return nil, errors.New("cms store: MenuItemTableName is required")
 	}
-
 	if opts.TranslationsEnabled && opts.TranslationTableName == "" {
 		return nil, errors.New("cms store: TranslationTableName is required")
 	}
-
 	if opts.VersioningEnabled && opts.VersioningTableName == "" {
 		return nil, errors.New("cms store: VersioningTableName is required")
 	}
 
+	// Validate database connection
 	if opts.DB == nil {
 		return nil, errors.New("cms store: DB is required")
 	}
 
+	// Set default database driver name if not provided
 	if opts.DbDriverName == "" {
 		opts.DbDriverName = database.DatabaseType(opts.DB)
 	}
 
+	// Set default shortcodes if not provided
 	if len(opts.Shortcodes) == 0 {
 		opts.Shortcodes = []ShortcodeInterface{}
 	}
 
+	// Set default middlewares if not provided
 	if len(opts.Middlewares) == 0 {
 		opts.Middlewares = []MiddlewareInterface{}
 	}
 
+	// Initialize versioning store if versioning is enabled
 	versionStore, err := initializeVersioningStore(opts)
-
 	if err != nil {
 		return nil, err
 	}
 
+	// Create a new store instance with the provided options
 	store := &store{
 		automigrateEnabled: opts.AutomigrateEnabled,
 		db:                 opts.DB,
@@ -151,20 +152,18 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		translationLanguages:       opts.TranslationLanguages,
 
 		versioningEnabled: opts.VersioningEnabled,
-		// versioningTableName: opts.VersioningTableName,
-		versioningStore: versionStore,
+		versioningStore:   versionStore,
 
 		shortcodes:  opts.Shortcodes,
 		middlewares: opts.Middlewares,
 	}
 
+	// Perform automatic migration if enabled
 	if store.automigrateEnabled {
-		context := lo.If(opts.Context != nil, opts.Context).Else(context.Background())
-
-		if err := store.AutoMigrate(context); err != nil {
+		ctx := lo.If(opts.Context != nil, opts.Context).Else(context.Background())
+		if err := store.AutoMigrate(ctx); err != nil {
 			return nil, err
 		}
-
 		if opts.VersioningEnabled {
 			if err := versionStore.AutoMigrate(); err != nil {
 				return nil, err
@@ -175,6 +174,7 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 	return store, nil
 }
 
+// initializeVersioningStore initializes a versioning store if versioning is enabled.
 func initializeVersioningStore(opts NewStoreOptions) (versionstore.StoreInterface, error) {
 	if !opts.VersioningEnabled {
 		return nil, nil
@@ -189,7 +189,6 @@ func initializeVersioningStore(opts NewStoreOptions) (versionstore.StoreInterfac
 		DB:                 opts.DB,
 		AutomigrateEnabled: opts.AutomigrateEnabled,
 		DebugEnabled:       opts.DebugEnabled,
-		// Logger:             nil,
 	})
 
 	if err != nil {
