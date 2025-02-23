@@ -255,15 +255,16 @@ Menus are created and managed through the admin interface, which provides tools 
 
 The following URL patterns are supported:
 
-    :any - ([^/]+)
-    :num - ([0-9]+)
-    :all - (.*)
-    :string - ([a-zA-Z]+)
-    :number - ([0-9]+)
-    :numeric - ([0-9-.]+)
-    :alpha - ([a-zA-Z0-9-_]+)
+- :any - ([^/]+)
+- :num - ([0-9]+)
+- :all - (.*)
+- :string - ([a-zA-Z]+)
+- :number - ([0-9]+)
+- :numeric - ([0-9-.]+)
+- :alpha - ([a-zA-Z0-9-_]+)
 
 Example:
-
+```
 /blog/:num/:any
 /shop/product/:num/:any
+```
