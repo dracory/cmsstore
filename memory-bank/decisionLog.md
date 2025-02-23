@@ -1,9 +1,9 @@
-## [2025-02-23] - README.md Update Decisions
+## [2025-02-23] - Constant Refactoring
 
-**Context:** The user requested an update to the README.md file's "Simplest Initialization" section to reflect the latest code and add comments.
+**Context:** Hardcoded strings were used in multiple query files. This made the code less maintainable and harder to update.
 
-**Decision:** Updated the code example in the README.md file with the latest code from `store_new.go` and added comments for clarity.  All table names were prefixed with `cms_` as requested by the user.
+**Decision:** Refactor the code to use constants defined in `consts.go`.
 
-**Rationale:** To ensure the README.md file provides accurate and up-to-date information for users.
+**Rationale:** Using constants improves code readability, maintainability, and reduces the risk of errors.  Changes are centralized in one location.
 
-**Implementation:** The README.md file was updated accordingly.
+**Implementation:**  Moved all relevant strings to `consts.go` and updated the affected files (`site_query.go`, `page_query.go`, `menu_query.go`, `template_query.go`). Added comments to `consts.go` for better understanding.

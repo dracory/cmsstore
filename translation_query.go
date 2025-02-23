@@ -71,230 +71,230 @@ func (q *translationQuery) Validate() error {
 }
 
 func (q *translationQuery) Columns() []string {
-	if !q.hasProperty("columns") {
+	if !q.hasProperty(propertyKeyColumns) {
 		return []string{}
 	}
 
-	return q.properties["columns"].([]string)
+	return q.properties[propertyKeyColumns].([]string)
 }
 
 func (q *translationQuery) SetColumns(columns []string) TranslationQueryInterface {
-	q.properties["columns"] = columns
+	q.properties[propertyKeyColumns] = columns
 	return q
 }
 
 func (q *translationQuery) HasCountOnly() bool {
-	return q.hasProperty("count_only")
+	return q.hasProperty(propertyKeyCountOnly)
 }
 
 func (q *translationQuery) IsCountOnly() bool {
 	if q.HasCountOnly() {
-		return q.properties["count_only"].(bool)
+		return q.properties[propertyKeyCountOnly].(bool)
 	}
 
 	return false
 }
 
 func (q *translationQuery) SetCountOnly(countOnly bool) TranslationQueryInterface {
-	q.properties["count_only"] = countOnly
+	q.properties[propertyKeyCountOnly] = countOnly
 	return q
 }
 
 func (q *translationQuery) HasCreatedAtGte() bool {
-	return q.hasProperty("created_at_gte")
+	return q.hasProperty(propertyKeyCreatedAtGte)
 }
 
 func (q *translationQuery) CreatedAtGte() string {
-	return q.properties["created_at_gte"].(string)
+	return q.properties[propertyKeyCreatedAtGte].(string)
 }
 
 func (q *translationQuery) SetCreatedAtGte(createdAtGte string) TranslationQueryInterface {
-	q.properties["created_at_gte"] = createdAtGte
+	q.properties[propertyKeyCreatedAtGte] = createdAtGte
 	return q
 }
 
 func (q *translationQuery) HasCreatedAtLte() bool {
-	return q.hasProperty("created_at_lte")
+	return q.hasProperty(propertyKeyCreatedAtLte)
 }
 
 func (q *translationQuery) CreatedAtLte() string {
-	return q.properties["created_at_lte"].(string)
+	return q.properties[propertyKeyCreatedAtLte].(string)
 }
 
 func (q *translationQuery) SetCreatedAtLte(createdAtLte string) TranslationQueryInterface {
-	q.properties["created_at_lte"] = createdAtLte
+	q.properties[propertyKeyCreatedAtLte] = createdAtLte
 	return q
 }
 
 func (q *translationQuery) HasHandle() bool {
-	return q.hasProperty("handle")
+	return q.hasProperty(propertyKeyHandle)
 }
 
 func (q *translationQuery) Handle() string {
-	return q.properties["handle"].(string)
+	return q.properties[propertyKeyHandle].(string)
 }
 
 func (q *translationQuery) SetHandle(handle string) TranslationQueryInterface {
-	q.properties["handle"] = handle
+	q.properties[propertyKeyHandle] = handle
 	return q
 }
 
 func (q *translationQuery) HasHandleOrID() bool {
-	return q.hasProperty("handle_or_id")
+	return q.hasProperty(propertyKeyHandleOrID)
 }
 
 func (q *translationQuery) HandleOrID() string {
-	return q.properties["handle_or_id"].(string)
+	return q.properties[propertyKeyHandleOrID].(string)
 }
 
 func (q *translationQuery) SetHandleOrID(handleOrID string) TranslationQueryInterface {
-	q.properties["handle_or_id"] = handleOrID
+	q.properties[propertyKeyHandleOrID] = handleOrID
 	return q
 }
 
 func (q *translationQuery) HasID() bool {
-	return q.hasProperty("id")
+	return q.hasProperty(propertyKeyId)
 }
 
 func (q *translationQuery) ID() string {
-	return q.properties["id"].(string)
+	return q.properties[propertyKeyId].(string)
 }
 
 func (q *translationQuery) SetID(id string) TranslationQueryInterface {
-	q.properties["id"] = id
+	q.properties[propertyKeyId] = id
 	return q
 }
 
 func (q *translationQuery) HasIDIn() bool {
-	return q.hasProperty("id_in")
+	return q.hasProperty(propertyKeyIdIn)
 }
 
 func (q *translationQuery) IDIn() []string {
-	return q.properties["id_in"].([]string)
+	return q.properties[propertyKeyIdIn].([]string)
 }
 
 func (q *translationQuery) SetIDIn(idIn []string) TranslationQueryInterface {
-	q.properties["id_in"] = idIn
+	q.properties[propertyKeyIdIn] = idIn
 	return q
 }
 
 func (q *translationQuery) HasLimit() bool {
-	return q.hasProperty("limit")
+	return q.hasProperty(propertyKeyLimit)
 }
 
 func (q *translationQuery) Limit() int {
-	return q.properties["limit"].(int)
+	return q.properties[propertyKeyLimit].(int)
 }
 
 func (q *translationQuery) SetLimit(limit int) TranslationQueryInterface {
-	q.properties["limit"] = limit
+	q.properties[propertyKeyLimit] = limit
 	return q
 }
 
 func (q *translationQuery) HasNameLike() bool {
-	return q.hasProperty("name_like")
+	return q.hasProperty(propertyKeyNameLike)
 }
 
 func (q *translationQuery) NameLike() string {
-	return q.properties["name_like"].(string)
+	return q.properties[propertyKeyNameLike].(string)
 }
 
 func (q *translationQuery) SetNameLike(nameLike string) TranslationQueryInterface {
-	q.properties["name_like"] = nameLike
+	q.properties[propertyKeyNameLike] = nameLike
 	return q
 }
 
 func (q *translationQuery) HasOffset() bool {
-	return q.hasProperty("offset")
+	return q.hasProperty(propertyKeyOffset)
 }
 
 func (q *translationQuery) Offset() int {
-	return q.properties["offset"].(int)
+	return q.properties[propertyKeyOffset].(int)
 }
 
 func (q *translationQuery) SetOffset(offset int) TranslationQueryInterface {
-	q.properties["offset"] = offset
+	q.properties[propertyKeyOffset] = offset
 	return q
 }
 
 func (q *translationQuery) HasOrderBy() bool {
-	return q.hasProperty("order_by")
+	return q.hasProperty(propertyKeyOrderBy)
 }
 
 func (q *translationQuery) OrderBy() string {
-	return q.properties["order_by"].(string)
+	return q.properties[propertyKeyOrderBy].(string)
 }
 
 func (q *translationQuery) SetOrderBy(orderBy string) TranslationQueryInterface {
-	q.properties["order_by"] = orderBy
+	q.properties[propertyKeyOrderBy] = orderBy
 	return q
 }
 
 func (q *translationQuery) HasSiteID() bool {
-	return q.hasProperty("site_id")
+	return q.hasProperty(propertyKeySiteID)
 }
 
 func (q *translationQuery) SiteID() string {
-	return q.properties["site_id"].(string)
+	return q.properties[propertyKeySiteID].(string)
 }
 
 func (q *translationQuery) SetSiteID(siteID string) TranslationQueryInterface {
-	q.properties["site_id"] = siteID
+	q.properties[propertyKeySiteID] = siteID
 	return q
 }
 
 func (q *translationQuery) HasSoftDeletedIncluded() bool {
-	return q.hasProperty("soft_delete_included")
+	return q.hasProperty(propertyKeySoftDeleteIncluded)
 }
 
 func (q *translationQuery) SoftDeletedIncluded() bool {
 	if !q.HasSoftDeletedIncluded() {
 		return false
 	}
-	return q.properties["soft_delete_included"].(bool)
+	return q.properties[propertyKeySoftDeleteIncluded].(bool)
 }
 
 func (q *translationQuery) SetSoftDeletedIncluded(softDeleteIncluded bool) TranslationQueryInterface {
-	q.properties["soft_delete_included"] = softDeleteIncluded
+	q.properties[propertyKeySoftDeleteIncluded] = softDeleteIncluded
 	return q
 }
 
 func (q *translationQuery) HasSortOrder() bool {
-	return q.hasProperty("sort_order")
+	return q.hasProperty(propertyKeySortOrder)
 }
 
 func (q *translationQuery) SortOrder() string {
-	return q.properties["sort_order"].(string)
+	return q.properties[propertyKeySortOrder].(string)
 }
 
 func (q *translationQuery) SetSortOrder(sortOrder string) TranslationQueryInterface {
-	q.properties["sort_order"] = sortOrder
+	q.properties[propertyKeySortOrder] = sortOrder
 	return q
 }
 
 func (q *translationQuery) HasStatus() bool {
-	return q.hasProperty("status")
+	return q.hasProperty(propertyKeyStatus)
 }
 
 func (q *translationQuery) Status() string {
-	return q.properties["status"].(string)
+	return q.properties[propertyKeyStatus].(string)
 }
 
 func (q *translationQuery) SetStatus(status string) TranslationQueryInterface {
-	q.properties["status"] = status
+	q.properties[propertyKeyStatus] = status
 	return q
 }
 
 func (q *translationQuery) HasStatusIn() bool {
-	return q.hasProperty("status_in")
+	return q.hasProperty(propertyKeyStatusIn)
 }
 
 func (q *translationQuery) StatusIn() []string {
-	return q.properties["status_in"].([]string)
+	return q.properties[propertyKeyStatusIn].([]string)
 }
 
 func (q *translationQuery) SetStatusIn(statusIn []string) TranslationQueryInterface {
-	q.properties["status_in"] = statusIn
+	q.properties[propertyKeyStatusIn] = statusIn
 	return q
 }
 

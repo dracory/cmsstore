@@ -1,15 +1,14 @@
 ## Current Session Context
 
-[2025-02-23 07:38:15 UTC]
+[2025-02-23 08:11:35 UTC]
 
 ## Recent Changes
-- Updated `productContext.md` with project overview and license information.
-- Added "Simplest Initialization" section to README.md with code example.
-- Updated README.md code example with comments.
-- Updated README.md code example to prefix all table names with `cms_`.
+- Moved constants to `consts.go`.
+- Updated `site_query.go`, `page_query.go`, `menu_query.go`, and `template_query.go` to use constants.
+- Added comments to `consts.go`.
 
 ## Current Goals
-- Complete UMB operation.
+- None.
 
 ## Open Questions
 - None.

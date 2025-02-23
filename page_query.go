@@ -22,60 +22,60 @@ var _ PageQueryInterface = (*pageQuery)(nil)
 
 // == INTERFACE IMPLEMENTATION ===============================================
 
-func (q *pageQuery) Validate() error {
-	if q.parameters == nil {
+func (p *pageQuery) Validate() error {
+	if p.parameters == nil {
 		return errors.New("page query. parameters cannot be nil")
 	}
 
-	if q.HasAliasLike() && q.AliasLike() == "" {
+	if p.HasAliasLike() && p.AliasLike() == "" {
 		return errors.New("page query. alias_like cannot be empty")
 	}
 
-	if q.HasCreatedAtGte() && q.CreatedAtGte() == "" {
+	if p.HasCreatedAtGte() && p.CreatedAtGte() == "" {
 		return errors.New("page query. created_at_gte cannot be empty")
 	}
 
-	if q.HasCreatedAtLte() && q.CreatedAtLte() == "" {
+	if p.HasCreatedAtLte() && p.CreatedAtLte() == "" {
 		return errors.New("page query. created_at_lte cannot be empty")
 	}
 
-	if q.HasID() && q.ID() == "" {
+	if p.HasID() && p.ID() == "" {
 		return errors.New("page query. id cannot be empty")
 	}
 
-	if q.HasIDIn() && len(q.IDIn()) < 1 {
+	if p.HasIDIn() && len(p.IDIn()) < 1 {
 		return errors.New("page query. id_in cannot be empty array")
 	}
 
-	if q.HasLimit() && q.Limit() < 0 {
+	if p.HasLimit() && p.Limit() < 0 {
 		return errors.New("page query. limit cannot be negative")
 	}
 
-	if q.HasHandle() && q.Handle() == "" {
+	if p.HasHandle() && p.Handle() == "" {
 		return errors.New("page query. handle cannot be empty")
 	}
 
-	if q.HasNameLike() && q.NameLike() == "" {
+	if p.HasNameLike() && p.NameLike() == "" {
 		return errors.New("page query. name_like cannot be empty")
 	}
 
-	if q.HasOffset() && q.Offset() < 0 {
+	if p.HasOffset() && p.Offset() < 0 {
 		return errors.New("page query. offset cannot be negative")
 	}
 
-	if q.HasOrderBy() && q.OrderBy() == "" {
+	if p.HasOrderBy() && p.OrderBy() == "" {
 		return errors.New("page query. order_by cannot be empty")
 	}
 
-	if q.HasStatus() && q.Status() == "" {
+	if p.HasStatus() && p.Status() == "" {
 		return errors.New("page query. status cannot be empty")
 	}
 
-	if q.HasStatusIn() && len(q.StatusIn()) < 1 {
+	if p.HasStatusIn() && len(p.StatusIn()) < 1 {
 		return errors.New("page query. status_in cannot be empty array")
 	}
 
-	if q.HasTemplateID() && q.TemplateID() == "" {
+	if p.HasTemplateID() && p.TemplateID() == "" {
 		return errors.New("page query. template_id cannot be empty")
 	}
 
@@ -83,254 +83,254 @@ func (q *pageQuery) Validate() error {
 }
 
 func (p *pageQuery) HasAlias() bool {
-	return p.hasParameter("alias")
+	return p.hasParameter(propertyKeyAlias)
 }
 
 func (p *pageQuery) Alias() string {
-	return p.parameters["alias"].(string)
+	return p.parameters[propertyKeyAlias].(string)
 }
 
 func (p *pageQuery) SetAlias(alias string) PageQueryInterface {
-	p.parameters["alias"] = alias
+	p.parameters[propertyKeyAlias] = alias
 	return p
 }
 
 func (p *pageQuery) HasAliasLike() bool {
-	return p.hasParameter("alias_like")
+	return p.hasParameter(propertyKeyAliasLike)
 }
 
 func (p *pageQuery) AliasLike() string {
-	return p.parameters["alias_like"].(string)
+	return p.parameters[propertyKeyAliasLike].(string)
 }
 
 func (p *pageQuery) SetAliasLike(nameLike string) PageQueryInterface {
-	p.parameters["alias_like"] = nameLike
+	p.parameters[propertyKeyAliasLike] = nameLike
 	return p
 }
 
 func (p *pageQuery) Columns() []string {
-	if p.parameters["columns"] == nil {
+	if p.parameters[propertyKeyColumns] == nil {
 		return []string{}
 	}
-	return p.parameters["columns"].([]string)
+	return p.parameters[propertyKeyColumns].([]string)
 }
 
 func (p *pageQuery) SetColumns(columns []string) PageQueryInterface {
-	p.parameters["columns"] = columns
+	p.parameters[propertyKeyColumns] = columns
 	return p
 }
 
 func (p *pageQuery) HasCreatedAtGte() bool {
-	return p.hasParameter("created_at_gte")
+	return p.hasParameter(propertyKeyCreatedAtGte)
 }
 
 func (p *pageQuery) CreatedAtGte() string {
-	return p.parameters["created_at_gte"].(string)
+	return p.parameters[propertyKeyCreatedAtGte].(string)
 }
 
 func (p *pageQuery) SetCreatedAtGte(createdAtGte string) PageQueryInterface {
-	p.parameters["created_at_gte"] = createdAtGte
+	p.parameters[propertyKeyCreatedAtGte] = createdAtGte
 	return p
 }
 
 func (p *pageQuery) HasCreatedAtLte() bool {
-	return p.hasParameter("created_at_lte")
+	return p.hasParameter(propertyKeyCreatedAtLte)
 }
 
 func (p *pageQuery) CreatedAtLte() string {
-	return p.parameters["created_at_lte"].(string)
+	return p.parameters[propertyKeyCreatedAtLte].(string)
 }
 
 func (p *pageQuery) SetCreatedAtLte(createdAtLte string) PageQueryInterface {
-	p.parameters["created_at_lte"] = createdAtLte
+	p.parameters[propertyKeyCreatedAtLte] = createdAtLte
 	return p
 }
 
 func (p *pageQuery) HasCountOnly() bool {
-	return p.hasParameter("count_only")
+	return p.hasParameter(propertyKeyCountOnly)
 }
 
 func (p *pageQuery) IsCountOnly() bool {
 	if !p.HasCountOnly() {
 		return false
 	}
-	return p.parameters["count_only"].(bool)
+	return p.parameters[propertyKeyCountOnly].(bool)
 }
 
 func (p *pageQuery) SetCountOnly(isCountOnly bool) PageQueryInterface {
-	p.parameters["count_only"] = isCountOnly
+	p.parameters[propertyKeyCountOnly] = isCountOnly
 	return p
 }
 
 func (p *pageQuery) HasHandle() bool {
-	return p.hasParameter("handle")
+	return p.hasParameter(propertyKeyHandle)
 }
 
 func (p *pageQuery) Handle() string {
-	return p.parameters["handle"].(string)
+	return p.parameters[propertyKeyHandle].(string)
 }
 
 func (p *pageQuery) SetHandle(handle string) PageQueryInterface {
-	p.parameters["handle"] = handle
+	p.parameters[propertyKeyHandle] = handle
 	return p
 }
 
 func (p *pageQuery) HasID() bool {
-	return p.hasParameter("id")
+	return p.hasParameter(propertyKeyId)
 }
 
 func (p *pageQuery) ID() string {
-	return p.parameters["id"].(string)
+	return p.parameters[propertyKeyId].(string)
 }
 
 func (p *pageQuery) SetID(id string) PageQueryInterface {
-	p.parameters["id"] = id
+	p.parameters[propertyKeyId] = id
 	return p
 }
 
 func (p *pageQuery) HasIDIn() bool {
-	return p.hasParameter("id_in")
+	return p.hasParameter(propertyKeyIdIn)
 }
 
 func (p *pageQuery) IDIn() []string {
-	return p.parameters["id_in"].([]string)
+	return p.parameters[propertyKeyIdIn].([]string)
 }
 
 func (p *pageQuery) SetIDIn(idIn []string) PageQueryInterface {
-	p.parameters["id_in"] = idIn
+	p.parameters[propertyKeyIdIn] = idIn
 	return p
 }
 
 func (p *pageQuery) HasLimit() bool {
-	return p.hasParameter("limit")
+	return p.hasParameter(propertyKeyLimit)
 }
 
 func (p *pageQuery) Limit() int {
-	return p.parameters["limit"].(int)
+	return p.parameters[propertyKeyLimit].(int)
 }
 
 func (p *pageQuery) SetLimit(limit int) PageQueryInterface {
-	p.parameters["limit"] = limit
+	p.parameters[propertyKeyLimit] = limit
 	return p
 }
 
 func (p *pageQuery) HasNameLike() bool {
-	return p.hasParameter("name_like")
+	return p.hasParameter(propertyKeyNameLike)
 }
 
 func (p *pageQuery) NameLike() string {
-	return p.parameters["name_like"].(string)
+	return p.parameters[propertyKeyNameLike].(string)
 }
 
 func (p *pageQuery) SetNameLike(nameLike string) PageQueryInterface {
-	p.parameters["name_like"] = nameLike
+	p.parameters[propertyKeyNameLike] = nameLike
 	return p
 }
 
 func (p *pageQuery) HasOffset() bool {
-	return p.hasParameter("offset")
+	return p.hasParameter(propertyKeyOffset)
 }
 
 func (p *pageQuery) Offset() int {
-	return p.parameters["offset"].(int)
+	return p.parameters[propertyKeyOffset].(int)
 }
 
 func (p *pageQuery) SetOffset(offset int) PageQueryInterface {
-	p.parameters["offset"] = offset
+	p.parameters[propertyKeyOffset] = offset
 	return p
 }
 
 func (p *pageQuery) HasOrderBy() bool {
-	return p.hasParameter("order_by")
+	return p.hasParameter(propertyKeyOrderBy)
 }
 
 func (p *pageQuery) OrderBy() string {
-	return p.parameters["order_by"].(string)
+	return p.parameters[propertyKeyOrderBy].(string)
 }
 
 func (p *pageQuery) SetOrderBy(orderBy string) PageQueryInterface {
-	p.parameters["order_by"] = orderBy
+	p.parameters[propertyKeyOrderBy] = orderBy
 	return p
 }
 
 func (p *pageQuery) HasSiteID() bool {
-	return p.hasParameter("site_id")
+	return p.hasParameter(propertyKeySiteID)
 }
 
 func (p *pageQuery) SiteID() string {
-	return p.parameters["site_id"].(string)
+	return p.parameters[propertyKeySiteID].(string)
 }
 
 func (p *pageQuery) SetSiteID(siteID string) PageQueryInterface {
-	p.parameters["site_id"] = siteID
+	p.parameters[propertyKeySiteID] = siteID
 	return p
 }
 
 func (p *pageQuery) HasSoftDeletedIncluded() bool {
-	return p.hasParameter("soft_deleted_included")
+	return p.hasParameter(propertyKeySoftDeleteIncluded)
 }
 
 func (p *pageQuery) SoftDeletedIncluded() bool {
 	if !p.HasSoftDeletedIncluded() {
 		return false
 	}
-	return p.parameters["soft_deleted_included"].(bool)
+	return p.parameters[propertyKeySoftDeleteIncluded].(bool)
 }
 
 func (p *pageQuery) SetSoftDeletedIncluded(softDeletedIncluded bool) PageQueryInterface {
-	p.parameters["soft_deleted_included"] = softDeletedIncluded
+	p.parameters[propertyKeySoftDeleteIncluded] = softDeletedIncluded
 	return p
 }
 
 func (p *pageQuery) HasSortOrder() bool {
-	return p.hasParameter("sort_order")
+	return p.hasParameter(propertyKeySortOrder)
 }
 
 func (p *pageQuery) SortOrder() string {
-	return p.parameters["sort_order"].(string)
+	return p.parameters[propertyKeySortOrder].(string)
 }
 
 func (p *pageQuery) SetSortOrder(sortOrder string) PageQueryInterface {
-	p.parameters["sort_order"] = sortOrder
+	p.parameters[propertyKeySortOrder] = sortOrder
 	return p
 }
 
 func (p *pageQuery) HasStatus() bool {
-	return p.hasParameter("status")
+	return p.hasParameter(propertyKeyStatus)
 }
 
 func (p *pageQuery) Status() string {
-	return p.parameters["status"].(string)
+	return p.parameters[propertyKeyStatus].(string)
 }
 
 func (p *pageQuery) SetStatus(status string) PageQueryInterface {
-	p.parameters["status"] = status
+	p.parameters[propertyKeyStatus] = status
 	return p
 }
 
 func (p *pageQuery) HasStatusIn() bool {
-	return p.hasParameter("status_in")
+	return p.hasParameter(propertyKeyStatusIn)
 }
 
 func (p *pageQuery) StatusIn() []string {
-	return p.parameters["status_in"].([]string)
+	return p.parameters[propertyKeyStatusIn].([]string)
 }
 
 func (p *pageQuery) SetStatusIn(statusIn []string) PageQueryInterface {
-	p.parameters["status_in"] = statusIn
+	p.parameters[propertyKeyStatusIn] = statusIn
 	return p
 }
 
 func (p *pageQuery) HasTemplateID() bool {
-	return p.hasParameter("template_id")
+	return p.hasParameter(propertyKeyTemplateID)
 }
 
 func (p *pageQuery) TemplateID() string {
-	return p.parameters["template_id"].(string)
+	return p.parameters[propertyKeyTemplateID].(string)
 }
 
 func (p *pageQuery) SetTemplateID(templateID string) PageQueryInterface {
-	p.parameters["template_id"] = templateID
+	p.parameters[propertyKeyTemplateID] = templateID
 	return p
 }
 

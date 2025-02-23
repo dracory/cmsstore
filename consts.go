@@ -1,75 +1,136 @@
 package cmsstore
 
-const BLOCK_STATUS_DRAFT = "draft"
-const BLOCK_STATUS_ACTIVE = "active"
-const BLOCK_STATUS_INACTIVE = "inactive"
+// Block Statuses
+const (
+	BLOCK_STATUS_DRAFT    = "draft"
+	BLOCK_STATUS_ACTIVE   = "active"
+	BLOCK_STATUS_INACTIVE = "inactive"
+)
 
-const ERROR_EMPTY_ARRAY = "array cannot be empty"
-const ERROR_EMPTY_STRING = "string cannot be empty"
-const ERROR_NEGATIVE_NUMBER = "number cannot be negative"
+// Error Messages for Validation
+const (
+	ERROR_EMPTY_ARRAY     = "array cannot be empty"
+	ERROR_EMPTY_STRING    = "string cannot be empty"
+	ERROR_NEGATIVE_NUMBER = "number cannot be negative"
+)
 
-const COLUMN_ALIAS = "alias"
-const COLUMN_CANONICAL_URL = "canonical_url"
-const COLUMN_CONTENT = "content"
-const COLUMN_CREATED_AT = "created_at"
-const COLUMN_DOMAIN_NAMES = "domain_names"
-const COLUMN_EDITOR = "editor"
-const COLUMN_ID = "id"
-const COLUMN_HANDLE = "handle"
-const COLUMN_MEMO = "memo"
-const COLUMN_MENU_ID = "menu_id"
-const COLUMN_META_DESCRIPTION = "meta_description"
-const COLUMN_META_KEYWORDS = "meta_keywords"
-const COLUMN_META_ROBOTS = "meta_robots"
-const COLUMN_METAS = "metas"
-const COLUMN_NAME = "name"
-const COLUMN_MIDDLEWARES_BEFORE = "middlewares_before"
-const COLUMN_MIDDLEWARES_AFTER = "middlewares_after"
-const COLUMN_PAGE_ID = "page_id"
-const COLUMN_PARENT_ID = "parent_id"
-const COLUMN_SEQUENCE = "sequence"
-const COLUMN_SITE_ID = "site_id"
-const COLUMN_SOFT_DELETED_AT = "soft_deleted_at"
-const COLUMN_STATUS = "status"
-const COLUMN_TARGET = "target"
-const COLUMN_TYPE = "type"
-const COLUMN_TEMPLATE_ID = "template_id"
-const COLUMN_TITLE = "title"
-const COLUMN_UPDATED_AT = "updated_at"
-const COLUMN_URL = "url"
+// Column Names for Database Queries
+const (
+	COLUMN_ALIAS              = "alias"
+	COLUMN_CANONICAL_URL      = "canonical_url"
+	COLUMN_CONTENT            = "content"
+	COLUMN_CREATED_AT         = "created_at"
+	COLUMN_DOMAIN_NAMES       = "domain_names"
+	COLUMN_EDITOR             = "editor"
+	COLUMN_ID                 = "id"
+	COLUMN_HANDLE             = "handle"
+	COLUMN_MEMO               = "memo"
+	COLUMN_MENU_ID            = "menu_id"
+	COLUMN_META_DESCRIPTION   = "meta_description"
+	COLUMN_META_KEYWORDS      = "meta_keywords"
+	COLUMN_META_ROBOTS        = "meta_robots"
+	COLUMN_METAS              = "metas"
+	COLUMN_NAME               = "name"
+	COLUMN_MIDDLEWARES_BEFORE = "middlewares_before"
+	COLUMN_MIDDLEWARES_AFTER  = "middlewares_after"
+	COLUMN_PAGE_ID            = "page_id"
+	COLUMN_PARENT_ID          = "parent_id"
+	COLUMN_SEQUENCE           = "sequence"
+	COLUMN_SITE_ID            = "site_id"
+	COLUMN_SOFT_DELETED_AT    = "soft_deleted_at"
+	COLUMN_STATUS             = "status"
+	COLUMN_TARGET             = "target"
+	COLUMN_TYPE               = "type"
+	COLUMN_TEMPLATE_ID        = "template_id"
+	COLUMN_TITLE              = "title"
+	COLUMN_UPDATED_AT         = "updated_at"
+	COLUMN_URL                = "url"
+)
 
-const MENU_STATUS_DRAFT = "draft"
-const MENU_STATUS_ACTIVE = "active"
-const MENU_STATUS_INACTIVE = "inactive"
+// Menu Statuses
+const (
+	MENU_STATUS_DRAFT    = "draft"
+	MENU_STATUS_ACTIVE   = "active"
+	MENU_STATUS_INACTIVE = "inactive"
+)
 
-const MENU_ITEM_STATUS_DRAFT = "draft"
-const MENU_ITEM_STATUS_ACTIVE = "active"
-const MENU_ITEM_STATUS_INACTIVE = "inactive"
+// Menu Item Statuses
+const (
+	MENU_ITEM_STATUS_DRAFT    = "draft"
+	MENU_ITEM_STATUS_ACTIVE   = "active"
+	MENU_ITEM_STATUS_INACTIVE = "inactive"
+)
 
-const MIDDLEWARE_TYPE_BEFORE = "before"
-const MIDDLEWARE_TYPE_AFTER = "after"
+// Middleware Types
+const (
+	MIDDLEWARE_TYPE_BEFORE = "before"
+	MIDDLEWARE_TYPE_AFTER  = "after"
+)
 
-const PAGE_STATUS_DRAFT = "draft"
-const PAGE_STATUS_ACTIVE = "active"
-const PAGE_STATUS_INACTIVE = "inactive"
+// Page Statuses
+const (
+	PAGE_STATUS_DRAFT    = "draft"
+	PAGE_STATUS_ACTIVE   = "active"
+	PAGE_STATUS_INACTIVE = "inactive"
+)
 
-const PAGE_EDITOR_BLOCKAREA = "blockarea"
-const PAGE_EDITOR_BLOCKEDITOR = "blockeditor"
-const PAGE_EDITOR_CODEMIRROR = "codemirror"
-const PAGE_EDITOR_HTMLAREA = "htmlarea"
-const PAGE_EDITOR_MARKDOWN = "markdown"
-const PAGE_EDITOR_TEXTAREA = "textarea"
+// Page Editor Types
+const (
+	PAGE_EDITOR_BLOCKAREA   = "blockarea"
+	PAGE_EDITOR_BLOCKEDITOR = "blockeditor"
+	PAGE_EDITOR_CODEMIRROR  = "codemirror"
+	PAGE_EDITOR_HTMLAREA    = "htmlarea"
+	PAGE_EDITOR_MARKDOWN    = "markdown"
+	PAGE_EDITOR_TEXTAREA    = "textarea"
+)
 
-const SITE_STATUS_DRAFT = "draft"
-const SITE_STATUS_ACTIVE = "active"
-const SITE_STATUS_INACTIVE = "inactive"
+// Site Statuses
+const (
+	SITE_STATUS_DRAFT    = "draft"
+	SITE_STATUS_ACTIVE   = "active"
+	SITE_STATUS_INACTIVE = "inactive"
+)
 
-const TEMPLATE_STATUS_DRAFT = "draft"
-const TEMPLATE_STATUS_ACTIVE = "active"
-const TEMPLATE_STATUS_INACTIVE = "inactive"
+// Template Statuses
+const (
+	TEMPLATE_STATUS_DRAFT    = "draft"
+	TEMPLATE_STATUS_ACTIVE   = "active"
+	TEMPLATE_STATUS_INACTIVE = "inactive"
+)
 
-const VERSIONING_TYPE_BLOCK = "block"
-const VERSIONING_TYPE_PAGE = "page"
-const VERSIONING_TYPE_TEMPLATE = "template"
-const VERSIONING_TYPE_TRANSLATION = "translation"
-const VERSIONING_TYPE_SITE = "site"
+// Versioning Types
+const (
+	VERSIONING_TYPE_BLOCK       = "block"
+	VERSIONING_TYPE_PAGE        = "page"
+	VERSIONING_TYPE_TEMPLATE    = "template"
+	VERSIONING_TYPE_TRANSLATION = "translation"
+	VERSIONING_TYPE_SITE        = "site"
+)
+
+// Query Parameter Keys
+const (
+	propertyKeyColumns            = "columns"
+	propertyKeyCreatedAtGte       = "created_at_gte"
+	propertyKeyCreatedAtLte       = "created_at_lte"
+	propertyKeyHandle             = "handle"
+	propertyKeyId                 = "id"
+	propertyKeyIdIn               = "id_in"
+	propertyKeyLimit              = "limit"
+	propertyKeyNameLike           = "name_like"
+	propertyKeyOffset             = "offset"
+	propertyKeyOrderBy            = "order_by"
+	propertyKeyPageID             = "page_id"
+	propertyKeyParentID           = "parent_id"
+	propertyKeySequence           = "sequence"
+	propertyKeySiteID             = "site_id"
+	propertyKeySoftDeleteIncluded = "soft_delete_included"
+	propertyKeySortOrder          = "sort_order"
+	propertyKeyStatus             = "status"
+	propertyKeyStatusIn           = "status_in"
+	propertyKeyTemplateID         = "template_id"
+	propertyKeyCountOnly          = "count_only"
+	propertyKeyDomainName         = "domain_name"
+	propertyKeyAlias              = "alias"
+	propertyKeyAliasLike          = "alias_like"
+	propertyKeyHandleOrID         = "handle_or_id"
+)

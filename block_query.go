@@ -55,256 +55,256 @@ func (q *blockQuery) Validate() error {
 }
 
 func (q *blockQuery) Columns() []string {
-	if !q.hasProperty("columns") {
+	if !q.hasProperty(propertyKeyColumns) {
 		return []string{}
 	}
 
-	return q.properties["columns"].([]string)
+	return q.properties[propertyKeyColumns].([]string)
 }
 
 func (q *blockQuery) SetColumns(columns []string) BlockQueryInterface {
-	q.properties["columns"] = columns
+	q.properties[propertyKeyColumns] = columns
 	return q
 }
 
 func (q *blockQuery) HasCreatedAtGte() bool {
-	return q.hasProperty("created_at_gte")
+	return q.hasProperty(propertyKeyCreatedAtGte)
 }
 
 func (q *blockQuery) HasCreatedAtLte() bool {
-	return q.hasProperty("created_at_lte")
+	return q.hasProperty(propertyKeyCreatedAtLte)
 }
 
 func (q *blockQuery) HasHandle() bool {
-	return q.hasProperty("handle")
+	return q.hasProperty(propertyKeyHandle)
 }
 
 func (q *blockQuery) HasID() bool {
-	return q.hasProperty("id")
+	return q.hasProperty(propertyKeyId)
 }
 
 func (q *blockQuery) HasIDIn() bool {
-	return q.hasProperty("id_in")
+	return q.hasProperty(propertyKeyIdIn)
 }
 
 func (q *blockQuery) HasLimit() bool {
-	return q.hasProperty("limit")
+	return q.hasProperty(propertyKeyLimit)
 }
 
 func (q *blockQuery) HasNameLike() bool {
-	return q.hasProperty("name_like")
+	return q.hasProperty(propertyKeyNameLike)
 }
 
 func (q *blockQuery) HasOffset() bool {
-	return q.hasProperty("offset")
+	return q.hasProperty(propertyKeyOffset)
 }
 
 func (q *blockQuery) HasOrderBy() bool {
-	return q.hasProperty("order_by")
+	return q.hasProperty(propertyKeyOrderBy)
 }
 
 func (q *blockQuery) HasPageID() bool {
-	return q.hasProperty("page_id")
+	return q.hasProperty(propertyKeyPageID)
 }
 
 func (q *blockQuery) HasParentID() bool {
-	return q.hasProperty("parent_id")
+	return q.hasProperty(propertyKeyParentID)
 }
 
 func (q *blockQuery) HasSequence() bool {
-	return q.hasProperty("sequence")
+	return q.hasProperty(propertyKeySequence)
 }
 
 func (q *blockQuery) HasSiteID() bool {
-	return q.hasProperty("site_id")
+	return q.hasProperty(propertyKeySiteID)
 }
 
 func (q *blockQuery) HasSoftDeleted() bool {
-	return q.hasProperty("soft_deleted")
+	return q.hasProperty(propertyKeySoftDeleteIncluded)
 }
 
 func (q *blockQuery) HasSortOrder() bool {
-	return q.hasProperty("sort_order")
+	return q.hasProperty(propertyKeySortOrder)
 }
 
 func (q *blockQuery) HasStatus() bool {
-	return q.hasProperty("status")
+	return q.hasProperty(propertyKeyStatus)
 }
 
 func (q *blockQuery) HasStatusIn() bool {
-	return q.hasProperty("status_in")
+	return q.hasProperty(propertyKeyStatusIn)
 }
 
 func (q *blockQuery) HasTemplateID() bool {
-	return q.hasProperty("template_id")
+	return q.hasProperty(propertyKeyTemplateID)
 }
 
 func (q *blockQuery) IsCountOnly() bool {
-	if q.hasProperty("count_only") {
-		return q.properties["count_only"].(bool)
+	if q.hasProperty(propertyKeyCountOnly) {
+		return q.properties[propertyKeyCountOnly].(bool)
 	}
 
 	return false
 }
 
 func (q *blockQuery) CreatedAtGte() string {
-	return q.properties["created_at_gte"].(string)
+	return q.properties[propertyKeyCreatedAtGte].(string)
 }
 
 func (q *blockQuery) CreatedAtLte() string {
-	return q.properties["created_at_lte"].(string)
+	return q.properties[propertyKeyCreatedAtLte].(string)
 }
 
 func (q *blockQuery) Handle() string {
-	return q.properties["handle"].(string)
+	return q.properties[propertyKeyHandle].(string)
 }
 
 func (q *blockQuery) ID() string {
-	return q.properties["id"].(string)
+	return q.properties[propertyKeyId].(string)
 }
 
 func (q *blockQuery) IDIn() []string {
-	return q.properties["id_in"].([]string)
+	return q.properties[propertyKeyIdIn].([]string)
 }
 
 func (q *blockQuery) Limit() int {
-	return q.properties["limit"].(int)
+	return q.properties[propertyKeyLimit].(int)
 }
 
 func (q *blockQuery) NameLike() string {
-	return q.properties["name_like"].(string)
+	return q.properties[propertyKeyNameLike].(string)
 }
 
 func (q *blockQuery) Offset() int {
-	return q.properties["offset"].(int)
+	return q.properties[propertyKeyOffset].(int)
 }
 
 func (q *blockQuery) OrderBy() string {
-	return q.properties["order_by"].(string)
+	return q.properties[propertyKeyOrderBy].(string)
 }
 
 func (q *blockQuery) PageID() string {
-	return q.properties["page_id"].(string)
+	return q.properties[propertyKeyPageID].(string)
 }
 
 func (q *blockQuery) ParentID() string {
-	return q.properties["parent_id"].(string)
+	return q.properties[propertyKeyParentID].(string)
 }
 
 func (q *blockQuery) Sequence() int {
-	return q.properties["sequence"].(int)
+	return q.properties[propertyKeySequence].(int)
 }
 
 func (q *blockQuery) SiteID() string {
-	return q.properties["site_id"].(string)
+	return q.properties[propertyKeySiteID].(string)
 }
 
 func (q *blockQuery) SoftDeleteIncluded() bool {
-	if !q.hasProperty("soft_delete_included") {
+	if !q.hasProperty(propertyKeySoftDeleteIncluded) {
 		return false
 	}
 
-	return q.properties["soft_delete_included"].(bool)
+	return q.properties[propertyKeySoftDeleteIncluded].(bool)
 }
 
 func (q *blockQuery) SortOrder() string {
-	return q.properties["sort_order"].(string)
+	return q.properties[propertyKeySortOrder].(string)
 }
 
 func (q *blockQuery) Status() string {
-	return q.properties["status"].(string)
+	return q.properties[propertyKeyStatus].(string)
 }
 
 func (q *blockQuery) StatusIn() []string {
-	return q.properties["status_in"].([]string)
+	return q.properties[propertyKeyStatusIn].([]string)
 }
 
 func (q *blockQuery) TemplateID() string {
-	return q.properties["template_id"].(string)
+	return q.properties[propertyKeyTemplateID].(string)
 }
 
 func (q *blockQuery) SetCountOnly(countOnly bool) BlockQueryInterface {
-	q.properties["count_only"] = countOnly
+	q.properties[propertyKeyCountOnly] = countOnly
 	return q
 }
 
 func (q *blockQuery) SetID(id string) BlockQueryInterface {
-	q.properties["id"] = id
+	q.properties[propertyKeyId] = id
 	return q
 }
 
 func (q *blockQuery) SetIDIn(idIn []string) BlockQueryInterface {
-	q.properties["id_in"] = idIn
+	q.properties[propertyKeyIdIn] = idIn
 	return q
 }
 
 func (q *blockQuery) SetHandle(handle string) BlockQueryInterface {
-	q.properties["handle"] = handle
+	q.properties[propertyKeyHandle] = handle
 	return q
 }
 
 func (q *blockQuery) SetLimit(limit int) BlockQueryInterface {
-	q.properties["limit"] = limit
+	q.properties[propertyKeyLimit] = limit
 	return q
 }
 
 func (q *blockQuery) SetNameLike(nameLike string) BlockQueryInterface {
-	q.properties["name_like"] = nameLike
+	q.properties[propertyKeyNameLike] = nameLike
 	return q
 }
 
 func (q *blockQuery) SetOffset(offset int) BlockQueryInterface {
-	q.properties["offset"] = offset
+	q.properties[propertyKeyOffset] = offset
 	return q
 }
 
 func (q *blockQuery) SetOrderBy(orderBy string) BlockQueryInterface {
-	q.properties["order_by"] = orderBy
+	q.properties[propertyKeyOrderBy] = orderBy
 	return q
 }
 
 func (q *blockQuery) SetPageID(pageID string) BlockQueryInterface {
-	q.properties["page_id"] = pageID
+	q.properties[propertyKeyPageID] = pageID
 	return q
 }
 
 func (q *blockQuery) SetParentID(parentID string) BlockQueryInterface {
-	q.properties["parent_id"] = parentID
+	q.properties[propertyKeyParentID] = parentID
 	return q
 }
 
 func (q *blockQuery) SetSequence(sequence int) BlockQueryInterface {
-	q.properties["sequence"] = sequence
+	q.properties[propertyKeySequence] = sequence
 	return q
 }
 
 func (q *blockQuery) SetSiteID(siteID string) BlockQueryInterface {
-	q.properties["site_id"] = siteID
+	q.properties[propertyKeySiteID] = siteID
 	return q
 }
 
 func (q *blockQuery) SetSoftDeleteIncluded(SoftDeleteIncluded bool) BlockQueryInterface {
-	q.properties["soft_delete_included"] = SoftDeleteIncluded
+	q.properties[propertyKeySoftDeleteIncluded] = SoftDeleteIncluded
 	return q
 }
 
 func (q *blockQuery) SetSortOrder(sortOrder string) BlockQueryInterface {
-	q.properties["sort_order"] = sortOrder
+	q.properties[propertyKeySortOrder] = sortOrder
 	return q
 }
 
 func (q *blockQuery) SetStatus(status string) BlockQueryInterface {
-	q.properties["status"] = status
+	q.properties[propertyKeyStatus] = status
 	return q
 }
 
 func (q *blockQuery) SetStatusIn(statusIn []string) BlockQueryInterface {
-	q.properties["status_in"] = statusIn
+	q.properties[propertyKeyStatusIn] = statusIn
 	return q
 }
 
 func (q *blockQuery) SetTemplateID(templateID string) BlockQueryInterface {
-	q.properties["template_id"] = templateID
+	q.properties[propertyKeyTemplateID] = templateID
 	return q
 }
 
@@ -312,192 +312,3 @@ func (q *blockQuery) hasProperty(key string) bool {
 	_, ok := q.properties[key]
 	return ok
 }
-
-// type blockQuery struct {
-// 	id              string
-// 	idIn            []string
-// 	nameLike        string
-// 	status          string
-// 	statusIn        []string
-// 	handle          string
-// 	createdAtGte    string
-// 	createdAtLte    string
-// 	countOnly       bool
-// 	offset          int64
-// 	limit           int
-// 	sortOrder       string
-// 	orderBy         string
-// 	withSoftDeleted bool
-// }
-
-// func NewBlockQuery() BlockQueryInterface {
-// 	return &blockQuery{}
-// }
-
-// var _ BlockQueryInterface = (*blockQuery)(nil)
-
-// func (q *blockQuery) ID() string {
-// 	return q.id
-// }
-
-// func (q *blockQuery) SetID(id string) (BlockQueryInterface, error) {
-// 	if id == "" {
-// 		return q, errors.New(ERROR_EMPTY_STRING)
-// 	}
-
-// 	q.id = id
-
-// 	return q, nil
-// }
-
-// func (q *blockQuery) IDIn() []string {
-// 	return q.idIn
-// }
-
-// func (q *blockQuery) SetIDIn(idIn []string) (BlockQueryInterface, error) {
-// 	if len(idIn) < 1 {
-// 		return q, errors.New(ERROR_EMPTY_ARRAY)
-// 	}
-
-// 	q.idIn = idIn
-
-// 	return q, nil
-// }
-
-// func (q *blockQuery) NameLike() string {
-// 	return q.nameLike
-// }
-
-// func (q *blockQuery) SetNameLike(nameLike string) (BlockQueryInterface, error) {
-// 	if nameLike == "" {
-// 		return q, errors.New(ERROR_EMPTY_STRING)
-// 	}
-// 	q.nameLike = nameLike
-// 	return q, nil
-// }
-
-// func (q *blockQuery) Status() string {
-// 	return q.status
-// }
-
-// func (q *blockQuery) SetStatus(status string) (BlockQueryInterface, error) {
-// 	if status == "" {
-// 		return q, errors.New(ERROR_EMPTY_STRING)
-// 	}
-// 	q.status = status
-// 	return q, nil
-// }
-
-// func (q *blockQuery) StatusIn() []string {
-// 	return q.statusIn
-// }
-
-// func (q *blockQuery) SetStatusIn(statusIn []string) (BlockQueryInterface, error) {
-// 	if len(statusIn) < 1 {
-// 		return q, errors.New(ERROR_EMPTY_ARRAY)
-// 	}
-// 	q.statusIn = statusIn
-// 	return q, nil
-// }
-
-// func (q *blockQuery) Handle() string {
-// 	return q.handle
-// }
-
-// func (q *blockQuery) SetHandle(handle string) (BlockQueryInterface, error) {
-// 	if handle == "" {
-// 		return q, errors.New(ERROR_EMPTY_STRING)
-// 	}
-// 	q.handle = handle
-// 	return q, nil
-// }
-
-// func (q *blockQuery) CreatedAtGte() string {
-// 	return q.createdAtGte
-// }
-
-// func (q *blockQuery) SetCreatedAtGte(createdAtGte string) (BlockQueryInterface, error) {
-// 	if createdAtGte == "" {
-// 		return q, errors.New(ERROR_EMPTY_STRING)
-// 	}
-// 	q.createdAtGte = createdAtGte
-// 	return q, nil
-// }
-
-// func (q *blockQuery) CreatedAtLte() string {
-// 	return q.createdAtLte
-// }
-
-// func (q *blockQuery) SetCreatedAtLte(createdAtLte string) (BlockQueryInterface, error) {
-// 	if createdAtLte == "" {
-// 		return q, errors.New(ERROR_EMPTY_STRING)
-// 	}
-// 	q.createdAtLte = createdAtLte
-// 	return q, nil
-// }
-
-// func (q *blockQuery) Offset() int {
-// 	return int(q.offset)
-// }
-
-// func (q *blockQuery) SetOffset(offset int) (BlockQueryInterface, error) {
-// 	if offset < 0 {
-// 		return q, errors.New(ERROR_NEGATIVE_NUMBER)
-// 	}
-// 	q.offset = int64(offset)
-// 	return q, nil
-// }
-
-// func (q *blockQuery) Limit() int {
-// 	return q.limit
-// }
-
-// func (q *blockQuery) SetLimit(limit int) (BlockQueryInterface, error) {
-// 	if limit < 1 {
-// 		return q, errors.New(ERROR_NEGATIVE_NUMBER)
-// 	}
-// 	q.limit = limit
-// 	return q, nil
-// }
-
-// func (q *blockQuery) SortOrder() string {
-// 	return q.sortOrder
-// }
-
-// func (q *blockQuery) SetSortOrder(sortOrder string) (BlockQueryInterface, error) {
-// 	if sortOrder == "" {
-// 		return q, errors.New(ERROR_EMPTY_STRING)
-// 	}
-// 	q.sortOrder = sortOrder
-// 	return q, nil
-// }
-
-// func (q *blockQuery) OrderBy() string {
-// 	return q.orderBy
-// }
-
-// func (q *blockQuery) SetOrderBy(orderBy string) (BlockQueryInterface, error) {
-// 	if orderBy == "" {
-// 		return q, errors.New(ERROR_EMPTY_STRING)
-// 	}
-// 	q.orderBy = orderBy
-// 	return q, nil
-// }
-
-// func (q *blockQuery) CountOnly() bool {
-// 	return q.countOnly
-// }
-
-// func (q *blockQuery) SetCountOnly(countOnly bool) BlockQueryInterface {
-// 	q.countOnly = countOnly
-// 	return q
-// }
-
-// func (q *blockQuery) WithSoftDeleted() bool {
-// 	return q.withSoftDeleted
-// }
-
-// func (q *blockQuery) SetWithSoftDeleted(withSoftDeleted bool) BlockQueryInterface {
-// 	q.withSoftDeleted = withSoftDeleted
-// 	return q
-// }

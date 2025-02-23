@@ -63,217 +63,217 @@ func (q *menuQuery) Validate() error {
 }
 
 func (q *menuQuery) Columns() []string {
-	if !q.hasProperty("columns") {
+	if !q.hasProperty(propertyKeyColumns) {
 		return []string{}
 	}
 
-	return q.properties["columns"].([]string)
+	return q.properties[propertyKeyColumns].([]string)
 }
 
 func (q *menuQuery) SetColumns(columns []string) MenuQueryInterface {
-	q.properties["columns"] = columns
+	q.properties[propertyKeyColumns] = columns
 	return q
 }
 
 func (q *menuQuery) HasCountOnly() bool {
-	return q.hasProperty("count_only")
+	return q.hasProperty(propertyKeyCountOnly)
 }
 
 func (q *menuQuery) IsCountOnly() bool {
 	if q.HasCountOnly() {
-		return q.properties["count_only"].(bool)
+		return q.properties[propertyKeyCountOnly].(bool)
 	}
 
 	return false
 }
 
 func (q *menuQuery) SetCountOnly(countOnly bool) MenuQueryInterface {
-	q.properties["count_only"] = countOnly
+	q.properties[propertyKeyCountOnly] = countOnly
 	return q
 }
 
 func (q *menuQuery) HasCreatedAtGte() bool {
-	return q.hasProperty("created_at_gte")
+	return q.hasProperty(propertyKeyCreatedAtGte)
 }
 
 func (q *menuQuery) CreatedAtGte() string {
-	return q.properties["created_at_gte"].(string)
+	return q.properties[propertyKeyCreatedAtGte].(string)
 }
 
 func (q *menuQuery) SetCreatedAtGte(createdAtGte string) MenuQueryInterface {
-	q.properties["created_at_gte"] = createdAtGte
+	q.properties[propertyKeyCreatedAtGte] = createdAtGte
 	return q
 }
 
 func (q *menuQuery) HasCreatedAtLte() bool {
-	return q.hasProperty("created_at_lte")
+	return q.hasProperty(propertyKeyCreatedAtLte)
 }
 
 func (q *menuQuery) CreatedAtLte() string {
-	return q.properties["created_at_lte"].(string)
+	return q.properties[propertyKeyCreatedAtLte].(string)
 }
 
 func (q *menuQuery) SetCreatedAtLte(createdAtLte string) MenuQueryInterface {
-	q.properties["created_at_lte"] = createdAtLte
+	q.properties[propertyKeyCreatedAtLte] = createdAtLte
 	return q
 }
 
 func (q *menuQuery) HasHandle() bool {
-	return q.hasProperty("handle")
+	return q.hasProperty(propertyKeyHandle)
 }
 
 func (q *menuQuery) Handle() string {
-	return q.properties["handle"].(string)
+	return q.properties[propertyKeyHandle].(string)
 }
 
 func (q *menuQuery) SetHandle(handle string) MenuQueryInterface {
-	q.properties["handle"] = handle
+	q.properties[propertyKeyHandle] = handle
 	return q
 }
 
 func (q *menuQuery) HasID() bool {
-	return q.hasProperty("id")
+	return q.hasProperty(propertyKeyId)
 }
 
 func (q *menuQuery) ID() string {
-	return q.properties["id"].(string)
+	return q.properties[propertyKeyId].(string)
 }
 
 func (q *menuQuery) SetID(id string) MenuQueryInterface {
-	q.properties["id"] = id
+	q.properties[propertyKeyId] = id
 	return q
 }
 
 func (q *menuQuery) HasIDIn() bool {
-	return q.hasProperty("id_in")
+	return q.hasProperty(propertyKeyIdIn)
 }
 
 func (q *menuQuery) IDIn() []string {
-	return q.properties["id_in"].([]string)
+	return q.properties[propertyKeyIdIn].([]string)
 }
 
 func (q *menuQuery) SetIDIn(idIn []string) MenuQueryInterface {
-	q.properties["id_in"] = idIn
+	q.properties[propertyKeyIdIn] = idIn
 	return q
 }
 
 func (q *menuQuery) HasLimit() bool {
-	return q.hasProperty("limit")
+	return q.hasProperty(propertyKeyLimit)
 }
 
 func (q *menuQuery) Limit() int {
-	return q.properties["limit"].(int)
+	return q.properties[propertyKeyLimit].(int)
 }
 
 func (q *menuQuery) SetLimit(limit int) MenuQueryInterface {
-	q.properties["limit"] = limit
+	q.properties[propertyKeyLimit] = limit
 	return q
 }
 
 func (q *menuQuery) HasNameLike() bool {
-	return q.hasProperty("name_like")
+	return q.hasProperty(propertyKeyNameLike)
 }
 
 func (q *menuQuery) NameLike() string {
-	return q.properties["name_like"].(string)
+	return q.properties[propertyKeyNameLike].(string)
 }
 
 func (q *menuQuery) SetNameLike(nameLike string) MenuQueryInterface {
-	q.properties["name_like"] = nameLike
+	q.properties[propertyKeyNameLike] = nameLike
 	return q
 }
 
 func (q *menuQuery) HasOffset() bool {
-	return q.hasProperty("offset")
+	return q.hasProperty(propertyKeyOffset)
 }
 
 func (q *menuQuery) Offset() int {
-	return q.properties["offset"].(int)
+	return q.properties[propertyKeyOffset].(int)
 }
 
 func (q *menuQuery) SetOffset(offset int) MenuQueryInterface {
-	q.properties["offset"] = offset
+	q.properties[propertyKeyOffset] = offset
 	return q
 }
 
 func (q *menuQuery) HasOrderBy() bool {
-	return q.hasProperty("order_by")
+	return q.hasProperty(propertyKeyOrderBy)
 }
 
 func (q *menuQuery) OrderBy() string {
-	return q.properties["order_by"].(string)
+	return q.properties[propertyKeyOrderBy].(string)
 }
 
 func (q *menuQuery) SetOrderBy(orderBy string) MenuQueryInterface {
-	q.properties["order_by"] = orderBy
+	q.properties[propertyKeyOrderBy] = orderBy
 	return q
 }
 
 func (q *menuQuery) HasSiteID() bool {
-	return q.hasProperty("site_id")
+	return q.hasProperty(propertyKeySiteID)
 }
 
 func (q *menuQuery) SiteID() string {
-	return q.properties["site_id"].(string)
+	return q.properties[propertyKeySiteID].(string)
 }
 
 func (q *menuQuery) SetSiteID(siteID string) MenuQueryInterface {
-	q.properties["site_id"] = siteID
+	q.properties[propertyKeySiteID] = siteID
 	return q
 }
 
 func (q *menuQuery) HasSoftDeletedIncluded() bool {
-	return q.hasProperty("soft_delete_included")
+	return q.hasProperty(propertyKeySoftDeleteIncluded)
 }
 
 func (q *menuQuery) SoftDeletedIncluded() bool {
 	if !q.HasSoftDeletedIncluded() {
 		return false
 	}
-	return q.properties["soft_delete_included"].(bool)
+	return q.properties[propertyKeySoftDeleteIncluded].(bool)
 }
 
 func (q *menuQuery) SetSoftDeletedIncluded(softDeleteIncluded bool) MenuQueryInterface {
-	q.properties["soft_delete_included"] = softDeleteIncluded
+	q.properties[propertyKeySoftDeleteIncluded] = softDeleteIncluded
 	return q
 }
 
 func (q *menuQuery) HasSortOrder() bool {
-	return q.hasProperty("sort_order")
+	return q.hasProperty(propertyKeySortOrder)
 }
 
 func (q *menuQuery) SortOrder() string {
-	return q.properties["sort_order"].(string)
+	return q.properties[propertyKeySortOrder].(string)
 }
 
 func (q *menuQuery) SetSortOrder(sortOrder string) MenuQueryInterface {
-	q.properties["sort_order"] = sortOrder
+	q.properties[propertyKeySortOrder] = sortOrder
 	return q
 }
 
 func (q *menuQuery) HasStatus() bool {
-	return q.hasProperty("status")
+	return q.hasProperty(propertyKeyStatus)
 }
 
 func (q *menuQuery) Status() string {
-	return q.properties["status"].(string)
+	return q.properties[propertyKeyStatus].(string)
 }
 
 func (q *menuQuery) SetStatus(status string) MenuQueryInterface {
-	q.properties["status"] = status
+	q.properties[propertyKeyStatus] = status
 	return q
 }
 
 func (q *menuQuery) HasStatusIn() bool {
-	return q.hasProperty("status_in")
+	return q.hasProperty(propertyKeyStatusIn)
 }
 
 func (q *menuQuery) StatusIn() []string {
-	return q.properties["status_in"].([]string)
+	return q.properties[propertyKeyStatusIn].([]string)
 }
 
 func (q *menuQuery) SetStatusIn(statusIn []string) MenuQueryInterface {
-	q.properties["status_in"] = statusIn
+	q.properties[propertyKeyStatusIn] = statusIn
 	return q
 }
 

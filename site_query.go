@@ -79,216 +79,216 @@ func (q *siteQuery) Validate() error {
 }
 
 func (q *siteQuery) Columns() []string {
-	if !q.hasParameter("columns") {
+	if !q.hasParameter(propertyKeyColumns) {
 		return []string{}
 	}
 
-	return q.parameters["columns"].([]string)
+	return q.parameters[propertyKeyColumns].([]string)
 }
 
 func (q *siteQuery) SetColumns(columns []string) SiteQueryInterface {
-	q.parameters["columns"] = columns
+	q.parameters[propertyKeyColumns] = columns
 	return q
 }
 
 func (q *siteQuery) HasCountOnly() bool {
-	return q.hasParameter("count_only")
+	return q.hasParameter(propertyKeyCountOnly)
 }
 
 func (q *siteQuery) IsCountOnly() bool {
 	if !q.HasCountOnly() {
 		return false
 	}
-	return q.parameters["count_only"].(bool)
+	return q.parameters[propertyKeyCountOnly].(bool)
 }
 
 func (q *siteQuery) SetCountOnly(isCountOnly bool) SiteQueryInterface {
-	q.parameters["count_only"] = isCountOnly
+	q.parameters[propertyKeyCountOnly] = isCountOnly
 	return q
 }
 
 func (q *siteQuery) HasCreatedAtGte() bool {
-	return q.hasParameter("created_at_gte")
+	return q.hasParameter(propertyKeyCreatedAtGte)
 }
 
 func (q *siteQuery) CreatedAtGte() string {
-	return q.parameters["created_at_gte"].(string)
+	return q.parameters[propertyKeyCreatedAtGte].(string)
 }
 
 func (q *siteQuery) SetCreatedAtGte(createdAtGte string) SiteQueryInterface {
-	q.parameters["created_at_gte"] = createdAtGte
+	q.parameters[propertyKeyCreatedAtGte] = createdAtGte
 	return q
 }
 
 func (q *siteQuery) HasCreatedAtLte() bool {
-	return q.hasParameter("created_at_lte")
+	return q.hasParameter(propertyKeyCreatedAtLte)
 }
 
 func (q *siteQuery) CreatedAtLte() string {
-	return q.parameters["created_at_lte"].(string)
+	return q.parameters[propertyKeyCreatedAtLte].(string)
 }
 
 func (q *siteQuery) SetCreatedAtLte(createdAtLte string) SiteQueryInterface {
-	q.parameters["created_at_lte"] = createdAtLte
+	q.parameters[propertyKeyCreatedAtLte] = createdAtLte
 	return q
 }
 
 func (q *siteQuery) HasDomainName() bool {
-	return q.hasParameter("domain_name")
+	return q.hasParameter(propertyKeyDomainName)
 }
 
 func (q *siteQuery) DomainName() string {
-	return q.parameters["domain_name"].(string)
+	return q.parameters[propertyKeyDomainName].(string)
 }
 
 func (q *siteQuery) SetDomainName(domainName string) SiteQueryInterface {
-	q.parameters["domain_name"] = domainName
+	q.parameters[propertyKeyDomainName] = domainName
 	return q
 }
 
 func (q *siteQuery) HasHandle() bool {
-	return q.hasParameter("handle")
+	return q.hasParameter(propertyKeyHandle)
 }
 
 func (q *siteQuery) Handle() string {
-	return q.parameters["handle"].(string)
+	return q.parameters[propertyKeyHandle].(string)
 }
 
 func (q *siteQuery) SetHandle(handle string) SiteQueryInterface {
-	q.parameters["handle"] = handle
+	q.parameters[propertyKeyHandle] = handle
 	return q
 }
 
 func (q *siteQuery) HasID() bool {
-	return q.hasParameter("id")
+	return q.hasParameter(propertyKeyId)
 }
 
 func (q *siteQuery) ID() string {
-	return q.parameters["id"].(string)
+	return q.parameters[propertyKeyId].(string)
 }
 
 func (q *siteQuery) SetID(id string) SiteQueryInterface {
-	q.parameters["id"] = id
+	q.parameters[propertyKeyId] = id
 	return q
 }
 
 func (q *siteQuery) HasIDIn() bool {
-	return q.hasParameter("id_in")
+	return q.hasParameter(propertyKeyIdIn)
 }
 
 func (q *siteQuery) IDIn() []string {
-	return q.parameters["id_in"].([]string)
+	return q.parameters[propertyKeyIdIn].([]string)
 }
 
 func (q *siteQuery) SetIDIn(idIn []string) SiteQueryInterface {
-	q.parameters["id_in"] = idIn
+	q.parameters[propertyKeyIdIn] = idIn
 	return q
 }
 
 func (q *siteQuery) HasLimit() bool {
-	return q.hasParameter("limit")
+	return q.hasParameter(propertyKeyLimit)
 }
 
 func (q *siteQuery) Limit() int {
-	return q.parameters["limit"].(int)
+	return q.parameters[propertyKeyLimit].(int)
 }
 
 func (q *siteQuery) SetLimit(limit int) SiteQueryInterface {
-	q.parameters["limit"] = limit
+	q.parameters[propertyKeyLimit] = limit
 	return q
 }
 
 func (q *siteQuery) HasNameLike() bool {
-	return q.hasParameter("name_like")
+	return q.hasParameter(propertyKeyNameLike)
 }
 
 func (q *siteQuery) NameLike() string {
-	return q.parameters["name_like"].(string)
+	return q.parameters[propertyKeyNameLike].(string)
 }
 
 func (q *siteQuery) SetNameLike(nameLike string) SiteQueryInterface {
-	q.parameters["name_like"] = nameLike
+	q.parameters[propertyKeyNameLike] = nameLike
 	return q
 }
 
 func (q *siteQuery) HasOffset() bool {
-	return q.hasParameter("offset")
+	return q.hasParameter(propertyKeyOffset)
 }
 
 func (q *siteQuery) Offset() int {
-	return q.parameters["offset"].(int)
+	return q.parameters[propertyKeyOffset].(int)
 }
 
 func (q *siteQuery) SetOffset(offset int) SiteQueryInterface {
-	q.parameters["offset"] = offset
+	q.parameters[propertyKeyOffset] = offset
 	return q
 }
 
 func (q *siteQuery) HasOrderBy() bool {
-	return q.hasParameter("order_by")
+	return q.hasParameter(propertyKeyOrderBy)
 }
 
 func (q *siteQuery) OrderBy() string {
-	return q.parameters["order_by"].(string)
+	return q.parameters[propertyKeyOrderBy].(string)
 }
 
 func (q *siteQuery) SetOrderBy(orderBy string) SiteQueryInterface {
-	q.parameters["order_by"] = orderBy
+	q.parameters[propertyKeyOrderBy] = orderBy
 	return q
 }
 
 func (q *siteQuery) HasSoftDeletedIncluded() bool {
-	return q.hasParameter("soft_deleted_included")
+	return q.hasParameter(propertyKeySoftDeleteIncluded)
 }
 
 func (q *siteQuery) SoftDeletedIncluded() bool {
 	if !q.HasSoftDeletedIncluded() {
 		return false
 	}
-	return q.parameters["soft_deleted_included"].(bool)
+	return q.parameters[propertyKeySoftDeleteIncluded].(bool)
 }
 
 func (q *siteQuery) SetSoftDeletedIncluded(softDeletedIncluded bool) SiteQueryInterface {
-	q.parameters["soft_deleted_included"] = softDeletedIncluded
+	q.parameters[propertyKeySoftDeleteIncluded] = softDeletedIncluded
 	return q
 }
 
 func (q *siteQuery) HasSortOrder() bool {
-	return q.hasParameter("sort_order")
+	return q.hasParameter(propertyKeySortOrder)
 }
 
 func (q *siteQuery) SortOrder() string {
-	return q.parameters["sort_order"].(string)
+	return q.parameters[propertyKeySortOrder].(string)
 }
 
 func (q *siteQuery) SetSortOrder(sortOrder string) SiteQueryInterface {
-	q.parameters["sort_order"] = sortOrder
+	q.parameters[propertyKeySortOrder] = sortOrder
 	return q
 }
 
 func (q *siteQuery) HasStatus() bool {
-	return q.hasParameter("status")
+	return q.hasParameter(propertyKeyStatus)
 }
 
 func (q *siteQuery) Status() string {
-	return q.parameters["status"].(string)
+	return q.parameters[propertyKeyStatus].(string)
 }
 
 func (q *siteQuery) SetStatus(status string) SiteQueryInterface {
-	q.parameters["status"] = status
+	q.parameters[propertyKeyStatus] = status
 	return q
 }
 
 func (q *siteQuery) HasStatusIn() bool {
-	return q.hasParameter("status_in")
+	return q.hasParameter(propertyKeyStatusIn)
 }
 
 func (q *siteQuery) StatusIn() []string {
-	return q.parameters["status_in"].([]string)
+	return q.parameters[propertyKeyStatusIn].([]string)
 }
 
 func (q *siteQuery) SetStatusIn(statusIn []string) SiteQueryInterface {
-	q.parameters["status_in"] = statusIn
+	q.parameters[propertyKeyStatusIn] = statusIn
 	return q
 }
 
