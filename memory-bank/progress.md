@@ -1,7 +1,7 @@
 ## Work Done
-- Moved constants to `consts.go`.
-- Updated `site_query.go`, `page_query.go`, `menu_query.go`, and `template_query.go` to use constants.
-- Added comments to `consts.go`.
+- Analyzed shortcode usage in the Go package.
+- Determined that shortcodes are externally defined and registered, allowing for user-defined custom rendering logic.
+- Updated Memory Bank with session details.
 
 ## Next Steps
-- Update Memory Bank (UMB)
+Awaiting further instructions.

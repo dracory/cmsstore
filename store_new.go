@@ -150,9 +150,9 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		translationLanguageDefault: opts.TranslationLanguageDefault,
 		translationLanguages:       opts.TranslationLanguages,
 
-		versioningEnabled:   opts.VersioningEnabled,
-		versioningTableName: opts.VersioningTableName,
-		versioningStore:     versionStore,
+		versioningEnabled: opts.VersioningEnabled,
+		// versioningTableName: opts.VersioningTableName,
+		versioningStore: versionStore,
 
 		shortcodes:  opts.Shortcodes,
 		middlewares: opts.Middlewares,
