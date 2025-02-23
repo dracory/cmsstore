@@ -250,3 +250,20 @@ This CMS provides a robust menu management system, allowing you to create and ma
 ### Using Menus
 
 Menus are created and managed through the admin interface, which provides tools for creating, updating, and deleting menu items.  The hierarchical structure of menus allows you to organize your navigation in a clear and intuitive way.  The system supports various menu types and allows for customization of menu items.
+
+## CMS URL Patterns
+
+The following URL patterns are supported:
+
+    :any - ([^/]+)
+    :num - ([0-9]+)
+    :all - (.*)
+    :string - ([a-zA-Z]+)
+    :number - ([0-9]+)
+    :numeric - ([0-9-.]+)
+    :alpha - ([a-zA-Z0-9-_]+)
+
+Example:
+
+/blog/:num/:any
+/shop/product/:num/:any
