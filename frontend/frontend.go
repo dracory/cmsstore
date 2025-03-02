@@ -22,7 +22,6 @@ import (
 type frontend struct {
 	blockEditorRenderer func(blocks []ui.BlockInterface) string
 	logger              *slog.Logger
-	shortcodes          []cmsstore.ShortcodeInterface
 	store               cmsstore.StoreInterface
 	cacheEnabled        bool
 	cacheExpireSeconds  int
@@ -514,7 +513,7 @@ func (frontend *frontend) renderContentToHtml(
 		return "", err
 	}
 
-	content, err = frontend.ContentRenderShortcodes(r, content)
+	content, err = frontend.applyShortcodes(r, content)
 
 	if err != nil {
 		return "", err
@@ -541,7 +540,7 @@ func (frontend *frontend) renderContentToHtml(
 //
 // =====================================================================
 func (frontend *frontend) pageFindBySiteAndAlias(ctx context.Context, siteID string, alias string) (cmsstore.PageInterface, error) {
-	// Try to find by "alias"
+	// 1. Try to find by "alias"
 	page, err := frontend.fetchPageBySiteAndAlias(ctx, siteID, alias)
 
 	if err != nil {
@@ -552,7 +551,7 @@ func (frontend *frontend) pageFindBySiteAndAlias(ctx context.Context, siteID str
 		return page, nil
 	}
 
-	// Try to find by "/alias"
+	// 2. Try to find by "/alias"
 	page, err = frontend.fetchPageBySiteAndAlias(ctx, siteID, "/"+alias)
 
 	if err != nil {
@@ -666,27 +665,6 @@ func (frontend *frontend) contentRenderTranslations(ctx context.Context, content
 	return content, nil
 }
 
-// returns the IDs in the content who have the following format [[prefix_id]]
-func contentFindIdsByPatternPrefix(content, prefix string) []string {
-	ids := []string{}
-
-	re := regexp.MustCompilePOSIX("|\\[\\[" + prefix + "_(.*)\\]\\]|U")
-
-	matches := re.FindAllStringSubmatch(content, -1)
-
-	for _, match := range matches {
-		if match[0] == "" {
-			continue
-		}
-		if match[1] == "" {
-			continue // no need to add empty IDs
-		}
-		ids = append(ids, match[1])
-	}
-
-	return ids
-}
-
 // ContentRenderBlockByID renders the block specified by the ID in the content
 //
 // Business Logic:
@@ -717,15 +695,28 @@ func (frontend *frontend) contentRenderBlockByID(ctx context.Context, content st
 	return content, nil
 }
 
-// ContentRenderShortcodes renders the shortcodes in a string
-func (frontend *frontend) ContentRenderShortcodes(req *http.Request, content string) (string, error) {
+// applyShortcodes replaces the shortcodes in the content with the actual content
+// of the shortcodes.
+//
+// Business logic:
+// - It uses the shortcode package to render the shortcodes.
+// - It iterates over the shortcodes added to the store and renders them with the shortcode package.
+// - It returns the processed content.
+//
+// Parameters:
+// - req: The HTTP request.
+// - content: The original page content to be processed.
+//
+// Returns:
+// - The processed page content after all applicable shortcodes have been applied.
+func (frontend *frontend) applyShortcodes(req *http.Request, content string) (string, error) {
 	sh, err := shortcode.NewShortcode(shortcode.WithBrackets("<", ">"))
 
 	if err != nil {
 		return "", err
 	}
 
-	for _, shortcode := range frontend.shortcodes {
+	for _, shortcode := range frontend.store.Shortcodes() {
 		content = sh.RenderWithRequest(req, content, shortcode.Alias(), shortcode.Render)
 	}
 
