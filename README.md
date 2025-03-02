@@ -268,3 +268,7 @@ Example:
 /blog/:num/:any
 /shop/product/:num/:any
 ```
+
+# Documentation
+
+For more information, please refer to the [Documentation](./docs/README.md).

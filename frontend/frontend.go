@@ -16,7 +16,6 @@ import (
 	"github.com/gouniverse/ui"
 	"github.com/gouniverse/utils"
 	"github.com/jellydator/ttlcache/v3"
-	"github.com/mingrammer/cfmt"
 	"github.com/samber/lo"
 )
 
@@ -31,6 +30,13 @@ type frontend struct {
 }
 
 var _ FrontendInterface = (*frontend)(nil)
+
+type contextKey string
+
+const (
+	// Define a custom context key for the page
+	pageContextKey contextKey = "page"
+)
 
 // Handler is the main handler for the CMS frontend.
 //
@@ -143,6 +149,15 @@ func (frontend *frontend) fetchBlockContent(ctx context.Context, blockID string)
 	return content, nil
 }
 
+// fetchPageAliasMapBySite fetches the page alias map for a given site ID
+//
+// Parameters:
+// - ctx: the context
+// - siteID: the ID of the site
+//
+// Returns:
+// - pageAliasMap: the page alias map
+// - err: the error, if any, or nil otherwise
 func (frontend *frontend) fetchPageAliasMapBySite(ctx context.Context, siteID string) (map[string]string, error) {
 	cacheKey := "page_alias_map_site:" + siteID
 
@@ -210,6 +225,13 @@ func (frontend *frontend) fetchPageBySiteAndAlias(ctx context.Context, siteID st
 
 // fetchActiveSites fetches the active sites from the database and stores them
 // in the cache to avoid an extra database query every time this method is called
+//
+// Parameters:
+// - ctx: the context
+//
+// Returns:
+// - sites: the active sites
+// - err: the error, if any, or nil otherwise
 func (frontend *frontend) fetchActiveSites(ctx context.Context) ([]cmsstore.SiteInterface, error) {
 	cacheKey := "sites_active"
 
@@ -249,6 +271,16 @@ func (frontend *frontend) fetchActiveSites(ctx context.Context) ([]cmsstore.Site
 // - matches the site endpoint as a prefix in the full page path (domain + path)
 // - returns the site and site endpoint
 // - results are cached in memory, to not fetch the same data multiple times
+//
+// Parameters:
+// - ctx: the context
+// - domain: the domain
+// - path: the path
+//
+// Returns:
+// - site: the site
+// - endpoint: the site endpoint
+// - err: the error, if any, or nil otherwise
 func (frontend *frontend) findSiteAndEndpointByDomainAndPath(ctx context.Context, domain string, path string) (site cmsstore.SiteInterface, endpoint string, err error) {
 	key1 := "find_site_and_endpoint_site" + domain + path
 	key2 := "find_site_and_endpoint_endpoint" + domain + path
@@ -351,9 +383,11 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(w http.ResponseWriter, r 
 		return hb.NewDiv().Text("Page with alias '").Text(alias).Text("' not found").ToHTML()
 	}
 
-	finalContent := frontend.pageOrTemplateContent(r, page)
+	// Get the page or template content
+	pageOrTemplateContent := frontend.pageOrTemplateContent(r, page)
 
-	html, err := frontend.renderContentToHtml(r, finalContent, TemplateRenderHtmlByIDOptions{
+	// Render the content to HTML
+	html, err := frontend.renderContentToHtml(r, pageOrTemplateContent, TemplateRenderHtmlByIDOptions{
 		Language:            language,
 		PageContent:         page.Content(),
 		PageCanonicalURL:    page.CanonicalUrl(),
@@ -369,19 +403,37 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(w http.ResponseWriter, r 
 	}
 
 	// Add page to the context
-	r = r.WithContext(context.WithValue(r.Context(), "page", page))
+	r = r.WithContext(context.WithValue(r.Context(), pageContextKey, page))
 
 	// Apply middleware transformations to the rendered HTML before returning the final result.
 	return frontend.applyMiddlewares(w, r, html, page.MiddlewaresBefore(), page.MiddlewaresAfter())
 }
 
+// pageOrTemplateContent returns the content of the page or the template associated with the page
+//
+// It follows these steps:
+// 1. Get the page content
+// 2. If the page uses the block editor, convert its JSON content to HTML.
+// 3. If the page has no template, return the page content as is.
+// 4. Fetch the template associated with the page.
+// 5. If the template is not found, return the page content as is.
+// 6. Return the template content.
+//
+// Parameters:
+// - r: the HTTP request
+// - page: the page
+//
+// Returns:
+// - pageContent: the content of the page or the template
 func (frontend *frontend) pageOrTemplateContent(r *http.Request, page cmsstore.PageInterface) (pageContent string) {
 	pageContent = page.Content()
 
+	// If the page uses the block editor, convert its JSON content to HTML.
 	if page.Editor() == cmsstore.PAGE_EDITOR_BLOCKEDITOR {
 		pageContent = frontend.convertBlockJsonToHtml(pageContent)
 	}
 
+	// If the page has no template, return the page content as is.
 	if page.TemplateID() == "" {
 		return pageContent
 	}
@@ -400,25 +452,6 @@ func (frontend *frontend) pageOrTemplateContent(r *http.Request, page cmsstore.P
 	}
 
 	return template.Content()
-}
-
-func (frontend *frontend) pageMiddlewaresFromMeta(page cmsstore.PageInterface) []string {
-	meta := page.Meta("middlewares")
-
-	if meta == "" {
-		return []string{}
-	}
-
-	m, err := utils.FromJSON(page.Meta("middlewares"), []string{})
-
-	if err != nil {
-		cfmt.Error(err)
-		return []string{}
-	}
-
-	return lo.Map(m.([]interface{}), func(v interface{}, _ int) string {
-		return v.(string)
-	})
 }
 
 func (frontend *frontend) convertBlockJsonToHtml(blocksJson string) string {
