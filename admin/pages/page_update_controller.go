@@ -615,7 +615,7 @@ func (c pageUpdateController) fieldsContent(data pageUpdateControllerData) (fiel
 			Name:  "page_title",
 			Type:  form.FORM_FIELD_TYPE_STRING,
 			Value: data.formTitle,
-			Help:  "The title of this blog as will be seen everywhere",
+			Help:  "The title of this webpage. This will be displayed in the browser tab",
 		},
 		&fieldContent,
 		&form.Field{

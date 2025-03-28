@@ -1,9 +1,20 @@
-package admin
+package shared
 
 import (
+	"net/http"
+
 	"github.com/gouniverse/cdn"
 	"github.com/gouniverse/hb"
 )
+
+func Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {
+	Styles     []string
+	StyleURLs  []string
+	Scripts    []string
+	ScriptURLs []string
+}) string {
+	return webpageComplete(webpageTitle, webpageHtml, options).ToHTML()
+}
 
 // WebpageComplete returns the webpage template for the website
 func webpageComplete(title, content string, options struct {

@@ -51,6 +51,10 @@ func (ui ui) Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpag
 	Scripts    []string
 	ScriptURLs []string
 }) string {
+	if ui.layout == nil {
+		return "layout is required"
+	}
+
 	return ui.layout(w, r, webpageTitle, webpageHtml, options)
 }
 

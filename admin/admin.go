@@ -91,7 +91,7 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 	Scripts    []string
 	ScriptURLs []string
 }) string {
-	webpage := webpageComplete(webpageTitle, webpageHtml, options).ToHTML()
+	webpage := shared.Layout(w, r, webpageTitle, webpageHtml, options)
 
 	if a.funcLayout != nil {
 		isNotEmpty := a.funcLayout("", "", struct {

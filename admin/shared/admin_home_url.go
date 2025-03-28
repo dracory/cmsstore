@@ -3,5 +3,11 @@ package shared
 import "net/http"
 
 func AdminHomeURL(r *http.Request) string {
-	return r.Context().Value(KeyAdminHomeURL).(string)
+	value := r.Context().Value(KeyAdminHomeURL)
+
+	if value == nil {
+		return ""
+	}
+
+	return value.(string)
 }

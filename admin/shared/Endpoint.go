@@ -3,5 +3,11 @@ package shared
 import "net/http"
 
 func Endpoint(r *http.Request) string {
-	return r.Context().Value(KeyEndpoint).(string)
+	value := r.Context().Value(KeyEndpoint)
+
+	if value == nil {
+		return ""
+	}
+
+	return value.(string)
 }
