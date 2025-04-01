@@ -116,7 +116,7 @@ func (o *page) SetCreatedAt(createdAt string) PageInterface {
 }
 
 // CreatedAtCarbon returns the creation timestamp of the page as a Carbon object.
-func (o *page) CreatedAtCarbon() carbon.Carbon {
+func (o *page) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
@@ -355,7 +355,7 @@ func (o *page) SetSoftDeletedAt(softDeletedAt string) PageInterface {
 }
 
 // SoftDeletedAtCarbon returns the soft delete timestamp of the page as a Carbon object.
-func (o *page) SoftDeletedAtCarbon() carbon.Carbon {
+func (o *page) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
@@ -404,6 +404,6 @@ func (o *page) SetUpdatedAt(updatedAt string) PageInterface {
 }
 
 // UpdatedAtCarbon returns the update timestamp of the page as a Carbon object.
-func (o *page) UpdatedAtCarbon() carbon.Carbon {
+func (o *page) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }

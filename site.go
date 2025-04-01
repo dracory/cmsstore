@@ -78,7 +78,7 @@ func (o *site) SetCreatedAt(createdAt string) SiteInterface {
 }
 
 // CreatedAtCarbon returns the creation timestamp of the site as a Carbon object.
-func (o *site) CreatedAtCarbon() carbon.Carbon {
+func (o *site) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
@@ -238,7 +238,7 @@ func (o *site) SetSoftDeletedAt(softDeletedAt string) SiteInterface {
 }
 
 // SoftDeletedAtCarbon returns the soft-deletion timestamp of the site as a Carbon object.
-func (o *site) SoftDeletedAtCarbon() carbon.Carbon {
+func (o *site) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
@@ -265,6 +265,6 @@ func (o *site) SetUpdatedAt(updatedAt string) SiteInterface {
 }
 
 // UpdatedAtCarbon returns the last updated timestamp of the site as a Carbon object.
-func (o *site) UpdatedAtCarbon() carbon.Carbon {
+func (o *site) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }

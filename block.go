@@ -71,7 +71,7 @@ func (o *block) SetCreatedAt(createdAt string) BlockInterface {
 	return o
 }
 
-func (o *block) CreatedAtCarbon() carbon.Carbon {
+func (o *block) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
@@ -249,7 +249,7 @@ func (o *block) SetSoftDeletedAt(softDeletedAt string) BlockInterface {
 	return o
 }
 
-func (o *block) SoftDeletedAtCarbon() carbon.Carbon {
+func (o *block) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
@@ -291,6 +291,6 @@ func (o *block) SetUpdatedAt(updatedAt string) BlockInterface {
 	return o
 }
 
-func (o *block) UpdatedAtCarbon() carbon.Carbon {
+func (o *block) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }

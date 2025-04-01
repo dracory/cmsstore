@@ -68,7 +68,7 @@ func (o *translation) SetCreatedAt(createdAt string) TranslationInterface {
 	return o
 }
 
-func (o *translation) CreatedAtCarbon() carbon.Carbon {
+func (o *translation) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
@@ -219,7 +219,7 @@ func (o *translation) SetSoftDeletedAt(softDeletedAt string) TranslationInterfac
 	return o
 }
 
-func (o *translation) SoftDeletedAtCarbon() carbon.Carbon {
+func (o *translation) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
@@ -241,6 +241,6 @@ func (o *translation) SetUpdatedAt(updatedAt string) TranslationInterface {
 	return o
 }
 
-func (o *translation) UpdatedAtCarbon() carbon.Carbon {
+func (o *translation) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }

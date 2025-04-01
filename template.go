@@ -69,7 +69,7 @@ func (o *template) SetCreatedAt(createdAt string) TemplateInterface {
 	return o
 }
 
-func (o *template) CreatedAtCarbon() carbon.Carbon {
+func (o *template) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
@@ -211,7 +211,7 @@ func (o *template) SetSoftDeletedAt(softDeletedAt string) TemplateInterface {
 	return o
 }
 
-func (o *template) SoftDeletedAtCarbon() carbon.Carbon {
+func (o *template) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
@@ -233,6 +233,6 @@ func (o *template) SetUpdatedAt(updatedAt string) TemplateInterface {
 	return o
 }
 
-func (o *template) UpdatedAtCarbon() carbon.Carbon {
+func (o *template) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }

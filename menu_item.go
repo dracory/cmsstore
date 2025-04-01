@@ -74,7 +74,7 @@ func (o *menuItem) SetCreatedAt(createdAt string) MenuItemInterface {
 }
 
 // CreatedAtCarbon returns the creation timestamp of the menu item as a Carbon object.
-func (o *menuItem) CreatedAtCarbon() carbon.Carbon {
+func (o *menuItem) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
@@ -281,7 +281,7 @@ func (o *menuItem) SetSoftDeletedAt(softDeletedAt string) MenuItemInterface {
 	return o
 }
 
-func (o *menuItem) SoftDeletedAtCarbon() carbon.Carbon {
+func (o *menuItem) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
@@ -318,7 +318,7 @@ func (o *menuItem) SetUpdatedAt(updatedAt string) MenuItemInterface {
 	return o
 }
 
-func (o *menuItem) UpdatedAtCarbon() carbon.Carbon {
+func (o *menuItem) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }
 

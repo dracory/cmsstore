@@ -17,7 +17,7 @@ type BlockInterface interface {
 
 	CreatedAt() string
 	SetCreatedAt(createdAt string) BlockInterface
-	CreatedAtCarbon() carbon.Carbon
+	CreatedAtCarbon() *carbon.Carbon
 
 	Content() string
 	SetContent(content string) BlockInterface
@@ -59,7 +59,7 @@ type BlockInterface interface {
 
 	SoftDeletedAt() string
 	SetSoftDeletedAt(softDeletedAt string) BlockInterface
-	SoftDeletedAtCarbon() carbon.Carbon
+	SoftDeletedAtCarbon() *carbon.Carbon
 
 	// Status returns the status of the block, i.e. BLOCK_STATUS_ACTIVE
 	Status() string
@@ -80,7 +80,7 @@ type BlockInterface interface {
 	SetUpdatedAt(updatedAt string) BlockInterface
 
 	// UpdatedAtCarbon returns carbon.Carbon of the last updated time of block
-	UpdatedAtCarbon() carbon.Carbon
+	UpdatedAtCarbon() *carbon.Carbon
 
 	IsActive() bool
 	IsInactive() bool
@@ -94,7 +94,7 @@ type MenuInterface interface {
 
 	CreatedAt() string
 	SetCreatedAt(createdAt string) MenuInterface
-	CreatedAtCarbon() carbon.Carbon
+	CreatedAtCarbon() *carbon.Carbon
 
 	Handle() string
 	SetHandle(handle string) MenuInterface
@@ -119,14 +119,14 @@ type MenuInterface interface {
 
 	SoftDeletedAt() string
 	SetSoftDeletedAt(softDeletedAt string) MenuInterface
-	SoftDeletedAtCarbon() carbon.Carbon
+	SoftDeletedAtCarbon() *carbon.Carbon
 
 	Status() string
 	SetStatus(status string) MenuInterface
 
 	UpdatedAt() string
 	SetUpdatedAt(updatedAt string) MenuInterface
-	UpdatedAtCarbon() carbon.Carbon
+	UpdatedAtCarbon() *carbon.Carbon
 
 	IsActive() bool
 	IsInactive() bool
@@ -140,7 +140,7 @@ type MenuItemInterface interface {
 
 	CreatedAt() string
 	SetCreatedAt(createdAt string) MenuItemInterface
-	CreatedAtCarbon() carbon.Carbon
+	CreatedAtCarbon() *carbon.Carbon
 
 	Handle() string
 	SetHandle(handle string) MenuItemInterface
@@ -176,7 +176,7 @@ type MenuItemInterface interface {
 
 	SoftDeletedAt() string
 	SetSoftDeletedAt(softDeletedAt string) MenuItemInterface
-	SoftDeletedAtCarbon() carbon.Carbon
+	SoftDeletedAtCarbon() *carbon.Carbon
 
 	Status() string
 	SetStatus(status string) MenuItemInterface
@@ -186,7 +186,7 @@ type MenuItemInterface interface {
 
 	UpdatedAt() string
 	SetUpdatedAt(updatedAt string) MenuItemInterface
-	UpdatedAtCarbon() carbon.Carbon
+	UpdatedAtCarbon() *carbon.Carbon
 
 	URL() string
 	SetURL(url string) MenuItemInterface
@@ -215,7 +215,7 @@ type PageInterface interface {
 
 	CreatedAt() string
 	SetCreatedAt(createdAt string) PageInterface
-	CreatedAtCarbon() carbon.Carbon
+	CreatedAtCarbon() *carbon.Carbon
 
 	CanonicalUrl() string
 	SetCanonicalUrl(canonicalUrl string) PageInterface
@@ -261,7 +261,7 @@ type PageInterface interface {
 
 	SoftDeletedAt() string
 	SetSoftDeletedAt(softDeletedAt string) PageInterface
-	SoftDeletedAtCarbon() carbon.Carbon
+	SoftDeletedAtCarbon() *carbon.Carbon
 
 	Status() string
 	SetStatus(status string) PageInterface
@@ -274,7 +274,7 @@ type PageInterface interface {
 
 	UpdatedAt() string
 	SetUpdatedAt(updatedAt string) PageInterface
-	UpdatedAtCarbon() carbon.Carbon
+	UpdatedAtCarbon() *carbon.Carbon
 
 	IsActive() bool
 	IsInactive() bool
@@ -288,7 +288,7 @@ type SiteInterface interface {
 
 	CreatedAt() string
 	SetCreatedAt(createdAt string) SiteInterface
-	CreatedAtCarbon() carbon.Carbon
+	CreatedAtCarbon() *carbon.Carbon
 
 	DomainNames() ([]string, error)
 	SetDomainNames(domainNames []string) (SiteInterface, error)
@@ -313,14 +313,14 @@ type SiteInterface interface {
 
 	SoftDeletedAt() string
 	SetSoftDeletedAt(softDeletedAt string) SiteInterface
-	SoftDeletedAtCarbon() carbon.Carbon
+	SoftDeletedAtCarbon() *carbon.Carbon
 
 	Status() string
 	SetStatus(status string) SiteInterface
 
 	UpdatedAt() string
 	SetUpdatedAt(updatedAt string) SiteInterface
-	UpdatedAtCarbon() carbon.Carbon
+	UpdatedAtCarbon() *carbon.Carbon
 
 	IsActive() bool
 	IsInactive() bool
@@ -448,7 +448,7 @@ type TemplateInterface interface {
 
 	CreatedAt() string
 	SetCreatedAt(createdAt string) TemplateInterface
-	CreatedAtCarbon() carbon.Carbon
+	CreatedAtCarbon() *carbon.Carbon
 
 	Content() string
 	SetContent(content string) TemplateInterface
@@ -476,14 +476,14 @@ type TemplateInterface interface {
 
 	SoftDeletedAt() string
 	SetSoftDeletedAt(softDeletedAt string) TemplateInterface
-	SoftDeletedAtCarbon() carbon.Carbon
+	SoftDeletedAtCarbon() *carbon.Carbon
 
 	Status() string
 	SetStatus(status string) TemplateInterface
 
 	UpdatedAt() string
 	SetUpdatedAt(updatedAt string) TemplateInterface
-	UpdatedAtCarbon() carbon.Carbon
+	UpdatedAtCarbon() *carbon.Carbon
 
 	IsActive() bool
 	IsInactive() bool
@@ -500,7 +500,7 @@ type TranslationInterface interface {
 
 	CreatedAt() string
 	SetCreatedAt(createdAt string) TranslationInterface
-	CreatedAtCarbon() carbon.Carbon
+	CreatedAtCarbon() *carbon.Carbon
 
 	Content() (languageCodeContent map[string]string, err error)
 	SetContent(languageCodeContent map[string]string) error
@@ -525,14 +525,14 @@ type TranslationInterface interface {
 
 	SoftDeletedAt() string
 	SetSoftDeletedAt(softDeletedAt string) TranslationInterface
-	SoftDeletedAtCarbon() carbon.Carbon
+	SoftDeletedAtCarbon() *carbon.Carbon
 
 	Status() string
 	SetStatus(status string) TranslationInterface
 
 	UpdatedAt() string
 	SetUpdatedAt(updatedAt string) TranslationInterface
-	UpdatedAtCarbon() carbon.Carbon
+	UpdatedAtCarbon() *carbon.Carbon
 
 	IsActive() bool
 	IsInactive() bool
