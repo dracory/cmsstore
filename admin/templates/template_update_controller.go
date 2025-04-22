@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gouniverse/api"
+	"github.com/gouniverse/base/req"
 	"github.com/gouniverse/bs"
 	"github.com/gouniverse/cdn"
 	"github.com/gouniverse/cmsstore"
@@ -12,7 +13,6 @@ import (
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/router"
 	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -418,12 +418,12 @@ func (controller templateUpdateController) fieldsSettings(data templateUpdateCon
 }
 
 func (controller templateUpdateController) saveTemplate(data templateUpdateControllerData) (templateUpdateControllerData, string) {
-	data.formContent = utils.Req(data.request, "template_content", "")
-	data.formMemo = utils.Req(data.request, "template_memo", "")
-	data.formName = utils.Req(data.request, "template_name", "")
-	data.formSiteID = utils.Req(data.request, "template_site_id", "")
-	data.formStatus = utils.Req(data.request, "template_status", "")
-	data.formTitle = utils.Req(data.request, "template_title", "")
+	data.formContent = req.Value(data.request, "template_content")
+	data.formMemo = req.Value(data.request, "template_memo")
+	data.formName = req.Value(data.request, "template_name")
+	data.formSiteID = req.Value(data.request, "template_site_id")
+	data.formStatus = req.Value(data.request, "template_status")
+	data.formTitle = req.Value(data.request, "template_title")
 
 	if data.view == VIEW_SETTINGS {
 		if data.formStatus == "" {
@@ -495,9 +495,9 @@ func (controller templateUpdateController) moveTemplateBlocks(request *http.Requ
 
 func (controller templateUpdateController) prepareDataAndValidate(r *http.Request) (data templateUpdateControllerData, errorMessage string) {
 	data.request = r
-	data.action = utils.Req(r, "action", "")
-	data.templateID = utils.Req(r, "template_id", "")
-	data.view = utils.Req(r, "view", "")
+	data.action = req.Value(r, "action")
+	data.templateID = req.Value(r, "template_id")
+	data.view = req.Value(r, "view")
 
 	if data.view == "" {
 		data.view = VIEW_CONTENT
