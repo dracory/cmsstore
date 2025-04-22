@@ -417,13 +417,13 @@ func (controller templateUpdateController) fieldsSettings(data templateUpdateCon
 	return fieldsSettings
 }
 
-func (controller templateUpdateController) saveTemplate(r *http.Request, data templateUpdateControllerData) (d templateUpdateControllerData, errorMessage string) {
-	data.formContent = utils.Req(r, "template_content", "")
-	data.formMemo = utils.Req(r, "template_memo", "")
-	data.formName = utils.Req(r, "template_name", "")
-	data.formSiteID = utils.Req(r, "template_site_id", "")
-	data.formStatus = utils.Req(r, "template_status", "")
-	data.formTitle = utils.Req(r, "template_title", "")
+func (controller templateUpdateController) saveTemplate(data templateUpdateControllerData) (templateUpdateControllerData, string) {
+	data.formContent = utils.Req(data.request, "template_content", "")
+	data.formMemo = utils.Req(data.request, "template_memo", "")
+	data.formName = utils.Req(data.request, "template_name", "")
+	data.formSiteID = utils.Req(data.request, "template_site_id", "")
+	data.formStatus = utils.Req(data.request, "template_status", "")
+	data.formTitle = utils.Req(data.request, "template_title", "")
 
 	if data.view == VIEW_SETTINGS {
 		if data.formStatus == "" {
@@ -443,7 +443,7 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 		data.template.SetContent(data.formContent)
 	}
 
-	err := controller.ui.Store().TemplateUpdate(d.request.Context(), data.template)
+	err := controller.ui.Store().TemplateUpdate(data.request.Context(), data.template)
 
 	if err != nil {
 		controller.ui.Logger().Error("At templateUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -451,7 +451,7 @@ func (controller templateUpdateController) saveTemplate(r *http.Request, data te
 		return data, ""
 	}
 
-	err = controller.moveTemplateBlocks(r, data.template.ID(), data.formSiteID)
+	err = controller.moveTemplateBlocks(data.request, data.template.ID(), data.formSiteID)
 
 	if err != nil {
 		controller.ui.Logger().Error("At templateUpdateController > prepareDataAndValidate", "error", err.Error())
@@ -541,7 +541,7 @@ func (controller templateUpdateController) prepareDataAndValidate(r *http.Reques
 		return data, ""
 	}
 
-	return controller.saveTemplate(r, data)
+	return controller.saveTemplate(data)
 }
 
 type templateUpdateControllerData struct {
