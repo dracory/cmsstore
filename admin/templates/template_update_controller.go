@@ -232,7 +232,7 @@ func (controller templateUpdateController) form(data templateUpdateControllerDat
 				Icon:              "success",
 				Text:              data.formSuccessMessage,
 				Position:          "top-end",
-				Timer:             1500,
+				Timer:             5000,
 				ShowConfirmButton: false,
 				ShowCancelButton:  false,
 			}).ToHTML(),
