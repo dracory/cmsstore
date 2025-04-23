@@ -2,6 +2,6 @@ package shared
 
 import "net/http"
 
-type Admin interface {
+type AdminInterface interface {
 	Handle(w http.ResponseWriter, r *http.Request)
 }

@@ -38,7 +38,7 @@ type admin struct {
 
 // == INTERFACE IMPLEMENTATION CHECK ==========================================
 
-var _ shared.Admin = (*admin)(nil)
+var _ shared.AdminInterface = (*admin)(nil)
 
 // == INTERFACE IMPLEMENTATION ================================================
 
