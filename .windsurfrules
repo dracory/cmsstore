@@ -1,0 +1,179 @@
+# WINDSURF AI INSTRUCTION RULES
+
+## AI MEMORY BANK
+
+The AI Memory Bank is a persistent knowledge repository located at `docs/ai-memory-bank/` that stores critical project information for future reference.
+
+### Key Files
+
+- **`docs/ai-memory-bank/overview.md`**
+  - Purpose: Project summary document providing concise information about purpose, structure, conventions, and frameworks
+  - Usage: Reference for quick onboarding and project navigation
+
+- **`docs/ai-memory-bank/lessons.md`**
+  - Purpose: Repository of project-specific knowledge, fixes, library versions, and corrections
+  - Usage: Prevents repeated mistakes and preserves solutions
+
+- **`docs/ai-memory-bank/plan.md`**
+  - Purpose: Active task planning document that serves as a structured scratchpad for organizing work
+  - Usage: Update with task breakdown using progress markers: `[X]` completed, `[ ]` pending
+
+### Best Practices
+
+- Update `plan.md` at the start of each new task
+- Record all corrections and important project details in `lessons.md`
+- Refer to `overview.md` before making structural decisions
+
+## AI TOOLS
+
+The AI toolset located in `docs/ai-tools/` contains Python utilities that provide extended capabilities. All tools run in an isolated virtual environment.
+
+### Available Tools
+
+#### Screenshot Verification
+Capture and analyze web page screenshots with LLM verification:
+
+```bash
+# Capture screenshots
+venv/bin/python docs/ai-tools/screenshot_utils.py URL [--output OUTPUT] [--width WIDTH] [--height HEIGHT]
+
+# Verify screenshots with LLM
+venv/bin/python docs/ai-tools/llm_api.py --prompt "Your verification question" --provider {openai|anthropic} --image path/to/screenshot.png
+```
+
+- **Programmatic Usage Example**
+```python
+from docs.ai-tools.screenshot_utils import take_screenshot_sync
+from docs.ai-tools.llm_api import query_llm
+
+# Take a screenshot
+screenshot_path = take_screenshot_sync('https://example.com', 'screenshot.png')
+
+# Verify with LLM
+response = query_llm(
+    "What is the background color and title of this webpage?",
+    provider="openai",  # or "anthropic"
+    image_path=screenshot_path
+)
+print(response)
+```
+
+#### LLM Integration
+Access language model capabilities through the provided API:
+
+```bash
+venv/bin/python docs/ai-tools/llm_api.py --prompt "Your question or instruction here"
+```
+
+#### Web Browser
+Extract content from web pages using the scraping utility:
+
+```bash
+venv/bin/python docs/ai-tools/web_scraper.py --max-concurrent 3 URL1 URL2 URL3
+```
+
+#### Search Engine
+Perform web searches and retrieve structured results:
+
+```bash
+venv/bin/python docs/ai-tools/search_engine.py "your search keywords"
+```
+
+Output format:
+```
+URL: https://example.com
+Title: Search result title
+Snippet: Brief excerpt from the search result
+```
+
+## SHORTCUTS
+
+- **UMB (Update Memory Bank)**
+  - When you encounter this shortcut, immediately update the memory bank with any new information learned in the current session
+  - Record the information in the appropriate file (`docs/ai-memory-bank/lessons.md` for corrections/fixes, `docs/ai-memory-bank/overview.md` for project structure)
+  - Format the update with a timestamp and clear context about what was learned
+  - Example format:
+    ```
+    ## [YYYY-MM-DD] Session Learning
+    - Learned: [specific information or correction]
+    - Context: [brief description of the situation or task]
+    - Application: [how to apply this knowledge in the future]
+    ```
+  - After updating, confirm the update has been made by providing a brief summary
+
+- Start by planning in `plan.md`
+- Check existing solutions in `lessons.md`
+- Reference project structure in `overview.md`
+- Leverage appropriate AI tools for implementation
+- Document new learnings immediately
+- When instructed with "UMB", update the memory bank with session learnings
+
+## WORKFLOW RECOMMENDATIONS
+
+- Start by planning in `docs/ai-memory-bank/plan.md`
+- Check existing solutions in `docs/ai-memory-bank/lessons.md`
+- Reference project structure in `docs/ai-memory-bank/overview.md`
+- Leverage appropriate AI tools from `docs/ai-tools/` for implementation
+- Create new tools when needed (following the TOOL CREATION guidelines)
+- Document new learnings immediately
+- When instructed with "UMB", update the memory bank with session learnings
+
+## TOOL CREATION
+
+- When existing tools are insufficient, create new tools in the `docs/ai-tools/` directory
+- Follow these guidelines for tool creation:
+  - Name tools descriptively (e.g., `csv_processor.py`, `image_analyzer.py`)
+  - Create tools with the virtual environment in mind: `docs/ai-tools/venv`
+  - Include comprehensive docstrings and comments
+  - Implement proper error handling and logging
+  - Create a clear command-line interface with argparse
+  - Provide examples of usage in the tool's header comment
+  - Make tools modular and reusable when possible
+  - Import from existing tool modules to maintain consistency
+- After creating a new tool, document it in `docs/ai-memory-bank/overview.md`
+- Example of a new tool template:
+  ```python
+  #!/usr/bin/env python
+  """
+  tool_name.py - Description of what the tool does
+  
+  Usage:
+      venv/bin/python docs/ai-tools/tool_name.py [arguments]
+  
+  Arguments:
+      --input-file     Path to input file
+      --output-file    Path to output file
+      --option         Description of option
+  
+  Examples:
+      venv/bin/python docs/ai-tools/tool_name.py --input-file data.txt --output-file results.txt
+  """
+  
+  import argparse
+  import logging
+  
+  # Configure logging
+  logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+  
+  def main():
+      # Set up argument parser
+      parser = argparse.ArgumentParser(description='Description of the tool')
+      parser.add_argument('--input-file', required=True, help='Path to input file')
+      parser.add_argument('--output-file', required=True, help='Path to output file')
+      parser.add_argument('--option', help='Description of option')
+      args = parser.parse_args()
+      
+      # Tool implementation
+      try:
+          logging.info("Starting process")
+          # Main functionality here
+          logging.info("Process completed successfully")
+      except Exception as e:
+          logging.error(f"Error occurred: {e}")
+          return 1
+      
+      return 0
+  
+  if __name__ == "__main__":
+      exit(main())
+  ```
