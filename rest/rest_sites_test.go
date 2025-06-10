@@ -196,13 +196,16 @@ func TestSiteEndpoints(t *testing.T) {
 		}
 
 		// Verify the site was soft deleted
-		site, err := store.SiteFindByID(context.Background(), testSite.ID())
+		// Create a query that includes soft-deleted items
+		query := cmsstore.SiteQuery().SetSoftDeletedIncluded(true).SetID(testSite.ID())
+		sites, err := store.SiteList(context.Background(), query)
 		if err != nil {
 			t.Fatalf("Failed to find site: %v", err)
 		}
-		if site == nil {
+		if len(sites) == 0 {
 			t.Fatalf("Site should still exist after soft delete")
 		}
+		site := sites[0]
 		if !site.IsSoftDeleted() {
 			t.Errorf("Site should be marked as soft deleted")
 		}
