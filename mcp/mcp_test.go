@@ -27,7 +27,7 @@ func initMCP(t *testing.T) (mcp.MCPInterface, *httptest.Server) {
 	mcpHandler := mcp.NewMCP(store)
 
 	// Create a test HTTP server with the MCP handler
-	server := httptest.NewServer(http.HandlerFunc(mcpHandler.Handler))
+	server := httptest.NewServer(mcpHandler.Handler())
 	t.Logf("Test server started successfully on %s", server.URL)
 	
 	return mcpHandler, server

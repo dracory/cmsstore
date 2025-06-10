@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gouniverse/cmsstore"
@@ -11,21 +12,20 @@ import (
 	mcpServer "github.com/mark3labs/mcp-go/server"
 )
 
-// MCPInterface defines the interface for the MCP handler
+// MCPInterface defines the interface for MCP handlers
 type MCPInterface interface {
-	// Handler returns the HTTP handler for the MCP server
-	Handler(w http.ResponseWriter, r *http.Request)
+	Handler() http.HandlerFunc
 }
 
-// mcpHandler represents the MCP handler for CMS operations
-type mcpHandler struct {
+// MCP represents the MCP handler for CMS operations
+type MCP struct {
 	store  cmsstore.StoreInterface
 	server *mcpServer.MCPServer
 }
 
 // NewMCP creates a new MCP handler instance
-func NewMCP(store cmsstore.StoreInterface) MCPInterface {
-	handler := &mcpHandler{
+func NewMCP(store cmsstore.StoreInterface) *MCP {
+	handler := &MCP{
 		store: store,
 	}
 
@@ -41,22 +41,65 @@ func NewMCP(store cmsstore.StoreInterface) MCPInterface {
 	return handler
 }
 
-// Handler is the main handler for the MCP server.
-// It processes MCP protocol requests and can be attached to any existing HTTP server.
-func (m *mcpHandler) Handler(w http.ResponseWriter, r *http.Request) {
-	// Process the MCP protocol request
-	if r.Method == http.MethodPost && r.Header.Get("Content-Type") == "application/json" {
-		// Use the MCP server's handler function directly
-		m.server.HandleMCPRequest(w, r)
-		return
-	}
+// Handler returns an http.HandlerFunc that can be attached to any router
+func (m *MCP) Handler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Process the MCP protocol request
+		if r.Method == http.MethodPost && r.Header.Get("Content-Type") == "application/json" {
+			// Handle the MCP request
+			m.handleMCPRequest(w, r)
+			return
+		}
 
-	// Return error for non-MCP requests
-	http.Error(w, `{"success":false,"error":"This endpoint only accepts MCP protocol requests"}`, http.StatusBadRequest)
+		// Return error for non-MCP requests
+		http.Error(w, `{"success":false,"error":"This endpoint only accepts MCP protocol requests"}`, http.StatusBadRequest)
+	}
 }
 
-// registerHandlers registers all the MCP handlers
-func (m *mcpHandler) registerHandlers() {
+// handleMCPRequest processes an MCP protocol request
+func (m *MCP) handleMCPRequest(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to read request body: %v"}`, err), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	// Process the MCP message using the MCP server
+	ctx := r.Context()
+	
+	// Parse the JSON-RPC request
+	var request struct {
+		JSONRPC string          `json:"jsonrpc"`
+		ID      string          `json:"id"`
+		Method  string          `json:"method"`
+		Params  json.RawMessage `json:"params"`
+	}
+	
+	if err := json.Unmarshal(body, &request); err != nil {
+		response := map[string]interface{}{
+			"jsonrpc": "2.0",
+			"id":      nil,
+			"error": map[string]interface{}{
+				"code":    -32700,
+				"message": "Parse error",
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+	
+	// Handle the request based on the method
+	response := m.server.HandleMessage(ctx, body)
+
+	// Write the response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// registerHandlers registers all the MCP tools and their handlers
+func (m *MCP) registerHandlers() {
 	// Register page operations
 	pageCreateTool := mcp.NewTool("page_create",
 		mcp.WithDescription("Create a new page"),
@@ -90,8 +133,11 @@ func (m *mcpHandler) registerHandlers() {
 	menuCreateTool := mcp.NewTool("menu_create",
 		mcp.WithDescription("Create a new menu"),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Menu name")),
-		mcp.WithString("status", mcp.Description("Menu status (draft, published, etc.)"), mcp.Enum("draft", "published")),
-		mcp.WithArray("items", mcp.Description("Menu items"), mcp.WithObject(mcp.WithString("title", mcp.Required(), mcp.Description("Item title")), mcp.WithString("url", mcp.Required(), mcp.Description("Item URL")))),
+		mcp.WithString("status", mcp.Description("Menu status (draft, active, inactive)"), 
+			mcp.Enum(cmsstore.MENU_STATUS_DRAFT, cmsstore.MENU_STATUS_ACTIVE, cmsstore.MENU_STATUS_INACTIVE)),
+		// Note: The MCP library API doesn't support nested objects in the way we were trying to use them
+		// So we'll use a simpler approach for menu items
+		mcp.WithString("items_json", mcp.Description("Menu items as JSON string")),
 	)
 	m.server.AddTool(menuCreateTool, m.handleMenuCreate)
 
@@ -103,7 +149,8 @@ func (m *mcpHandler) registerHandlers() {
 }
 
 // handlePageCreate handles the page_create tool
-func (m *mcpHandler) handlePageCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// handlePageCreate handles the page_create tool
+func (m *MCP) handlePageCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// Parse the request parameters
 	var params struct {
 		Title   string `json:"title"`
@@ -151,7 +198,7 @@ func (m *mcpHandler) handlePageCreate(ctx context.Context, request mcp.CallToolR
 }
 
 // handlePageGet handles page retrieval requests
-func (m *mcpHandler) handlePageGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (m *MCP) handlePageGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// Get the page ID from request parameters
 	pageID, err := request.RequireString("id")
 	if err != nil {
@@ -184,7 +231,7 @@ func (m *mcpHandler) handlePageGet(ctx context.Context, request mcp.CallToolRequ
 }
 
 // handlePageUpdate handles page update requests
-func (m *mcpHandler) handlePageUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (m *MCP) handlePageUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// Parse the arguments
 	var args struct {
 		ID      string         `json:"id"`
@@ -251,7 +298,7 @@ func (m *mcpHandler) handlePageUpdate(ctx context.Context, request mcp.CallToolR
 }
 
 // handlePageDelete handles page deletion requests
-func (m *mcpHandler) handlePageDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (m *MCP) handlePageDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// Parse the arguments
 	var data struct {
 		ID string `json:"id"`
@@ -297,7 +344,7 @@ func (m *mcpHandler) handlePageDelete(ctx context.Context, request mcp.CallToolR
 }
 
 // handleMenuCreate handles menu creation requests
-func (m *mcpHandler) handleMenuCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (m *MCP) handleMenuCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// Parse the request parameters
 	var params struct {
 		Name   string `json:"name"`
@@ -327,15 +374,16 @@ func (m *mcpHandler) handleMenuCreate(ctx context.Context, request mcp.CallToolR
 
 	// Add menu items if provided
 	if len(params.Items) > 0 {
-		items := []map[string]interface{}{}
-		for _, item := range params.Items {
-			items = append(items, map[string]interface{}{
-				"title": item.Title,
-				"url":   item.URL,
-			})
+		// Convert items to JSON string
+		itemsJSON, err := json.Marshal(params.Items)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("failed to marshal menu items: %v", err)), nil
 		}
-		// Store items as metadata since SetItems is not available
-		menu.SetMetadata(map[string]interface{}{"items": items})
+		// Store items as meta since SetItems is not available
+		err = menu.SetMeta("items", string(itemsJSON))
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("failed to set menu items: %v", err)), nil
+		}
 	}
 
 	// Save the menu
@@ -344,11 +392,14 @@ func (m *mcpHandler) handleMenuCreate(ctx context.Context, request mcp.CallToolR
 	}
 
 	// Return success response
+	// Get items from meta
+	itemsJSON := menu.Meta("items")
+	
 	result, err := json.Marshal(map[string]interface{}{
 		"id":      menu.ID(),
 		"name":    menu.Name(),
 		"status":  menu.Status(),
-		"items":   menu.GetMetadata()["items"],
+		"items":   itemsJSON,
 		"success": true,
 	})
 
@@ -360,7 +411,7 @@ func (m *mcpHandler) handleMenuCreate(ctx context.Context, request mcp.CallToolR
 }
 
 // handleMenuGet handles menu retrieval requests
-func (m *mcpHandler) handleMenuGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (m *MCP) handleMenuGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// Parse the request parameters
 	var params struct {
 		ID string `json:"id"`
@@ -387,11 +438,14 @@ func (m *mcpHandler) handleMenuGet(ctx context.Context, request mcp.CallToolRequ
 	}
 
 	// Convert the menu to JSON for the response
+	// Get items from meta
+	itemsJSON := menu.Meta("items")
+	
 	result, err := json.Marshal(map[string]interface{}{
 		"id":     menu.ID(),
 		"name":   menu.Name(),
 		"status": menu.Status(),
-		"items":  menu.GetMetadata()["items"],
+		"items":   itemsJSON,
 	})
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal menu: %v", err)), nil
