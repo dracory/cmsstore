@@ -142,7 +142,7 @@ func (m *MCP) registerHandlers() {
 	menuCreateTool := mcp.NewTool("menu_create",
 		mcp.WithDescription("Create a new menu"),
 		mcp.WithString("name", mcp.Required(), mcp.Description("Menu name")),
-		mcp.WithString("status", mcp.Description("Menu status (draft, active, inactive)"), 
+		mcp.WithString("status", mcp.Description("Menu status (draft, active, inactive)"),
 			mcp.Enum(cmsstore.MENU_STATUS_DRAFT, cmsstore.MENU_STATUS_ACTIVE, cmsstore.MENU_STATUS_INACTIVE)),
 		// Note: The MCP library API doesn't support nested objects in the way we were trying to use them
 		// So we'll use a simpler approach for menu items
@@ -169,6 +169,7 @@ func (m *MCP) handlePageCreate(ctx context.Context, request mcp.CallToolRequest)
 		Title   string `json:"title"`
 		Content string `json:"content"`
 		Status  string `json:"status,omitempty"`
+		SiteID  string `json:"site_id,omitempty"`
 	}
 
 	// Convert request.Arguments to JSON and then unmarshal into our struct
@@ -181,12 +182,41 @@ func (m *MCP) handlePageCreate(ctx context.Context, request mcp.CallToolRequest)
 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
 	}
 
+	// Validate required fields
+	if params.Title == "" {
+		return mcp.NewToolResultError("missing required parameter: title"), nil
+	}
+
+	// Create or get a default site if site_id is not provided
+	siteID := params.SiteID
+	if siteID == "" {
+		// Try to find an existing site
+		sites, err := m.store.SiteList(ctx, cmsstore.SiteQuery())
+		if err != nil || len(sites) == 0 {
+			// Create a default site
+			defaultSite := cmsstore.NewSite()
+			defaultSite.SetName("Default Site")
+			defaultSite.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
+			err = m.store.SiteCreate(ctx, defaultSite)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("failed to create default site: %v", err)), nil
+			}
+			siteID = defaultSite.ID()
+		} else {
+			// Use the first existing site
+			siteID = sites[0].ID()
+		}
+	}
+
 	// Create page using the store
 	page := cmsstore.NewPage()
 	page.SetTitle(params.Title)
 	page.SetContent(params.Content)
+	page.SetSiteID(siteID) // Set the site ID
 	if params.Status != "" {
 		page.SetStatus(params.Status)
+	} else {
+		page.SetStatus(cmsstore.PAGE_STATUS_ACTIVE) // Set a default status
 	}
 
 	// Save the page
@@ -200,6 +230,7 @@ func (m *MCP) handlePageCreate(ctx context.Context, request mcp.CallToolRequest)
 		"title":   page.Title(),
 		"content": page.Content(),
 		"status":  page.Status(),
+		"site_id": page.SiteID(),
 		"success": true,
 	})
 
@@ -212,11 +243,22 @@ func (m *MCP) handlePageCreate(ctx context.Context, request mcp.CallToolRequest)
 
 // handlePageGet handles page retrieval requests
 func (m *MCP) handlePageGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	// Get the page ID from request parameters
-	pageID, err := request.RequireString("id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("missing or invalid page ID: %v", err)), nil
+	// Parse the arguments from the request
+	var args struct {
+		ID string `json:"id"`
 	}
+
+	if err := json.Unmarshal([]byte(request.Params.Arguments.(json.RawMessage)), &args); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to parse arguments: %v", err)), nil
+	}
+
+	// Validate required fields
+	if args.ID == "" {
+		return mcp.NewToolResultError("missing required parameter: id"), nil
+	}
+
+	// Use the page ID from the parsed arguments
+	pageID := args.ID
 
 	// Get the page from the store
 	page, err := m.store.PageFindByID(ctx, pageID)
@@ -407,7 +449,7 @@ func (m *MCP) handleMenuCreate(ctx context.Context, request mcp.CallToolRequest)
 	// Return success response
 	// Get items from meta
 	itemsJSON := menu.Meta("items")
-	
+
 	result, err := json.Marshal(map[string]interface{}{
 		"id":      menu.ID(),
 		"name":    menu.Name(),
@@ -514,12 +556,54 @@ func (m *MCP) handleCallTool(w http.ResponseWriter, ctx context.Context, id stri
 		return
 	}
 
-	// Return the successful result
+	// Check if the result indicates an error (isError flag)
+	if result.IsError {
+		// Extract error message from the result
+		var errorMessage string
+		if len(result.Content) > 0 {
+			if textContent, ok := result.Content[0].(mcp.TextContent); ok {
+				errorMessage = textContent.Text
+			}
+		}
+		
+		if errorMessage == "" {
+			errorMessage = "Unknown error occurred"
+		}
+
+		response := map[string]interface{}{
+			"jsonrpc": "2.0",
+			"id":      id,
+			"error": map[string]interface{}{
+				"code":    -32000,
+				"message": errorMessage,
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// Get the text content from the result
+	var textContent string
+	if len(result.Content) > 0 {
+		for _, content := range result.Content {
+			if tc, ok := content.(mcp.TextContent); ok {
+				textContent = tc.Text
+				break
+			}
+		}
+	}
+
+	// Format the response according to the test expectations
 	response := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"id":      id,
-		"result":  result.Result,
+		"result": map[string]interface{}{
+			"text": textContent,
+			"success": true,
+		},
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
@@ -554,12 +638,12 @@ func (m *MCP) handleMenuGet(ctx context.Context, request mcp.CallToolRequest) (*
 	// Convert the menu to JSON for the response
 	// Get items from meta
 	itemsJSON := menu.Meta("items")
-	
+
 	result, err := json.Marshal(map[string]interface{}{
 		"id":     menu.ID(),
 		"name":   menu.Name(),
 		"status": menu.Status(),
-		"items":   itemsJSON,
+		"items":  itemsJSON,
 	})
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal menu: %v", err)), nil
