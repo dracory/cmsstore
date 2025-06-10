@@ -36,7 +36,7 @@ func (api *RestAPI) handleMenusEndpoint(w http.ResponseWriter, r *http.Request, 
 		if len(pathParts) > 0 && pathParts[0] != "" {
 			api.handleMenuDelete(w, r, pathParts[0])
 		} else {
-			http.Error(w, `{"success":false,"error":"Menu ID required for deletion"}`, http.StatusBadRequest)
+			http.Error(w, `{"success":false,"error":"Method not allowed"}`, http.StatusMethodNotAllowed)
 		}
 	default:
 		http.Error(w, `{"success":false,"error":"Method not allowed"}`, http.StatusMethodNotAllowed)
