@@ -84,6 +84,32 @@ func (api *RestAPI) handleBlockCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	block.SetSiteID(siteID)
 
+	// Set page ID - optional field
+	if pageID, ok := blockData["page_id"].(string); ok {
+		block.SetPageID(pageID)
+	}
+
+	// Set template ID - optional field
+	if templateID, ok := blockData["template_id"].(string); ok {
+		block.SetTemplateID(templateID)
+	} else {
+		block.SetTemplateID("") // Set empty string if not provided
+	}
+
+	// Set parent ID - optional field
+	if parentID, ok := blockData["parent_id"].(string); ok {
+		block.SetParentID(parentID)
+	} else {
+		block.SetParentID("") // Set empty string if not provided
+	}
+
+	// Set sequence - optional field with default value 0
+	if sequence, ok := blockData["sequence"].(float64); ok {
+		block.SetSequenceInt(int(sequence))
+	} else {
+		block.SetSequenceInt(0) // Default to 0 if not provided
+	}
+
 	// Save the block
 	if err := api.store.BlockCreate(r.Context(), block); err != nil {
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to save block: %v"}`, err), http.StatusInternalServerError)
@@ -97,6 +123,7 @@ func (api *RestAPI) handleBlockCreate(w http.ResponseWriter, r *http.Request) {
 		"name":    block.Name(),
 		"content": block.Content(),
 		"site_id": block.SiteID(),
+		"page_id": block.PageID(),
 	}
 
 	jsonResponse, err := json.Marshal(response)
@@ -126,10 +153,13 @@ func (api *RestAPI) handleBlockGet(w http.ResponseWriter, r *http.Request, block
 	// Return the block
 	response := map[string]interface{}{
 		"success": true,
-		"id":      block.ID(),
-		"name":    block.Name(),
-		"content": block.Content(),
-		"site_id": block.SiteID(),
+		"block": map[string]interface{}{
+			"id":      block.ID(),
+			"name":    block.Name(),
+			"content": block.Content(),
+			"site_id": block.SiteID(),
+			"page_id": block.PageID(),
+		},
 	}
 
 	jsonResponse, err := json.Marshal(response)

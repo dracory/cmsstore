@@ -10,11 +10,11 @@ import (
 	"github.com/gouniverse/cmsstore"
 )
 
-func TestBlockEndpoints(t *testing.T) {
+// setupBlockTest creates the necessary test data for block tests
+func setupBlockTest(t *testing.T) (string, cmsstore.StoreInterface, cmsstore.SiteInterface, cmsstore.PageInterface, cmsstore.BlockInterface, func()) {
 	serverURL, store, cleanup := setupTestAPI(t)
-	defer cleanup()
 
-	// Create a test site for our tests
+	// Create a test site
 	testSite := cmsstore.NewSite()
 	testSite.SetName("Test Site for Blocks")
 	testSite.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
@@ -23,195 +23,250 @@ func TestBlockEndpoints(t *testing.T) {
 		t.Fatalf("Failed to create test site: %v", err)
 	}
 
-	// Create a test block for our tests
+	// Create a test page
+	testPage := cmsstore.NewPage()
+	testPage.SetName("Test Page for Blocks")
+	testPage.SetSiteID(testSite.ID())
+	testPage.SetStatus(cmsstore.PAGE_STATUS_ACTIVE)
+	err = store.PageCreate(context.Background(), testPage)
+	if err != nil {
+		t.Fatalf("Failed to create test page: %v", err)
+	}
+
+	// Create a test block
 	testBlock := cmsstore.NewBlock()
 	testBlock.SetName("Test Block")
 	testBlock.SetContent("Test Content")
 	testBlock.SetSiteID(testSite.ID())
+	testBlock.SetPageID(testPage.ID())
 	testBlock.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
+	testBlock.SetTemplateID("")
+	testBlock.SetParentID("")
+	testBlock.SetSequenceInt(-1)
 	err = store.BlockCreate(context.Background(), testBlock)
 	if err != nil {
 		t.Fatalf("Failed to create test block: %v", err)
 	}
 
-	t.Run("List Blocks", func(t *testing.T) {
-		resp, err := http.Get(serverURL + "/api/blocks?site_id=" + testSite.ID())
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	return serverURL, store, testSite, testPage, testBlock, cleanup
+}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+// TestBlockList tests the GET /api/blocks endpoint (list blocks)
+func TestBlockList(t *testing.T) {
+	serverURL, _, testSite, _, _, cleanup := setupBlockTest(t)
+	defer cleanup()
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	resp, err := http.Get(serverURL + "/api/blocks?site_id=" + testSite.ID())
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
 
-		blocks, ok := result["blocks"].([]interface{})
-		if !ok {
-			t.Fatalf("Expected blocks to be an array, got %T", result["blocks"])
-		}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
 
-		if len(blocks) < 1 {
-			t.Errorf("Expected at least one block, got %d", len(blocks))
-		}
-	})
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
 
-	t.Run("Get Block", func(t *testing.T) {
-		resp, err := http.Get(serverURL + "/api/blocks/" + testBlock.ID())
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	blocks, ok := result["blocks"].([]interface{})
+	if !ok {
+		t.Fatalf("Expected blocks to be an array, got %T", result["blocks"])
+	}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+	if len(blocks) < 1 {
+		t.Errorf("Expected at least one block, got %d", len(blocks))
+	}
+}
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+// TestBlockGet tests the GET /api/blocks/{id} endpoint (get single block)
+func TestBlockGet(t *testing.T) {
+	serverURL, _, _, _, testBlock, cleanup := setupBlockTest(t)
+	defer cleanup()
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	resp, err := http.Get(serverURL + "/api/blocks/" + testBlock.ID())
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-		if id, ok := result["id"].(string); !ok || id != testBlock.ID() {
-			t.Errorf("Expected id to be %s, got %v", testBlock.ID(), id)
-		}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
 
-		if name, ok := result["name"].(string); !ok || name != "Test Block" {
-			t.Errorf("Expected name to be 'Test Block', got %v", name)
-		}
-	})
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
 
-	t.Run("Create Block", func(t *testing.T) {
-		blockData := map[string]interface{}{
-			"name":    "New Test Block",
-			"content": "New Test Content",
-			"site_id": testSite.ID(),
-			"status":  cmsstore.BLOCK_STATUS_ACTIVE,
-		}
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
 
-		jsonData, err := json.Marshal(blockData)
-		if err != nil {
-			t.Fatalf("Failed to marshal JSON: %v", err)
-		}
+	block, ok := result["block"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("Expected block to be an object, got %T", result["block"])
+	}
 
-		resp, err := http.Post(serverURL+"/api/blocks", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	if id, ok := block["id"].(string); !ok || id != testBlock.ID() {
+		t.Errorf("Expected id to be %s, got %v", testBlock.ID(), id)
+	}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+	if name, ok := block["name"].(string); !ok || name != testBlock.Name() {
+		t.Errorf("Expected name to be %s, got %v", testBlock.Name(), name)
+	}
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	if content, ok := block["content"].(string); !ok || content != testBlock.Content() {
+		t.Errorf("Expected content to be %s, got %v", testBlock.Content(), content)
+	}
+}
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+// TestBlockCreate tests the POST /api/blocks endpoint (create block)
+func TestBlockCreate(t *testing.T) {
+	serverURL, _, testSite, testPage, _, cleanup := setupBlockTest(t)
+	defer cleanup()
 
-		if _, ok := result["id"].(string); !ok {
-			t.Errorf("Expected id to be a string")
-		}
+	blockData := map[string]interface{}{
+		"name":    "New Test Block",
+		"content": "New Test Content",
+		"site_id": testSite.ID(),
+		"page_id": testPage.ID(),
+		"status":  cmsstore.BLOCK_STATUS_ACTIVE,
+	}
 
-		if name, ok := result["name"].(string); !ok || name != "New Test Block" {
-			t.Errorf("Expected name to be 'New Test Block', got %v", name)
-		}
-	})
+	jsonData, err := json.Marshal(blockData)
+	if err != nil {
+		t.Fatalf("Failed to marshal JSON: %v", err)
+	}
 
-	t.Run("Update Block", func(t *testing.T) {
-		updateData := map[string]interface{}{
-			"name":    "Updated Test Block",
-			"content": "Updated Test Content",
-		}
+	resp, err := http.Post(serverURL+"/api/blocks", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-		jsonData, err := json.Marshal(updateData)
-		if err != nil {
-			t.Fatalf("Failed to marshal JSON: %v", err)
-		}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
 
-		req, err := http.NewRequest(http.MethodPut, serverURL+"/api/blocks/"+testBlock.ID(), bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
+
+	// Print the response for debugging
+	jsonResponse, _ := json.MarshalIndent(result, "", "  ")
+	t.Logf("Response: %s", jsonResponse)
+
+	if _, ok := result["id"].(string); !ok {
+		t.Errorf("Expected id to be a string")
+	}
+
+	if name, ok := result["name"].(string); !ok || name != "New Test Block" {
+		t.Errorf("Expected name to be 'New Test Block', got %v", name)
+	}
+}
+
+// TestBlockUpdate tests the PUT /api/blocks/{id} endpoint (update block)
+func TestBlockUpdate(t *testing.T) {
+	serverURL, _, _, _, testBlock, cleanup := setupBlockTest(t)
+	defer cleanup()
+
+	updateData := map[string]interface{}{
+		"name":    "Updated Test Block",
+		"content": "Updated Test Content",
+	}
+
+	jsonData, err := json.Marshal(updateData)
+	if err != nil {
+		t.Fatalf("Failed to marshal JSON: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPut, serverURL+"/api/blocks/"+testBlock.ID(), bytes.NewBuffer(jsonData))
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
 		req.Header.Set("Content-Type", "application/json")
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
 
-		if name, ok := result["name"].(string); !ok || name != "Updated Test Block" {
-			t.Errorf("Expected name to be 'Updated Test Block', got %v", name)
-		}
-	})
+	if name, ok := result["name"].(string); !ok || name != "Updated Test Block" {
+		t.Errorf("Expected name to be 'Updated Test Block', got %v", name)
+	}
+}
 
-	t.Run("Delete Block", func(t *testing.T) {
-		req, err := http.NewRequest(http.MethodDelete, serverURL+"/api/blocks/"+testBlock.ID(), nil)
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
+// TestBlockDelete tests the DELETE /api/blocks/{id} endpoint (delete block)
+func TestBlockDelete(t *testing.T) {
+	serverURL, store, _, _, testBlock, cleanup := setupBlockTest(t)
+	defer cleanup()
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	req, err := http.NewRequest(http.MethodDelete, serverURL+"/api/blocks/"+testBlock.ID(), nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
 
-		// Verify the block was soft deleted
-		block, err := store.BlockFindByID(context.Background(), testBlock.ID())
-		if err != nil {
-			t.Fatalf("Failed to find block: %v", err)
-		}
-		if block == nil {
-			t.Fatalf("Block should still exist after soft delete")
-		}
-		if !block.IsSoftDeleted() {
-			t.Errorf("Block should be marked as soft deleted")
-		}
-	})
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
+
+	// Verify the block was soft deleted
+	// Create a query that includes soft-deleted items
+	query := cmsstore.BlockQuery().SetSoftDeleteIncluded(true).SetID(testBlock.ID())
+	blocks, err := store.BlockList(context.Background(), query)
+	if err != nil {
+		t.Fatalf("Failed to find block: %v", err)
+	}
+
+	if len(blocks) == 0 {
+		t.Fatalf("Block should still exist after soft delete")
+	}
+
+	block := blocks[0]
+	if !block.IsSoftDeleted() {
+		t.Errorf("Block should be marked as soft deleted")
+	}
 }
