@@ -329,15 +329,15 @@ func (controller translationUpdateController) fieldsSettings(data translationUpd
 				},
 				{
 					Value: "Draft",
-					Key:   cmsstore.TEMPLATE_STATUS_DRAFT,
+					Key:   cmsstore.TRANSLATION_STATUS_DRAFT,
 				},
 				{
 					Value: "Published",
-					Key:   cmsstore.TEMPLATE_STATUS_ACTIVE,
+					Key:   cmsstore.TRANSLATION_STATUS_ACTIVE,
 				},
 				{
 					Value: "Unpublished",
-					Key:   cmsstore.TEMPLATE_STATUS_INACTIVE,
+					Key:   cmsstore.TRANSLATION_STATUS_INACTIVE,
 				},
 			},
 		}),

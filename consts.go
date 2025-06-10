@@ -98,6 +98,13 @@ const (
 	TEMPLATE_STATUS_INACTIVE = "inactive"
 )
 
+// Translation Statuses
+const (
+	TRANSLATION_STATUS_DRAFT    = "draft"
+	TRANSLATION_STATUS_ACTIVE   = "active"
+	TRANSLATION_STATUS_INACTIVE = "inactive"
+)
+
 // Versioning Types
 const (
 	VERSIONING_TYPE_BLOCK       = "block"
