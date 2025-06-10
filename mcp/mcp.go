@@ -21,12 +21,14 @@ type MCPInterface interface {
 type MCP struct {
 	store  cmsstore.StoreInterface
 	server *mcpServer.MCPServer
+	tools  map[string]mcp.Tool
 }
 
 // NewMCP creates a new MCP handler instance
 func NewMCP(store cmsstore.StoreInterface) *MCP {
 	handler := &MCP{
 		store: store,
+		tools: make(map[string]mcp.Tool),
 	}
 
 	// Initialize MCP server
@@ -65,9 +67,6 @@ func (m *MCP) handleMCPRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Process the MCP message using the MCP server
-	ctx := r.Context()
-	
 	// Parse the JSON-RPC request
 	var request struct {
 		JSONRPC string          `json:"jsonrpc"`
@@ -75,7 +74,7 @@ func (m *MCP) handleMCPRequest(w http.ResponseWriter, r *http.Request) {
 		Method  string          `json:"method"`
 		Params  json.RawMessage `json:"params"`
 	}
-	
+
 	if err := json.Unmarshal(body, &request); err != nil {
 		response := map[string]interface{}{
 			"jsonrpc": "2.0",
@@ -89,9 +88,15 @@ func (m *MCP) handleMCPRequest(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	
-	// Handle the request based on the method
-	response := m.server.HandleMessage(ctx, body)
+
+	// Handle the call_tool method
+	if request.Method == "call_tool" {
+		m.handleCallTool(w, r.Context(), request.ID, request.Params)
+		return
+	}
+
+	// For other methods, let the MCP server handle it
+	response := m.server.HandleMessage(r.Context(), body)
 
 	// Write the response
 	w.Header().Set("Content-Type", "application/json")
@@ -107,6 +112,7 @@ func (m *MCP) registerHandlers() {
 		mcp.WithString("content", mcp.Required(), mcp.Description("Page content")),
 		mcp.WithString("status", mcp.Description("Page status (draft, published, etc.)"), mcp.Enum("draft", "published")),
 	)
+	m.tools["page_create"] = pageCreateTool
 	m.server.AddTool(pageCreateTool, m.handlePageCreate)
 
 	// Add more tools for other operations (get, update, delete, etc.)
@@ -114,6 +120,7 @@ func (m *MCP) registerHandlers() {
 		mcp.WithDescription("Get a page by ID"),
 		mcp.WithString("id", mcp.Required(), mcp.Description("Page ID")),
 	)
+	m.tools["page_get"] = pageGetTool
 	m.server.AddTool(pageGetTool, m.handlePageGet)
 
 	pageUpdateTool := mcp.NewTool("page_update",
@@ -121,12 +128,14 @@ func (m *MCP) registerHandlers() {
 		mcp.WithString("id", mcp.Required(), mcp.Description("Page ID")),
 		mcp.WithObject("updates", mcp.Required(), mcp.Description("Page updates")),
 	)
+	m.tools["page_update"] = pageUpdateTool
 	m.server.AddTool(pageUpdateTool, m.handlePageUpdate)
 
 	pageDeleteTool := mcp.NewTool("page_delete",
 		mcp.WithDescription("Delete a page"),
 		mcp.WithString("id", mcp.Required(), mcp.Description("Page ID")),
 	)
+	m.tools["page_delete"] = pageDeleteTool
 	m.server.AddTool(pageDeleteTool, m.handlePageDelete)
 
 	// Menu operations
@@ -139,13 +148,17 @@ func (m *MCP) registerHandlers() {
 		// So we'll use a simpler approach for menu items
 		mcp.WithString("items_json", mcp.Description("Menu items as JSON string")),
 	)
+	m.tools["menu_create"] = menuCreateTool
 	m.server.AddTool(menuCreateTool, m.handleMenuCreate)
 
 	menuGetTool := mcp.NewTool("menu_get",
 		mcp.WithDescription("Get a menu"),
 		mcp.WithString("id", mcp.Required(), mcp.Description("Menu ID")),
 	)
+	m.tools["menu_get"] = menuGetTool
 	m.server.AddTool(menuGetTool, m.handleMenuGet)
+
+	// We need to handle call_tool method manually
 }
 
 // handlePageCreate handles the page_create tool
@@ -408,6 +421,107 @@ func (m *MCP) handleMenuCreate(ctx context.Context, request mcp.CallToolRequest)
 	}
 
 	return mcp.NewToolResultText(string(result)), nil
+}
+
+// handleCallTool processes the JSON-RPC call_tool method
+func (m *MCP) handleCallTool(w http.ResponseWriter, ctx context.Context, id string, params json.RawMessage) {
+	// Parse the call_tool parameters
+	var callParams struct {
+		ToolName  string          `json:"tool_name"`
+		Arguments json.RawMessage `json:"arguments"`
+	}
+
+	if err := json.Unmarshal(params, &callParams); err != nil {
+		response := map[string]interface{}{
+			"jsonrpc": "2.0",
+			"id":      id,
+			"error": map[string]interface{}{
+				"code":    -32602,
+				"message": "Invalid params",
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// Check if the tool exists
+	_, ok := m.tools[callParams.ToolName]
+	if !ok {
+		response := map[string]interface{}{
+			"jsonrpc": "2.0",
+			"id":      id,
+			"error": map[string]interface{}{
+				"code":    -32601,
+				"message": fmt.Sprintf("Tool %s not found", callParams.ToolName),
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// Create a CallToolRequest with the correct structure
+	callRequest := mcp.CallToolRequest{
+		Params: mcp.CallToolParams{
+			Name:      callParams.ToolName,
+			Arguments: json.RawMessage(callParams.Arguments),
+		},
+	}
+
+	// Call the appropriate handler based on the tool name
+	var result *mcp.CallToolResult
+	var err error
+
+	switch callParams.ToolName {
+	case "page_create":
+		result, err = m.handlePageCreate(ctx, callRequest)
+	case "page_get":
+		result, err = m.handlePageGet(ctx, callRequest)
+	case "page_update":
+		result, err = m.handlePageUpdate(ctx, callRequest)
+	case "page_delete":
+		result, err = m.handlePageDelete(ctx, callRequest)
+	case "menu_create":
+		result, err = m.handleMenuCreate(ctx, callRequest)
+	case "menu_get":
+		result, err = m.handleMenuGet(ctx, callRequest)
+	default:
+		response := map[string]interface{}{
+			"jsonrpc": "2.0",
+			"id":      id,
+			"error": map[string]interface{}{
+				"code":    -32601,
+				"message": fmt.Sprintf("Handler for tool %s not implemented", callParams.ToolName),
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	if err != nil {
+		response := map[string]interface{}{
+			"jsonrpc": "2.0",
+			"id":      id,
+			"error": map[string]interface{}{
+				"code":    -32603,
+				"message": err.Error(),
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// Return the successful result
+	response := map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      id,
+		"result":  result.Result,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // handleMenuGet handles menu retrieval requests
