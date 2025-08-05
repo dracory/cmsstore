@@ -199,14 +199,19 @@ func TestMenuEndpoints(t *testing.T) {
 			t.Errorf("Expected success to be true, got %v", result["success"])
 		}
 
-		// Verify the menu was soft deleted
-		menu, err := store.MenuFindByID(context.Background(), testMenu.ID())
+		// Verify the menu was soft deleted by querying with soft-deleted included
+		list, err := store.MenuList(context.Background(), 
+			cmsstore.MenuQuery().
+				SetID(testMenu.ID()).
+				SetSoftDeletedIncluded(true).
+				SetLimit(1))
 		if err != nil {
 			t.Fatalf("Failed to find menu: %v", err)
 		}
-		if menu == nil {
+		if len(list) == 0 {
 			t.Fatalf("Menu should still exist after soft delete")
 		}
+		menu := list[0]
 		if !menu.IsSoftDeleted() {
 			t.Errorf("Menu should be marked as soft deleted")
 		}

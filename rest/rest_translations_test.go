@@ -10,6 +10,89 @@ import (
 	"github.com/gouniverse/cmsstore"
 )
 
+// TestListTranslationsWithLocaleFilter tests the GET /api/translations endpoint with locale filter
+func TestListTranslationsWithLocaleFilter(t *testing.T) {
+	serverURL, store, cleanup := setupTestAPI(t)
+	defer cleanup()
+
+	// Create a test site
+	testSite := cmsstore.NewSite()
+	testSite.SetName("Test Site for Locale Filter")
+	testSite.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
+	err := store.SiteCreate(context.Background(), testSite)
+	if err != nil {
+		t.Fatalf("Failed to create test site: %v", err)
+	}
+
+	// Create a test translation with all required fields
+	testTranslation := cmsstore.NewTranslation()
+	testTranslation.SetName("welcome_message")   // This is the key/identifier for the translation
+	testTranslation.SetHandle("welcome_message") // Handle is also required
+	testTranslation.SetSiteID(testSite.ID())     // Must be set to a valid site ID
+	testTranslation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
+
+	// Set content as a map of locale to text
+	contentMap := map[string]string{
+		"en": "Welcome to our site",
+		"fr": "Bienvenue sur notre site",
+	}
+	err = testTranslation.SetContent(contentMap)
+	if err != nil {
+		t.Fatalf("Failed to set translation content: %v", err)
+	}
+
+	// Store key and locale in metadata - required for filtering
+	err = testTranslation.SetMeta("key", "welcome_message")
+	if err != nil {
+		t.Fatalf("Failed to set translation key metadata: %v", err)
+	}
+
+	err = testTranslation.SetMeta("locale", "fr") // Set the locale we'll filter by
+	if err != nil {
+		t.Fatalf("Failed to set translation locale metadata: %v", err)
+	}
+
+	// Set some additional metadata
+	err = testTranslation.SetMeta("description", "Welcome message for the homepage")
+	if err != nil {
+		t.Fatalf("Failed to set translation description metadata: %v", err)
+	}
+	err = store.TranslationCreate(context.Background(), testTranslation)
+	if err != nil {
+		t.Fatalf("Failed to create test translation: %v", err)
+	}
+
+	// Test the endpoint
+	resp, err := http.Get(serverURL + "/api/translations?site_id=" + testSite.ID() + "&locale=fr")
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
+
+	translations, ok := result["translations"].([]interface{})
+	if !ok {
+		t.Fatalf("Expected translations to be an array, got %T", result["translations"])
+	}
+
+	// Since we're filtering by locale, we should still see our test translation
+	if len(translations) < 1 {
+		t.Errorf("Expected at least one translation with locale 'fr', got %d", len(translations))
+	}
+}
+
 func TestTranslationEndpoints(t *testing.T) {
 	serverURL, store, cleanup := setupTestAPI(t)
 	defer cleanup()
@@ -80,36 +163,7 @@ func TestTranslationEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("List Translations with Locale Filter", func(t *testing.T) {
-		resp, err := http.Get(serverURL + "/api/translations?site_id=" + testSite.ID() + "&locale=fr")
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
-
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
-
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
-
-		translations, ok := result["translations"].([]interface{})
-		if !ok {
-			t.Fatalf("Expected translations to be an array, got %T", result["translations"])
-		}
-
-		// Since we're filtering by locale, we should still see our test translation
-		if len(translations) < 1 {
-			t.Errorf("Expected at least one translation with locale 'fr', got %d", len(translations))
-		}
-	})
+	t.Run("List Translations with Locale Filter", TestListTranslationsWithLocaleFilter)
 
 	t.Run("Get Translation", func(t *testing.T) {
 		resp, err := http.Get(serverURL + "/api/translations/" + testTranslation.ID())

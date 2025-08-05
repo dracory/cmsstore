@@ -10,9 +10,16 @@ import (
 	"github.com/gouniverse/cmsstore"
 )
 
-func TestTemplateEndpoints(t *testing.T) {
+type templateTestFixtures struct {
+	serverURL   string
+	store      cmsstore.StoreInterface
+	cleanup    func()
+	testSite   cmsstore.SiteInterface
+	testTemplate cmsstore.TemplateInterface
+}
+
+func setupTemplateTest(t *testing.T) *templateTestFixtures {
 	serverURL, store, cleanup := setupTestAPI(t)
-	defer cleanup()
 
 	// Create a test site for our tests
 	testSite := cmsstore.NewSite()
@@ -34,184 +41,212 @@ func TestTemplateEndpoints(t *testing.T) {
 		t.Fatalf("Failed to create test template: %v", err)
 	}
 
-	t.Run("List Templates", func(t *testing.T) {
-		resp, err := http.Get(serverURL + "/api/templates?site_id=" + testSite.ID())
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	return &templateTestFixtures{
+		serverURL:   serverURL,
+		store:      store,
+		cleanup:    cleanup,
+		testSite:   testSite,
+		testTemplate: testTemplate,
+	}
+}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+func TestListTemplates(t *testing.T) {
+	fixtures := setupTemplateTest(t)
+	defer fixtures.cleanup()
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	resp, err := http.Get(fixtures.serverURL + "/api/templates?site_id=" + fixtures.testSite.ID())
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
 
-		templates, ok := result["templates"].([]interface{})
-		if !ok {
-			t.Fatalf("Expected templates to be an array, got %T", result["templates"])
-		}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
 
-		if len(templates) < 1 {
-			t.Errorf("Expected at least one template, got %d", len(templates))
-		}
-	})
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
 
-	t.Run("Get Template", func(t *testing.T) {
-		resp, err := http.Get(serverURL + "/api/templates/" + testTemplate.ID())
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	templates, ok := result["templates"].([]interface{})
+	if !ok {
+		t.Fatalf("Expected templates to be an array, got %T", result["templates"])
+	}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+	if len(templates) < 1 {
+		t.Errorf("Expected at least one template, got %d", len(templates))
+	}
+}
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+func TestGetTemplate(t *testing.T) {
+	fixtures := setupTemplateTest(t)
+	defer fixtures.cleanup()
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	resp, err := http.Get(fixtures.serverURL + "/api/templates/" + fixtures.testTemplate.ID())
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-		if id, ok := result["id"].(string); !ok || id != testTemplate.ID() {
-			t.Errorf("Expected id to be %s, got %v", testTemplate.ID(), id)
-		}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
 
-		if name, ok := result["name"].(string); !ok || name != "Test Template" {
-			t.Errorf("Expected name to be 'Test Template', got %v", name)
-		}
-	})
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
 
-	t.Run("Create Template", func(t *testing.T) {
-		templateData := map[string]interface{}{
-			"name":    "New Test Template",
-			"content": "New Test Content",
-			"site_id": testSite.ID(),
-			"status":  cmsstore.TEMPLATE_STATUS_ACTIVE,
-		}
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
 
-		jsonData, err := json.Marshal(templateData)
-		if err != nil {
-			t.Fatalf("Failed to marshal JSON: %v", err)
-		}
+	if id, ok := result["id"].(string); !ok || id != fixtures.testTemplate.ID() {
+		t.Errorf("Expected id to be %s, got %v", fixtures.testTemplate.ID(), id)
+	}
 
-		resp, err := http.Post(serverURL+"/api/templates", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	if name, ok := result["name"].(string); !ok || name != "Test Template" {
+		t.Errorf("Expected name to be 'Test Template', got %v", name)
+	}
+}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+func TestCreateTemplate(t *testing.T) {
+	fixtures := setupTemplateTest(t)
+	defer fixtures.cleanup()
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	templateData := map[string]interface{}{
+		"name":    "New Test Template",
+		"content": "New Test Content",
+		"site_id": fixtures.testSite.ID(),
+		"status":  cmsstore.TEMPLATE_STATUS_ACTIVE,
+	}
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	jsonData, err := json.Marshal(templateData)
+	if err != nil {
+		t.Fatalf("Failed to marshal JSON: %v", err)
+	}
 
-		if _, ok := result["id"].(string); !ok {
-			t.Errorf("Expected id to be a string")
-		}
+	resp, err := http.Post(fixtures.serverURL+"/api/templates", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-		if name, ok := result["name"].(string); !ok || name != "New Test Template" {
-			t.Errorf("Expected name to be 'New Test Template', got %v", name)
-		}
-	})
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
 
-	t.Run("Update Template", func(t *testing.T) {
-		updateData := map[string]interface{}{
-			"name":    "Updated Test Template",
-			"content": "Updated Test Content",
-		}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
 
-		jsonData, err := json.Marshal(updateData)
-		if err != nil {
-			t.Fatalf("Failed to marshal JSON: %v", err)
-		}
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
 
-		req, err := http.NewRequest(http.MethodPut, serverURL+"/api/templates/"+testTemplate.ID(), bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
-		req.Header.Set("Content-Type", "application/json")
+	if _, ok := result["id"].(string); !ok {
+		t.Errorf("Expected id to be a string")
+	}
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	if name, ok := result["name"].(string); !ok || name != "New Test Template" {
+		t.Errorf("Expected name to be 'New Test Template', got %v", name)
+	}
+}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+func TestUpdateTemplate(t *testing.T) {
+	fixtures := setupTemplateTest(t)
+	defer fixtures.cleanup()
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	updateData := map[string]interface{}{
+		"name":    "Updated Test Template",
+		"content": "Updated Test Content",
+	}
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	jsonData, err := json.Marshal(updateData)
+	if err != nil {
+		t.Fatalf("Failed to marshal JSON: %v", err)
+	}
 
-		if name, ok := result["name"].(string); !ok || name != "Updated Test Template" {
-			t.Errorf("Expected name to be 'Updated Test Template', got %v", name)
-		}
-	})
+	req, err := http.NewRequest(http.MethodPut, fixtures.serverURL+"/api/templates/"+fixtures.testTemplate.ID(), bytes.NewBuffer(jsonData))
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
 
-	t.Run("Delete Template", func(t *testing.T) {
-		req, err := http.NewRequest(http.MethodDelete, serverURL+"/api/templates/"+testTemplate.ID(), nil)
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	if name, ok := result["name"].(string); !ok || name != "Updated Test Template" {
+		t.Errorf("Expected name to be 'Updated Test Template', got %v", name)
+	}
+}
 
-		// Verify the template was soft deleted
-		template, err := store.TemplateFindByID(context.Background(), testTemplate.ID())
-		if err != nil {
-			t.Fatalf("Failed to find template: %v", err)
-		}
-		if template == nil {
-			t.Fatalf("Template should still exist after soft delete")
-		}
-		if !template.IsSoftDeleted() {
-			t.Errorf("Template should be marked as soft deleted")
-		}
-	})
+func TestDeleteTemplate(t *testing.T) {
+	fixtures := setupTemplateTest(t)
+	defer fixtures.cleanup()
+
+	req, err := http.NewRequest(http.MethodDelete, fixtures.serverURL+"/api/templates/"+fixtures.testTemplate.ID(), nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("Failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK, got %v", resp.Status)
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+
+	if success, ok := result["success"].(bool); !ok || !success {
+		t.Errorf("Expected success to be true, got %v", result["success"])
+	}
+
+	// Verify the template was soft deleted by querying with soft-deleted included
+	list, err := fixtures.store.TemplateList(context.Background(), 
+		cmsstore.TemplateQuery().
+			SetID(fixtures.testTemplate.ID()).
+			SetSoftDeletedIncluded(true).
+			SetLimit(1))
+	if err != nil {
+		t.Fatalf("Failed to find template: %v", err)
+	}
+	if len(list) == 0 {
+		t.Fatalf("Template should still exist after soft delete")
+	}
+	template := list[0]
+	if !template.IsSoftDeleted() {
+		t.Errorf("Template should be marked as soft deleted")
+	}
 }

@@ -49,14 +49,27 @@ func initTestDB(t *testing.T, filepath string) (*sql.DB, func()) {
 func initTestStore(t *testing.T, db *sql.DB) cmsstore.StoreInterface {
 	t.Helper()
 	store, err := cmsstore.NewStore(cmsstore.NewStoreOptions{
-		DB:                 db,
-		BlockTableName:     "rest_test_block",
-		PageTableName:      "rest_test_page",
-		SiteTableName:      "rest_test_site",
-		TemplateTableName:  "rest_test_template",
-		MenusEnabled:       true,
-		MenuTableName:      "rest_test_menu",
-		MenuItemTableName:  "rest_test_menu_item",
+		DB:                db,
+		BlockTableName:    "rest_test_block",
+		PageTableName:     "rest_test_page",
+		SiteTableName:     "rest_test_site",
+		TemplateTableName: "rest_test_template",
+
+		TranslationsEnabled:        true,
+		TranslationLanguageDefault: "en",
+		TranslationLanguages: map[string]string{
+			"en": "English",
+			"fr": "French",
+		},
+		TranslationTableName: "rest_test_translation",
+
+		MenusEnabled:      true,
+		MenuTableName:     "rest_test_menu",
+		MenuItemTableName: "rest_test_menu_item",
+
+		VersioningEnabled:   true,
+		VersioningTableName: "rest_test_version",
+
 		AutomigrateEnabled: true,
 		DbDriverName:       "sqlite3",
 	})
