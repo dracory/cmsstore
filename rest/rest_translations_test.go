@@ -8,360 +8,301 @@ import (
 	"testing"
 
 	"github.com/gouniverse/cmsstore"
+	"github.com/stretchr/testify/require"
 )
+
+// CreateTestSite is now defined in test_utils.go
+// createTestTranslation creates a test translation and returns it
+func createTestTranslation(t *testing.T, store cmsstore.StoreInterface, siteID string) cmsstore.TranslationInterface {
+	translation := cmsstore.NewTranslation()
+	translation.SetName("welcome_message")
+	translation.SetHandle("welcome_message")
+	translation.SetSiteID(siteID)
+	translation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
+
+	contentMap := map[string]string{
+		"en": "Welcome to our site",
+		"fr": "Bienvenue sur notre site",
+	}
+	err := translation.SetContent(contentMap)
+	require.NoError(t, err, "Failed to set translation content")
+
+	err = translation.SetMeta("key", "welcome_message")
+	require.NoError(t, err, "Failed to set translation key metadata")
+
+	err = translation.SetMeta("description", "Welcome message for the homepage")
+	require.NoError(t, err, "Failed to set translation description metadata")
+
+	err = store.TranslationCreate(context.Background(), translation)
+	require.NoError(t, err, "Failed to create test translation")
+
+	return translation
+}
+
+// TestListTranslations tests the GET /api/translations endpoint
+func TestListTranslations(t *testing.T) {
+	serverURL, store, cleanup := setupTestAPI(t)
+	defer cleanup()
+
+	testSite, cleanupSite := CreateTestSite(t, store)
+	defer cleanupSite()
+
+	// Create a test translation
+	_ = createTestTranslation(t, store, testSite.ID())
+
+	// Test the endpoint
+	resp, err := http.Get(serverURL + "/api/translations?site_id=" + testSite.ID())
+	require.NoError(t, err, "Failed to make request")
+	defer resp.Body.Close()
+
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code")
+
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	require.NoError(t, err, "Failed to decode response")
+
+	success, ok := result["success"].(bool)
+	require.True(t, ok && success, "Expected success to be true")
+
+	translations, ok := result["translations"].([]interface{})
+	require.True(t, ok, "Expected translations to be an array")
+	require.GreaterOrEqual(t, len(translations), 1, "Expected at least one translation")
+}
 
 // TestListTranslationsWithLocaleFilter tests the GET /api/translations endpoint with locale filter
 func TestListTranslationsWithLocaleFilter(t *testing.T) {
 	serverURL, store, cleanup := setupTestAPI(t)
 	defer cleanup()
 
-	// Create a test site
-	testSite := cmsstore.NewSite()
-	testSite.SetName("Test Site for Locale Filter")
-	testSite.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
-	err := store.SiteCreate(context.Background(), testSite)
-	if err != nil {
-		t.Fatalf("Failed to create test site: %v", err)
-	}
+	testSite, cleanupSite := CreateTestSite(t, store)
+	defer cleanupSite()
 
-	// Create a test translation with all required fields
-	testTranslation := cmsstore.NewTranslation()
-	testTranslation.SetName("welcome_message")   // This is the key/identifier for the translation
-	testTranslation.SetHandle("welcome_message") // Handle is also required
-	testTranslation.SetSiteID(testSite.ID())     // Must be set to a valid site ID
-	testTranslation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
+	// Create a test translation
+	translation := createTestTranslation(t, store, testSite.ID())
 
-	// Set content as a map of locale to text
-	contentMap := map[string]string{
-		"en": "Welcome to our site",
-		"fr": "Bienvenue sur notre site",
-	}
-	err = testTranslation.SetContent(contentMap)
-	if err != nil {
-		t.Fatalf("Failed to set translation content: %v", err)
-	}
+	// Set the locale we'll filter by
+	err := translation.SetMeta("locale", "fr")
+	require.NoError(t, err, "Failed to set translation locale metadata")
 
-	// Store key and locale in metadata - required for filtering
-	err = testTranslation.SetMeta("key", "welcome_message")
-	if err != nil {
-		t.Fatalf("Failed to set translation key metadata: %v", err)
-	}
+	// Update the translation with the new metadata
+	err = store.TranslationUpdate(context.Background(), translation)
+	require.NoError(t, err, "Failed to update test translation with locale metadata")
 
-	err = testTranslation.SetMeta("locale", "fr") // Set the locale we'll filter by
-	if err != nil {
-		t.Fatalf("Failed to set translation locale metadata: %v", err)
-	}
-
-	// Set some additional metadata
-	err = testTranslation.SetMeta("description", "Welcome message for the homepage")
-	if err != nil {
-		t.Fatalf("Failed to set translation description metadata: %v", err)
-	}
-	err = store.TranslationCreate(context.Background(), testTranslation)
-	if err != nil {
-		t.Fatalf("Failed to create test translation: %v", err)
-	}
-
-	// Test the endpoint
+	// Test the endpoint with locale filter
 	resp, err := http.Get(serverURL + "/api/translations?site_id=" + testSite.ID() + "&locale=fr")
-	if err != nil {
-		t.Fatalf("Failed to make request: %v", err)
-	}
+	require.NoError(t, err, "Failed to make request")
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("Expected status OK, got %v", resp.Status)
-	}
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code")
 
 	var result map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("Failed to decode response: %v", err)
-	}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	require.NoError(t, err, "Failed to decode response")
 
-	if success, ok := result["success"].(bool); !ok || !success {
-		t.Errorf("Expected success to be true, got %v", result["success"])
-	}
+	success, ok := result["success"].(bool)
+	require.True(t, ok && success, "Expected success to be true")
 
 	translations, ok := result["translations"].([]interface{})
-	if !ok {
-		t.Fatalf("Expected translations to be an array, got %T", result["translations"])
-	}
-
-	// Since we're filtering by locale, we should still see our test translation
-	if len(translations) < 1 {
-		t.Errorf("Expected at least one translation with locale 'fr', got %d", len(translations))
-	}
+	require.True(t, ok, "Expected translations to be an array")
+	require.GreaterOrEqual(t, len(translations), 1, "Expected at least one translation with locale 'fr'")
 }
 
-func TestTranslationEndpoints(t *testing.T) {
+// TestGetTranslation tests the GET /api/translations/:id endpoint
+func TestGetTranslation(t *testing.T) {
 	serverURL, store, cleanup := setupTestAPI(t)
 	defer cleanup()
 
-	// Create a test site for our tests
-	testSite := cmsstore.NewSite()
-	testSite.SetName("Test Site for Translations")
-	testSite.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
-	err := store.SiteCreate(context.Background(), testSite)
-	if err != nil {
-		t.Fatalf("Failed to create test site: %v", err)
+	testSite, cleanupSite := CreateTestSite(t, store)
+	defer cleanupSite()
+
+	// Create a test translation
+	translation := createTestTranslation(t, store, testSite.ID())
+
+	// Test the endpoint
+	resp, err := http.Get(serverURL + "/api/translations/" + translation.ID())
+	require.NoError(t, err, "Failed to make request")
+	defer resp.Body.Close()
+
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code")
+
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	require.NoError(t, err, "Failed to decode response")
+
+	success, ok := result["success"].(bool)
+	require.True(t, ok && success, "Expected success to be true")
+
+	id, ok := result["id"].(string)
+	require.True(t, ok, "Expected id to be a string")
+	require.Equal(t, translation.ID(), id, "Unexpected translation ID")
+
+	key, ok := result["key"].(string)
+	require.True(t, ok, "Expected key to be a string")
+	require.Equal(t, "welcome_message", key, "Unexpected translation key")
+
+	// Check that content is properly returned
+	content, ok := result["content"].(map[string]interface{})
+	require.True(t, ok, "Expected content to be a map")
+
+	enText, ok := content["en"].(string)
+	require.True(t, ok, "Expected English text to be present")
+	require.Equal(t, "Welcome to our site", enText, "Unexpected English text")
+
+	frText, ok := content["fr"].(string)
+	require.True(t, ok, "Expected French text to be present")
+	require.Equal(t, "Bienvenue sur notre site", frText, "Unexpected French text")
+}
+
+// TestCreateTranslation tests the POST /api/translations endpoint
+func TestCreateTranslation(t *testing.T) {
+	serverURL, store, cleanup := setupTestAPI(t)
+	defer cleanup()
+
+	testSite, cleanupSite := CreateTestSite(t, store)
+	defer cleanupSite()
+
+	translationData := map[string]interface{}{
+		"key":     "login_button",
+		"site_id": testSite.ID(),
+		"status":  cmsstore.TRANSLATION_STATUS_ACTIVE,
+		"content": map[string]string{
+			"en": "Login",
+			"fr": "Connexion",
+		},
 	}
 
-	// Create a test translation for our tests
-	testTranslation := cmsstore.NewTranslation()
-	testTranslation.SetName("welcome_message") // Key is stored in Name
+	jsonData, err := json.Marshal(translationData)
+	require.NoError(t, err, "Failed to marshal JSON")
 
-	// Set content as a map of locale to text
-	contentMap := map[string]string{
-		"en": "Welcome to our site",
-		"fr": "Bienvenue sur notre site",
+	resp, err := http.Post(serverURL+"/api/translations", "application/json", bytes.NewBuffer(jsonData))
+	require.NoError(t, err, "Failed to make request")
+	defer resp.Body.Close()
+
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code")
+
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	require.NoError(t, err, "Failed to decode response")
+
+	success, ok := result["success"].(bool)
+	require.True(t, ok && success, "Expected success to be true")
+
+	id, ok := result["id"].(string)
+	require.True(t, ok, "Expected id to be a string")
+	require.NotEmpty(t, id, "Expected non-empty id")
+
+	key, ok := result["key"].(string)
+	require.True(t, ok, "Expected key to be a string")
+	require.Equal(t, "login_button", key, "Unexpected translation key")
+
+	// Check that content is properly returned
+	content, ok := result["content"].(map[string]interface{})
+	require.True(t, ok, "Expected content to be a map")
+
+	enText, ok := content["en"].(string)
+	require.True(t, ok, "Expected English text to be present")
+	require.Equal(t, "Login", enText, "Unexpected English text")
+
+	frText, ok := content["fr"].(string)
+	require.True(t, ok, "Expected French text to be present")
+	require.Equal(t, "Connexion", frText, "Unexpected French text")
+}
+
+// TestUpdateTranslation tests the PUT /api/translations/:id endpoint
+func TestUpdateTranslation(t *testing.T) {
+	serverURL, store, cleanup := setupTestAPI(t)
+	defer cleanup()
+
+	testSite, cleanupSite := CreateTestSite(t, store)
+	defer cleanupSite()
+
+	// Create a test translation to update
+	translation := createTestTranslation(t, store, testSite.ID())
+
+	updateData := map[string]interface{}{
+		"key": "welcome_message",
+		"content": map[string]string{
+			"en": "Welcome to our updated site",
+			"fr": "Bienvenue sur notre site mis à jour",
+			"es": "Bienvenido a nuestro sitio actualizado", // Adding a new language
+		},
 	}
-	err = testTranslation.SetContent(contentMap)
-	if err != nil {
-		t.Fatalf("Failed to set translation content: %v", err)
-	}
 
-	// Store key and locale in metadata
-	err = testTranslation.SetMeta("key", "welcome_message")
-	if err != nil {
-		t.Fatalf("Failed to set translation key metadata: %v", err)
-	}
+	jsonData, err := json.Marshal(updateData)
+	require.NoError(t, err, "Failed to marshal JSON")
 
-	testTranslation.SetSiteID(testSite.ID())
-	testTranslation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
-	err = store.TranslationCreate(context.Background(), testTranslation)
-	if err != nil {
-		t.Fatalf("Failed to create test translation: %v", err)
-	}
+	req, err := http.NewRequest(http.MethodPut, serverURL+"/api/translations/"+translation.ID(), bytes.NewBuffer(jsonData))
+	require.NoError(t, err, "Failed to create request")
+	req.Header.Set("Content-Type", "application/json")
 
-	t.Run("List Translations", func(t *testing.T) {
-		resp, err := http.Get(serverURL + "/api/translations?site_id=" + testSite.ID())
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err, "Failed to make request")
+	defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code")
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	require.NoError(t, err, "Failed to decode response")
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	success, ok := result["success"].(bool)
+	require.True(t, ok && success, "Expected success to be true")
 
-		translations, ok := result["translations"].([]interface{})
-		if !ok {
-			t.Fatalf("Expected translations to be an array, got %T", result["translations"])
-		}
+	// Check that content is properly updated
+	content, ok := result["content"].(map[string]interface{})
+	require.True(t, ok, "Expected content to be a map")
 
-		if len(translations) < 1 {
-			t.Errorf("Expected at least one translation, got %d", len(translations))
-		}
-	})
+	enText, ok := content["en"].(string)
+	require.True(t, ok, "Expected English text to be present")
+	require.Equal(t, "Welcome to our updated site", enText, "Unexpected English text")
 
-	t.Run("List Translations with Locale Filter", TestListTranslationsWithLocaleFilter)
+	frText, ok := content["fr"].(string)
+	require.True(t, ok, "Expected French text to be present")
+	require.Equal(t, "Bienvenue sur notre site mis à jour", frText, "Unexpected French text")
 
-	t.Run("Get Translation", func(t *testing.T) {
-		resp, err := http.Get(serverURL + "/api/translations/" + testTranslation.ID())
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
+	esText, ok := content["es"].(string)
+	require.True(t, ok, "Expected Spanish text to be present")
+	require.Equal(t, "Bienvenido a nuestro sitio actualizado", esText, "Unexpected Spanish text")
+}
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
+// TestDeleteTranslation tests the DELETE /api/translations/:id endpoint
+func TestDeleteTranslation(t *testing.T) {
+	serverURL, store, cleanup := setupTestAPI(t)
+	defer cleanup()
 
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
+	testSite, cleanupSite := CreateTestSite(t, store)
+	defer cleanupSite()
 
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
+	// Create a test translation to delete
+	translation := createTestTranslation(t, store, testSite.ID())
 
-		if id, ok := result["id"].(string); !ok || id != testTranslation.ID() {
-			t.Errorf("Expected id to be %s, got %v", testTranslation.ID(), id)
-		}
+	req, err := http.NewRequest(http.MethodDelete, serverURL+"/api/translations/"+translation.ID(), nil)
+	require.NoError(t, err, "Failed to create request")
 
-		if key, ok := result["key"].(string); !ok || key != "welcome_message" {
-			t.Errorf("Expected key to be 'welcome_message', got %v", key)
-		}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err, "Failed to make request")
+	defer resp.Body.Close()
 
-		// Check that content is properly returned
-		content, ok := result["content"].(map[string]interface{})
-		if !ok {
-			t.Fatalf("Expected content to be a map, got %T", result["content"])
-		}
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code")
 
-		if enText, ok := content["en"].(string); !ok || enText != "Welcome to our site" {
-			t.Errorf("Expected English text to be 'Welcome to our site', got %v", enText)
-		}
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	require.NoError(t, err, "Failed to decode response")
 
-		if frText, ok := content["fr"].(string); !ok || frText != "Bienvenue sur notre site" {
-			t.Errorf("Expected French text to be 'Bienvenue sur notre site', got %v", frText)
-		}
-	})
+	success, ok := result["success"].(bool)
+	require.True(t, ok && success, "Expected success to be true")
 
-	t.Run("Create Translation", func(t *testing.T) {
-		translationData := map[string]interface{}{
-			"key":     "login_button",
-			"site_id": testSite.ID(),
-			"status":  cmsstore.TRANSLATION_STATUS_ACTIVE,
-			"content": map[string]string{
-				"en": "Login",
-				"fr": "Connexion",
-			},
-		}
-
-		jsonData, err := json.Marshal(translationData)
-		if err != nil {
-			t.Fatalf("Failed to marshal JSON: %v", err)
-		}
-
-		resp, err := http.Post(serverURL+"/api/translations", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
-
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
-
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
-
-		if _, ok := result["id"].(string); !ok {
-			t.Errorf("Expected id to be a string")
-		}
-
-		if key, ok := result["key"].(string); !ok || key != "login_button" {
-			t.Errorf("Expected key to be 'login_button', got %v", key)
-		}
-
-		// Check that content is properly returned
-		content, ok := result["content"].(map[string]interface{})
-		if !ok {
-			t.Fatalf("Expected content to be a map, got %T", result["content"])
-		}
-
-		if enText, ok := content["en"].(string); !ok || enText != "Login" {
-			t.Errorf("Expected English text to be 'Login', got %v", enText)
-		}
-
-		if frText, ok := content["fr"].(string); !ok || frText != "Connexion" {
-			t.Errorf("Expected French text to be 'Connexion', got %v", frText)
-		}
-	})
-
-	t.Run("Update Translation", func(t *testing.T) {
-		updateData := map[string]interface{}{
-			"key": "welcome_message",
-			"content": map[string]string{
-				"en": "Welcome to our updated site",
-				"fr": "Bienvenue sur notre site mis à jour",
-				"es": "Bienvenido a nuestro sitio actualizado", // Adding a new language
-			},
-		}
-
-		jsonData, err := json.Marshal(updateData)
-		if err != nil {
-			t.Fatalf("Failed to marshal JSON: %v", err)
-		}
-
-		req, err := http.NewRequest(http.MethodPut, serverURL+"/api/translations/"+testTranslation.ID(), bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
-		req.Header.Set("Content-Type", "application/json")
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
-
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
-
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
-
-		// Check that content is properly updated
-		content, ok := result["content"].(map[string]interface{})
-		if !ok {
-			t.Fatalf("Expected content to be a map, got %T", result["content"])
-		}
-
-		if enText, ok := content["en"].(string); !ok || enText != "Welcome to our updated site" {
-			t.Errorf("Expected English text to be 'Welcome to our updated site', got %v", enText)
-		}
-
-		if frText, ok := content["fr"].(string); !ok || frText != "Bienvenue sur notre site mis à jour" {
-			t.Errorf("Expected French text to be 'Bienvenue sur notre site mis à jour', got %v", frText)
-		}
-
-		if esText, ok := content["es"].(string); !ok || esText != "Bienvenido a nuestro sitio actualizado" {
-			t.Errorf("Expected Spanish text to be 'Bienvenido a nuestro sitio actualizado', got %v", esText)
-		}
-	})
-
-	t.Run("Delete Translation", func(t *testing.T) {
-		req, err := http.NewRequest(http.MethodDelete, serverURL+"/api/translations/"+testTranslation.ID(), nil)
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status OK, got %v", resp.Status)
-		}
-
-		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
-
-		if success, ok := result["success"].(bool); !ok || !success {
-			t.Errorf("Expected success to be true, got %v", result["success"])
-		}
-
-		// Verify the translation was soft deleted
-		translation, err := store.TranslationFindByID(context.Background(), testTranslation.ID())
-		if err != nil {
-			t.Fatalf("Failed to find translation: %v", err)
-		}
-		if translation == nil {
-			t.Fatalf("Translation should still exist after soft delete")
-		}
-		if !translation.IsSoftDeleted() {
-			t.Errorf("Translation should be marked as soft deleted")
-		}
-	})
+	// Verify the translation was soft deleted by querying with soft-deleted included
+	translations, err := store.TranslationList(context.Background(), 
+		cmsstore.TranslationQuery().
+			SetID(translation.ID()).
+			SetSoftDeletedIncluded(true).
+			SetLimit(1))
+	require.NoError(t, err, "Failed to find translation")
+	require.NotEmpty(t, translations, "Translation should still exist after soft delete")
+	
+	translationAfterDelete := translations[0]
+	require.True(t, translationAfterDelete.IsSoftDeleted(), "Translation should be marked as soft deleted")
 }

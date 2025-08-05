@@ -80,6 +80,23 @@ func initTestStore(t *testing.T, db *sql.DB) cmsstore.StoreInterface {
 	return store
 }
 
+// CreateTestSite creates a new test site and returns it along with a cleanup function
+func CreateTestSite(t *testing.T, store cmsstore.StoreInterface) (cmsstore.SiteInterface, func()) {
+	t.Helper()
+	
+	site := cmsstore.NewSite()
+	site.SetName("Test Site - " + t.Name())
+	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
+	err := store.SiteCreate(context.Background(), site)
+	if err != nil {
+		t.Fatalf("Failed to create test site: %v", err)
+	}
+
+	return site, func() {
+		_ = store.SiteDeleteByID(context.Background(), site.ID())
+	}
+}
+
 // setupTestAPI sets up the RestAPI with an in-memory store and returns an httptest.Server URL and a cleanup func.
 func setupTestAPI(t *testing.T) (serverURL string, store cmsstore.StoreInterface, cleanup func()) {
 	t.Helper()

@@ -10,16 +10,7 @@ import (
 	"github.com/gouniverse/cmsstore"
 )
 
-func createTestSite(t *testing.T, store cmsstore.StoreInterface) cmsstore.SiteInterface {
-	testSite := cmsstore.NewSite()
-	testSite.SetName("Test Site for Pages - " + t.Name())
-	testSite.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
-	err := store.SiteCreate(context.Background(), testSite)
-	if err != nil {
-		t.Fatalf("Failed to create test site: %v", err)
-	}
-	return testSite
-}
+// CreateTestSite is now defined in test_utils.go
 
 func createTestPage(t *testing.T, store cmsstore.StoreInterface, siteID string) cmsstore.PageInterface {
 	testPage := cmsstore.NewPage()
@@ -40,7 +31,8 @@ func TestPageEndpoints(t *testing.T) {
 
 	t.Run("List Pages", func(t *testing.T) {
 		// Create test data
-		testSite := createTestSite(t, store)
+		testSite, cleanupSite := CreateTestSite(t, store)
+		defer cleanupSite()
 		createTestPage(t, store, testSite.ID())
 
 		resp, err := http.Get(serverURL + "/api/pages")
@@ -74,7 +66,8 @@ func TestPageEndpoints(t *testing.T) {
 
 	t.Run("Get Page", func(t *testing.T) {
 		// Create test data
-		testSite := createTestSite(t, store)
+		testSite, cleanupSite := CreateTestSite(t, store)
+		defer cleanupSite()
 		testPage := createTestPage(t, store, testSite.ID())
 
 		resp, err := http.Get(serverURL + "/api/pages/" + testPage.ID())
@@ -108,7 +101,8 @@ func TestPageEndpoints(t *testing.T) {
 
 	t.Run("Create Page", func(t *testing.T) {
 		// Create test site first
-		testSite := createTestSite(t, store)
+		testSite, cleanupSite := CreateTestSite(t, store)
+		defer cleanupSite()
 		
 		pageData := map[string]interface{}{
 			"title":   "New Test Page - " + t.Name(),
@@ -153,7 +147,8 @@ func TestPageEndpoints(t *testing.T) {
 
 	t.Run("Update Page", func(t *testing.T) {
 		// Create test data
-		testSite := createTestSite(t, store)
+		testSite, cleanupSite := CreateTestSite(t, store)
+		defer cleanupSite()
 		testPage := createTestPage(t, store, testSite.ID())
 
 		updateData := map[string]interface{}{
@@ -200,7 +195,8 @@ func TestPageEndpoints(t *testing.T) {
 
 	t.Run("Delete Page", func(t *testing.T) {
 		// Create test data
-		testSite := createTestSite(t, store)
+		testSite, cleanupSite := CreateTestSite(t, store)
+		defer cleanupSite()
 		testPage := createTestPage(t, store, testSite.ID())
 
 		req, err := http.NewRequest(http.MethodDelete, serverURL+"/api/pages/"+testPage.ID(), nil)
