@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dracory/base/test"
+	"github.com/dracory/test"
 	"github.com/gouniverse/cmsstore"
 	"github.com/gouniverse/cmsstore/admin/shared"
 	"github.com/gouniverse/cmsstore/testutils"
