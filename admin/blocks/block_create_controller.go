@@ -2,16 +2,15 @@ package admin
 
 import (
 	"net/http"
-	"strings"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/sb"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
 )
 
@@ -164,10 +163,10 @@ func (controller *blockCreateController) modal(data blockCreateControllerData) h
 
 func (controller *blockCreateController) prepareDataAndValidate(r *http.Request) (data blockCreateControllerData, errorMessage string) {
 	data.request = r
-	data.name = strings.TrimSpace(utils.Req(r, "block_name", ""))
-	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
-	data.pageID = strings.TrimSpace(utils.Req(r, "page_id", ""))         // empty for now
-	data.templateID = strings.TrimSpace(utils.Req(r, "template_id", "")) // empty for now
+	data.name = req.GetStringTrimmed(r, "block_name")
+	data.siteID = req.GetStringTrimmed(r, "site_id")
+	data.pageID = req.GetStringTrimmed(r, "page_id")         // empty for now
+	data.templateID = req.GetStringTrimmed(r, "template_id") // empty for now
 
 	var err error
 

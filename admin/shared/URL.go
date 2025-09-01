@@ -4,7 +4,7 @@ import (
 	"net/http"
 	urlpkg "net/url"
 
-	"github.com/gouniverse/utils"
+	"github.com/dracory/req"
 	"github.com/samber/lo"
 )
 
@@ -20,7 +20,7 @@ func URL(endpoint string, path string, params map[string]string) string {
 
 func URLR(r *http.Request, path string, params map[string]string) string {
 	endpoint := Endpoint(r)
-	filterSiteID := utils.Req(r, "filter_site_id", "")
+	filterSiteID := req.GetStringTrimmed(r, "filter_site_id")
 
 	if params == nil {
 		params = map[string]string{}

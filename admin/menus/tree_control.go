@@ -3,11 +3,12 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
-	"github.com/gouniverse/uid"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/uid"
 	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
 )
@@ -30,7 +31,7 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 	// If no ID is provided, generate one, while making sure
 	// we retain any existing ID
 	if t.id == "" {
-		treeID := utils.Req(r, "treectl_id", "")
+		treeID := req.GetStringTrimmed(r, "treectl_id")
 		if treeID != "" {
 			t.id = treeID
 		} else {
@@ -38,31 +39,31 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 		}
 	}
 
-	action := utils.Req(r, "treectl_action", "")
+	action := req.GetStringTrimmed(r, "treectl_action")
 
 	if action == "node_add" {
-		parentID := utils.Req(r, "treectl_parent_id", "")
+		parentID := req.GetStringTrimmed(r, "treectl_parent_id")
 		newNode := Node{ID: uid.HumanUid(), Name: "New"}
 		tree.Add(parentID, newNode)
 	}
 
 	if action == "node_delete" {
-		nodeID := utils.Req(r, "treectl_node_id", "")
+		nodeID := req.GetStringTrimmed(r, "treectl_node_id")
 		tree.Remove(nodeID)
 	}
 
 	if action == "node_move_up" {
-		nodeID := utils.Req(r, "treectl_node_id", "")
+		nodeID := req.GetStringTrimmed(r, "treectl_node_id")
 		tree.MoveUp(nodeID)
 	}
 
 	if action == "node_move_down" {
-		nodeID := utils.Req(r, "treectl_node_id", "")
+		nodeID := req.GetStringTrimmed(r, "treectl_node_id")
 		tree.MoveDown(nodeID)
 	}
 
 	if action == "node_move_out_up" {
-		nodeID := utils.Req(r, "treectl_node_id", "")
+		nodeID := req.GetStringTrimmed(r, "treectl_node_id")
 		parent := tree.Parent(nodeID)
 		if parent != nil {
 			tree.MoveToPosition(nodeID, parent.ParentID, parent.Sequence)
@@ -70,7 +71,7 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 	}
 
 	if action == "node_move_out_down" {
-		nodeID := utils.Req(r, "treectl_node_id", "")
+		nodeID := req.GetStringTrimmed(r, "treectl_node_id")
 		parent := tree.Parent(nodeID)
 		if parent != nil {
 			tree.MoveToPosition(nodeID, parent.ParentID, parent.Sequence+1)
@@ -78,7 +79,7 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 	}
 
 	if action == "node_move_in_up" {
-		nodeID := utils.Req(r, "treectl_node_id", "")
+		nodeID := req.GetStringTrimmed(r, "treectl_node_id")
 		sibling := tree.FindPreviousSibling(nodeID)
 		if sibling != nil {
 			tree.MoveToParent(nodeID, sibling.ID)
@@ -86,7 +87,7 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 	}
 
 	if action == "node_move_in_down" {
-		nodeID := utils.Req(r, "treectl_node_id", "")
+		nodeID := req.GetStringTrimmed(r, "treectl_node_id")
 		sibling := tree.FindNextSibling(nodeID)
 		if sibling != nil {
 			tree.MoveToParent(nodeID, sibling.ID)
@@ -94,7 +95,7 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 	}
 
 	if action == "node_update_modal" {
-		nodeID := utils.Req(r, "treectl_node_id", "")
+		nodeID := req.GetStringTrimmed(r, "treectl_node_id")
 		node := tree.Find(nodeID)
 		if node == nil {
 			return hb.Div().Text(`ERROR: Node not found`)
@@ -103,11 +104,11 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 	}
 
 	if action == "node_update" {
-		nodeID := utils.Req(r, "treectl_node_id", "")
-		pageID := utils.Req(r, "treectl_page_id", "")
-		url := utils.Req(r, "treectl_url", "")
-		target := utils.Req(r, "treectl_target", "")
-		name := utils.Req(r, "treectl_name", "")
+		nodeID := req.GetStringTrimmed(r, "treectl_node_id")
+		pageID := req.GetStringTrimmed(r, "treectl_page_id")
+		url := req.GetStringTrimmed(r, "treectl_url")
+		target := req.GetStringTrimmed(r, "treectl_target")
+		name := req.GetStringTrimmed(r, "treectl_name")
 		node := tree.Find(nodeID)
 
 		if node == nil {

@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/dracory/cmsstore"
 	"github.com/dromara/carbon/v2"
-	"github.com/gouniverse/cmsstore"
 )
 
 // handleTranslationsEndpoint handles HTTP requests for the /api/translations endpoint
@@ -80,18 +80,18 @@ func (api *RestAPI) handleTranslationCreate(w http.ResponseWriter, r *http.Reque
 			http.Error(w, `{"success":false,"error":"Either content map or locale is required"}`, http.StatusBadRequest)
 			return
 		}
-		
+
 		// Get text if provided, default to empty string
 		text, _ = translationData["text"].(string)
 	}
 
 	// Create the translation
 	translation := cmsstore.NewTranslation()
-	
+
 	// Set name and handle as the key
 	translation.SetName(key)
 	translation.SetHandle(key)
-	
+
 	// Set content - accept either direct content map or text+locale
 	var content map[string]string
 	if contentMap, ok := translationData["content"].(map[string]interface{}); ok {
@@ -105,12 +105,12 @@ func (api *RestAPI) handleTranslationCreate(w http.ResponseWriter, r *http.Reque
 		// Fall back to text+locale for backward compatibility
 		content = map[string]string{locale: text}
 	}
-	
+
 	if err := translation.SetContent(content); err != nil {
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to set translation content: %v"}`, err), http.StatusBadRequest)
 		return
 	}
-	
+
 	// Store key in meta for easier retrieval
 	if err := translation.SetMeta("key", key); err != nil {
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to set key in meta: %v"}`, err), http.StatusBadRequest)
@@ -137,14 +137,14 @@ func (api *RestAPI) handleTranslationCreate(w http.ResponseWriter, r *http.Reque
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to get translation content: %v"}`, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Get metas to extract key
 	metas, err := translation.Metas()
 	if err != nil {
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to get translation metas: %v"}`, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Return the created translation with full content
 	response := map[string]interface{}{
 		"success": true,
@@ -201,14 +201,14 @@ func (api *RestAPI) handleTranslationGet(w http.ResponseWriter, r *http.Request,
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to get translation content: %v"}`, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Get metas to extract key and locale
 	metas, err := translation.Metas()
 	if err != nil {
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to get translation metas: %v"}`, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Return the translation with full content
 	response := map[string]interface{}{
 		"success": true,
@@ -243,12 +243,12 @@ func (api *RestAPI) handleTranslationList(w http.ResponseWriter, r *http.Request
 	if siteID != "" {
 		query = query.SetSiteID(siteID)
 	}
-	
+
 	// For key, we can use the name field since we're storing the key there
 	if key != "" {
 		query = query.SetNameLike(key)
 	}
-	
+
 	// Note: We can't directly filter by locale in the query
 	// We'll need to filter the results after fetching them
 
@@ -267,17 +267,17 @@ func (api *RestAPI) handleTranslationList(w http.ResponseWriter, r *http.Request
 		if err != nil {
 			continue // Skip this translation if we can't get content
 		}
-		
+
 		metas, err := translation.Metas()
 		if err != nil {
 			continue // Skip this translation if we can't get metas
 		}
-		
+
 		// Check if we need to filter by locale
 		if locale != "" && metas["locale"] != locale {
 			continue // Skip translations that don't match the requested locale
 		}
-		
+
 		translationData := map[string]interface{}{
 			"id":      translation.ID(),
 			"key":     metas["key"],
@@ -339,17 +339,17 @@ func (api *RestAPI) handleTranslationUpdate(w http.ResponseWriter, r *http.Reque
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to get translation content: %v"}`, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	metas, err := translation.Metas()
 	if err != nil {
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to get translation metas: %v"}`, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Get current key and locale from metas (for reference only)
 	_ = metas["key"]
 	_ = metas["locale"]
-	
+
 	// Apply updates
 	if key, ok := updates["key"].(string); ok && key != "" {
 		// Update key in name and meta
@@ -359,7 +359,7 @@ func (api *RestAPI) handleTranslationUpdate(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	}
-	
+
 	// Handle locale update
 	newLocale := ""
 	if locale, ok := updates["locale"].(string); ok && locale != "" {
@@ -373,7 +373,7 @@ func (api *RestAPI) handleTranslationUpdate(w http.ResponseWriter, r *http.Reque
 		// Use current locale if not updated
 		newLocale = metas["locale"]
 	}
-	
+
 	// Handle content update - check for full content map first
 	if contentMap, ok := updates["content"].(map[string]interface{}); ok && len(contentMap) > 0 {
 		// Convert map[string]interface{} to map[string]string
@@ -383,7 +383,7 @@ func (api *RestAPI) handleTranslationUpdate(w http.ResponseWriter, r *http.Reque
 				updatedContent[k] = strVal
 			}
 		}
-		
+
 		// Set the updated content
 		if err := translation.SetContent(updatedContent); err != nil {
 			http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to update translation content: %v"}`, err), http.StatusBadRequest)
@@ -396,7 +396,7 @@ func (api *RestAPI) handleTranslationUpdate(w http.ResponseWriter, r *http.Reque
 			updatedContent = make(map[string]string)
 		}
 		updatedContent[newLocale] = text
-		
+
 		// Set the updated content
 		if err := translation.SetContent(updatedContent); err != nil {
 			http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to update translation content: %v"}`, err), http.StatusBadRequest)
@@ -416,13 +416,13 @@ func (api *RestAPI) handleTranslationUpdate(w http.ResponseWriter, r *http.Reque
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to get updated translation content: %v"}`, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	updatedMetas, err := translation.Metas()
 	if err != nil {
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to get updated translation metas: %v"}`, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Return the updated translation with full content
 	response := map[string]interface{}{
 		"success": true,
@@ -461,14 +461,14 @@ func (api *RestAPI) handleTranslationDelete(w http.ResponseWriter, r *http.Reque
 
 	// Set soft deleted at timestamp
 	translation.SetSoftDeletedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
-	
+
 	// Update the translation to mark as soft deleted
 	err = api.store.TranslationUpdate(r.Context(), translation)
 	if err != nil {
 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to delete translation: %v"}`, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Instead of trying to fetch the soft-deleted translation (which might not be returned by default),
 	// we'll just return success if the update was successful
 	// The test will verify the soft delete status separately

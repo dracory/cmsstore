@@ -22,7 +22,7 @@ This package provides an MCP (Model Context Protocol) handler for the CMS Store,
 ### Installation
 
 ```bash
-go get github.com/gouniverse/cmsstore/mcp
+go get github.com/dracory/cmsstore/mcp
 ```
 
 ### Basic Usage
@@ -34,8 +34,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/mcp"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/mcp"
 )
 
 func main() {

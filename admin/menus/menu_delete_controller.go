@@ -3,12 +3,12 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/utils"
 )
 
 // == CONTROLLER ==============================================================
@@ -131,7 +131,7 @@ func (controller *menuDeleteController) modal(data menuDeleteControllerData) hb.
 
 func (controller *menuDeleteController) prepareDataAndValidate(r *http.Request) (data menuDeleteControllerData, errorMessage string) {
 	data.request = r
-	data.menuID = utils.Req(r, "menu_id", "")
+	data.menuID = req.GetStringTrimmed(r, "menu_id")
 
 	if data.menuID == "" {
 		return data, "menu id is required"

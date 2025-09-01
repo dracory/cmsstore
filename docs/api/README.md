@@ -3,7 +3,7 @@
 ## Data Model
 
 ### DataObject Base
-All entities in the CMS extend the `dataobject.DataObject` from `github.com/gouniverse/dataobject`. This provides:
+All entities in the CMS extend the `dataobject.DataObject` from `github.com/dracory/dataobject`. This provides:
 - Common data management functionality
 - Data storage and retrieval using `Get`/`Set` methods
 - Data change tracking with `DataChanged()` and `MarkAsNotDirty()`

@@ -3,12 +3,12 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/utils"
 )
 
 // == CONTROLLER ==============================================================
@@ -131,7 +131,7 @@ func (controller *pageDeleteController) modal(data pageDeleteControllerData) hb.
 
 func (controller *pageDeleteController) prepareDataAndValidate(r *http.Request) (data pageDeleteControllerData, errorMessage string) {
 	data.request = r
-	data.pageID = utils.Req(r, "page_id", "")
+	data.pageID = req.GetStringTrimmed(r, "page_id")
 
 	if data.pageID == "" {
 		return data, "page id is required"

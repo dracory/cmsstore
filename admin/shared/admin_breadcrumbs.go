@@ -3,9 +3,9 @@ package shared
 import (
 	"net/http"
 
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/hb"
-	"github.com/gouniverse/utils"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/samber/lo"
 )
 
@@ -13,11 +13,11 @@ func AdminBreadcrumbs(r *http.Request, pageBreadcrumbs []Breadcrumb, options str
 	SiteList []cmsstore.SiteInterface
 }) hb.TagInterface {
 	adminHomeURL := AdminHomeURL(r)
-	siteID := utils.Req(r, "filter_site_id", "")
+	siteID := req.GetStringTrimmed(r, "filter_site_id")
 	site, siteFound := lo.Find(options.SiteList, func(site cmsstore.SiteInterface) bool {
 		return site.ID() == siteID
 	})
-	path := utils.Req(r, "path", "")
+	path := req.GetStringTrimmed(r, "path")
 
 	adminHomeBreadcrumb := lo.
 		If(adminHomeURL != "", Breadcrumb{

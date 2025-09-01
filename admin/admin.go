@@ -6,18 +6,18 @@ import (
 	"maps"
 	"net/http"
 
-	"github.com/gouniverse/blockeditor"
-	adminBlocks "github.com/gouniverse/cmsstore/admin/blocks"
-	adminMenus "github.com/gouniverse/cmsstore/admin/menus"
-	adminPages "github.com/gouniverse/cmsstore/admin/pages"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	adminSites "github.com/gouniverse/cmsstore/admin/sites"
-	adminTemplates "github.com/gouniverse/cmsstore/admin/templates"
-	adminTranslations "github.com/gouniverse/cmsstore/admin/translations"
+	"github.com/dracory/blockeditor"
+	adminBlocks "github.com/dracory/cmsstore/admin/blocks"
+	adminMenus "github.com/dracory/cmsstore/admin/menus"
+	adminPages "github.com/dracory/cmsstore/admin/pages"
+	"github.com/dracory/cmsstore/admin/shared"
+	adminSites "github.com/dracory/cmsstore/admin/sites"
+	adminTemplates "github.com/dracory/cmsstore/admin/templates"
+	adminTranslations "github.com/dracory/cmsstore/admin/translations"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/req"
 	"github.com/gouniverse/responses"
-	"github.com/gouniverse/utils"
 )
 
 // == TYPE ====================================================================
@@ -43,7 +43,7 @@ var _ shared.AdminInterface = (*admin)(nil)
 // == INTERFACE IMPLEMENTATION ================================================
 
 func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
-	path := utils.Req(r, "path", "home")
+	path := req.GetStringTrimmedOr(r, "path", "home")
 
 	if path == "" {
 		path = shared.PathHome

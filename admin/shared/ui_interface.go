@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 type UiInterface interface {

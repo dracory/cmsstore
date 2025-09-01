@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/cmsstore/testutils"
 )
 
 func initUI(store cmsstore.StoreInterface) UiInterface {

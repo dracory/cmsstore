@@ -1,10 +1,10 @@
-# Cms Store <a href="https://gitpod.io/#https://github.com/gouniverse/cmsstore" style="float:right:"><img src="https://gitpod.io/button/open-in-gitpod.svg" alt="Open in Gitpod" loading="lazy"></a>
+# Cms Store <a href="https://gitpod.io/#https://github.com/dracory/cmsstore" style="float:right:"><img src="https://gitpod.io/button/open-in-gitpod.svg" alt="Open in Gitpod" loading="lazy"></a>
 
 <img src="https://opengraph.githubassets.com/5b92c81c05d64a82c3fb4ba95739403a2d38cbad61f260a0701b3366b3d10327/gouniverse/cmsstore" />
 
-[![Tests Status](https://github.com/gouniverse/cmsstore/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/gouniverse/cmsstore/actions/workflows/tests.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/gouniverse/cmsstore)](https://goreportcard.com/report/github.com/gouniverse/cmsstore)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/gouniverse/cmsstore)](https://pkg.go.dev/github.com/gouniverse/cmsstore)
+[![Tests Status](https://github.com/dracory/cmsstore/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/dracory/cmsstore/actions/workflows/tests.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dracory/cmsstore)](https://goreportcard.com/report/github.com/dracory/cmsstore)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/dracory/cmsstore)](https://pkg.go.dev/github.com/dracory/cmsstore)
 
 ## License
 
@@ -26,7 +26,7 @@ or dependencies. Removal is also a breeze just remove the module.
 ## Installation
 
 ```
-go get -u github.com/gouniverse/cmsstore
+go get -u github.com/dracory/cmsstore
 ```
 
 ## Features

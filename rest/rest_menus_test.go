@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 func TestMenuEndpoints(t *testing.T) {
@@ -200,7 +200,7 @@ func TestMenuEndpoints(t *testing.T) {
 		}
 
 		// Verify the menu was soft deleted by querying with soft-deleted included
-		list, err := store.MenuList(context.Background(), 
+		list, err := store.MenuList(context.Background(),
 			cmsstore.MenuQuery().
 				SetID(testMenu.ID()).
 				SetSoftDeletedIncluded(true).

@@ -3,12 +3,12 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/utils"
 )
 
 // == CONTROLLER ==============================================================
@@ -131,7 +131,7 @@ func (controller *translationDeleteController) modal(data translationDeleteContr
 
 func (controller *translationDeleteController) prepareDataAndValidate(r *http.Request) (data translationDeleteControllerData, errorMessage string) {
 	data.request = r
-	data.translationID = utils.Req(r, "translation_id", "")
+	data.translationID = req.GetString(r, "translation_id")
 
 	if data.translationID == "" {
 		return data, "translation id is required"

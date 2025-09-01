@@ -3,16 +3,16 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/api"
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cdn"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/api"
+	"github.com/dracory/bs"
+	"github.com/dracory/cdn"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/sb"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -81,7 +81,7 @@ func (controller *menuUpdateController) treeEditorHandle(r *http.Request, data m
 		return hb.Div().Text(`ERROR: ` + err.Error())
 	}
 
-	menuItemsJson := utils.Req(r, "menu_items", "")
+	menuItemsJson := req.GetStringTrimmed(r, "menu_items")
 
 	if menuItemsJson == "" {
 		menuItemsJson = data.formMenuItemsJSON
@@ -418,12 +418,12 @@ func (controller menuUpdateController) fieldsSettings(data menuUpdateControllerD
 }
 
 func (controller menuUpdateController) saveMenu(r *http.Request, data menuUpdateControllerData) (d menuUpdateControllerData, errorMessage string) {
-	data.formMenuItemsJSON = utils.Req(r, "menu_items", "")
-	data.formMemo = utils.Req(r, "menu_memo", "")
-	data.formName = utils.Req(r, "menu_name", "")
-	data.formStatus = utils.Req(r, "menu_status", "")
-	data.formHandle = utils.Req(r, "menu_title", "")
-	data.formSiteID = utils.Req(r, "menu_site_id", "")
+	data.formMenuItemsJSON = req.GetStringTrimmed(r, "menu_items")
+	data.formMemo = req.GetStringTrimmed(r, "menu_memo")
+	data.formName = req.GetStringTrimmed(r, "menu_name")
+	data.formStatus = req.GetStringTrimmed(r, "menu_status")
+	data.formHandle = req.GetStringTrimmed(r, "menu_title")
+	data.formSiteID = req.GetStringTrimmed(r, "menu_site_id")
 
 	refreshPage := false
 
@@ -581,9 +581,9 @@ func (controller menuUpdateController) saveMenuItems(data menuUpdateControllerDa
 
 func (controller menuUpdateController) prepareDataAndValidate(r *http.Request) (data menuUpdateControllerData, errorMessage string) {
 	data.request = r
-	data.action = utils.Req(r, "action", "")
-	data.menuID = utils.Req(r, "menu_id", "")
-	data.view = utils.Req(r, "view", "")
+	data.action = req.GetStringTrimmed(r, "action")
+	data.menuID = req.GetStringTrimmed(r, "menu_id")
+	data.view = req.GetStringTrimmed(r, "view")
 
 	if data.view == "" {
 		data.view = VIEW_MENU_ITEMS

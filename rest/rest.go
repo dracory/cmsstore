@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 // RestAPI represents the REST API for the CMS store

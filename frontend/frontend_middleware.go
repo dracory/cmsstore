@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 // applyMiddlewares applies middlewares to the page content

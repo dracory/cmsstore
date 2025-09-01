@@ -3,12 +3,12 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/utils"
 )
 
 // == CONTROLLER ==============================================================
@@ -131,7 +131,7 @@ func (controller *templateDeleteController) modal(data templateDeleteControllerD
 
 func (controller *templateDeleteController) prepareDataAndValidate(r *http.Request) (data templateDeleteControllerData, errorMessage string) {
 	data.request = r
-	data.templateID = utils.Req(r, "template_id", "")
+	data.templateID = req.GetStringTrimmed(r, "template_id")
 
 	if data.templateID == "" {
 		return data, "template id is required"

@@ -2,22 +2,23 @@ package admin
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"slices"
 	"sort"
 	"strings"
 
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/hb"
-	"github.com/gouniverse/maputils"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
+	"github.com/spf13/cast"
 )
 
 // == CONTROLLER ==============================================================
@@ -156,13 +157,12 @@ func (controller *pageVersioningController) tableRevision(data pageVersioningCon
 		return hb.Div().Class("alert alert-danger").HTML("Revision is empty. It has no content!")
 	}
 
-	dataAny, err := utils.FromJSON(content, map[string]any{})
-
-	if err != nil {
+	dataAny := map[string]any{}
+	if err := json.Unmarshal([]byte(content), &dataAny); err != nil {
 		return hb.Div().Class("alert alert-danger").HTML(err.Error())
 	}
 
-	dataMap := maputils.AnyToMapStringString(dataAny)
+	dataMap := cast.ToStringMapString(dataAny)
 	keys := lo.Keys(dataMap)
 
 	sort.Slice(keys, func(i, j int) bool {
@@ -262,8 +262,8 @@ func (controller *pageVersioningController) tableRevisions(data pageVersioningCo
 func (controller *pageVersioningController) prepareDataAndValidate(r *http.Request) (data pageVersioningControllerData, errorMessage string) {
 	var err error
 	data.request = r
-	data.pageID = strings.TrimSpace(utils.Req(r, "page_id", ""))
-	data.versioningID = strings.TrimSpace(utils.Req(r, "versioning_id", ""))
+	data.pageID = strings.TrimSpace(req.GetStringTrimmed(r, "page_id"))
+	data.versioningID = strings.TrimSpace(req.GetStringTrimmed(r, "versioning_id"))
 
 	if data.pageID == "" {
 		return data, "page id is required"
@@ -311,7 +311,7 @@ func (controller *pageVersioningController) prepareDataAndValidate(r *http.Reque
 	// 	return data, err.Error()
 	// }
 
-	attrs := utils.ReqArray(r, "revision_attributes", []string{})
+	attrs := req.GetArray(r, "revision_attributes", []string{})
 
 	if len(attrs) < 1 {
 		return data, "No revision attributes were selected. Aborted"
@@ -335,13 +335,14 @@ func (controller *pageVersioningController) restoreRevisionAttributes(ctx contex
 		return errors.New("revision is empty. it has no content!")
 	}
 
-	dataAny, err := utils.FromJSON(content, map[string]any{})
+	dataAny := map[string]any{}
+	err := json.Unmarshal([]byte(content), &dataAny)
 
 	if err != nil {
 		return err
 	}
 
-	dataMap := maputils.AnyToMapStringString(dataAny)
+	dataMap := cast.ToStringMapString(dataAny)
 
 	for _, attr := range attrs {
 		if !slices.Contains(controller.supportedAttributes(), attr) {

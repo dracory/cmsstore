@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/rest" // Import the package to be tested
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/rest" // Import the package to be tested
 	"github.com/gouniverse/utils"
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
@@ -83,7 +83,7 @@ func initTestStore(t *testing.T, db *sql.DB) cmsstore.StoreInterface {
 // CreateTestSite creates a new test site and returns it along with a cleanup function
 func CreateTestSite(t *testing.T, store cmsstore.StoreInterface) (cmsstore.SiteInterface, func()) {
 	t.Helper()
-	
+
 	site := cmsstore.NewSite()
 	site.SetName("Test Site - " + t.Name())
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)

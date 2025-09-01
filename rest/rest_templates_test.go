@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 type templateTestFixtures struct {
-	serverURL   string
-	store      cmsstore.StoreInterface
-	cleanup    func()
-	testSite   cmsstore.SiteInterface
+	serverURL    string
+	store        cmsstore.StoreInterface
+	cleanup      func()
+	testSite     cmsstore.SiteInterface
 	testTemplate cmsstore.TemplateInterface
 }
 
@@ -42,10 +42,10 @@ func setupTemplateTest(t *testing.T) *templateTestFixtures {
 	}
 
 	return &templateTestFixtures{
-		serverURL:   serverURL,
-		store:      store,
-		cleanup:    cleanup,
-		testSite:   testSite,
+		serverURL:    serverURL,
+		store:        store,
+		cleanup:      cleanup,
+		testSite:     testSite,
 		testTemplate: testTemplate,
 	}
 }
@@ -234,7 +234,7 @@ func TestDeleteTemplate(t *testing.T) {
 	}
 
 	// Verify the template was soft deleted by querying with soft-deleted included
-	list, err := fixtures.store.TemplateList(context.Background(), 
+	list, err := fixtures.store.TemplateList(context.Background(),
 		cmsstore.TemplateQuery().
 			SetID(fixtures.testTemplate.ID()).
 			SetSoftDeletedIncluded(true).

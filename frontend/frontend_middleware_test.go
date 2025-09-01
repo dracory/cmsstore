@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 // TestApplyMiddlewares_BeforeAndAfter tests that the before and after middlewares are applied correctly

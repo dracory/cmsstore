@@ -1,7 +1,7 @@
 package cmsstore
 
 import (
-	"github.com/gouniverse/sb"
+	"github.com/dracory/sb"
 )
 
 // siteTableCreateSql returns a SQL string for creating the site table

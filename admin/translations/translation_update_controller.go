@@ -3,15 +3,15 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/api"
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cdn"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/api"
+	"github.com/dracory/bs"
+	"github.com/dracory/cdn"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
 )
 
@@ -401,12 +401,12 @@ func (controller translationUpdateController) fieldsSettings(data translationUpd
 }
 
 func (controller translationUpdateController) saveTranslation(r *http.Request, data translationUpdateControllerData) (d translationUpdateControllerData, errorMessage string) {
-	data.formContent = utils.ReqMap(r, "translation_content")
-	data.formMemo = utils.Req(r, "translation_memo", "")
-	data.formName = utils.Req(r, "translation_name", "")
-	data.formStatus = utils.Req(r, "translation_status", "")
-	data.formHandle = utils.Req(r, "translation_handle", "")
-	data.formSiteID = utils.Req(r, "translation_site_id", "")
+	data.formContent = req.GetMap(r, "translation_content")
+	data.formMemo = req.GetStringTrimmed(r, "translation_memo")
+	data.formName = req.GetStringTrimmed(r, "translation_name")
+	data.formStatus = req.GetStringTrimmed(r, "translation_status")
+	data.formHandle = req.GetStringTrimmed(r, "translation_handle")
+	data.formSiteID = req.GetStringTrimmed(r, "translation_site_id")
 
 	refreshPage := false
 
@@ -487,9 +487,9 @@ func (controller translationUpdateController) saveTranslation(r *http.Request, d
 
 func (controller translationUpdateController) prepareDataAndValidate(r *http.Request) (data translationUpdateControllerData, errorMessage string) {
 	data.request = r
-	data.action = utils.Req(r, "action", "")
-	data.translationID = utils.Req(r, "translation_id", "")
-	data.view = utils.Req(r, "view", "")
+	data.action = req.GetStringTrimmed(r, "action")
+	data.translationID = req.GetStringTrimmed(r, "translation_id")
+	data.view = req.GetStringTrimmed(r, "view")
 
 	if data.view == "" {
 		data.view = VIEW_CONTENT

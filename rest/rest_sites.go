@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 // handleSitesEndpoint handles HTTP requests for the /api/sites endpoint

@@ -4,12 +4,11 @@ import (
 	"database/sql"
 	"os"
 
-	"github.com/gouniverse/utils"
 	_ "modernc.org/sqlite"
 )
 
 func initDB(filepath string) *sql.DB {
-	if filepath != ":memory:" && utils.FileExists(filepath) {
+	if filepath != ":memory:" && fileExists(filepath) {
 		err := os.Remove(filepath) // remove database
 
 		if err != nil {
@@ -47,4 +46,12 @@ func initStore(filepath string) (StoreInterface, error) {
 	}
 
 	return store, nil
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

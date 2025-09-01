@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 // setupBlockTest creates the necessary test data for block tests
@@ -196,7 +196,7 @@ func TestBlockUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
-		req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

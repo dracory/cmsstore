@@ -3,8 +3,8 @@ package shared
 import (
 	"context"
 
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/hb"
 	"github.com/samber/lo"
 )
 

@@ -19,7 +19,7 @@ This package provides a REST API for the CMS Store, allowing web applications to
 ### Installation
 
 ```bash
-go get github.com/gouniverse/cmsstore/rest
+go get github.com/dracory/cmsstore/rest
 ```
 
 ### Basic Usage
@@ -33,8 +33,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/rest"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/rest"
 )
 
 func main() {

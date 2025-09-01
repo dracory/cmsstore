@@ -4,17 +4,16 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/gouniverse/api"
-	"github.com/gouniverse/base/req"
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cdn"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/api"
+	"github.com/dracory/bs"
+	"github.com/dracory/cdn"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/sb"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -359,10 +358,10 @@ func (siteUpdateController) fieldsSEO(data siteUpdateControllerData) []form.Fiel
 }
 
 func (controller siteUpdateController) saveSite(r *http.Request, data siteUpdateControllerData) (d siteUpdateControllerData, errorMessage string) {
-	data.formMemo = utils.Req(r, "site_memo", "")
-	data.formName = utils.Req(r, "site_name", "")
-	data.formStatus = utils.Req(r, "site_status", "")
-	data.formTitle = utils.Req(r, "site_title", "")
+	data.formMemo = req.GetStringTrimmed(r, "site_memo")
+	data.formName = req.GetStringTrimmed(r, "site_name")
+	data.formStatus = req.GetStringTrimmed(r, "site_status")
+	data.formTitle = req.GetStringTrimmed(r, "site_title")
 	data.formDomainNames = controller.requestMapToDomainNames(r)
 
 	if data.view == VIEW_SETTINGS {
@@ -409,9 +408,9 @@ func (controller siteUpdateController) saveSite(r *http.Request, data siteUpdate
 func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (data siteUpdateControllerData, errorMessage string) {
 	var err error
 	data.request = r
-	data.action = utils.Req(r, "action", "")
-	data.siteID = utils.Req(r, "site_id", "")
-	data.view = utils.Req(r, "view", "")
+	data.action = req.GetStringTrimmed(r, "action")
+	data.siteID = req.GetStringTrimmed(r, "site_id")
+	data.view = req.GetStringTrimmed(r, "view")
 
 	if data.view == "" {
 		data.view = VIEW_SETTINGS
@@ -464,7 +463,7 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	if data.action == ACTION_REPEATER_DELETE {
-		repeatableRemoveIndex := utils.Req(r, "repeatable_remove_index", "")
+		repeatableRemoveIndex := req.GetStringTrimmed(r, "repeatable_remove_index")
 
 		if repeatableRemoveIndex == "" {
 			return data, ""
@@ -476,7 +475,7 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	if data.action == ACTION_REPEATER_MOVE_UP {
-		repeatableMoveUpIndex := cast.ToInt(utils.Req(r, "repeatable_move_up_index", ""))
+		repeatableMoveUpIndex := cast.ToInt(req.GetStringTrimmed(r, "repeatable_move_up_index"))
 
 		if repeatableMoveUpIndex == 0 {
 			return data, ""
@@ -492,7 +491,7 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	if data.action == ACTION_REPEATER_MOVE_DOWN {
-		repeatableMoveDownIndex := cast.ToInt(utils.Req(r, "repeatable_move_down_index", ""))
+		repeatableMoveDownIndex := cast.ToInt(req.GetStringTrimmed(r, "repeatable_move_down_index"))
 
 		if repeatableMoveDownIndex == len(data.formDomainNames)-1 {
 			return data, ""
@@ -511,7 +510,7 @@ func (controller siteUpdateController) prepareDataAndValidate(r *http.Request) (
 }
 
 func (controller siteUpdateController) requestMapToDomainNames(r *http.Request) []string {
-	formDomainNames := req.Maps(r, "site_domain_names", []map[string]string{})
+	formDomainNames := req.GetMaps(r, "site_domain_names", []map[string]string{})
 	domainNames := []string{}
 
 	for _, formDomainName := range formDomainNames {

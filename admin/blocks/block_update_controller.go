@@ -3,16 +3,16 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/api"
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cdn"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/api"
+	"github.com/dracory/bs"
+	"github.com/dracory/cdn"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/sb"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -408,12 +408,12 @@ func (controller blockUpdateController) fieldsSettings(data blockUpdateControlle
 }
 
 func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpdateControllerData) (d blockUpdateControllerData, errorMessage string) {
-	data.formContent = utils.Req(r, "block_content", "")
-	data.formMemo = utils.Req(r, "block_memo", "")
-	data.formName = utils.Req(r, "block_name", "")
-	data.formSiteID = utils.Req(r, "block_site_id", "")
-	data.formStatus = utils.Req(r, "block_status", "")
-	data.formTitle = utils.Req(r, "block_title", "")
+	data.formContent = req.GetStringTrimmed(r, "block_content")
+	data.formMemo = req.GetStringTrimmed(r, "block_memo")
+	data.formName = req.GetStringTrimmed(r, "block_name")
+	data.formSiteID = req.GetStringTrimmed(r, "block_site_id")
+	data.formStatus = req.GetStringTrimmed(r, "block_status")
+	data.formTitle = req.GetStringTrimmed(r, "block_title")
 
 	if data.view == VIEW_SETTINGS {
 		if data.formStatus == "" {
@@ -453,9 +453,9 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 
 func (controller blockUpdateController) prepareDataAndValidate(r *http.Request) (data blockUpdateControllerData, errorMessage string) {
 	data.request = r
-	data.action = utils.Req(r, "action", "")
-	data.blockID = utils.Req(r, "block_id", "")
-	data.view = utils.Req(r, "view", "")
+	data.action = req.GetStringTrimmed(r, "action")
+	data.blockID = req.GetStringTrimmed(r, "block_id")
+	data.view = req.GetStringTrimmed(r, "view")
 
 	if data.view == "" {
 		data.view = VIEW_CONTENT

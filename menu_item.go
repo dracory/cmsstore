@@ -1,12 +1,12 @@
 package cmsstore
 
 import (
+	"encoding/json"
+
+	"github.com/dracory/dataobject"
+	"github.com/dracory/sb"
+	"github.com/dracory/uid"
 	"github.com/dromara/carbon/v2"
-	"github.com/gouniverse/dataobject"
-	"github.com/gouniverse/maputils"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/uid"
-	"github.com/gouniverse/utils"
 	"github.com/spf13/cast"
 )
 
@@ -158,12 +158,13 @@ func (o *menuItem) Metas() (map[string]string, error) {
 		metasStr = "{}"
 	}
 
-	metasJson, errJson := utils.FromJSON(metasStr, map[string]string{})
+	metasJson := map[string]string{}
+	errJson := json.Unmarshal([]byte(metasStr), &metasJson)
 	if errJson != nil {
 		return map[string]string{}, errJson
 	}
 
-	return maputils.MapStringAnyToMapStringString(metasJson.(map[string]any)), nil
+	return metasJson, nil
 }
 
 // Meta returns the value of a specific meta for the menu item.
@@ -190,12 +191,12 @@ func (o *menuItem) SetMeta(name string, value string) error {
 //
 // Warning: This method overwrites any existing metas with the provided map.
 func (o *menuItem) SetMetas(metas map[string]string) error {
-	mapString, err := utils.ToJSON(metas)
+	mapString, err := json.Marshal(metas)
 	if err != nil {
 		return err
 	}
 
-	o.Set(COLUMN_METAS, mapString)
+	o.Set(COLUMN_METAS, string(mapString))
 
 	return nil
 }

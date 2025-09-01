@@ -3,8 +3,8 @@ package frontend
 import (
 	"log/slog"
 
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/ui"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/ui"
 )
 
 type Config struct {

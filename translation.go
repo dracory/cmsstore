@@ -1,12 +1,12 @@
 package cmsstore
 
 import (
+	"encoding/json"
+
+	"github.com/dracory/dataobject"
+	"github.com/dracory/sb"
+	"github.com/dracory/uid"
 	"github.com/dromara/carbon/v2"
-	"github.com/gouniverse/dataobject"
-	"github.com/gouniverse/maputils"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/uid"
-	"github.com/gouniverse/utils"
 )
 
 // == TYPE ===================================================================
@@ -79,22 +79,23 @@ func (o *translation) Content() (languageCodeContentMap map[string]string, err e
 		languageCodeContentStr = "{}"
 	}
 
-	languageCodeContentJSON, errJson := utils.FromJSON(languageCodeContentStr, map[string]string{})
+	languageCodeContentJSON := map[string]string{}
+	errJson := json.Unmarshal([]byte(languageCodeContentStr), &languageCodeContentJSON)
 	if errJson != nil {
 		return map[string]string{}, errJson
 	}
 
-	return maputils.MapStringAnyToMapStringString(languageCodeContentJSON.(map[string]any)), nil
+	return languageCodeContentJSON, nil
 }
 
 func (o *translation) SetContent(languageCodeContentMap map[string]string) error {
-	mapString, err := utils.ToJSON(languageCodeContentMap)
+	mapString, err := json.Marshal(languageCodeContentMap)
 
 	if err != nil {
 		return err
 	}
 
-	o.Set(COLUMN_CONTENT, mapString)
+	o.Set(COLUMN_CONTENT, string(mapString))
 
 	return nil
 }
@@ -139,12 +140,13 @@ func (o *translation) Metas() (map[string]string, error) {
 		metasStr = "{}"
 	}
 
-	metasJson, errJson := utils.FromJSON(metasStr, map[string]string{})
+	metasJson := map[string]string{}
+	errJson := json.Unmarshal([]byte(metasStr), &metasJson)
 	if errJson != nil {
 		return map[string]string{}, errJson
 	}
 
-	return maputils.MapStringAnyToMapStringString(metasJson.(map[string]any)), nil
+	return metasJson, nil
 }
 
 func (o *translation) Meta(name string) string {
@@ -168,12 +170,12 @@ func (o *translation) SetMeta(name string, value string) error {
 // SetMetas stores metas as json string
 // Warning: it overwrites any existing metas
 func (o *translation) SetMetas(metas map[string]string) error {
-	mapString, err := utils.ToJSON(metas)
+	mapString, err := json.Marshal(metas)
 	if err != nil {
 		return err
 	}
 
-	o.Set(COLUMN_METAS, mapString)
+	o.Set(COLUMN_METAS, string(mapString))
 
 	return nil
 }

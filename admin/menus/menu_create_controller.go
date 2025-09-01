@@ -2,16 +2,15 @@ package admin
 
 import (
 	"net/http"
-	"strings"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/sb"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
 )
 
@@ -162,8 +161,8 @@ func (controller *menuCreateController) modal(data menuCreateControllerData) hb.
 
 func (controller *menuCreateController) prepareDataAndValidate(r *http.Request) (data menuCreateControllerData, errorMessage string) {
 	data.request = r
-	data.name = strings.TrimSpace(utils.Req(r, "menu_name", ""))
-	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
+	data.name = req.GetStringTrimmed(r, "menu_name")
+	data.siteID = req.GetStringTrimmed(r, "site_id")
 
 	var err error
 

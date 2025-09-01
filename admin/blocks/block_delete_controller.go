@@ -3,12 +3,12 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/utils"
 )
 
 // == CONTROLLER ==============================================================
@@ -131,7 +131,7 @@ func (controller *blockDeleteController) modal(data blockDeleteControllerData) h
 
 func (controller *blockDeleteController) prepareDataAndValidate(r *http.Request) (data blockDeleteControllerData, errorMessage string) {
 	data.request = r
-	data.blockID = utils.Req(r, "block_id", "")
+	data.blockID = req.GetStringTrimmed(r, "block_id")
 
 	if data.blockID == "" {
 		return data, "block id is required"

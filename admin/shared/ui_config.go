@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gouniverse/blockeditor"
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/blockeditor"
+	"github.com/dracory/cmsstore"
 )
 
 type UiConfig struct {

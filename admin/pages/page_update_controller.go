@@ -6,18 +6,17 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/gouniverse/api"
-	"github.com/gouniverse/base/req"
-	"github.com/gouniverse/blockeditor"
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cdn"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/api"
+	"github.com/dracory/blockeditor"
+	"github.com/dracory/bs"
+	"github.com/dracory/cdn"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/sb"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 	"github.com/gouniverse/versionstore"
 	"github.com/mingrammer/cfmt"
 	"github.com/samber/lo"
@@ -971,20 +970,20 @@ func (c pageUpdateController) fieldsSettings(data pageUpdateControllerData) []fo
 }
 
 func (controller pageUpdateController) savePage(r *http.Request, data pageUpdateControllerData) (d pageUpdateControllerData, errorMessage string) {
-	data.formAlias = utils.Req(r, "page_alias", "")
-	data.formCanonicalURL = utils.Req(r, "page_canonical_url", "")
-	data.formContent = utils.Req(r, "page_content", "")
-	data.formEditor = utils.Req(r, "page_editor", "")
-	data.formMemo = utils.Req(r, "page_memo", "")
-	data.formMetaDescription = utils.Req(r, "page_meta_description", "")
-	data.formMetaKeywords = utils.Req(r, "page_meta_keywords", "")
-	data.formMetaRobots = utils.Req(r, "page_meta_robots", "")
-	data.formName = utils.Req(r, "page_name", "")
-	data.formSummary = utils.Req(r, "page_summary", "")
-	data.formStatus = utils.Req(r, "page_status", "")
-	data.formSiteID = utils.Req(r, "page_site_id", "")
-	data.formTitle = utils.Req(r, "page_title", "")
-	data.formTemplateID = utils.Req(r, "page_template_id", "")
+	data.formAlias = req.GetStringTrimmed(r, "page_alias")
+	data.formCanonicalURL = req.GetStringTrimmed(r, "page_canonical_url")
+	data.formContent = req.GetStringTrimmed(r, "page_content")
+	data.formEditor = req.GetStringTrimmed(r, "page_editor")
+	data.formMemo = req.GetStringTrimmed(r, "page_memo")
+	data.formMetaDescription = req.GetStringTrimmed(r, "page_meta_description")
+	data.formMetaKeywords = req.GetStringTrimmed(r, "page_meta_keywords")
+	data.formMetaRobots = req.GetStringTrimmed(r, "page_meta_robots")
+	data.formName = req.GetStringTrimmed(r, "page_name")
+	data.formSummary = req.GetStringTrimmed(r, "page_summary")
+	data.formStatus = req.GetStringTrimmed(r, "page_status")
+	data.formSiteID = req.GetStringTrimmed(r, "page_site_id")
+	data.formTitle = req.GetStringTrimmed(r, "page_title")
+	data.formTemplateID = req.GetStringTrimmed(r, "page_template_id")
 	data.formMiddlewaresAfter = controller.requestMapToMiddlewaresAfter(r)
 	data.formMiddlewaresBefore = controller.requestMapToMiddlewaresBefore(r)
 
@@ -1178,9 +1177,9 @@ func (controller pageUpdateController) movePageBlocks(request *http.Request, pag
 // - errorMessage string - the error message, or emty string if no error
 func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (data pageUpdateControllerData, errorMessage string) {
 	data.request = r
-	data.action = req.ValueOr(r, "action", "")
-	data.pageID = req.ValueOr(r, "page_id", "")
-	data.view = req.ValueOr(r, "view", VIEW_CONTENT)
+	data.action = req.GetStringTrimmed(r, "action")
+	data.pageID = req.GetStringTrimmed(r, "page_id")
+	data.view = req.GetStringTrimmedOr(r, "view", VIEW_CONTENT)
 
 	if data.view == "" {
 		data.view = VIEW_CONTENT
@@ -1253,7 +1252,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_DELETE {
-		repeatableRemoveIndex := utils.Req(r, "repeatable_remove_index", "")
+		repeatableRemoveIndex := req.GetStringTrimmed(r, "repeatable_remove_index")
 
 		if repeatableRemoveIndex == "" {
 			return data, ""
@@ -1265,7 +1264,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_UP {
-		repeatableMoveUpIndex := cast.ToInt(utils.Req(r, "repeatable_move_up_index", ""))
+		repeatableMoveUpIndex := cast.ToInt(req.GetStringTrimmed(r, "repeatable_move_up_index"))
 
 		if repeatableMoveUpIndex == 0 {
 			return data, ""
@@ -1281,7 +1280,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	if data.action == ACTION_MIDDLEWARES_AFTER_REPEATER_MOVE_DOWN {
-		repeatableMoveDownIndex := cast.ToInt(utils.Req(r, "repeatable_move_down_index", ""))
+		repeatableMoveDownIndex := cast.ToInt(req.GetStringTrimmed(r, "repeatable_move_down_index"))
 
 		if repeatableMoveDownIndex == len(data.formMiddlewaresAfter)-1 {
 			return data, ""
@@ -1302,7 +1301,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_DELETE {
-		repeatableRemoveIndex := utils.Req(r, "repeatable_remove_index", "")
+		repeatableRemoveIndex := req.GetStringTrimmed(r, "repeatable_remove_index")
 
 		if repeatableRemoveIndex == "" {
 			return data, ""
@@ -1314,7 +1313,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_UP {
-		repeatableMoveUpIndex := cast.ToInt(utils.Req(r, "repeatable_move_up_index", ""))
+		repeatableMoveUpIndex := cast.ToInt(req.GetStringTrimmed(r, "repeatable_move_up_index"))
 
 		if repeatableMoveUpIndex == 0 {
 			return data, ""
@@ -1330,7 +1329,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 	}
 
 	if data.action == ACTION_MIDDLEWARES_BEFORE_REPEATER_MOVE_DOWN {
-		repeatableMoveDownIndex := cast.ToInt(utils.Req(r, "repeatable_move_down_index", ""))
+		repeatableMoveDownIndex := cast.ToInt(req.GetStringTrimmed(r, "repeatable_move_down_index"))
 
 		if repeatableMoveDownIndex == len(data.formMiddlewaresBefore)-1 {
 			return data, ""
@@ -1368,7 +1367,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 // }
 
 func (controller pageUpdateController) requestMapToMiddlewaresBefore(r *http.Request) []string {
-	formMiddlewares := req.Maps(r, "page_middlewares_before", []map[string]string{})
+	formMiddlewares := req.GetMaps(r, "page_middlewares_before", []map[string]string{})
 	middlewares := []string{}
 
 	for _, formMiddleware := range formMiddlewares {
@@ -1379,7 +1378,7 @@ func (controller pageUpdateController) requestMapToMiddlewaresBefore(r *http.Req
 }
 
 func (controller pageUpdateController) requestMapToMiddlewaresAfter(r *http.Request) []string {
-	formMiddlewares := req.Maps(r, "page_middlewares_after", []map[string]string{})
+	formMiddlewares := req.GetMaps(r, "page_middlewares_after", []map[string]string{})
 	middlewares := []string{}
 
 	for _, formMiddleware := range formMiddlewares {

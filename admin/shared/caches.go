@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 // CachedSitesActive returns a list of active sites, caching the result for 2 minutes

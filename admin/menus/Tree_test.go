@@ -3,7 +3,7 @@ package admin
 import (
 	"testing"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 func Test_Tree_FromJSON(t *testing.T) {

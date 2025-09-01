@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gouniverse/cmsstore/mcp"
-	"github.com/gouniverse/cmsstore/testutils"
+	"github.com/dracory/cmsstore/mcp"
+	"github.com/dracory/cmsstore/testutils"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -29,7 +29,7 @@ func initMCP(t *testing.T) (mcp.MCPInterface, *httptest.Server) {
 	// Create a test HTTP server with the MCP handler
 	server := httptest.NewServer(mcpHandler.Handler())
 	t.Logf("Test server started successfully on %s", server.URL)
-	
+
 	return mcpHandler, server
 }
 

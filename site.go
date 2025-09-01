@@ -1,13 +1,12 @@
 package cmsstore
 
 import (
+	"encoding/json"
+
+	"github.com/dracory/dataobject"
+	"github.com/dracory/sb"
+	"github.com/dracory/uid"
 	"github.com/dromara/carbon/v2"
-	"github.com/gouniverse/dataobject"
-	"github.com/gouniverse/maputils"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/uid"
-	"github.com/gouniverse/utils"
-	"github.com/samber/lo"
 )
 
 // == TYPE ===================================================================
@@ -90,7 +89,8 @@ func (o *site) DomainNames() ([]string, error) {
 		domainNamesStr = "[]"
 	}
 
-	domainNamesJson, errJson := utils.FromJSON(domainNamesStr, []string{})
+	domainNamesJson := []string{}
+	errJson := json.Unmarshal([]byte(domainNamesStr), &domainNamesJson)
 	if errJson != nil {
 		return []string{}, errJson
 	}
@@ -99,18 +99,16 @@ func (o *site) DomainNames() ([]string, error) {
 		return []string{}, nil
 	}
 
-	return lo.Map(domainNamesJson.([]any), func(domainName any, _ int) string {
-		return domainName.(string)
-	}), nil
+	return domainNamesJson, nil
 }
 
 // SetDomainNames sets the domain names associated with the site.
 func (o *site) SetDomainNames(domainNames []string) (SiteInterface, error) {
-	domainNamesJson, errJson := utils.ToJSON(domainNames)
-	if errJson != nil {
-		return o, errJson
+	domainNamesBytes, err := json.Marshal(domainNames)
+	if err != nil {
+		return o, err
 	}
-	o.Set(COLUMN_DOMAIN_NAMES, domainNamesJson)
+	o.Set(COLUMN_DOMAIN_NAMES, string(domainNamesBytes))
 	return o, nil
 }
 
@@ -159,12 +157,13 @@ func (o *site) Metas() (map[string]string, error) {
 		metasStr = "{}"
 	}
 
-	metasJson, errJson := utils.FromJSON(metasStr, map[string]string{})
+	metasJson := map[string]string{}
+	errJson := json.Unmarshal([]byte(metasStr), &metasJson)
 	if errJson != nil {
 		return map[string]string{}, errJson
 	}
 
-	return maputils.MapStringAnyToMapStringString(metasJson.(map[string]any)), nil
+	return metasJson, nil
 }
 
 // Meta returns a specific metadata field.
@@ -190,12 +189,12 @@ func (o *site) SetMeta(name string, value string) error {
 // SetMetas stores metadata as a JSON string.
 // Warning: it overwrites any existing metadata.
 func (o *site) SetMetas(metas map[string]string) error {
-	mapString, err := utils.ToJSON(metas)
+	mapString, err := json.Marshal(metas)
 	if err != nil {
 		return err
 	}
 
-	o.Set(COLUMN_METAS, mapString)
+	o.Set(COLUMN_METAS, string(mapString))
 
 	return nil
 }

@@ -3,8 +3,8 @@ package shared
 import (
 	"net/http"
 
-	"github.com/gouniverse/cdn"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/cdn"
+	"github.com/dracory/hb"
 )
 
 func Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml string, options struct {

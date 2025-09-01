@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"os"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 	"github.com/gouniverse/utils"
 	_ "modernc.org/sqlite"
 )

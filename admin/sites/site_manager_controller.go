@@ -11,16 +11,16 @@ import (
 	// "project/internal/links"
 	// "project/pkg/cmsstore"
 
-	"github.com/gouniverse/api"
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cdn"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/api"
+	"github.com/dracory/bs"
+	"github.com/dracory/cdn"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/sb"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -460,18 +460,18 @@ func (controller *siteManagerController) prepareData(r *http.Request) (data site
 	var err error
 	initialPerPage := 20
 	data.request = r
-	data.action = utils.Req(r, "action", "")
-	data.page = utils.Req(r, "page", "0")
+	data.action = req.GetStringTrimmed(r, "action")
+	data.page = req.GetStringTrimmed(r, "page")
 	data.pageInt = cast.ToInt(data.page)
-	data.perPage = cast.ToInt(utils.Req(r, "per_page", cast.ToString(initialPerPage)))
-	data.sortOrder = utils.Req(r, "sort", sb.DESC)
-	data.sortBy = utils.Req(r, "by", cmsstore.COLUMN_CREATED_AT)
+	data.perPage = cast.ToInt(req.GetStringTrimmedOr(r, "per_page", cast.ToString(initialPerPage)))
+	data.sortOrder = req.GetStringTrimmed(r, "sort")
+	data.sortBy = req.GetStringTrimmed(r, "by")
 
-	data.formCreatedFrom = utils.Req(r, "filter_created_from", "")
-	data.formCreatedTo = utils.Req(r, "filter_created_to", "")
-	data.formName = utils.Req(r, "filter_name", "")
-	data.formSiteID = utils.Req(r, "filter_site_id", "")
-	data.formStatus = utils.Req(r, "filter_status", "")
+	data.formCreatedFrom = req.GetStringTrimmed(r, "filter_created_from")
+	data.formCreatedTo = req.GetStringTrimmed(r, "filter_created_to")
+	data.formName = req.GetStringTrimmed(r, "filter_name")
+	data.formSiteID = req.GetStringTrimmed(r, "filter_site_id")
+	data.formStatus = req.GetStringTrimmed(r, "filter_status")
 
 	data.recordList, data.recordCount, err = controller.fetchRecordList(data)
 

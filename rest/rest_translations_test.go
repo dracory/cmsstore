@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 	"github.com/stretchr/testify/require"
 )
 
@@ -295,14 +295,14 @@ func TestDeleteTranslation(t *testing.T) {
 	require.True(t, ok && success, "Expected success to be true")
 
 	// Verify the translation was soft deleted by querying with soft-deleted included
-	translations, err := store.TranslationList(context.Background(), 
+	translations, err := store.TranslationList(context.Background(),
 		cmsstore.TranslationQuery().
 			SetID(translation.ID()).
 			SetSoftDeletedIncluded(true).
 			SetLimit(1))
 	require.NoError(t, err, "Failed to find translation")
 	require.NotEmpty(t, translations, "Translation should still exist after soft delete")
-	
+
 	translationAfterDelete := translations[0]
 	require.True(t, translationAfterDelete.IsSoftDeleted(), "Translation should be marked as soft deleted")
 }

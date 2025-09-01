@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 	"github.com/mark3labs/mcp-go/mcp"
 	mcpServer "github.com/mark3labs/mcp-go/server"
 )
@@ -565,7 +565,7 @@ func (m *MCP) handleCallTool(w http.ResponseWriter, ctx context.Context, id stri
 				errorMessage = textContent.Text
 			}
 		}
-		
+
 		if errorMessage == "" {
 			errorMessage = "Unknown error occurred"
 		}
@@ -599,7 +599,7 @@ func (m *MCP) handleCallTool(w http.ResponseWriter, ctx context.Context, id stri
 		"jsonrpc": "2.0",
 		"id":      id,
 		"result": map[string]interface{}{
-			"text": textContent,
+			"text":    textContent,
 			"success": true,
 		},
 	}

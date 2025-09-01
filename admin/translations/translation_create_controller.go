@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/form"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/form"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
+	"github.com/dracory/sb"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/sb"
-	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
 )
 
@@ -162,8 +162,8 @@ func (controller *translationCreateController) modal(data translationCreateContr
 
 func (controller *translationCreateController) prepareDataAndValidate(r *http.Request) (data translationCreateControllerData, errorMessage string) {
 	data.request = r
-	data.name = strings.TrimSpace(utils.Req(r, "translation_name", ""))
-	data.siteID = strings.TrimSpace(utils.Req(r, "site_id", ""))
+	data.name = strings.TrimSpace(req.GetStringTrimmed(r, "translation_name"))
+	data.siteID = strings.TrimSpace(req.GetStringTrimmed(r, "site_id"))
 
 	var err error
 

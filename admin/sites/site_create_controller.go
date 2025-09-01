@@ -7,14 +7,13 @@ import (
 	// "project/controllers/admin/cms/shared"
 	// "project/internal/helpers"
 	// "project/pkg/cmsstore"
-	"strings"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/utils"
 )
 
 // == CONTROLLER ==============================================================
@@ -135,7 +134,7 @@ func (controller *siteCreateController) modal(data siteCreateControllerData) hb.
 
 func (controller *siteCreateController) prepareDataAndValidate(r *http.Request) (data siteCreateControllerData, errorMessage string) {
 	data.request = r
-	data.name = strings.TrimSpace(utils.Req(r, "site_name", ""))
+	data.name = req.GetStringTrimmed(r, "site_name")
 
 	if r.Method != http.MethodPost {
 		return data, ""

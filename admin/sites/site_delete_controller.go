@@ -3,12 +3,12 @@ package admin
 import (
 	"net/http"
 
-	"github.com/gouniverse/bs"
-	"github.com/gouniverse/cmsstore"
-	"github.com/gouniverse/cmsstore/admin/shared"
-	"github.com/gouniverse/hb"
+	"github.com/dracory/bs"
+	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
+	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/gouniverse/router"
-	"github.com/gouniverse/utils"
 )
 
 // == CONTROLLER ==============================================================
@@ -131,7 +131,7 @@ func (controller *siteDeleteController) modal(data siteDeleteControllerData) hb.
 
 func (controller *siteDeleteController) prepareDataAndValidate(r *http.Request) (data siteDeleteControllerData, errorMessage string) {
 	data.request = r
-	data.siteID = utils.Req(r, "site_id", "")
+	data.siteID = req.GetString(r, "site_id")
 
 	if data.siteID == "" {
 		return data, "site id is required"

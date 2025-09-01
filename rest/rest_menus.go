@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 // handleMenusEndpoint handles HTTP requests for the /api/menus endpoint

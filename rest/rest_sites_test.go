@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 func TestSiteEndpoints(t *testing.T) {

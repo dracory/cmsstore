@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gouniverse/cmsstore"
+	"github.com/dracory/cmsstore"
 )
 
 // CreateTestSite is now defined in test_utils.go
@@ -103,7 +103,7 @@ func TestPageEndpoints(t *testing.T) {
 		// Create test site first
 		testSite, cleanupSite := CreateTestSite(t, store)
 		defer cleanupSite()
-		
+
 		pageData := map[string]interface{}{
 			"title":   "New Test Page - " + t.Name(),
 			"content": "New Test Content - " + t.Name(),
@@ -225,7 +225,7 @@ func TestPageEndpoints(t *testing.T) {
 		}
 
 		// Verify the page was soft deleted by querying with soft-deleted included
-		list, err := store.PageList(context.Background(), 
+		list, err := store.PageList(context.Background(),
 			cmsstore.PageQuery().
 				SetID(testPage.ID()).
 				SetSoftDeletedIncluded(true).
