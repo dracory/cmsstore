@@ -7,7 +7,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/gouniverse/base/database"
+	"github.com/dracory/database"
 	"github.com/gouniverse/versionstore"
 	"github.com/samber/lo"
 )

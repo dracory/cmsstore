@@ -8,6 +8,7 @@ require (
 	github.com/dracory/blockeditor v0.24.0
 	github.com/dracory/bs v0.15.0
 	github.com/dracory/cdn v1.8.0
+	github.com/dracory/database v0.3.0
 	github.com/dracory/dataobject v1.6.0
 	github.com/dracory/env v0.6.0
 	github.com/dracory/form v0.19.0
@@ -19,7 +20,6 @@ require (
 	github.com/dracory/uid v1.8.0
 	github.com/dromara/carbon/v2 v2.6.11
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/gouniverse/base v0.9.0
 	github.com/gouniverse/responses v0.6.0
 	github.com/gouniverse/router v1.4.2
 	github.com/lib/pq v1.10.9
@@ -31,10 +31,10 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/dracory/database v0.3.0 // indirect
 	github.com/dracory/envenc v0.12.0 // indirect
 	github.com/dracory/str v0.3.0 // indirect
 	github.com/dracory/websrv v0.1.0 // indirect
+	github.com/gouniverse/base v0.9.0 // indirect
 	github.com/gouniverse/dataobject v1.3.0 // indirect
 	github.com/gouniverse/hb v1.87.0 // indirect
 	github.com/gouniverse/maputils v0.7.0 // indirect

@@ -34,7 +34,7 @@ A modular, embeddable CMS package for Go applications that provides content mana
 ## Dependencies
 - `github.com/doug-martin/goqu/v9`: SQL query builder
 - `github.com/dromara/carbon/v2`: Date/time handling
-- `github.com/gouniverse/base`: Base utilities
+- `github.com/dracory/database`: Database utilities
 - `github.com/dracory/sb`: SQL builder utilities
 - `github.com/samber/lo`: Lo-Dash like Go utilities
 

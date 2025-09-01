@@ -10,8 +10,8 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/dracory/sb"
-	"github.com/gouniverse/base/req"
 	"github.com/gouniverse/router"
 )
 
@@ -418,12 +418,12 @@ func (controller templateUpdateController) fieldsSettings(data templateUpdateCon
 }
 
 func (controller templateUpdateController) saveTemplate(data templateUpdateControllerData) (templateUpdateControllerData, string) {
-	data.formContent = req.Value(data.request, "template_content")
-	data.formMemo = req.Value(data.request, "template_memo")
-	data.formName = req.Value(data.request, "template_name")
-	data.formSiteID = req.Value(data.request, "template_site_id")
-	data.formStatus = req.Value(data.request, "template_status")
-	data.formTitle = req.Value(data.request, "template_title")
+	data.formContent = req.GetStringTrimmed(data.request, "template_content")
+	data.formMemo = req.GetStringTrimmed(data.request, "template_memo")
+	data.formName = req.GetStringTrimmed(data.request, "template_name")
+	data.formSiteID = req.GetStringTrimmed(data.request, "template_site_id")
+	data.formStatus = req.GetStringTrimmed(data.request, "template_status")
+	data.formTitle = req.GetStringTrimmed(data.request, "template_title")
 
 	if data.view == VIEW_SETTINGS {
 		if data.formStatus == "" {
@@ -495,9 +495,9 @@ func (controller templateUpdateController) moveTemplateBlocks(request *http.Requ
 
 func (controller templateUpdateController) prepareDataAndValidate(r *http.Request) (data templateUpdateControllerData, errorMessage string) {
 	data.request = r
-	data.action = req.Value(r, "action")
-	data.templateID = req.Value(r, "template_id")
-	data.view = req.Value(r, "view")
+	data.action = req.GetStringTrimmed(r, "action")
+	data.templateID = req.GetStringTrimmed(r, "template_id")
+	data.view = req.GetStringTrimmed(r, "view")
 
 	if data.view == "" {
 		data.view = VIEW_CONTENT
