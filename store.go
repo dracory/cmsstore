@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/dracory/database"
-	"github.com/gouniverse/versionstore"
+	"github.com/dracory/versionstore"
 )
 
 // == TYPE ====================================================================
