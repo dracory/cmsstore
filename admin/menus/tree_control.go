@@ -9,8 +9,8 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/uid"
-	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
+	"github.com/spf13/cast"
 )
 
 type treeControl struct {
@@ -258,13 +258,13 @@ func (t *treeControl) renderNode(tree Tree, node Node, level int) hb.TagInterfac
 		HxSwap(`beforeend`)
 
 	padding := lo.Ternary(isRoot, 0, 20)
-	backgroundOpacity := `0.0` + (utils.ToString(1 + level*2))
+	backgroundOpacity := `0.0` + (cast.ToString(1 + level*2))
 
 	nodeView := hb.Div().
 		Class("tree-node").
 		ClassIf(isRoot, "tree-node-root").
 		Style(`border: 1px solid lavender; border-radius: 10px; margin: 5px 0px; padding: 5px`).
-		Style("margin-left: " + utils.ToString(padding) + "px;").
+		Style("margin-left: " + cast.ToString(padding) + "px;").
 		Style("background-color: rgba(0, 149, 182, " + backgroundOpacity + ");").
 		Child(icon).
 		Child(hb.Span().

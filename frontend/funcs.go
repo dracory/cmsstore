@@ -1,6 +1,9 @@
 package frontend
 
-import "regexp"
+import (
+	"encoding/json"
+	"regexp"
+)
 
 // returns the IDs in the content who have the following format [[prefix_id]]
 func contentFindIdsByPatternPrefix(content, prefix string) []string {
@@ -21,4 +24,9 @@ func contentFindIdsByPatternPrefix(content, prefix string) []string {
 	}
 
 	return ids
+}
+
+func isJSON(str string) bool {
+	var js map[string]interface{}
+	return json.Unmarshal([]byte(str), &js) == nil
 }

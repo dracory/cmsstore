@@ -9,14 +9,13 @@ import (
 	"sort"
 	"strings"
 
-	// "github.com/gouniverse/cms/types"
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/hb"
 	"github.com/dracory/ui"
 	"github.com/gouniverse/shortcode"
-	"github.com/gouniverse/utils"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/samber/lo"
+	"github.com/spf13/cast"
 )
 
 type frontend struct {
@@ -70,7 +69,7 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	languageAny := r.Context().Value(LanguageKey{})
-	language := utils.ToString(languageAny)
+	language := cast.ToString(languageAny)
 
 	// if fr.translationsEnabled {
 	// 	isValidLanguage := lo.Contains(lo.Keys(cms.translationLanguages), language)
@@ -458,7 +457,7 @@ func (frontend *frontend) convertBlockJsonToHtml(blocksJson string) string {
 		return "Block editor not configured"
 	}
 
-	if !utils.IsJSON(blocksJson) {
+	if !isJSON(blocksJson) {
 		return "Malformed block content"
 	}
 

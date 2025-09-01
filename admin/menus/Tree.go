@@ -6,7 +6,6 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/uid"
-	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -451,7 +450,7 @@ func (tree *Tree) Update(node Node) {
 	}
 }
 
-func (tree *Tree) ToJSON() (json string, err error) {
+func (tree *Tree) ToJSON() (jsonString string, err error) {
 	nodes := tree.list
 
 	maps := make([]map[string]interface{}, 0)
@@ -460,7 +459,11 @@ func (tree *Tree) ToJSON() (json string, err error) {
 		maps = append(maps, nodeToMap(node))
 	}
 
-	return utils.ToJSON(maps)
+	jsonBytes, err := json.Marshal(maps)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonBytes), nil
 }
 
 func nodeToMap(node Node) map[string]any {
