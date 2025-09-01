@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/dracory/cmsstore"
-	"github.com/gouniverse/utils"
 	_ "modernc.org/sqlite"
 )
 
@@ -20,7 +19,7 @@ const BLOCK_01 = "BLOCK_01"
 const BLOCK_02 = "BLOCK_02"
 
 func initDB(filepath string) *sql.DB {
-	if filepath != ":memory:" && utils.FileExists(filepath) {
+	if filepath != ":memory:" && fileExists(filepath) {
 		err := os.Remove(filepath) // remove database
 
 		if err != nil {
@@ -93,4 +92,9 @@ func SeedTemplate(store cmsstore.StoreInterface, siteID string, templateID strin
 	err := store.TemplateCreate(context.Background(), template)
 
 	return template, err
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
 }

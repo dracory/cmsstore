@@ -14,14 +14,13 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/rest" // Import the package to be tested
-	"github.com/gouniverse/utils"
-	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	_ "github.com/mattn/go-sqlite3"    // SQLite driver
 )
 
 // initTestDB creates and returns a new in-memory SQLite database connection.
 func initTestDB(t *testing.T, filepath string) (*sql.DB, func()) {
 	t.Helper()
-	if filepath != ":memory:" && utils.FileExists(filepath) {
+	if filepath != ":memory:" && fileExists(filepath) {
 		err := os.Remove(filepath)
 		if err != nil {
 			t.Fatalf("failed to remove existing db file: %v", err)
@@ -43,6 +42,11 @@ func initTestDB(t *testing.T, filepath string) (*sql.DB, func()) {
 		}
 	}
 	return db, cleanup
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
 }
 
 // initTestStore initializes a cmsstore.StoreInterface with the given database connection.
