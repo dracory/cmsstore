@@ -12,7 +12,6 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
-	"github.com/gouniverse/router"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -24,8 +23,6 @@ const ACTION_TREEEDITOR_HANDLE = "treeditor_handle"
 type menuUpdateController struct {
 	ui UiInterface
 }
-
-var _ router.HTMLControllerInterface = (*menuUpdateController)(nil)
 
 // == CONSTRUCTOR =============================================================
 

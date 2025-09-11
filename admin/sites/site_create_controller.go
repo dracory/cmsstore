@@ -13,7 +13,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/gouniverse/router"
 )
 
 // == CONTROLLER ==============================================================
@@ -27,8 +26,6 @@ type siteCreateControllerData struct {
 	name           string
 	successMessage string
 }
-
-var _ router.HTMLControllerInterface = (*siteCreateController)(nil)
 
 // == CONSTRUCTOR =============================================================
 

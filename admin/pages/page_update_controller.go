@@ -17,7 +17,6 @@ import (
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
 	"github.com/dracory/versionstore"
-	"github.com/gouniverse/router"
 	"github.com/mingrammer/cfmt"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
@@ -44,8 +43,6 @@ const ACTION_MIDDLEWARES_REPEATER_ADD = "action_middlewares_repeater_add"
 type pageUpdateController struct {
 	ui UiInterface
 }
-
-var _ router.HTMLControllerInterface = (*pageUpdateController)(nil)
 
 // == CONSTRUCTOR =============================================================
 

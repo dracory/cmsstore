@@ -12,7 +12,6 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
-	"github.com/gouniverse/router"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -34,8 +33,6 @@ const codemirrorMatchBracketsJs = "//cdnjs.cloudflare.com/ajax/libs/codemirror/3
 type templateUpdateController struct {
 	ui UiInterface
 }
-
-var _ router.HTMLControllerInterface = (*templateUpdateController)(nil)
 
 // == CONSTRUCTOR =============================================================
 

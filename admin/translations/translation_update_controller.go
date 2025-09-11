@@ -11,7 +11,6 @@ import (
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/gouniverse/router"
 	"github.com/samber/lo"
 )
 
@@ -23,8 +22,6 @@ const VIEW_CONTENT = "content"
 type translationUpdateController struct {
 	ui UiInterface
 }
-
-var _ router.HTMLControllerInterface = (*translationUpdateController)(nil)
 
 // == CONSTRUCTOR =============================================================
 

@@ -16,7 +16,6 @@ import (
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
-	"github.com/gouniverse/router"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -35,8 +34,6 @@ type pageVersioningControllerData struct {
 	versioning     cmsstore.VersioningInterface
 	successMessage string
 }
-
-var _ router.HTMLControllerInterface = (*pageDeleteController)(nil)
 
 // == CONSTRUCTOR =============================================================
 

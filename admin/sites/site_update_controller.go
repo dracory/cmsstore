@@ -13,7 +13,6 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
-	"github.com/gouniverse/router"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -30,8 +29,6 @@ const ACTION_REPEATER_MOVE_DOWN = "repeater_move_down"
 type siteUpdateController struct {
 	ui UiInterface
 }
-
-var _ router.HTMLControllerInterface = (*siteUpdateController)(nil)
 
 // == CONSTRUCTOR =============================================================
 

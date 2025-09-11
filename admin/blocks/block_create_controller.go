@@ -10,7 +10,6 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
-	"github.com/gouniverse/router"
 	"github.com/samber/lo"
 )
 
@@ -29,8 +28,6 @@ type blockCreateControllerData struct {
 	name           string
 	successMessage string
 }
-
-var _ router.HTMLControllerInterface = (*blockCreateController)(nil)
 
 // == CONSTRUCTOR =============================================================
 

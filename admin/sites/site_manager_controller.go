@@ -20,7 +20,6 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
-	"github.com/gouniverse/router"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -32,8 +31,6 @@ const ActionModalPageFilterShow = "modal_site_filter_show"
 type siteManagerController struct {
 	ui UiInterface
 }
-
-var _ router.HTMLControllerInterface = (*siteManagerController)(nil)
 
 // == CONSTRUCTOR =============================================================
 

@@ -8,7 +8,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/gouniverse/router"
 )
 
 // == CONTROLLER ==============================================================
@@ -16,8 +15,6 @@ import (
 type siteDeleteController struct {
 	ui UiInterface
 }
-
-var _ router.HTMLControllerInterface = (*siteDeleteController)(nil)
 
 // == CONSTRUCTOR =============================================================
 
