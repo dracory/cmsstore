@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
-	_ "modernc.org/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestStorePageCreate(t *testing.T) {

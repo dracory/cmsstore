@@ -4,7 +4,7 @@
 
 - Go 1.23.3 or higher
 - One of the following SQL databases:
-  - SQLite (using modernc.org/sqlite)
+  - SQLite (using mattn/go-sqlite3)
   - MySQL 5.7+ (using go-sql-driver/mysql)
   - PostgreSQL 9.6+ (using lib/pq)
 - Git

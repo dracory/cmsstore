@@ -26,7 +26,6 @@ require (
 	github.com/samber/lo v1.51.0
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
-	modernc.org/sqlite v1.38.2
 )
 
 require (
@@ -34,11 +33,11 @@ require (
 	github.com/dracory/envenc v1.0.0 // indirect
 	github.com/dracory/str v0.3.0 // indirect
 	github.com/dracory/websrv v0.1.0 // indirect
-	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	modernc.org/sqlite v1.38.2 // indirect
 )
 
 require (
