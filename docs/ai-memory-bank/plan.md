@@ -20,3 +20,8 @@ Based on the analysis of the project structure, database schema, store initializ
 - [ ] Review warnings about response usage before error checks
 - [ ] Refactor rest tests to assert on request/response errors first
 - [ ] Confirm tests compile and run cleanly
+
+## [2025-11-13] Add domain button bug
+- [ ] Reproduce add domain button failure and capture console/network errors
+- [ ] Trace frontend logic to ensure SweetAlert dependency loads before usage
+- [ ] Verify backend site update controller handles domain addition request

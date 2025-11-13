@@ -78,6 +78,7 @@ func (controller *siteUpdateController) Handler(w http.ResponseWriter, r *http.R
 		Scripts:   []string{},
 		ScriptURLs: []string{
 			cdn.Sweetalert2_10(),
+			cdn.Htmx_2_0_0(),
 		},
 	}
 
