@@ -12,6 +12,11 @@ Based on the analysis of the project structure, database schema, store initializ
 - [ ] Verify the behaviour via tests or reasoning
 
 ## [2025-11-13] Translation implementation tests
-- [ ] Determine behaviours to cover for translation implementation
-- [ ] Add unit tests for translation implementation setters/getters
-- [ ] Document or share results
+- [X] Determine behaviours to cover for translation implementation
+- [X] Add unit tests for translation implementation setters/getters
+- [X] Document or share results
+
+## [2025-11-13] REST API tests warnings
+- [ ] Review warnings about response usage before error checks
+- [ ] Refactor rest tests to assert on request/response errors first
+- [ ] Confirm tests compile and run cleanly
