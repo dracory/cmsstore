@@ -25,3 +25,6 @@ Based on the analysis of the project structure, database schema, store initializ
 - [ ] Reproduce add domain button failure and capture console/network errors
 - [ ] Trace frontend logic to ensure SweetAlert dependency loads before usage
 - [ ] Verify backend site update controller handles domain addition request
+- [ ] Identify appropriate package and file for site update controller tests
+- [ ] Implement regression test covering domain repeater addition scenario
+- [ ] Run go test suite for admin/sites and ensure pass
