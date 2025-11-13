@@ -14,7 +14,7 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/rest" // Import the package to be tested
-	_ "github.com/mattn/go-sqlite3"    // SQLite driver
+	_ "modernc.org/sqlite"             // SQLite driver
 )
 
 // initTestDB creates and returns a new in-memory SQLite database connection.
@@ -27,7 +27,7 @@ func initTestDB(t *testing.T, filepath string) (*sql.DB, func()) {
 		}
 	}
 
-	db, err := sql.Open("sqlite3", filepath)
+	db, err := sql.Open("sqlite", filepath)
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)
 	}

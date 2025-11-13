@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 func initDB(filepath string) *sql.DB {
@@ -17,7 +17,7 @@ func initDB(filepath string) *sql.DB {
 	}
 
 	dsn := filepath + "?parseTime=true"
-	db, err := sql.Open("sqlite3", dsn)
+	db, err := sql.Open("sqlite", dsn)
 
 	if err != nil {
 		panic(err)

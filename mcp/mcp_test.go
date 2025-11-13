@@ -11,7 +11,7 @@ package mcp_test
 
 // 	"github.com/dracory/cmsstore/mcp"
 // 	"github.com/dracory/cmsstore/testutils"
-// 	_ "github.com/mattn/go-sqlite3"
+// 	_ "modernc.org/sqlite"
 // )
 
 // func initMCP(t *testing.T) (mcp.MCPInterface, *httptest.Server) {
