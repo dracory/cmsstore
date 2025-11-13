@@ -11,19 +11,19 @@ import (
 
 // == TYPE ===================================================================
 
-type translation struct {
+type translationImplementation struct {
 	dataobject.DataObject
 }
 
 // == INTERFACES =============================================================
 
 // var _ dataobject.DataObjectInterface = (*translation)(nil)
-var _ TranslationInterface = (*translation)(nil)
+var _ TranslationInterface = (*translationImplementation)(nil)
 
 // == CONSTRUCTORS ==========================================================
 
 func NewTranslation() TranslationInterface {
-	o := &translation{}
+	o := &translationImplementation{}
 	o.SetContent(map[string]string{})
 	o.SetHandle("")
 	o.SetID(uid.HumanUid())
@@ -37,42 +37,42 @@ func NewTranslation() TranslationInterface {
 	return o
 }
 
-func NewTranslationFromExistingData(data map[string]string) *translation {
-	o := &translation{}
+func NewTranslationFromExistingData(data map[string]string) TranslationInterface {
+	o := &translationImplementation{}
 	o.Hydrate(data)
 	return o
 }
 
 // == METHODS ===============================================================
 
-func (o *translation) IsActive() bool {
+func (o *translationImplementation) IsActive() bool {
 	return o.Status() == PAGE_STATUS_ACTIVE
 }
 
-func (o *translation) IsInactive() bool {
+func (o *translationImplementation) IsInactive() bool {
 	return o.Status() == PAGE_STATUS_INACTIVE
 }
 
-func (o *translation) IsSoftDeleted() bool {
+func (o *translationImplementation) IsSoftDeleted() bool {
 	return o.SoftDeletedAtCarbon().Compare("<", carbon.Now(carbon.UTC))
 }
 
 // == SETTERS AND GETTERS =====================================================
 
-func (o *translation) CreatedAt() string {
+func (o *translationImplementation) CreatedAt() string {
 	return o.Get(COLUMN_CREATED_AT)
 }
 
-func (o *translation) SetCreatedAt(createdAt string) TranslationInterface {
+func (o *translationImplementation) SetCreatedAt(createdAt string) TranslationInterface {
 	o.Set(COLUMN_CREATED_AT, createdAt)
 	return o
 }
 
-func (o *translation) CreatedAtCarbon() *carbon.Carbon {
+func (o *translationImplementation) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
-func (o *translation) Content() (languageCodeContentMap map[string]string, err error) {
+func (o *translationImplementation) Content() (languageCodeContentMap map[string]string, err error) {
 	languageCodeContentStr := o.Get(COLUMN_CONTENT)
 
 	if languageCodeContentStr == "" {
@@ -88,7 +88,7 @@ func (o *translation) Content() (languageCodeContentMap map[string]string, err e
 	return languageCodeContentJSON, nil
 }
 
-func (o *translation) SetContent(languageCodeContentMap map[string]string) error {
+func (o *translationImplementation) SetContent(languageCodeContentMap map[string]string) error {
 	mapString, err := json.Marshal(languageCodeContentMap)
 
 	if err != nil {
@@ -100,11 +100,11 @@ func (o *translation) SetContent(languageCodeContentMap map[string]string) error
 	return nil
 }
 
-func (o *translation) ID() string {
+func (o *translationImplementation) ID() string {
 	return o.Get(COLUMN_ID)
 }
 
-func (o *translation) SetID(id string) TranslationInterface {
+func (o *translationImplementation) SetID(id string) TranslationInterface {
 	o.Set(COLUMN_ID, id)
 	return o
 }
@@ -112,28 +112,28 @@ func (o *translation) SetID(id string) TranslationInterface {
 // Handle returns the handle of the translation
 //
 // A handle is a human friendly unique identifier for the translation, unlike the ID
-func (o *translation) Handle() string {
+func (o *translationImplementation) Handle() string {
 	return o.Get(COLUMN_HANDLE)
 }
 
 // SetHandle sets the handle of the translation
 //
 // A handle is a human friendly unique identifier for the translation, unlike the ID
-func (o *translation) SetHandle(handle string) TranslationInterface {
+func (o *translationImplementation) SetHandle(handle string) TranslationInterface {
 	o.Set(COLUMN_HANDLE, handle)
 	return o
 }
 
-func (o *translation) Memo() string {
+func (o *translationImplementation) Memo() string {
 	return o.Get(COLUMN_MEMO)
 }
 
-func (o *translation) SetMemo(memo string) TranslationInterface {
+func (o *translationImplementation) SetMemo(memo string) TranslationInterface {
 	o.Set(COLUMN_MEMO, memo)
 	return o
 }
 
-func (o *translation) Metas() (map[string]string, error) {
+func (o *translationImplementation) Metas() (map[string]string, error) {
 	metasStr := o.Get(COLUMN_METAS)
 
 	if metasStr == "" {
@@ -149,7 +149,7 @@ func (o *translation) Metas() (map[string]string, error) {
 	return metasJson, nil
 }
 
-func (o *translation) Meta(name string) string {
+func (o *translationImplementation) Meta(name string) string {
 	metas, err := o.Metas()
 
 	if err != nil {
@@ -163,13 +163,13 @@ func (o *translation) Meta(name string) string {
 	return ""
 }
 
-func (o *translation) SetMeta(name string, value string) error {
+func (o *translationImplementation) SetMeta(name string, value string) error {
 	return o.UpsertMetas(map[string]string{name: value})
 }
 
 // SetMetas stores metas as json string
 // Warning: it overwrites any existing metas
-func (o *translation) SetMetas(metas map[string]string) error {
+func (o *translationImplementation) SetMetas(metas map[string]string) error {
 	mapString, err := json.Marshal(metas)
 	if err != nil {
 		return err
@@ -180,7 +180,7 @@ func (o *translation) SetMetas(metas map[string]string) error {
 	return nil
 }
 
-func (o *translation) UpsertMetas(metas map[string]string) error {
+func (o *translationImplementation) UpsertMetas(metas map[string]string) error {
 	currentMetas, err := o.Metas()
 
 	if err != nil {
@@ -194,55 +194,55 @@ func (o *translation) UpsertMetas(metas map[string]string) error {
 	return o.SetMetas(currentMetas)
 }
 
-func (o *translation) Name() string {
+func (o *translationImplementation) Name() string {
 	return o.Get(COLUMN_NAME)
 }
 
-func (o *translation) SetName(name string) TranslationInterface {
+func (o *translationImplementation) SetName(name string) TranslationInterface {
 	o.Set(COLUMN_NAME, name)
 	return o
 }
 
-func (o *translation) SiteID() string {
+func (o *translationImplementation) SiteID() string {
 	return o.Get(COLUMN_SITE_ID)
 }
 
-func (o *translation) SetSiteID(siteID string) TranslationInterface {
+func (o *translationImplementation) SetSiteID(siteID string) TranslationInterface {
 	o.Set(COLUMN_SITE_ID, siteID)
 	return o
 }
 
-func (o *translation) SoftDeletedAt() string {
+func (o *translationImplementation) SoftDeletedAt() string {
 	return o.Get(COLUMN_SOFT_DELETED_AT)
 }
 
-func (o *translation) SetSoftDeletedAt(softDeletedAt string) TranslationInterface {
+func (o *translationImplementation) SetSoftDeletedAt(softDeletedAt string) TranslationInterface {
 	o.Set(COLUMN_SOFT_DELETED_AT, softDeletedAt)
 	return o
 }
 
-func (o *translation) SoftDeletedAtCarbon() *carbon.Carbon {
+func (o *translationImplementation) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
-func (o *translation) Status() string {
+func (o *translationImplementation) Status() string {
 	return o.Get(COLUMN_STATUS)
 }
 
-func (o *translation) SetStatus(status string) TranslationInterface {
+func (o *translationImplementation) SetStatus(status string) TranslationInterface {
 	o.Set(COLUMN_STATUS, status)
 	return o
 }
 
-func (o *translation) UpdatedAt() string {
+func (o *translationImplementation) UpdatedAt() string {
 	return o.Get(COLUMN_UPDATED_AT)
 }
 
-func (o *translation) SetUpdatedAt(updatedAt string) TranslationInterface {
+func (o *translationImplementation) SetUpdatedAt(updatedAt string) TranslationInterface {
 	o.Set(COLUMN_UPDATED_AT, updatedAt)
 	return o
 }
 
-func (o *translation) UpdatedAtCarbon() *carbon.Carbon {
+func (o *translationImplementation) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }

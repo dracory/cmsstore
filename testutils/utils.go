@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/dracory/cmsstore"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 const SITE_01 = "SITE_01"

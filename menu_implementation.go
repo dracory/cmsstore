@@ -14,10 +14,10 @@ import (
 
 // == TYPE ===================================================================
 
-// menu represents a menu item in the CMS store.
+// menuImplementation represents a menu item in the CMS store.
 // It embeds the DataObject from the gouniverse/dataobject package to provide
 // common data object functionalities.
-type menu struct {
+type menuImplementation struct {
 	dataobject.DataObject
 }
 
@@ -26,14 +26,14 @@ type menu struct {
 // var _ dataobject.DataObjectInterface = (*menu)(nil)
 // The menu type implements the MenuInterface, which defines the methods
 // required for menu operations.
-var _ MenuInterface = (*menu)(nil)
+var _ MenuInterface = (*menuImplementation)(nil)
 
 // == CONSTRUCTORS ==========================================================
 
 // NewMenu creates a new menu instance with default values.
 // It initializes the menu with a unique ID, draft status, and current timestamps.
 func NewMenu() MenuInterface {
-	o := &menu{}
+	o := &menuImplementation{}
 	o.SetHandle("")
 	o.SetID(uid.HumanUid())
 	o.SetMemo("")
@@ -48,8 +48,8 @@ func NewMenu() MenuInterface {
 
 // NewMenuFromExistingData creates a new menu instance from existing data.
 // It hydrates the menu with the provided data map.
-func NewMenuFromExistingData(data map[string]string) *menu {
-	o := &menu{}
+func NewMenuFromExistingData(data map[string]string) *menuImplementation {
+	o := &menuImplementation{}
 	o.Hydrate(data)
 	return o
 }
@@ -57,45 +57,45 @@ func NewMenuFromExistingData(data map[string]string) *menu {
 // == METHODS ===============================================================
 
 // IsActive checks if the menu is in active status.
-func (o *menu) IsActive() bool {
+func (o *menuImplementation) IsActive() bool {
 	return o.Status() == PAGE_STATUS_ACTIVE
 }
 
 // IsInactive checks if the menu is in inactive status.
-func (o *menu) IsInactive() bool {
+func (o *menuImplementation) IsInactive() bool {
 	return o.Status() == PAGE_STATUS_INACTIVE
 }
 
 // IsSoftDeleted checks if the menu is soft deleted.
-func (o *menu) IsSoftDeleted() bool {
+func (o *menuImplementation) IsSoftDeleted() bool {
 	return o.SoftDeletedAtCarbon().Compare("<", carbon.Now(carbon.UTC))
 }
 
 // == SETTERS AND GETTERS =====================================================
 
 // CreatedAt returns the creation timestamp of the menu.
-func (o *menu) CreatedAt() string {
+func (o *menuImplementation) CreatedAt() string {
 	return o.Get(COLUMN_CREATED_AT)
 }
 
 // SetCreatedAt sets the creation timestamp of the menu.
-func (o *menu) SetCreatedAt(createdAt string) MenuInterface {
+func (o *menuImplementation) SetCreatedAt(createdAt string) MenuInterface {
 	o.Set(COLUMN_CREATED_AT, createdAt)
 	return o
 }
 
 // CreatedAtCarbon returns the creation timestamp of the menu as a Carbon instance.
-func (o *menu) CreatedAtCarbon() *carbon.Carbon {
+func (o *menuImplementation) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
 // ID returns the unique identifier of the menu.
-func (o *menu) ID() string {
+func (o *menuImplementation) ID() string {
 	return o.Get(COLUMN_ID)
 }
 
 // SetID sets the unique identifier of the menu.
-func (o *menu) SetID(id string) MenuInterface {
+func (o *menuImplementation) SetID(id string) MenuInterface {
 	o.Set(COLUMN_ID, id)
 	return o
 }
@@ -103,31 +103,31 @@ func (o *menu) SetID(id string) MenuInterface {
 // Handle returns the human-friendly unique identifier of the menu.
 //
 // A handle is a human-friendly unique identifier for the menu, unlike the ID.
-func (o *menu) Handle() string {
+func (o *menuImplementation) Handle() string {
 	return o.Get(COLUMN_HANDLE)
 }
 
 // SetHandle sets the human-friendly unique identifier of the menu.
 //
 // A handle is a human-friendly unique identifier for the menu, unlike the ID.
-func (o *menu) SetHandle(handle string) MenuInterface {
+func (o *menuImplementation) SetHandle(handle string) MenuInterface {
 	o.Set(COLUMN_HANDLE, handle)
 	return o
 }
 
 // Memo returns the memo associated with the menu.
-func (o *menu) Memo() string {
+func (o *menuImplementation) Memo() string {
 	return o.Get(COLUMN_MEMO)
 }
 
 // SetMemo sets the memo associated with the menu.
-func (o *menu) SetMemo(memo string) MenuInterface {
+func (o *menuImplementation) SetMemo(memo string) MenuInterface {
 	o.Set(COLUMN_MEMO, memo)
 	return o
 }
 
 // Metas returns the metadata associated with the menu.
-func (o *menu) Metas() (map[string]string, error) {
+func (o *menuImplementation) Metas() (map[string]string, error) {
 	metasStr := o.Get(COLUMN_METAS)
 
 	if metasStr == "" {
@@ -144,7 +144,7 @@ func (o *menu) Metas() (map[string]string, error) {
 }
 
 // Meta returns the value of a specific metadata key.
-func (o *menu) Meta(name string) string {
+func (o *menuImplementation) Meta(name string) string {
 	metas, err := o.Metas()
 
 	if err != nil {
@@ -159,13 +159,13 @@ func (o *menu) Meta(name string) string {
 }
 
 // SetMeta sets the value of a specific metadata key.
-func (o *menu) SetMeta(name string, value string) error {
+func (o *menuImplementation) SetMeta(name string, value string) error {
 	return o.UpsertMetas(map[string]string{name: value})
 }
 
 // SetMetas stores metadata as a JSON string.
 // Warning: it overwrites any existing metadata.
-func (o *menu) SetMetas(metas map[string]string) error {
+func (o *menuImplementation) SetMetas(metas map[string]string) error {
 	mapString, err := json.Marshal(metas)
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func (o *menu) SetMetas(metas map[string]string) error {
 }
 
 // UpsertMetas updates or inserts metadata.
-func (o *menu) UpsertMetas(metas map[string]string) error {
+func (o *menuImplementation) UpsertMetas(metas map[string]string) error {
 	currentMetas, err := o.Metas()
 
 	if err != nil {
@@ -192,66 +192,66 @@ func (o *menu) UpsertMetas(metas map[string]string) error {
 }
 
 // Name returns the name of the menu.
-func (o *menu) Name() string {
+func (o *menuImplementation) Name() string {
 	return o.Get(COLUMN_NAME)
 }
 
 // SetName sets the name of the menu.
-func (o *menu) SetName(name string) MenuInterface {
+func (o *menuImplementation) SetName(name string) MenuInterface {
 	o.Set(COLUMN_NAME, name)
 	return o
 }
 
 // SiteID returns the site identifier associated with the menu.
-func (o *menu) SiteID() string {
+func (o *menuImplementation) SiteID() string {
 	return o.Get(COLUMN_SITE_ID)
 }
 
 // SetSiteID sets the site identifier associated with the menu.
-func (o *menu) SetSiteID(siteID string) MenuInterface {
+func (o *menuImplementation) SetSiteID(siteID string) MenuInterface {
 	o.Set(COLUMN_SITE_ID, siteID)
 	return o
 }
 
 // SoftDeletedAt returns the soft deletion timestamp of the menu.
-func (o *menu) SoftDeletedAt() string {
+func (o *menuImplementation) SoftDeletedAt() string {
 	return o.Get(COLUMN_SOFT_DELETED_AT)
 }
 
 // SetSoftDeletedAt sets the soft deletion timestamp of the menu.
-func (o *menu) SetSoftDeletedAt(softDeletedAt string) MenuInterface {
+func (o *menuImplementation) SetSoftDeletedAt(softDeletedAt string) MenuInterface {
 	o.Set(COLUMN_SOFT_DELETED_AT, softDeletedAt)
 	return o
 }
 
 // SoftDeletedAtCarbon returns the soft deletion timestamp of the menu as a Carbon instance.
-func (o *menu) SoftDeletedAtCarbon() *carbon.Carbon {
+func (o *menuImplementation) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
 // Status returns the status of the menu.
-func (o *menu) Status() string {
+func (o *menuImplementation) Status() string {
 	return o.Get(COLUMN_STATUS)
 }
 
 // SetStatus sets the status of the menu.
-func (o *menu) SetStatus(status string) MenuInterface {
+func (o *menuImplementation) SetStatus(status string) MenuInterface {
 	o.Set(COLUMN_STATUS, status)
 	return o
 }
 
 // UpdatedAt returns the last update timestamp of the menu.
-func (o *menu) UpdatedAt() string {
+func (o *menuImplementation) UpdatedAt() string {
 	return o.Get(COLUMN_UPDATED_AT)
 }
 
 // SetUpdatedAt sets the last update timestamp of the menu.
-func (o *menu) SetUpdatedAt(updatedAt string) MenuInterface {
+func (o *menuImplementation) SetUpdatedAt(updatedAt string) MenuInterface {
 	o.Set(COLUMN_UPDATED_AT, updatedAt)
 	return o
 }
 
 // UpdatedAtCarbon returns the last update timestamp of the menu as a Carbon instance.
-func (o *menu) UpdatedAtCarbon() *carbon.Carbon {
+func (o *menuImplementation) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }

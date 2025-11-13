@@ -13,20 +13,20 @@ import (
 // == TYPE ===================================================================
 
 // page represents a page in the CMS system.
-type page struct {
+type pageImplementation struct {
 	dataobject.DataObject
 }
 
 // == INTERFACES =============================================================
 
 // var _ dataobject.DataObjectInterface = (*page)(nil)
-var _ PageInterface = (*page)(nil)
+var _ PageInterface = (*pageImplementation)(nil)
 
 // == CONSTRUCTORS ==========================================================
 
 // NewPage creates a new page with default values.
 func NewPage() PageInterface {
-	o := &page{}
+	o := &pageImplementation{}
 	o.SetAlias("")
 	o.SetCanonicalUrl("")
 	o.SetContent("")
@@ -51,8 +51,8 @@ func NewPage() PageInterface {
 }
 
 // NewPageFromExistingData creates a new page from existing data.
-func NewPageFromExistingData(data map[string]string) *page {
-	o := &page{}
+func NewPageFromExistingData(data map[string]string) *pageImplementation {
+	o := &pageImplementation{}
 	o.Hydrate(data)
 	return o
 }
@@ -60,22 +60,22 @@ func NewPageFromExistingData(data map[string]string) *page {
 // == METHODS ===============================================================
 
 // IsActive checks if the page is active.
-func (o *page) IsActive() bool {
+func (o *pageImplementation) IsActive() bool {
 	return o.Status() == PAGE_STATUS_ACTIVE
 }
 
 // IsInactive checks if the page is inactive.
-func (o *page) IsInactive() bool {
+func (o *pageImplementation) IsInactive() bool {
 	return o.Status() == PAGE_STATUS_INACTIVE
 }
 
 // IsSoftDeleted checks if the page is soft deleted.
-func (o *page) IsSoftDeleted() bool {
+func (o *pageImplementation) IsSoftDeleted() bool {
 	return o.SoftDeletedAtCarbon().Compare("<", carbon.Now(carbon.UTC))
 }
 
 // MarshalToVersioning marshals the page data to a versioned JSON string, excluding timestamps and soft delete information.
-func (o *page) MarshalToVersioning() (string, error) {
+func (o *pageImplementation) MarshalToVersioning() (string, error) {
 	versionedData := map[string]string{}
 
 	for k, v := range o.Data() {
@@ -97,72 +97,72 @@ func (o *page) MarshalToVersioning() (string, error) {
 // == SETTERS AND GETTERS =====================================================
 
 // Alias returns the alias of the page.
-func (o *page) Alias() string {
+func (o *pageImplementation) Alias() string {
 	return o.Get(COLUMN_ALIAS)
 }
 
 // SetAlias sets the alias of the page.
-func (o *page) SetAlias(alias string) PageInterface {
+func (o *pageImplementation) SetAlias(alias string) PageInterface {
 	o.Set(COLUMN_ALIAS, alias)
 	return o
 }
 
 // CreatedAt returns the creation timestamp of the page.
-func (o *page) CreatedAt() string {
+func (o *pageImplementation) CreatedAt() string {
 	return o.Get(COLUMN_CREATED_AT)
 }
 
 // SetCreatedAt sets the creation timestamp of the page.
-func (o *page) SetCreatedAt(createdAt string) PageInterface {
+func (o *pageImplementation) SetCreatedAt(createdAt string) PageInterface {
 	o.Set(COLUMN_CREATED_AT, createdAt)
 	return o
 }
 
 // CreatedAtCarbon returns the creation timestamp of the page as a Carbon object.
-func (o *page) CreatedAtCarbon() *carbon.Carbon {
+func (o *pageImplementation) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.CreatedAt())
 }
 
 // CanonicalUrl returns the canonical URL of the page.
-func (o *page) CanonicalUrl() string {
+func (o *pageImplementation) CanonicalUrl() string {
 	return o.Get(COLUMN_CANONICAL_URL)
 }
 
 // SetCanonicalUrl sets the canonical URL of the page.
-func (o *page) SetCanonicalUrl(canonicalUrl string) PageInterface {
+func (o *pageImplementation) SetCanonicalUrl(canonicalUrl string) PageInterface {
 	o.Set(COLUMN_CANONICAL_URL, canonicalUrl)
 	return o
 }
 
 // Content returns the content of the page.
-func (o *page) Content() string {
+func (o *pageImplementation) Content() string {
 	return o.Get(COLUMN_CONTENT)
 }
 
 // SetContent sets the content of the page.
-func (o *page) SetContent(content string) PageInterface {
+func (o *pageImplementation) SetContent(content string) PageInterface {
 	o.Set(COLUMN_CONTENT, content)
 	return o
 }
 
 // Editor returns the editor of the page.
-func (o *page) Editor() string {
+func (o *pageImplementation) Editor() string {
 	return o.Get(COLUMN_EDITOR)
 }
 
 // SetEditor sets the editor of the page.
-func (o *page) SetEditor(editor string) PageInterface {
+func (o *pageImplementation) SetEditor(editor string) PageInterface {
 	o.Set(COLUMN_EDITOR, editor)
 	return o
 }
 
 // ID returns the ID of the page.
-func (o *page) ID() string {
+func (o *pageImplementation) ID() string {
 	return o.Get(COLUMN_ID)
 }
 
 // SetID sets the ID of the page.
-func (o *page) SetID(id string) PageInterface {
+func (o *pageImplementation) SetID(id string) PageInterface {
 	o.Set(COLUMN_ID, id)
 	return o
 }
@@ -170,64 +170,64 @@ func (o *page) SetID(id string) PageInterface {
 // Handle returns the handle of the page.
 //
 // A handle is a human-friendly unique identifier for the page, unlike the ID.
-func (o *page) Handle() string {
+func (o *pageImplementation) Handle() string {
 	return o.Get(COLUMN_HANDLE)
 }
 
 // SetHandle sets the handle of the page.
 //
 // A handle is a human-friendly unique identifier for the page, unlike the ID.
-func (o *page) SetHandle(handle string) PageInterface {
+func (o *pageImplementation) SetHandle(handle string) PageInterface {
 	o.Set(COLUMN_HANDLE, handle)
 	return o
 }
 
 // Memo returns the memo of the page.
-func (o *page) Memo() string {
+func (o *pageImplementation) Memo() string {
 	return o.Get(COLUMN_MEMO)
 }
 
 // SetMemo sets the memo of the page.
-func (o *page) SetMemo(memo string) PageInterface {
+func (o *pageImplementation) SetMemo(memo string) PageInterface {
 	o.Set(COLUMN_MEMO, memo)
 	return o
 }
 
 // MetaDescription returns the meta description of the page.
-func (o *page) MetaDescription() string {
+func (o *pageImplementation) MetaDescription() string {
 	return o.Get(COLUMN_META_DESCRIPTION)
 }
 
 // SetMetaDescription sets the meta description of the page.
-func (o *page) SetMetaDescription(metaDescription string) PageInterface {
+func (o *pageImplementation) SetMetaDescription(metaDescription string) PageInterface {
 	o.Set(COLUMN_META_DESCRIPTION, metaDescription)
 	return o
 }
 
 // MetaKeywords returns the meta keywords of the page.
-func (o *page) MetaKeywords() string {
+func (o *pageImplementation) MetaKeywords() string {
 	return o.Get(COLUMN_META_KEYWORDS)
 }
 
 // SetMetaKeywords sets the meta keywords of the page.
-func (o *page) SetMetaKeywords(metaKeywords string) PageInterface {
+func (o *pageImplementation) SetMetaKeywords(metaKeywords string) PageInterface {
 	o.Set(COLUMN_META_KEYWORDS, metaKeywords)
 	return o
 }
 
 // MetaRobots returns the meta robots of the page.
-func (o *page) MetaRobots() string {
+func (o *pageImplementation) MetaRobots() string {
 	return o.Get(COLUMN_META_ROBOTS)
 }
 
 // SetMetaRobots sets the meta robots of the page.
-func (o *page) SetMetaRobots(metaRobots string) PageInterface {
+func (o *pageImplementation) SetMetaRobots(metaRobots string) PageInterface {
 	o.Set(COLUMN_META_ROBOTS, metaRobots)
 	return o
 }
 
 // Metas returns the metas of the page as a map.
-func (o *page) Metas() (map[string]string, error) {
+func (o *pageImplementation) Metas() (map[string]string, error) {
 	metasStr := o.Get(COLUMN_METAS)
 
 	if metasStr == "" {
@@ -244,7 +244,7 @@ func (o *page) Metas() (map[string]string, error) {
 }
 
 // Meta returns the value of a specific meta key.
-func (o *page) Meta(name string) string {
+func (o *pageImplementation) Meta(name string) string {
 	metas, err := o.Metas()
 
 	if err != nil {
@@ -259,13 +259,13 @@ func (o *page) Meta(name string) string {
 }
 
 // SetMeta sets the value of a specific meta key.
-func (o *page) SetMeta(name string, value string) error {
+func (o *pageImplementation) SetMeta(name string, value string) error {
 	return o.UpsertMetas(map[string]string{name: value})
 }
 
 // SetMetas stores metas as a JSON string.
 // Warning: it overwrites any existing metas.
-func (o *page) SetMetas(metas map[string]string) error {
+func (o *pageImplementation) SetMetas(metas map[string]string) error {
 	mapString, err := json.Marshal(metas)
 	if err != nil {
 		return err
@@ -277,7 +277,7 @@ func (o *page) SetMetas(metas map[string]string) error {
 }
 
 // UpsertMetas updates or inserts metas into the existing metas.
-func (o *page) UpsertMetas(metas map[string]string) error {
+func (o *pageImplementation) UpsertMetas(metas map[string]string) error {
 	currentMetas, err := o.Metas()
 
 	if err != nil {
@@ -292,7 +292,7 @@ func (o *page) UpsertMetas(metas map[string]string) error {
 }
 
 // MiddlewaresBefore returns the middlewares that run before the page.
-func (o *page) MiddlewaresBefore() []string {
+func (o *pageImplementation) MiddlewaresBefore() []string {
 	s := o.Get(COLUMN_MIDDLEWARES_BEFORE)
 	if s == "" {
 		return []string{}
@@ -302,14 +302,14 @@ func (o *page) MiddlewaresBefore() []string {
 }
 
 // SetMiddlewaresBefore sets the middlewares that run before the page.
-func (o *page) SetMiddlewaresBefore(middlewaresBefore []string) PageInterface {
+func (o *pageImplementation) SetMiddlewaresBefore(middlewaresBefore []string) PageInterface {
 	s := strings.Join(middlewaresBefore, ",")
 	o.Set(COLUMN_MIDDLEWARES_BEFORE, s)
 	return o
 }
 
 // MiddlewaresAfter returns the middlewares that run after the page.
-func (o *page) MiddlewaresAfter() []string {
+func (o *pageImplementation) MiddlewaresAfter() []string {
 	s := o.Get(COLUMN_MIDDLEWARES_AFTER)
 	if s == "" {
 		return []string{}
@@ -319,95 +319,95 @@ func (o *page) MiddlewaresAfter() []string {
 }
 
 // SetMiddlewaresAfter sets the middlewares that run after the page.
-func (o *page) SetMiddlewaresAfter(middlewaresAfter []string) PageInterface {
+func (o *pageImplementation) SetMiddlewaresAfter(middlewaresAfter []string) PageInterface {
 	s := strings.Join(middlewaresAfter, ",")
 	o.Set(COLUMN_MIDDLEWARES_AFTER, s)
 	return o
 }
 
 // Name returns the name of the page.
-func (o *page) Name() string {
+func (o *pageImplementation) Name() string {
 	return o.Get(COLUMN_NAME)
 }
 
 // SetName sets the name of the page.
-func (o *page) SetName(name string) PageInterface {
+func (o *pageImplementation) SetName(name string) PageInterface {
 	o.Set(COLUMN_NAME, name)
 	return o
 }
 
 // SiteID returns the site ID of the page.
-func (o *page) SiteID() string {
+func (o *pageImplementation) SiteID() string {
 	return o.Get(COLUMN_SITE_ID)
 }
 
 // SetSiteID sets the site ID of the page.
-func (o *page) SetSiteID(siteID string) PageInterface {
+func (o *pageImplementation) SetSiteID(siteID string) PageInterface {
 	o.Set(COLUMN_SITE_ID, siteID)
 	return o
 }
 
 // SoftDeletedAt returns the soft delete timestamp of the page.
-func (o *page) SoftDeletedAt() string {
+func (o *pageImplementation) SoftDeletedAt() string {
 	return o.Get(COLUMN_SOFT_DELETED_AT)
 }
 
 // SetSoftDeletedAt sets the soft delete timestamp of the page.
-func (o *page) SetSoftDeletedAt(softDeletedAt string) PageInterface {
+func (o *pageImplementation) SetSoftDeletedAt(softDeletedAt string) PageInterface {
 	o.Set(COLUMN_SOFT_DELETED_AT, softDeletedAt)
 	return o
 }
 
 // SoftDeletedAtCarbon returns the soft delete timestamp of the page as a Carbon object.
-func (o *page) SoftDeletedAtCarbon() *carbon.Carbon {
+func (o *pageImplementation) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
 }
 
 // Status returns the status of the page.
-func (o *page) Status() string {
+func (o *pageImplementation) Status() string {
 	return o.Get(COLUMN_STATUS)
 }
 
 // SetStatus sets the status of the page.
-func (o *page) SetStatus(status string) PageInterface {
+func (o *pageImplementation) SetStatus(status string) PageInterface {
 	o.Set(COLUMN_STATUS, status)
 	return o
 }
 
 // Title returns the title of the page.
-func (o *page) Title() string {
+func (o *pageImplementation) Title() string {
 	return o.Get(COLUMN_TITLE)
 }
 
 // SetTitle sets the title of the page.
-func (o *page) SetTitle(title string) PageInterface {
+func (o *pageImplementation) SetTitle(title string) PageInterface {
 	o.Set(COLUMN_TITLE, title)
 	return o
 }
 
 // TemplateID returns the template ID of the page.
-func (o *page) TemplateID() string {
+func (o *pageImplementation) TemplateID() string {
 	return o.Get(COLUMN_TEMPLATE_ID)
 }
 
 // SetTemplateID sets the template ID of the page.
-func (o *page) SetTemplateID(templateID string) PageInterface {
+func (o *pageImplementation) SetTemplateID(templateID string) PageInterface {
 	o.Set(COLUMN_TEMPLATE_ID, templateID)
 	return o
 }
 
 // UpdatedAt returns the update timestamp of the page.
-func (o *page) UpdatedAt() string {
+func (o *pageImplementation) UpdatedAt() string {
 	return o.Get(COLUMN_UPDATED_AT)
 }
 
 // SetUpdatedAt sets the update timestamp of the page.
-func (o *page) SetUpdatedAt(updatedAt string) PageInterface {
+func (o *pageImplementation) SetUpdatedAt(updatedAt string) PageInterface {
 	o.Set(COLUMN_UPDATED_AT, updatedAt)
 	return o
 }
 
 // UpdatedAtCarbon returns the update timestamp of the page as a Carbon object.
-func (o *page) UpdatedAtCarbon() *carbon.Carbon {
+func (o *pageImplementation) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }

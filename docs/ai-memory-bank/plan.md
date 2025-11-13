@@ -10,3 +10,8 @@ Based on the analysis of the project structure, database schema, store initializ
 - [ ] Investigate where `siteQuery` is created without an order_by value
 - [ ] Implement validation or defaulting to avoid empty `order_by` values
 - [ ] Verify the behaviour via tests or reasoning
+
+## [2025-11-13] Translation implementation tests
+- [ ] Determine behaviours to cover for translation implementation
+- [ ] Add unit tests for translation implementation setters/getters
+- [ ] Document or share results
