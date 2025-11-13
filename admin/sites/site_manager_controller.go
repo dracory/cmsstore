@@ -461,8 +461,8 @@ func (controller *siteManagerController) prepareData(r *http.Request) (data site
 	data.page = req.GetStringTrimmed(r, "page")
 	data.pageInt = cast.ToInt(data.page)
 	data.perPage = cast.ToInt(req.GetStringTrimmedOr(r, "per_page", cast.ToString(initialPerPage)))
-	data.sortOrder = req.GetStringTrimmed(r, "sort")
-	data.sortBy = req.GetStringTrimmed(r, "by")
+	data.sortOrder = req.GetStringTrimmedOr(r, "sort", sb.DESC)
+	data.sortBy = req.GetStringTrimmedOr(r, "by", cmsstore.COLUMN_CREATED_AT)
 
 	data.formCreatedFrom = req.GetStringTrimmed(r, "filter_created_from")
 	data.formCreatedTo = req.GetStringTrimmed(r, "filter_created_to")
@@ -507,9 +507,15 @@ func (controller *siteManagerController) fetchRecordList(data siteManagerControl
 
 	query := cmsstore.SiteQuery().
 		SetLimit(data.perPage).
-		SetOffset(data.pageInt * data.perPage).
-		SetOrderBy(data.sortBy).
-		SetSortOrder(data.sortOrder)
+		SetOffset(data.pageInt * data.perPage)
+
+	if data.sortBy != "" {
+		query = query.SetOrderBy(data.sortBy)
+	}
+
+	if data.sortOrder != "" {
+		query = query.SetSortOrder(data.sortOrder)
+	}
 
 	if len(siteIDs) > 0 {
 		query = query.SetIDIn(siteIDs)
