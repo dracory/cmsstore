@@ -7,7 +7,6 @@ import (
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/hb"
-	"github.com/gouniverse/responses"
 )
 
 func UI(config shared.UiConfig) UiInterface {
@@ -69,23 +68,27 @@ func (ui ui) Store() cmsstore.StoreInterface {
 func (ui ui) TemplateCreate(w http.ResponseWriter, r *http.Request) {
 	controller := NewTemplateCreateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) TemplateManager(w http.ResponseWriter, r *http.Request) {
 	controller := NewTemplateManagerController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) TemplateDelete(w http.ResponseWriter, r *http.Request) {
 	controller := NewTemplateDeleteController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) TemplateUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewTemplateUpdateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }

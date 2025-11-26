@@ -15,7 +15,7 @@ import (
 // == TYPE ===================================================================
 
 // menuImplementation represents a menu item in the CMS store.
-// It embeds the DataObject from the gouniverse/dataobject package to provide
+// It embeds the DataObject from the dracory/dataobject package to provide
 // common data object functionalities.
 type menuImplementation struct {
 	dataobject.DataObject

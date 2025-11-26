@@ -6,7 +6,6 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
-	"github.com/gouniverse/responses"
 )
 
 func UI(config shared.UiConfig) UiInterface {
@@ -62,23 +61,27 @@ func (ui ui) Store() cmsstore.StoreInterface {
 func (ui ui) TranslationCreate(w http.ResponseWriter, r *http.Request) {
 	controller := NewTranslationCreateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) TranslationManager(w http.ResponseWriter, r *http.Request) {
 	controller := NewTranslationManagerController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) TranslationDelete(w http.ResponseWriter, r *http.Request) {
 	controller := NewTranslationDeleteController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) TranslationUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewTranslationUpdateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }

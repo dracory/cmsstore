@@ -7,7 +7,6 @@ import (
 	"github.com/dracory/blockeditor"
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
-	"github.com/gouniverse/responses"
 )
 
 func UI(config shared.UiConfig) UiInterface {
@@ -69,29 +68,34 @@ func (ui ui) Store() cmsstore.StoreInterface {
 func (ui ui) PageCreate(w http.ResponseWriter, r *http.Request) {
 	controller := NewPageCreateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) PageManager(w http.ResponseWriter, r *http.Request) {
 	controller := NewPageManagerController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) PageDelete(w http.ResponseWriter, r *http.Request) {
 	controller := NewPageDeleteController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) PageUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewPageUpdateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) PageVersioning(w http.ResponseWriter, r *http.Request) {
 	controller := NewPageVersioningController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }

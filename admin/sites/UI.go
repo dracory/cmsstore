@@ -6,7 +6,6 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
-	"github.com/gouniverse/responses"
 )
 
 func UI(config shared.UiConfig) UiInterface {
@@ -61,23 +60,27 @@ func (ui ui) Store() cmsstore.StoreInterface {
 func (ui ui) SiteCreate(w http.ResponseWriter, r *http.Request) {
 	controller := NewSiteCreateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) SiteManager(w http.ResponseWriter, r *http.Request) {
 	controller := NewSiteManagerController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) SiteDelete(w http.ResponseWriter, r *http.Request) {
 	controller := NewSiteDeleteController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) SiteUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewSiteUpdateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }

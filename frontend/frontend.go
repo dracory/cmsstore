@@ -11,8 +11,8 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/hb"
+	"github.com/dracory/shortcode"
 	"github.com/dracory/ui"
-	"github.com/gouniverse/shortcode"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"

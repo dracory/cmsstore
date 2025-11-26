@@ -21,7 +21,6 @@ require (
 	github.com/dracory/versionstore v0.5.0
 	github.com/dromara/carbon/v2 v2.6.15
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/gouniverse/responses v0.6.0
 	github.com/lib/pq v1.10.9
 	github.com/samber/lo v1.52.0
 	github.com/spf13/cast v1.10.0
@@ -40,19 +39,19 @@ require (
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	golang.org/x/exp v0.0.0-20251113190631-e25ba8c21ef6 // indirect
+	golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/libc v1.67.0 // indirect
+	modernc.org/libc v1.67.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/dracory/shortcode v0.5.0
 	github.com/georgysavva/scany v1.2.3 // indirect
-	github.com/gouniverse/shortcode v0.4.0
 	github.com/jellydator/ttlcache/v3 v3.4.0
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect

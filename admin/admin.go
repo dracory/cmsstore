@@ -17,7 +17,6 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/req"
-	"github.com/gouniverse/responses"
 )
 
 // == TYPE ====================================================================
@@ -105,7 +104,8 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 		}
 	}
 
-	responses.HTMLResponse(w, r, webpage)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(webpage))
 	return ""
 }
 

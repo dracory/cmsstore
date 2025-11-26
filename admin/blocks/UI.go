@@ -6,7 +6,6 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
-	"github.com/gouniverse/responses"
 )
 
 func UI(config shared.UiConfig) UiInterface {
@@ -62,23 +61,27 @@ func (ui ui) Store() cmsstore.StoreInterface {
 func (ui ui) BlockCreate(w http.ResponseWriter, r *http.Request) {
 	controller := NewBlockCreateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) BlockManager(w http.ResponseWriter, r *http.Request) {
 	controller := NewBlockManagerController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) BlockDelete(w http.ResponseWriter, r *http.Request) {
 	controller := NewBlockDeleteController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
 
 func (ui ui) BlockUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewBlockUpdateController(ui)
 	html := controller.Handler(w, r)
-	responses.HTMLResponse(w, r, html)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
 }
