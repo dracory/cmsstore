@@ -16,6 +16,7 @@ Welcome to the CMS Store documentation. This documentation provides comprehensiv
 - [Getting Started](getting-started/installation.md)
 - [Architecture Overview](architecture/overview.md)
 - [API Reference](api/README.md)
+- [MCP (Model Context Protocol)](../mcp/README.md)
 - [Component Documentation](components/README.md)
 
 ## Project Overview

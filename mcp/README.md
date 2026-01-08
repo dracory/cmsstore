@@ -6,8 +6,10 @@ This package provides an MCP (Model Context Protocol) handler for the CMS Store,
 
 ## Features
 
-- Page management (create, read, update, delete)
-- Menu management (create, read)
+- Page management (create, list, read, update, delete)
+- Menu management (create, list, read)
+- Site listing
+- Schema discovery for LLMs (`cms_schema`)
 - Extensible architecture for adding more handlers
 - JSON-RPC 2.0 compatible
 - Attachable to any existing HTTP server
@@ -46,7 +48,7 @@ func main() {
 	mcpHandler := mcp.NewMCP(store)
 	
 	// Register the MCP handler with your existing router/mux
-	http.HandleFunc("/mcp/", mcpHandler.Handler)
+	http.HandleFunc("/mcp/cms", mcpHandler.Handler)
 	
 	// Start your server
 	log.Println("Starting server on :8080")
@@ -62,19 +64,156 @@ func main() {
 
 The MCP (Model Context Protocol) API allows LLMs to interact with the CMS Store using a structured protocol designed for AI applications.
 
-#### Page Operations
+This handler supports both MCP-standard JSON-RPC methods and legacy aliases:
+
+- MCP-standard:
+  - `initialize`
+  - `notifications/initialized`
+  - `tools/list`
+  - `tools/call`
+- Legacy aliases (supported for compatibility):
+  - `list_tools` (alias of `tools/list`)
+  - `call_tool` (alias of `tools/call`)
+
+### Request/Response Shape
+
+This MCP handler uses JSON-RPC 2.0 over HTTP `POST`.
+
+#### List tools
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "tools/list",
+  "params": {}
+}
+```
+
+#### Call a tool
+
+MCP-standard:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "tools/call",
+  "params": {
+    "name": "page_list",
+    "arguments": {
+      "limit": 10,
+      "offset": 0
+    }
+  }
+}
+```
+
+Legacy alias:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "call_tool",
+  "params": {
+    "tool_name": "page_list",
+    "arguments": {
+      "limit": 10,
+      "offset": 0
+    }
+  }
+}
+```
+
+Tool results are returned in the MCP format:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"items\":[]}" 
+      }
+    ]
+  }
+}
+```
+
+### Supported Tools
+
+This MCP handler exposes the following tools via `tools/list`:
+
+- `cms_schema`
+- `page_list`
+- `page_create`
+- `page_get`
+- `page_update`
+- `page_delete`
+- `menu_list`
+- `menu_create`
+- `menu_get`
+- `site_list`
+
+### Schema discovery (`cms_schema`)
+
+LLMs can call `cms_schema` to retrieve a JSON document describing CMS entities and supported tool arguments.
+
+Example call:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "schema",
+  "method": "tools/call",
+  "params": {
+    "name": "cms_schema",
+    "arguments": {}
+  }
+}
+```
+
+The response `result.content[0].text` contains a JSON document with `entities` and `tools` keys.
+
+### ID typing: always use strings
+
+CMS IDs can be very large. Some LLM clients may convert large integer-looking strings into JSON numbers (including scientific notation), which is lossy and can break lookups.
+
+- Always send identifiers as strings:
+
+```json
+{ "id": "20260108160058473" }
+```
+
+- Do not send identifiers as numbers:
+
+```json
+{ "id": 2.0260108160058473e+31 }
+```
+
+The handler's `tools/list` response includes `inputSchema` definitions that mark identifiers as `type: "string"` to help clients send the correct types.
+
+### Page Operations
 
 ##### Create a Page
 
 **Request:**
 ```json
 {
-  "name": "page_create",
+  "jsonrpc": "2.0",
+  "id": "create",
+  "method": "tools/call",
   "params": {
-    "title": "My New Page",
-    "content": "<p>Page content goes here</p>",
-    "status": "published",
-    "site_id": "site-123"
+    "name": "page_create",
+    "arguments": {
+      "title": "My New Page",
+      "content": "<p>Page content goes here</p>",
+      "status": "published",
+      "site_id": "site-123"
+    }
   }
 }
 ```
@@ -83,12 +222,12 @@ The MCP (Model Context Protocol) API allows LLMs to interact with the CMS Store 
 ```json
 {
   "result": {
-    "id": "page_123",
-    "title": "My New Page",
-    "content": "<p>Page content goes here</p>",
-    "status": "published",
-    "site_id": "site-123",
-    "success": true
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"id\":\"page_123\",\"title\":\"My New Page\"}"
+      }
+    ]
   }
 }
 ```
@@ -98,9 +237,14 @@ The MCP (Model Context Protocol) API allows LLMs to interact with the CMS Store 
 **Request:**
 ```json
 {
-  "name": "page_get",
+  "jsonrpc": "2.0",
+  "id": "get",
+  "method": "tools/call",
   "params": {
-    "id": "page_123"
+    "name": "page_get",
+    "arguments": {
+      "id": "page_123"
+    }
   }
 }
 ```
@@ -109,11 +253,32 @@ The MCP (Model Context Protocol) API allows LLMs to interact with the CMS Store 
 ```json
 {
   "result": {
-    "id": "page_123",
-    "title": "My New Page",
-    "content": "<p>Page content goes here</p>",
-    "status": "published",
-    "site_id": "site-123"
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"id\":\"page_123\",\"title\":\"My New Page\"}"
+      }
+    ]
+  }
+}
+```
+
+##### List Pages
+
+**Request:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "list",
+  "method": "tools/call",
+  "params": {
+    "name": "page_list",
+    "arguments": {
+      "limit": 10,
+      "offset": 0,
+      "site_id": "site-123"
+    }
   }
 }
 ```
@@ -125,10 +290,15 @@ The MCP (Model Context Protocol) API allows LLMs to interact with the CMS Store 
 **Request:**
 ```json
 {
-  "name": "menu_create",
+  "jsonrpc": "2.0",
+  "id": "create",
+  "method": "tools/call",
   "params": {
-    "title": "Main Menu",
-    "site_id": "site-123"
+    "name": "menu_create",
+    "arguments": {
+      "name": "Main Menu",
+      "site_id": "site-123"
+    }
   }
 }
 ```
@@ -138,9 +308,51 @@ The MCP (Model Context Protocol) API allows LLMs to interact with the CMS Store 
 **Request:**
 ```json
 {
-  "name": "menu_get",
+  "jsonrpc": "2.0",
+  "id": "get",
+  "method": "tools/call",
   "params": {
-    "id": "menu_123"
+    "name": "menu_get",
+    "arguments": {
+      "id": "menu_123"
+    }
+  }
+}
+```
+
+##### List Menus
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "list",
+  "method": "tools/call",
+  "params": {
+    "name": "menu_list",
+    "arguments": {
+      "limit": 10,
+      "offset": 0,
+      "site_id": "site-123"
+    }
+  }
+}
+```
+
+### Site Operations
+
+##### List Sites
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "list",
+  "method": "tools/call",
+  "params": {
+    "name": "site_list",
+    "arguments": {
+      "limit": 10,
+      "offset": 0
+    }
   }
 }
 ```
@@ -165,30 +377,11 @@ The MCP server is designed to be easily extensible for the MCP protocol interfac
 
 ### Adding New MCP Tools
 
-1. Define a new tool in the `registerHandlers` method in `server.go`:
+1. Add the tool definition to `handleToolsList` in `mcp.go`.
 
-```go
-newTool := mcp.NewTool("tool_name",
-    mcp.WithDescription("Tool description"),
-    mcp.WithString("param_name", mcp.Required(), mcp.Description("Parameter description")),
-    // Add more parameters as needed
-)
-s.server.AddTool(newTool, s.handleNewTool)
-```
+2. Add the tool dispatch in `dispatchTool` in `mcp.go`.
 
-2. Implement the handler function:
-
-```go
-func (s *Server) handleNewTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-    // Parse parameters
-    // Perform operations
-    // Return results
-    return mcp.NewToolResultSuccess(map[string]interface{}{
-        "success": true,
-        "data": result,
-    }), nil
-}
-```
+3. Implement the tool handler method on `*MCP` (for example `toolMyTool(ctx, args)`).
 
 ### Best Practices
 

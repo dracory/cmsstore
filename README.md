@@ -41,6 +41,16 @@ go get -u github.com/dracory/cmsstore
 - Supports middleware
 - Supports shortcodes
 
+## MCP (Model Context Protocol)
+
+CMS Store includes an MCP (Model Context Protocol) HTTP handler that allows LLM clients (for example Windsurf) to manage CMS content via JSON-RPC tools.
+
+- The MCP handler lives in the `mcp` package
+- It supports MCP JSON-RPC methods (`initialize`, `tools/list`, `tools/call`) and legacy aliases (`list_tools`, `call_tool`)
+- It exposes tools such as `page_list`, `page_create`, `page_get`, `page_update`, `page_delete`, `menu_list`, `menu_create`, `menu_get`, `site_list`, and `cms_schema`
+
+See the detailed documentation and examples in: `mcp/README.md`
+
 ## Simplest Initialization
 
 The simplest initialization involves providing a database instance. Note that this minimal setup has limited capabilities; features like database migrations are not automatically run.

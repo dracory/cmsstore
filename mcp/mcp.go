@@ -1,653 +1,1060 @@
 package mcp
 
-// import (
-// 	"context"
-// 	"encoding/json"
-// 	"fmt"
-// 	"io/ioutil"
-// 	"net/http"
-
-// 	"github.com/dracory/cmsstore"
-// 	"github.com/mark3labs/mcp-go/mcp"
-// 	mcpServer "github.com/mark3labs/mcp-go/server"
-// )
-
-// // MCPInterface defines the interface for MCP handlers
-// type MCPInterface interface {
-// 	Handler() http.HandlerFunc
-// }
-
-// // MCP represents the MCP handler for CMS operations
-// type MCP struct {
-// 	store  cmsstore.StoreInterface
-// 	server *mcpServer.MCPServer
-// 	tools  map[string]mcp.Tool
-// }
-
-// // NewMCP creates a new MCP handler instance
-// func NewMCP(store cmsstore.StoreInterface) *MCP {
-// 	handler := &MCP{
-// 		store: store,
-// 		tools: make(map[string]mcp.Tool),
-// 	}
-
-// 	// Initialize MCP server
-// 	handler.server = mcpServer.NewMCPServer(
-// 		"CMS Store",
-// 		"1.0.0",
-// 	)
-
-// 	// Register handlers
-// 	handler.registerHandlers()
-
-// 	return handler
-// }
-
-// // Handler returns an http.HandlerFunc that can be attached to any router
-// func (m *MCP) Handler() http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		// Process the MCP protocol request
-// 		if r.Method == http.MethodPost && r.Header.Get("Content-Type") == "application/json" {
-// 			// Handle the MCP request
-// 			m.handleMCPRequest(w, r)
-// 			return
-// 		}
-
-// 		// Return error for non-MCP requests
-// 		http.Error(w, `{"success":false,"error":"This endpoint only accepts MCP protocol requests"}`, http.StatusBadRequest)
-// 	}
-// }
-
-// // handleMCPRequest processes an MCP protocol request
-// func (m *MCP) handleMCPRequest(w http.ResponseWriter, r *http.Request) {
-// 	body, err := ioutil.ReadAll(r.Body)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf(`{"success":false,"error":"Failed to read request body: %v"}`, err), http.StatusBadRequest)
-// 		return
-// 	}
-// 	defer r.Body.Close()
-
-// 	// Parse the JSON-RPC request
-// 	var request struct {
-// 		JSONRPC string          `json:"jsonrpc"`
-// 		ID      string          `json:"id"`
-// 		Method  string          `json:"method"`
-// 		Params  json.RawMessage `json:"params"`
-// 	}
-
-// 	if err := json.Unmarshal(body, &request); err != nil {
-// 		response := map[string]interface{}{
-// 			"jsonrpc": "2.0",
-// 			"id":      nil,
-// 			"error": map[string]interface{}{
-// 				"code":    -32700,
-// 				"message": "Parse error",
-// 			},
-// 		}
-// 		w.Header().Set("Content-Type", "application/json")
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
-
-// 	// Handle the call_tool method
-// 	if request.Method == "call_tool" {
-// 		m.handleCallTool(w, r.Context(), request.ID, request.Params)
-// 		return
-// 	}
-
-// 	// For other methods, let the MCP server handle it
-// 	response := m.server.HandleMessage(r.Context(), body)
-
-// 	// Write the response
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(response)
-// }
-
-// // registerHandlers registers all the MCP tools and their handlers
-// func (m *MCP) registerHandlers() {
-// 	// Register page operations
-// 	pageCreateTool := mcp.NewTool("page_create",
-// 		mcp.WithDescription("Create a new page"),
-// 		mcp.WithString("title", mcp.Required(), mcp.Description("Page title")),
-// 		mcp.WithString("content", mcp.Required(), mcp.Description("Page content")),
-// 		mcp.WithString("status", mcp.Description("Page status (draft, published, etc.)"), mcp.Enum("draft", "published")),
-// 	)
-// 	m.tools["page_create"] = pageCreateTool
-// 	m.server.AddTool(pageCreateTool, m.handlePageCreate)
-
-// 	// Add more tools for other operations (get, update, delete, etc.)
-// 	pageGetTool := mcp.NewTool("page_get",
-// 		mcp.WithDescription("Get a page by ID"),
-// 		mcp.WithString("id", mcp.Required(), mcp.Description("Page ID")),
-// 	)
-// 	m.tools["page_get"] = pageGetTool
-// 	m.server.AddTool(pageGetTool, m.handlePageGet)
-
-// 	pageUpdateTool := mcp.NewTool("page_update",
-// 		mcp.WithDescription("Update a page"),
-// 		mcp.WithString("id", mcp.Required(), mcp.Description("Page ID")),
-// 		mcp.WithObject("updates", mcp.Required(), mcp.Description("Page updates")),
-// 	)
-// 	m.tools["page_update"] = pageUpdateTool
-// 	m.server.AddTool(pageUpdateTool, m.handlePageUpdate)
-
-// 	pageDeleteTool := mcp.NewTool("page_delete",
-// 		mcp.WithDescription("Delete a page"),
-// 		mcp.WithString("id", mcp.Required(), mcp.Description("Page ID")),
-// 	)
-// 	m.tools["page_delete"] = pageDeleteTool
-// 	m.server.AddTool(pageDeleteTool, m.handlePageDelete)
-
-// 	// Menu operations
-// 	menuCreateTool := mcp.NewTool("menu_create",
-// 		mcp.WithDescription("Create a new menu"),
-// 		mcp.WithString("name", mcp.Required(), mcp.Description("Menu name")),
-// 		mcp.WithString("status", mcp.Description("Menu status (draft, active, inactive)"),
-// 			mcp.Enum(cmsstore.MENU_STATUS_DRAFT, cmsstore.MENU_STATUS_ACTIVE, cmsstore.MENU_STATUS_INACTIVE)),
-// 		// Note: The MCP library API doesn't support nested objects in the way we were trying to use them
-// 		// So we'll use a simpler approach for menu items
-// 		mcp.WithString("items_json", mcp.Description("Menu items as JSON string")),
-// 	)
-// 	m.tools["menu_create"] = menuCreateTool
-// 	m.server.AddTool(menuCreateTool, m.handleMenuCreate)
-
-// 	menuGetTool := mcp.NewTool("menu_get",
-// 		mcp.WithDescription("Get a menu"),
-// 		mcp.WithString("id", mcp.Required(), mcp.Description("Menu ID")),
-// 	)
-// 	m.tools["menu_get"] = menuGetTool
-// 	m.server.AddTool(menuGetTool, m.handleMenuGet)
-
-// 	// We need to handle call_tool method manually
-// }
-
-// // handlePageCreate handles the page_create tool
-// // handlePageCreate handles the page_create tool
-// func (m *MCP) handlePageCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-// 	// Parse the request parameters
-// 	var params struct {
-// 		Title   string `json:"title"`
-// 		Content string `json:"content"`
-// 		Status  string `json:"status,omitempty"`
-// 		SiteID  string `json:"site_id,omitempty"`
-// 	}
-
-// 	// Convert request.Arguments to JSON and then unmarshal into our struct
-// 	argsJSON, err := json.Marshal(request.Params.Arguments)
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	if err := json.Unmarshal(argsJSON, &params); err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	// Validate required fields
-// 	if params.Title == "" {
-// 		return mcp.NewToolResultError("missing required parameter: title"), nil
-// 	}
-
-// 	// Create or get a default site if site_id is not provided
-// 	siteID := params.SiteID
-// 	if siteID == "" {
-// 		// Try to find an existing site
-// 		sites, err := m.store.SiteList(ctx, cmsstore.SiteQuery())
-// 		if err != nil || len(sites) == 0 {
-// 			// Create a default site
-// 			defaultSite := cmsstore.NewSite()
-// 			defaultSite.SetName("Default Site")
-// 			defaultSite.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
-// 			err = m.store.SiteCreate(ctx, defaultSite)
-// 			if err != nil {
-// 				return mcp.NewToolResultError(fmt.Sprintf("failed to create default site: %v", err)), nil
-// 			}
-// 			siteID = defaultSite.ID()
-// 		} else {
-// 			// Use the first existing site
-// 			siteID = sites[0].ID()
-// 		}
-// 	}
-
-// 	// Create page using the store
-// 	page := cmsstore.NewPage()
-// 	page.SetTitle(params.Title)
-// 	page.SetContent(params.Content)
-// 	page.SetSiteID(siteID) // Set the site ID
-// 	if params.Status != "" {
-// 		page.SetStatus(params.Status)
-// 	} else {
-// 		page.SetStatus(cmsstore.PAGE_STATUS_ACTIVE) // Set a default status
-// 	}
-
-// 	// Save the page
-// 	if err := m.store.PageCreate(ctx, page); err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to create page: %v", err)), nil
-// 	}
-
-// 	// Return success response
-// 	result, err := json.Marshal(map[string]interface{}{
-// 		"id":      page.ID(),
-// 		"title":   page.Title(),
-// 		"content": page.Content(),
-// 		"status":  page.Status(),
-// 		"site_id": page.SiteID(),
-// 		"success": true,
-// 	})
-
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal page: %v", err)), nil
-// 	}
-
-// 	return mcp.NewToolResultText(string(result)), nil
-// }
-
-// // handlePageGet handles page retrieval requests
-// func (m *MCP) handlePageGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-// 	// Parse the arguments from the request
-// 	var args struct {
-// 		ID string `json:"id"`
-// 	}
-
-// 	if err := json.Unmarshal([]byte(request.Params.Arguments.(json.RawMessage)), &args); err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse arguments: %v", err)), nil
-// 	}
-
-// 	// Validate required fields
-// 	if args.ID == "" {
-// 		return mcp.NewToolResultError("missing required parameter: id"), nil
-// 	}
-
-// 	// Use the page ID from the parsed arguments
-// 	pageID := args.ID
-
-// 	// Get the page from the store
-// 	page, err := m.store.PageFindByID(ctx, pageID)
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to get page: %v", err)), nil
-// 	}
-
-// 	if page == nil {
-// 		return mcp.NewToolResultError("page not found"), nil
-// 	}
-
-// 	// Convert the page to JSON for the response
-// 	result, err := json.Marshal(map[string]interface{}{
-// 		"id":      page.ID(),
-// 		"title":   page.Title(),
-// 		"content": page.Content(),
-// 		"status":  page.Status(),
-// 	})
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal page: %v", err)), nil
-// 	}
-
-// 	// Return the page data as a text result
-// 	return mcp.NewToolResultText(string(result)), nil
-// }
-
-// // handlePageUpdate handles page update requests
-// func (m *MCP) handlePageUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-// 	// Parse the arguments
-// 	var args struct {
-// 		ID      string         `json:"id"`
-// 		Updates map[string]any `json:"updates"`
-// 	}
-
-// 	// Convert request.Arguments to JSON and then unmarshal into our struct
-// 	argsJSON, err := json.Marshal(request.Params.Arguments)
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	if err := json.Unmarshal(argsJSON, &args); err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	// Get the existing page
-// 	page, err := m.store.PageFindByID(ctx, args.ID)
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to find page: %v", err)), nil
-// 	}
-
-// 	if page == nil {
-// 		return mcp.NewToolResultError("page not found"), nil
-// 	}
-
-// 	// Apply updates
-// 	for key, value := range args.Updates {
-// 		switch key {
-// 		case "title":
-// 			if title, ok := value.(string); ok {
-// 				page.SetTitle(title)
-// 			}
-// 		case "content":
-// 			if content, ok := value.(string); ok {
-// 				page.SetContent(content)
-// 			}
-// 		case "status":
-// 			if status, ok := value.(string); ok {
-// 				page.SetStatus(status)
-// 			}
-// 		}
-// 	}
-
-// 	// Save the updated page
-// 	if err := m.store.PageUpdate(ctx, page); err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to update page: %v", err)), nil
-// 	}
-
-// 	// Return success response
-// 	result, err := json.Marshal(map[string]interface{}{
-// 		"id":      page.ID(),
-// 		"title":   page.Title(),
-// 		"content": page.Content(),
-// 		"status":  page.Status(),
-// 		"success": true,
-// 	})
-
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal page: %v", err)), nil
-// 	}
-
-// 	return mcp.NewToolResultText(string(result)), nil
-// }
-
-// // handlePageDelete handles page deletion requests
-// func (m *MCP) handlePageDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-// 	// Parse the arguments
-// 	var data struct {
-// 		ID string `json:"id"`
-// 	}
-
-// 	// Convert request.Arguments to JSON and then unmarshal into our struct
-// 	argsJSON, err := json.Marshal(request.Params.Arguments)
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	if err := json.Unmarshal(argsJSON, &data); err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	// First try to get the page to ensure it exists
-// 	page, err := m.store.PageFindByID(ctx, data.ID)
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to find page: %v", err)), nil
-// 	}
-// 	if page == nil {
-// 		return mcp.NewToolResultError("page not found"), nil
-// 	}
-
-// 	// Try soft delete first, fall back to hard delete if needed
-// 	err = m.store.PageSoftDeleteByID(ctx, data.ID)
-// 	if err != nil {
-// 		// If soft delete fails, try hard delete
-// 		if err := m.store.PageDelete(ctx, page); err != nil {
-// 			return mcp.NewToolResultError(fmt.Sprintf("failed to delete page: %v", err)), nil
-// 		}
-// 	}
-
-// 	// Return success response
-// 	result, err := json.Marshal(map[string]interface{}{
-// 		"id":      data.ID,
-// 		"success": true,
-// 	})
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal response: %v", err)), nil
-// 	}
-// 	return mcp.NewToolResultText(string(result)), nil
-// }
-
-// // handleMenuCreate handles menu creation requests
-// func (m *MCP) handleMenuCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-// 	// Parse the request parameters
-// 	var params struct {
-// 		Name   string `json:"name"`
-// 		Status string `json:"status,omitempty"`
-// 		Items  []struct {
-// 			Title string `json:"title"`
-// 			URL   string `json:"url"`
-// 		} `json:"items,omitempty"`
-// 	}
-
-// 	// Convert request.Arguments to JSON and then unmarshal into our struct
-// 	argsJSON, err := json.Marshal(request.Params.Arguments)
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	if err := json.Unmarshal(argsJSON, &params); err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	// Create menu using the store
-// 	menu := cmsstore.NewMenu()
-// 	menu.SetName(params.Name)
-// 	if params.Status != "" {
-// 		menu.SetStatus(params.Status)
-// 	}
-
-// 	// Add menu items if provided
-// 	if len(params.Items) > 0 {
-// 		// Convert items to JSON string
-// 		itemsJSON, err := json.Marshal(params.Items)
-// 		if err != nil {
-// 			return mcp.NewToolResultError(fmt.Sprintf("failed to marshal menu items: %v", err)), nil
-// 		}
-// 		// Store items as meta since SetItems is not available
-// 		err = menu.SetMeta("items", string(itemsJSON))
-// 		if err != nil {
-// 			return mcp.NewToolResultError(fmt.Sprintf("failed to set menu items: %v", err)), nil
-// 		}
-// 	}
-
-// 	// Save the menu
-// 	if err := m.store.MenuCreate(ctx, menu); err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to create menu: %v", err)), nil
-// 	}
-
-// 	// Return success response
-// 	// Get items from meta
-// 	itemsJSON := menu.Meta("items")
-
-// 	result, err := json.Marshal(map[string]interface{}{
-// 		"id":      menu.ID(),
-// 		"name":    menu.Name(),
-// 		"status":  menu.Status(),
-// 		"items":   itemsJSON,
-// 		"success": true,
-// 	})
-
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal menu: %v", err)), nil
-// 	}
-
-// 	return mcp.NewToolResultText(string(result)), nil
-// }
-
-// // handleCallTool processes the JSON-RPC call_tool method
-// func (m *MCP) handleCallTool(w http.ResponseWriter, ctx context.Context, id string, params json.RawMessage) {
-// 	// Parse the call_tool parameters
-// 	var callParams struct {
-// 		ToolName  string          `json:"tool_name"`
-// 		Arguments json.RawMessage `json:"arguments"`
-// 	}
-
-// 	if err := json.Unmarshal(params, &callParams); err != nil {
-// 		response := map[string]interface{}{
-// 			"jsonrpc": "2.0",
-// 			"id":      id,
-// 			"error": map[string]interface{}{
-// 				"code":    -32602,
-// 				"message": "Invalid params",
-// 			},
-// 		}
-// 		w.Header().Set("Content-Type", "application/json")
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
-
-// 	// Check if the tool exists
-// 	_, ok := m.tools[callParams.ToolName]
-// 	if !ok {
-// 		response := map[string]interface{}{
-// 			"jsonrpc": "2.0",
-// 			"id":      id,
-// 			"error": map[string]interface{}{
-// 				"code":    -32601,
-// 				"message": fmt.Sprintf("Tool %s not found", callParams.ToolName),
-// 			},
-// 		}
-// 		w.Header().Set("Content-Type", "application/json")
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
-
-// 	// Create a CallToolRequest with the correct structure
-// 	callRequest := mcp.CallToolRequest{
-// 		Params: mcp.CallToolParams{
-// 			Name:      callParams.ToolName,
-// 			Arguments: json.RawMessage(callParams.Arguments),
-// 		},
-// 	}
-
-// 	// Call the appropriate handler based on the tool name
-// 	var result *mcp.CallToolResult
-// 	var err error
-
-// 	switch callParams.ToolName {
-// 	case "page_create":
-// 		result, err = m.handlePageCreate(ctx, callRequest)
-// 	case "page_get":
-// 		result, err = m.handlePageGet(ctx, callRequest)
-// 	case "page_update":
-// 		result, err = m.handlePageUpdate(ctx, callRequest)
-// 	case "page_delete":
-// 		result, err = m.handlePageDelete(ctx, callRequest)
-// 	case "menu_create":
-// 		result, err = m.handleMenuCreate(ctx, callRequest)
-// 	case "menu_get":
-// 		result, err = m.handleMenuGet(ctx, callRequest)
-// 	default:
-// 		response := map[string]interface{}{
-// 			"jsonrpc": "2.0",
-// 			"id":      id,
-// 			"error": map[string]interface{}{
-// 				"code":    -32601,
-// 				"message": fmt.Sprintf("Handler for tool %s not implemented", callParams.ToolName),
-// 			},
-// 		}
-// 		w.Header().Set("Content-Type", "application/json")
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
-
-// 	if err != nil {
-// 		response := map[string]interface{}{
-// 			"jsonrpc": "2.0",
-// 			"id":      id,
-// 			"error": map[string]interface{}{
-// 				"code":    -32603,
-// 				"message": err.Error(),
-// 			},
-// 		}
-// 		w.Header().Set("Content-Type", "application/json")
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
-
-// 	// Check if the result indicates an error (isError flag)
-// 	if result.IsError {
-// 		// Extract error message from the result
-// 		var errorMessage string
-// 		if len(result.Content) > 0 {
-// 			if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-// 				errorMessage = textContent.Text
-// 			}
-// 		}
-
-// 		if errorMessage == "" {
-// 			errorMessage = "Unknown error occurred"
-// 		}
-
-// 		response := map[string]interface{}{
-// 			"jsonrpc": "2.0",
-// 			"id":      id,
-// 			"error": map[string]interface{}{
-// 				"code":    -32000,
-// 				"message": errorMessage,
-// 			},
-// 		}
-// 		w.Header().Set("Content-Type", "application/json")
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
-
-// 	// Get the text content from the result
-// 	var textContent string
-// 	if len(result.Content) > 0 {
-// 		for _, content := range result.Content {
-// 			if tc, ok := content.(mcp.TextContent); ok {
-// 				textContent = tc.Text
-// 				break
-// 			}
-// 		}
-// 	}
-
-// 	// Format the response according to the test expectations
-// 	response := map[string]interface{}{
-// 		"jsonrpc": "2.0",
-// 		"id":      id,
-// 		"result": map[string]interface{}{
-// 			"text":    textContent,
-// 			"success": true,
-// 		},
-// 	}
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(response)
-// }
-
-// // handleMenuGet handles menu retrieval requests
-// func (m *MCP) handleMenuGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-// 	// Parse the request parameters
-// 	var params struct {
-// 		ID string `json:"id"`
-// 	}
-
-// 	// Convert request.Arguments to JSON and then unmarshal into our struct
-// 	argsJSON, err := json.Marshal(request.Params.Arguments)
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	if err := json.Unmarshal(argsJSON, &params); err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to parse request: %v", err)), nil
-// 	}
-
-// 	// Get the menu from the store
-// 	menu, err := m.store.MenuFindByID(ctx, params.ID)
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to find menu: %v", err)), nil
-// 	}
-
-// 	if menu == nil {
-// 		return mcp.NewToolResultError("menu not found"), nil
-// 	}
-
-// 	// Convert the menu to JSON for the response
-// 	// Get items from meta
-// 	itemsJSON := menu.Meta("items")
-
-// 	result, err := json.Marshal(map[string]interface{}{
-// 		"id":     menu.ID(),
-// 		"name":   menu.Name(),
-// 		"status": menu.Status(),
-// 		"items":  itemsJSON,
-// 	})
-// 	if err != nil {
-// 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal menu: %v", err)), nil
-// 	}
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
+	"github.com/dracory/cmsstore"
+)
+
+type MCP struct {
+	store cmsstore.StoreInterface
+}
+
+func NewMCP(store cmsstore.StoreInterface) *MCP {
+	return &MCP{store: store}
+}
+
+// Handler is an HTTP handler intended to be mounted at a dedicated route.
+//
+// The protocol is JSON-RPC 2.0 compatible and currently supports:
+// - method: "call_tool" with params {"tool_name": string, "arguments": object}
+// - method: "list_tools" with params {}
+func (m *MCP) Handler(w http.ResponseWriter, r *http.Request) {
+	if m == nil || m.store == nil {
+		writeJSON(w, http.StatusInternalServerError, jsonRPCErrorResponse(nil, -32603, "store is not initialized"))
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, jsonRPCErrorResponse(nil, -32602, "failed to read request body"))
+		return
+	}
+
+	defer r.Body.Close()
+
+	var req jsonRPCRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		writeJSON(w, http.StatusOK, jsonRPCErrorResponse(nil, -32700, "parse error"))
+		return
+	}
+
+	if strings.TrimSpace(req.JSONRPC) == "" {
+		req.JSONRPC = "2.0"
+	}
+
+	switch req.Method {
+	case "initialize":
+		m.handleInitialize(w, r.Context(), req.ID, req.Params)
+		return
+	case "notifications/initialized":
+		m.handleInitialized(w, r.Context())
+		return
+	case "tools/list":
+		m.handleToolsList(w, r.Context(), req.ID)
+		return
+	case "tools/call":
+		m.handleToolsCall(w, r.Context(), req.ID, req.Params)
+		return
+	case "list_tools":
+		m.handleToolsList(w, r.Context(), req.ID)
+		return
+	case "call_tool":
+		m.handleToolsCall(w, r.Context(), req.ID, req.Params)
+		return
+	default:
+		writeJSON(w, http.StatusOK, jsonRPCErrorResponse(req.ID, -32601, "method not found"))
+		return
+	}
+}
+
+func argString(args map[string]any, key string) string {
+	v, ok := args[key]
+	if !ok || v == nil {
+		return ""
+	}
+	switch t := v.(type) {
+	case string:
+		return t
+	case json.Number:
+		return t.String()
+	case float64:
+		return fmt.Sprintf("%.0f", t)
+	case int:
+		return fmt.Sprintf("%d", t)
+	case int64:
+		return fmt.Sprintf("%d", t)
+	case bool:
+		if t {
+			return "true"
+		}
+		return "false"
+	default:
+		return ""
+	}
+}
+
+func argInt(args map[string]any, key string) (int, bool) {
+	v, ok := args[key]
+	if !ok || v == nil {
+		return 0, false
+	}
+	switch t := v.(type) {
+	case json.Number:
+		i64, err := t.Int64()
+		if err != nil {
+			return 0, false
+		}
+		return int(i64), true
+	case float64:
+		return int(t), true
+	case int:
+		return t, true
+	case int64:
+		return int(t), true
+	default:
+		return 0, false
+	}
+}
+
+func argBool(args map[string]any, key string) (bool, bool) {
+	v, ok := args[key]
+	if !ok || v == nil {
+		return false, false
+	}
+	switch t := v.(type) {
+	case bool:
+		return t, true
+	case string:
+		vv := strings.TrimSpace(strings.ToLower(t))
+		if vv == "true" || vv == "1" || vv == "yes" {
+			return true, true
+		}
+		if vv == "false" || vv == "0" || vv == "no" {
+			return false, true
+		}
+		return false, false
+	default:
+		return false, false
+	}
+}
+
+type jsonRPCRequest struct {
+	JSONRPC string          `json:"jsonrpc"`
+	ID      any             `json:"id"`
+	Method  string          `json:"method"`
+	Params  json.RawMessage `json:"params"`
+}
+
+func (m *MCP) handleInitialize(w http.ResponseWriter, ctx context.Context, id any, params json.RawMessage) {
+	var p struct {
+		ProtocolVersion string `json:"protocolVersion"`
+		ClientInfo      any    `json:"clientInfo"`
+		Capabilities    any    `json:"capabilities"`
+	}
+	_ = json.Unmarshal(params, &p)
+
+	result := map[string]any{
+		"protocolVersion": "2025-06-18",
+		"serverInfo": map[string]any{
+			"name":    "cmsstore",
+			"version": "0.1.0",
+		},
+		"capabilities": map[string]any{
+			"tools": map[string]any{},
+		},
+		"echo": map[string]any{
+			"clientProtocolVersion": p.ProtocolVersion,
+			"clientInfo":            p.ClientInfo,
+			"clientCapabilities":    p.Capabilities,
+		},
+	}
+
+	writeJSON(w, http.StatusOK, jsonRPCResultResponse(id, result))
+}
+
+func (m *MCP) handleInitialized(w http.ResponseWriter, ctx context.Context) {
+	// JSON-RPC notifications do not expect a response.
+	w.WriteHeader(http.StatusOK)
+}
+
+func (m *MCP) handleToolsList(w http.ResponseWriter, ctx context.Context, id any) {
+	tools := []map[string]any{
+		{
+			"name":        "cms_schema",
+			"description": "Get a JSON schema-like description of CMS entities and supported MCP tools",
+			"inputSchema": map[string]any{"type": "object"},
+		},
+		{
+			"name":        "page_list",
+			"description": "List CMS pages",
+			"inputSchema": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit":                map[string]any{"type": "integer"},
+					"offset":               map[string]any{"type": "integer"},
+					"site_id":              map[string]any{"type": "string"},
+					"status":               map[string]any{"type": "string"},
+					"name_like":            map[string]any{"type": "string"},
+					"alias_like":           map[string]any{"type": "string"},
+					"handle":               map[string]any{"type": "string"},
+					"template_id":          map[string]any{"type": "string"},
+					"include_soft_deleted": map[string]any{"type": "boolean"},
+					"order_by":             map[string]any{"type": "string"},
+					"sort_order":           map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "page_create",
+			"description": "Create a CMS page",
+			"inputSchema": map[string]any{
+				"type":     "object",
+				"required": []string{"title"},
+				"properties": map[string]any{
+					"title":       map[string]any{"type": "string"},
+					"content":     map[string]any{"type": "string"},
+					"status":      map[string]any{"type": "string"},
+					"site_id":     map[string]any{"type": "string"},
+					"template_id": map[string]any{"type": "string"},
+					"alias":       map[string]any{"type": "string"},
+					"name":        map[string]any{"type": "string"},
+					"handle":      map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "page_get",
+			"description": "Get a CMS page by ID",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "page_update",
+			"description": "Update a CMS page",
+			"inputSchema": map[string]any{
+				"type":     "object",
+				"required": []string{"id"},
+				"properties": map[string]any{
+					"id": map[string]any{"type": "string"},
+					"updates": map[string]any{
+						"type": "object",
+						"properties": map[string]any{
+							"title":            map[string]any{"type": "string"},
+							"content":          map[string]any{"type": "string"},
+							"status":           map[string]any{"type": "string"},
+							"alias":            map[string]any{"type": "string"},
+							"name":             map[string]any{"type": "string"},
+							"handle":           map[string]any{"type": "string"},
+							"site_id":          map[string]any{"type": "string"},
+							"template_id":      map[string]any{"type": "string"},
+							"canonical_url":    map[string]any{"type": "string"},
+							"meta_description": map[string]any{"type": "string"},
+							"meta_keywords":    map[string]any{"type": "string"},
+							"meta_robots":      map[string]any{"type": "string"},
+							"memo":             map[string]any{"type": "string"},
+						},
+					},
+				},
+			},
+		},
+		{
+			"name":        "page_delete",
+			"description": "Delete a CMS page",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "menu_list",
+			"description": "List CMS menus",
+			"inputSchema": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit":                map[string]any{"type": "integer"},
+					"offset":               map[string]any{"type": "integer"},
+					"site_id":              map[string]any{"type": "string"},
+					"status":               map[string]any{"type": "string"},
+					"name_like":            map[string]any{"type": "string"},
+					"handle":               map[string]any{"type": "string"},
+					"include_soft_deleted": map[string]any{"type": "boolean"},
+					"order_by":             map[string]any{"type": "string"},
+					"sort_order":           map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "menu_create",
+			"description": "Create a CMS menu",
+			"inputSchema": map[string]any{
+				"type":     "object",
+				"required": []string{"name"},
+				"properties": map[string]any{
+					"name":    map[string]any{"type": "string"},
+					"status":  map[string]any{"type": "string"},
+					"site_id": map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "menu_get",
+			"description": "Get a CMS menu by ID",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "site_list",
+			"description": "List CMS sites",
+			"inputSchema": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit":                map[string]any{"type": "integer"},
+					"offset":               map[string]any{"type": "integer"},
+					"status":               map[string]any{"type": "string"},
+					"name_like":            map[string]any{"type": "string"},
+					"domain_name":          map[string]any{"type": "string"},
+					"handle":               map[string]any{"type": "string"},
+					"include_soft_deleted": map[string]any{"type": "boolean"},
+					"order_by":             map[string]any{"type": "string"},
+					"sort_order":           map[string]any{"type": "string"},
+				},
+			},
+		},
+	}
+
+	result := map[string]any{
+		"tools": tools,
+	}
+	writeJSON(w, http.StatusOK, jsonRPCResultResponse(id, result))
+}
+
+func (m *MCP) handleToolsCall(w http.ResponseWriter, ctx context.Context, id any, params json.RawMessage) {
+	// Support both MCP standard params and legacy ones:
+	// - MCP: {"name": "tool", "arguments": {...}}
+	// - Legacy: {"tool_name": "tool", "arguments": {...}}
+	var p struct {
+		Name     string          `json:"name"`
+		ToolName string          `json:"tool_name"`
+		ArgsRaw  json.RawMessage `json:"arguments"`
+	}
+
+	if err := json.Unmarshal(params, &p); err != nil {
+		writeJSON(w, http.StatusOK, jsonRPCErrorResponse(id, -32602, "invalid params"))
+		return
+	}
+
+	toolName := strings.TrimSpace(p.Name)
+	if toolName == "" {
+		toolName = strings.TrimSpace(p.ToolName)
+	}
+	if toolName == "" {
+		writeJSON(w, http.StatusOK, jsonRPCErrorResponse(id, -32602, "missing tool name"))
+		return
+	}
+
+	args := map[string]any{}
+	if len(p.ArgsRaw) > 0 {
+		dec := json.NewDecoder(strings.NewReader(string(p.ArgsRaw)))
+		dec.UseNumber()
+		if err := dec.Decode(&args); err != nil {
+			writeJSON(w, http.StatusOK, jsonRPCErrorResponse(id, -32602, "invalid arguments"))
+			return
+		}
+	}
+
+	textResult, err := m.dispatchTool(ctx, toolName, args)
+	if err != nil {
+		writeJSON(w, http.StatusOK, jsonRPCErrorResponse(id, -32000, err.Error()))
+		return
+	}
+
+	result := map[string]any{
+		"content": []map[string]any{
+			{
+				"type": "text",
+				"text": textResult,
+			},
+		},
+	}
+	writeJSON(w, http.StatusOK, jsonRPCResultResponse(id, result))
+}
+
+func (m *MCP) dispatchTool(ctx context.Context, toolName string, args map[string]any) (string, error) {
+	switch toolName {
+	case "cms_schema":
+		return m.toolCmsSchema(ctx, args)
+	case "page_list":
+		return m.toolPageList(ctx, args)
+	case "page_create":
+		return m.toolPageCreate(ctx, args)
+	case "page_get":
+		return m.toolPageGet(ctx, args)
+	case "page_update":
+		return m.toolPageUpdate(ctx, args)
+	case "page_delete":
+		return m.toolPageDelete(ctx, args)
+	case "menu_list":
+		return m.toolMenuList(ctx, args)
+	case "menu_create":
+		return m.toolMenuCreate(ctx, args)
+	case "menu_get":
+		return m.toolMenuGet(ctx, args)
+	case "site_list":
+		return m.toolSiteList(ctx, args)
+	default:
+		return "", errors.New("tool not found")
+	}
+}
+
+func (m *MCP) toolCmsSchema(ctx context.Context, args map[string]any) (string, error) {
+	entities := map[string]any{
+		"page": map[string]any{
+			"fields": []map[string]any{
+				{"name": "id", "type": "string"},
+				{"name": "site_id", "type": "string"},
+				{"name": "template_id", "type": "string"},
+				{"name": "title", "type": "string"},
+				{"name": "name", "type": "string"},
+				{"name": "handle", "type": "string"},
+				{"name": "alias", "type": "string"},
+				{"name": "canonical_url", "type": "string"},
+				{"name": "content", "type": "string"},
+				{"name": "editor", "type": "string"},
+				{"name": "memo", "type": "string"},
+				{"name": "meta_description", "type": "string"},
+				{"name": "meta_keywords", "type": "string"},
+				{"name": "meta_robots", "type": "string"},
+				{"name": "middlewares_before", "type": "array", "items": map[string]any{"type": "string"}},
+				{"name": "middlewares_after", "type": "array", "items": map[string]any{"type": "string"}},
+				{"name": "status", "type": "string"},
+				{"name": "created_at", "type": "string"},
+				{"name": "updated_at", "type": "string"},
+				{"name": "soft_deleted_at", "type": "string"},
+			},
+		},
+		"menu": map[string]any{
+			"fields": []map[string]any{
+				{"name": "id", "type": "string"},
+				{"name": "site_id", "type": "string"},
+				{"name": "name", "type": "string"},
+				{"name": "handle", "type": "string"},
+				{"name": "memo", "type": "string"},
+				{"name": "status", "type": "string"},
+				{"name": "created_at", "type": "string"},
+				{"name": "updated_at", "type": "string"},
+				{"name": "soft_deleted_at", "type": "string"},
+			},
+		},
+		"site": map[string]any{
+			"fields": []map[string]any{
+				{"name": "id", "type": "string"},
+				{"name": "name", "type": "string"},
+				{"name": "handle", "type": "string"},
+				{"name": "domain_names", "type": "array", "items": map[string]any{"type": "string"}},
+				{"name": "memo", "type": "string"},
+				{"name": "status", "type": "string"},
+				{"name": "created_at", "type": "string"},
+				{"name": "updated_at", "type": "string"},
+				{"name": "soft_deleted_at", "type": "string"},
+			},
+		},
+	}
+
+	tools := map[string]any{
+		"page_list": map[string]any{
+			"arguments": []map[string]any{
+				{"name": "limit", "type": "integer"},
+				{"name": "offset", "type": "integer"},
+				{"name": "site_id", "type": "string"},
+				{"name": "status", "type": "string"},
+				{"name": "name_like", "type": "string"},
+				{"name": "alias_like", "type": "string"},
+				{"name": "handle", "type": "string"},
+				{"name": "template_id", "type": "string"},
+				{"name": "include_soft_deleted", "type": "boolean"},
+				{"name": "order_by", "type": "string"},
+				{"name": "sort_order", "type": "string"},
+			},
+			"returns": map[string]any{
+				"items": "array[page]",
+			},
+		},
+		"menu_list": map[string]any{
+			"arguments": []map[string]any{
+				{"name": "limit", "type": "integer"},
+				{"name": "offset", "type": "integer"},
+				{"name": "site_id", "type": "string"},
+				{"name": "status", "type": "string"},
+				{"name": "name_like", "type": "string"},
+				{"name": "handle", "type": "string"},
+				{"name": "include_soft_deleted", "type": "boolean"},
+				{"name": "order_by", "type": "string"},
+				{"name": "sort_order", "type": "string"},
+			},
+			"returns": map[string]any{
+				"items": "array[menu]",
+			},
+		},
+		"site_list": map[string]any{
+			"arguments": []map[string]any{
+				{"name": "limit", "type": "integer"},
+				{"name": "offset", "type": "integer"},
+				{"name": "status", "type": "string"},
+				{"name": "name_like", "type": "string"},
+				{"name": "domain_name", "type": "string"},
+				{"name": "handle", "type": "string"},
+				{"name": "include_soft_deleted", "type": "boolean"},
+				{"name": "order_by", "type": "string"},
+				{"name": "sort_order", "type": "string"},
+			},
+			"returns": map[string]any{
+				"items": "array[site]",
+			},
+		},
+		"page_create": map[string]any{
+			"arguments": []map[string]any{
+				{"name": "title", "type": "string", "required": true},
+				{"name": "content", "type": "string"},
+				{"name": "status", "type": "string"},
+				{"name": "site_id", "type": "string"},
+			},
+			"returns": map[string]any{
+				"page": "page",
+			},
+		},
+		"page_get": map[string]any{
+			"arguments": []map[string]any{{"name": "id", "type": "string", "required": true}},
+			"returns":   map[string]any{"page": "page"},
+		},
+		"page_update": map[string]any{
+			"arguments": []map[string]any{{"name": "id", "type": "string", "required": true}},
+			"returns":   map[string]any{"page": "page"},
+		},
+		"page_delete": map[string]any{
+			"arguments": []map[string]any{{"name": "id", "type": "string", "required": true}},
+			"returns":   map[string]any{"deleted": "boolean"},
+		},
+		"menu_create": map[string]any{
+			"arguments": []map[string]any{{"name": "name", "type": "string", "required": true}},
+			"returns":   map[string]any{"menu": "menu"},
+		},
+		"menu_get": map[string]any{
+			"arguments": []map[string]any{{"name": "id", "type": "string", "required": true}},
+			"returns":   map[string]any{"menu": "menu"},
+		},
+	}
+
+	respBytes, err := json.Marshal(map[string]any{
+		"entities": entities,
+		"tools":    tools,
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func (m *MCP) toolPageList(ctx context.Context, args map[string]any) (string, error) {
+	q := cmsstore.PageQuery()
+
+	if v, ok := args["site_id"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetSiteID(v)
+	}
+	if v, ok := args["status"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetStatus(v)
+	}
+	if v, ok := args["name_like"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetNameLike(v)
+	}
+	if v, ok := args["alias_like"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetAliasLike(v)
+	}
+	if v, ok := args["handle"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetHandle(v)
+	}
+	if v := strings.TrimSpace(argString(args, "template_id")); v != "" {
+		q.SetTemplateID(v)
+	}
+	if v, ok := argBool(args, "include_soft_deleted"); ok {
+		q.SetSoftDeletedIncluded(v)
+	}
+	if v, ok := argInt(args, "limit"); ok {
+		q.SetLimit(v)
+	}
+	if v, ok := argInt(args, "offset"); ok {
+		q.SetOffset(v)
+	}
+	if v, ok := args["order_by"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetOrderBy(v)
+	}
+	if v, ok := args["sort_order"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetSortOrder(v)
+	}
+
+	pages, err := m.store.PageList(ctx, q)
+	if err != nil {
+		return "", err
+	}
+
+	items := make([]map[string]any, 0, len(pages))
+	for _, p := range pages {
+		if p == nil {
+			continue
+		}
+		items = append(items, map[string]any{
+			"id":          p.ID(),
+			"title":       p.Title(),
+			"name":        p.Name(),
+			"handle":      p.Handle(),
+			"alias":       p.Alias(),
+			"status":      p.Status(),
+			"site_id":     p.SiteID(),
+			"template_id": p.TemplateID(),
+			"created_at":  p.CreatedAt(),
+			"updated_at":  p.UpdatedAt(),
+		})
+	}
+
+	respBytes, err := json.Marshal(map[string]any{
+		"items": items,
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func (m *MCP) toolMenuList(ctx context.Context, args map[string]any) (string, error) {
+	q := cmsstore.MenuQuery()
+
+	if v, ok := args["site_id"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetSiteID(v)
+	}
+	if v, ok := args["status"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetStatus(v)
+	}
+	if v, ok := args["name_like"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetNameLike(v)
+	}
+	if v, ok := args["handle"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetHandle(v)
+	}
+	if v, ok := argBool(args, "include_soft_deleted"); ok {
+		q.SetSoftDeletedIncluded(v)
+	}
+	if v, ok := argInt(args, "limit"); ok {
+		q.SetLimit(v)
+	}
+	if v, ok := argInt(args, "offset"); ok {
+		q.SetOffset(v)
+	}
+	if v, ok := args["order_by"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetOrderBy(v)
+	}
+	if v, ok := args["sort_order"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetSortOrder(v)
+	}
+
+	menus, err := m.store.MenuList(ctx, q)
+	if err != nil {
+		return "", err
+	}
+
+	items := make([]map[string]any, 0, len(menus))
+	for _, menu := range menus {
+		if menu == nil {
+			continue
+		}
+		items = append(items, map[string]any{
+			"id":         menu.ID(),
+			"name":       menu.Name(),
+			"handle":     menu.Handle(),
+			"status":     menu.Status(),
+			"site_id":    menu.SiteID(),
+			"created_at": menu.CreatedAt(),
+			"updated_at": menu.UpdatedAt(),
+		})
+	}
+
+	respBytes, err := json.Marshal(map[string]any{
+		"items": items,
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func (m *MCP) toolSiteList(ctx context.Context, args map[string]any) (string, error) {
+	q := cmsstore.SiteQuery()
+
+	if v, ok := args["status"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetStatus(v)
+	}
+	if v, ok := args["name_like"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetNameLike(v)
+	}
+	if v, ok := args["domain_name"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetDomainName(v)
+	}
+	if v, ok := args["handle"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetHandle(v)
+	}
+	if v, ok := argBool(args, "include_soft_deleted"); ok {
+		q.SetSoftDeletedIncluded(v)
+	}
+	if v, ok := argInt(args, "limit"); ok {
+		q.SetLimit(v)
+	}
+	if v, ok := argInt(args, "offset"); ok {
+		q.SetOffset(v)
+	}
+	if v, ok := args["order_by"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetOrderBy(v)
+	}
+	if v, ok := args["sort_order"].(string); ok && strings.TrimSpace(v) != "" {
+		q.SetSortOrder(v)
+	}
+
+	sites, err := m.store.SiteList(ctx, q)
+	if err != nil {
+		return "", err
+	}
+
+	items := make([]map[string]any, 0, len(sites))
+	for _, s := range sites {
+		if s == nil {
+			continue
+		}
+		domains, _ := s.DomainNames()
+		items = append(items, map[string]any{
+			"id":          s.ID(),
+			"name":        s.Name(),
+			"handle":      s.Handle(),
+			"status":      s.Status(),
+			"domainNames": domains,
+			"created_at":  s.CreatedAt(),
+			"updated_at":  s.UpdatedAt(),
+		})
+	}
+
+	respBytes, err := json.Marshal(map[string]any{
+		"items": items,
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func (m *MCP) toolPageCreate(ctx context.Context, args map[string]any) (string, error) {
+	title, _ := args["title"].(string)
+	content, _ := args["content"].(string)
+	status, _ := args["status"].(string)
+	siteID, _ := args["site_id"].(string)
+
+	if strings.TrimSpace(title) == "" {
+		return "", errors.New("missing required parameter: title")
+	}
+
+	if siteID == "" {
+		sites, err := m.store.SiteList(ctx, cmsstore.SiteQuery())
+		if err != nil {
+			return "", err
+		}
+		if len(sites) > 0 {
+			siteID = sites[0].ID()
+		} else {
+			defaultSite := cmsstore.NewSite()
+			defaultSite.SetName("Default Site")
+			defaultSite.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
+			if err := m.store.SiteCreate(ctx, defaultSite); err != nil {
+				return "", err
+			}
+			siteID = defaultSite.ID()
+		}
+	}
+
+	page := cmsstore.NewPage()
+	page.SetTitle(title)
+	page.SetContent(content)
+	page.SetSiteID(siteID)
+	if status != "" {
+		page.SetStatus(status)
+	}
+
+	if err := m.store.PageCreate(ctx, page); err != nil {
+		return "", err
+	}
+
+	respBytes, err := json.Marshal(map[string]any{
+		"id":      page.ID(),
+		"title":   page.Title(),
+		"content": page.Content(),
+		"status":  page.Status(),
+		"site_id": page.SiteID(),
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func (m *MCP) toolPageGet(ctx context.Context, args map[string]any) (string, error) {
+	id := argString(args, "id")
+	if strings.TrimSpace(id) == "" {
+		return "", errors.New("missing required parameter: id")
+	}
+
+	page, err := m.store.PageFindByID(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	if page == nil {
+		return "", errors.New("page not found")
+	}
+
+	respBytes, err := json.Marshal(map[string]any{
+		"id":      page.ID(),
+		"title":   page.Title(),
+		"content": page.Content(),
+		"status":  page.Status(),
+		"site_id": page.SiteID(),
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func (m *MCP) toolPageUpdate(ctx context.Context, args map[string]any) (string, error) {
+	id := argString(args, "id")
+	if strings.TrimSpace(id) == "" {
+		return "", errors.New("missing required parameter: id")
+	}
+
+	updatesAny, _ := args["updates"].(map[string]any)
+	if updatesAny == nil {
+		updatesAny = map[string]any{}
+		for k, v := range args {
+			if k == "id" {
+				continue
+			}
+			updatesAny[k] = v
+		}
+	}
+	if len(updatesAny) == 0 {
+		return "", errors.New("missing required parameter: updates")
+	}
+
+	page, err := m.store.PageFindByID(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	if page == nil {
+		return "", errors.New("page not found")
+	}
+
+	if v := strings.TrimSpace(argString(updatesAny, "title")); v != "" {
+		page.SetTitle(v)
+	}
+	if v, ok := updatesAny["content"].(string); ok {
+		page.SetContent(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "status")); v != "" {
+		page.SetStatus(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "alias")); v != "" {
+		page.SetAlias(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "name")); v != "" {
+		page.SetName(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "handle")); v != "" {
+		page.SetHandle(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "template_id")); v != "" {
+		page.SetTemplateID(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "site_id")); v != "" {
+		page.SetSiteID(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "canonical_url")); v != "" {
+		page.SetCanonicalUrl(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "meta_description")); v != "" {
+		page.SetMetaDescription(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "meta_keywords")); v != "" {
+		page.SetMetaKeywords(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "meta_robots")); v != "" {
+		page.SetMetaRobots(v)
+	}
+	if v := strings.TrimSpace(argString(updatesAny, "memo")); v != "" {
+		page.SetMemo(v)
+	}
+
+	if err := m.store.PageUpdate(ctx, page); err != nil {
+		return "", err
+	}
+
+	respBytes, err := json.Marshal(map[string]any{
+		"id":      page.ID(),
+		"title":   page.Title(),
+		"content": page.Content(),
+		"status":  page.Status(),
+		"site_id": page.SiteID(),
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func (m *MCP) toolPageDelete(ctx context.Context, args map[string]any) (string, error) {
+	id := argString(args, "id")
+	if strings.TrimSpace(id) == "" {
+		return "", errors.New("missing required parameter: id")
+	}
+
+	page, err := m.store.PageFindByID(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	if page == nil {
+		return "", errors.New("page not found")
+	}
+
+	if err := m.store.PageSoftDeleteByID(ctx, id); err != nil {
+		if err := m.store.PageDelete(ctx, page); err != nil {
+			return "", err
+		}
+	}
+
+	respBytes, err := json.Marshal(map[string]any{"id": id})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func (m *MCP) toolMenuCreate(ctx context.Context, args map[string]any) (string, error) {
+	name, _ := args["name"].(string)
+	status, _ := args["status"].(string)
+	siteID := strings.TrimSpace(argString(args, "site_id"))
+	if strings.TrimSpace(name) == "" {
+		return "", errors.New("missing required parameter: name")
+	}
+
+	if siteID == "" {
+		sites, err := m.store.SiteList(ctx, cmsstore.SiteQuery())
+		if err != nil {
+			return "", err
+		}
+		if len(sites) > 0 {
+			siteID = sites[0].ID()
+		} else {
+			defaultSite := cmsstore.NewSite()
+			defaultSite.SetName("Default Site")
+			defaultSite.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
+			if err := m.store.SiteCreate(ctx, defaultSite); err != nil {
+				return "", err
+			}
+			siteID = defaultSite.ID()
+		}
+	}
+
+	menu := cmsstore.NewMenu()
+	menu.SetName(name)
+	menu.SetSiteID(siteID)
+	if status != "" {
+		menu.SetStatus(status)
+	}
+
+	if err := m.store.MenuCreate(ctx, menu); err != nil {
+		return "", err
+	}
+
+	respBytes, err := json.Marshal(map[string]any{
+		"id":     menu.ID(),
+		"name":   menu.Name(),
+		"status": menu.Status(),
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func (m *MCP) toolMenuGet(ctx context.Context, args map[string]any) (string, error) {
+	id := argString(args, "id")
+	if strings.TrimSpace(id) == "" {
+		return "", errors.New("missing required parameter: id")
+	}
+
+	menu, err := m.store.MenuFindByID(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	if menu == nil {
+		return "", errors.New("menu not found")
+	}
+
+	respBytes, err := json.Marshal(map[string]any{
+		"id":     menu.ID(),
+		"name":   menu.Name(),
+		"status": menu.Status(),
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(respBytes), nil
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(v)
+}
+
+func jsonRPCErrorResponse(id any, code int, message string) map[string]any {
+	return map[string]any{
+		"jsonrpc": "2.0",
+		"id":      id,
+		"error": map[string]any{
+			"code":    code,
+			"message": message,
+		},
+	}
+}
+
+func jsonRPCResultResponse(id any, result any) map[string]any {
+	return map[string]any{
+		"jsonrpc": "2.0",
+		"id":      id,
+		"result":  result,
+	}
+}
 
 // 	// Return the menu data as a text result
 // 	return mcp.NewToolResultText(string(result)), nil
