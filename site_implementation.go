@@ -267,3 +267,23 @@ func (o *siteImplementation) SetUpdatedAt(updatedAt string) SiteInterface {
 func (o *siteImplementation) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.UpdatedAt())
 }
+
+// MarshalToVersioning marshals the site data to a versioned JSON string, excluding timestamps and soft delete information.
+func (o *siteImplementation) MarshalToVersioning() (string, error) {
+	versionedData := map[string]string{}
+
+	for k, v := range o.Data() {
+		if k == COLUMN_CREATED_AT ||
+			k == COLUMN_UPDATED_AT ||
+			k == COLUMN_SOFT_DELETED_AT {
+			continue
+		}
+		versionedData[k] = v
+	}
+
+	b, err := json.Marshal(versionedData)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}

@@ -109,6 +109,8 @@ const (
 const (
 	VERSIONING_TYPE_BLOCK       = "block"
 	VERSIONING_TYPE_PAGE        = "page"
+	VERSIONING_TYPE_MENU        = "menu"
+	VERSIONING_TYPE_MENU_ITEM   = "menu_item"
 	VERSIONING_TYPE_TEMPLATE    = "template"
 	VERSIONING_TYPE_TRANSLATION = "translation"
 	VERSIONING_TYPE_SITE        = "site"

@@ -118,10 +118,201 @@ func (m *MCP) handleInitialized(w http.ResponseWriter, _ context.Context) {
 
 func (m *MCP) handleToolsList(w http.ResponseWriter, _ context.Context, id any) {
 	tools := []map[string]any{
+		// START: BLOCK TOOLS
+		{
+			"name":        "block_delete",
+			"description": "Delete a CMS block",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "block_get",
+			"description": "Get a CMS block by ID",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "block_list",
+			"description": "List CMS blocks",
+			"inputSchema": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit":                map[string]any{"type": "integer"},
+					"offset":               map[string]any{"type": "integer"},
+					"site_id":              map[string]any{"type": "string"},
+					"page_id":              map[string]any{"type": "string"},
+					"status":               map[string]any{"type": "string"},
+					"name_like":            map[string]any{"type": "string"},
+					"handle":               map[string]any{"type": "string"},
+					"include_soft_deleted": map[string]any{"type": "boolean"},
+					"order_by":             map[string]any{"type": "string"},
+					"sort_order":           map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "block_upsert",
+			"description": "Create or update a CMS block (if ID is provided, updates existing block; otherwise creates new block)",
+			"inputSchema": map[string]any{
+				"type":     "object",
+				"required": []string{"type"},
+				"properties": map[string]any{
+					"id":       map[string]any{"type": "string"},
+					"type":     map[string]any{"type": "string"},
+					"content":  map[string]any{"type": "string"},
+					"status":   map[string]any{"type": "string"},
+					"site_id":  map[string]any{"type": "string"},
+					"page_id":  map[string]any{"type": "string"},
+					"name":     map[string]any{"type": "string"},
+					"handle":   map[string]any{"type": "string"},
+					"editor":   map[string]any{"type": "string"},
+					"memo":     map[string]any{"type": "string"},
+					"sequence": map[string]any{"type": "integer"},
+				},
+			},
+		},
+		// END: BLOCK TOOLS
+		// START: CMS SCHEMA TOOL
 		{
 			"name":        "cms_schema",
 			"description": "Get a JSON schema-like description of CMS entities and supported MCP tools",
 			"inputSchema": map[string]any{"type": "object"},
+		},
+		// END: CMS SCHEMA TOOL
+		// START: MENU TOOLS
+		{
+			"name":        "menu_delete",
+			"description": "Delete a CMS menu",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "menu_get",
+			"description": "Get a CMS menu by ID",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "menu_list",
+			"description": "List CMS menus",
+			"inputSchema": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit":                map[string]any{"type": "integer"},
+					"offset":               map[string]any{"type": "integer"},
+					"site_id":              map[string]any{"type": "string"},
+					"status":               map[string]any{"type": "string"},
+					"name_like":            map[string]any{"type": "string"},
+					"handle":               map[string]any{"type": "string"},
+					"include_soft_deleted": map[string]any{"type": "boolean"},
+					"order_by":             map[string]any{"type": "string"},
+					"sort_order":           map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "menu_upsert",
+			"description": "Create or update a CMS menu (if ID is provided, updates existing menu; otherwise creates new menu)",
+			"inputSchema": map[string]any{
+				"type":     "object",
+				"required": []string{"name"},
+				"properties": map[string]any{
+					"id":      map[string]any{"type": "string"},
+					"name":    map[string]any{"type": "string"},
+					"status":  map[string]any{"type": "string"},
+					"site_id": map[string]any{"type": "string"},
+					"handle":  map[string]any{"type": "string"},
+					"memo":    map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "menu_item_delete",
+			"description": "Delete a CMS menu item",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "menu_item_get",
+			"description": "Get a CMS menu item by ID",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "menu_item_list",
+			"description": "List CMS menu items",
+			"inputSchema": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit":                map[string]any{"type": "integer"},
+					"offset":               map[string]any{"type": "integer"},
+					"menu_id":              map[string]any{"type": "string"},
+					"status":               map[string]any{"type": "string"},
+					"name_like":            map[string]any{"type": "string"},
+					"include_soft_deleted": map[string]any{"type": "boolean"},
+					"order_by":             map[string]any{"type": "string"},
+					"sort_order":           map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "menu_item_upsert",
+			"description": "Create or update a CMS menu item (if ID is provided, updates existing menu item; otherwise creates new menu item)",
+			"inputSchema": map[string]any{
+				"type":     "object",
+				"required": []string{"name"},
+				"properties": map[string]any{
+					"id":        map[string]any{"type": "string"},
+					"name":      map[string]any{"type": "string"},
+					"url":       map[string]any{"type": "string"},
+					"target":    map[string]any{"type": "string"},
+					"status":    map[string]any{"type": "string"},
+					"menu_id":   map[string]any{"type": "string"},
+					"page_id":   map[string]any{"type": "string"},
+					"parent_id": map[string]any{"type": "string"},
+					"handle":    map[string]any{"type": "string"},
+					"memo":      map[string]any{"type": "string"},
+					"sequence":  map[string]any{"type": "integer"},
+				},
+			},
+		},
+		// END: MENU TOOLS
+		// START: PAGE TOOLS
+		{
+			"name":        "page_delete",
+			"description": "Delete a CMS page",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "page_get",
+			"description": "Get a CMS page by ID",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
 		},
 		{
 			"name":        "page_list",
@@ -167,61 +358,11 @@ func (m *MCP) handleToolsList(w http.ResponseWriter, _ context.Context, id any) 
 				},
 			},
 		},
+		// END: PAGE TOOLS
+		// START: SITE TOOLS
 		{
-			"name":        "page_get",
-			"description": "Get a CMS page by ID",
-			"inputSchema": map[string]any{
-				"type":       "object",
-				"required":   []string{"id"},
-				"properties": map[string]any{"id": map[string]any{"type": "string"}},
-			},
-		},
-		{
-			"name":        "page_delete",
-			"description": "Delete a CMS page",
-			"inputSchema": map[string]any{
-				"type":       "object",
-				"required":   []string{"id"},
-				"properties": map[string]any{"id": map[string]any{"type": "string"}},
-			},
-		},
-		{
-			"name":        "menu_upsert",
-			"description": "Create or update a CMS menu (if ID is provided, updates existing menu; otherwise creates new menu)",
-			"inputSchema": map[string]any{
-				"type":     "object",
-				"required": []string{"name"},
-				"properties": map[string]any{
-					"id":      map[string]any{"type": "string"},
-					"name":    map[string]any{"type": "string"},
-					"status":  map[string]any{"type": "string"},
-					"site_id": map[string]any{"type": "string"},
-					"handle":  map[string]any{"type": "string"},
-					"memo":    map[string]any{"type": "string"},
-				},
-			},
-		},
-		{
-			"name":        "menu_list",
-			"description": "List CMS menus",
-			"inputSchema": map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"limit":                map[string]any{"type": "integer"},
-					"offset":               map[string]any{"type": "integer"},
-					"site_id":              map[string]any{"type": "string"},
-					"status":               map[string]any{"type": "string"},
-					"name_like":            map[string]any{"type": "string"},
-					"handle":               map[string]any{"type": "string"},
-					"include_soft_deleted": map[string]any{"type": "boolean"},
-					"order_by":             map[string]any{"type": "string"},
-					"sort_order":           map[string]any{"type": "string"},
-				},
-			},
-		},
-		{
-			"name":        "menu_get",
-			"description": "Get a CMS menu by ID",
+			"name":        "site_get",
+			"description": "Get a CMS site by ID",
 			"inputSchema": map[string]any{
 				"type":       "object",
 				"required":   []string{"id"},
@@ -246,6 +387,143 @@ func (m *MCP) handleToolsList(w http.ResponseWriter, _ context.Context, id any) 
 				},
 			},
 		},
+		{
+			"name":        "site_upsert",
+			"description": "Create or update a CMS site (if ID is provided, updates existing site; otherwise creates new site)",
+			"inputSchema": map[string]any{
+				"type":     "object",
+				"required": []string{"name"},
+				"properties": map[string]any{
+					"id":           map[string]any{"type": "string"},
+					"name":         map[string]any{"type": "string"},
+					"handle":       map[string]any{"type": "string"},
+					"status":       map[string]any{"type": "string"},
+					"domain_names": map[string]any{"type": "array"},
+					"memo":         map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "site_delete",
+			"description": "Delete a CMS site",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		// END: SITE TOOLS
+		// START: TEMPLATE TOOLS
+		{
+			"name":        "template_delete",
+			"description": "Delete a CMS template",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "template_get",
+			"description": "Get a CMS template by ID",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "template_list",
+			"description": "List CMS templates",
+			"inputSchema": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit":                map[string]any{"type": "integer"},
+					"offset":               map[string]any{"type": "integer"},
+					"site_id":              map[string]any{"type": "string"},
+					"status":               map[string]any{"type": "string"},
+					"name_like":            map[string]any{"type": "string"},
+					"handle":               map[string]any{"type": "string"},
+					"include_soft_deleted": map[string]any{"type": "boolean"},
+					"order_by":             map[string]any{"type": "string"},
+					"sort_order":           map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "template_upsert",
+			"description": "Create or update a CMS template (if ID is provided, updates existing template; otherwise creates new template)",
+			"inputSchema": map[string]any{
+				"type":     "object",
+				"required": []string{"name"},
+				"properties": map[string]any{
+					"id":      map[string]any{"type": "string"},
+					"name":    map[string]any{"type": "string"},
+					"content": map[string]any{"type": "string"},
+					"status":  map[string]any{"type": "string"},
+					"site_id": map[string]any{"type": "string"},
+					"handle":  map[string]any{"type": "string"},
+					"editor":  map[string]any{"type": "string"},
+					"memo":    map[string]any{"type": "string"},
+				},
+			},
+		},
+		// END: TEMPLATE TOOLS
+		// START: TRANSLATION TOOLS
+		{
+			"name":        "translation_delete",
+			"description": "Delete a CMS translation",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "translation_get",
+			"description": "Get a CMS translation by ID",
+			"inputSchema": map[string]any{
+				"type":       "object",
+				"required":   []string{"id"},
+				"properties": map[string]any{"id": map[string]any{"type": "string"}},
+			},
+		},
+		{
+			"name":        "translation_list",
+			"description": "List CMS translations",
+			"inputSchema": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit":                map[string]any{"type": "integer"},
+					"offset":               map[string]any{"type": "integer"},
+					"site_id":              map[string]any{"type": "string"},
+					"status":               map[string]any{"type": "string"},
+					"name_like":            map[string]any{"type": "string"},
+					"handle":               map[string]any{"type": "string"},
+					"include_soft_deleted": map[string]any{"type": "boolean"},
+					"order_by":             map[string]any{"type": "string"},
+					"sort_order":           map[string]any{"type": "string"},
+				},
+			},
+		},
+		{
+			"name":        "translation_upsert",
+			"description": "Create or update a CMS translation (if ID is provided, updates existing translation; otherwise creates new translation)",
+			"inputSchema": map[string]any{
+				"type":     "object",
+				"required": []string{"name"},
+				"properties": map[string]any{
+					"id":      map[string]any{"type": "string"},
+					"name":    map[string]any{"type": "string"},
+					"content": map[string]any{"type": "object"},
+					"status":  map[string]any{"type": "string"},
+					"site_id": map[string]any{"type": "string"},
+					"handle":  map[string]any{"type": "string"},
+					"memo":    map[string]any{"type": "string"},
+				},
+			},
+		},
+		// END: TRANSLATION TOOLS
 	}
 
 	result := map[string]any{
@@ -309,6 +587,30 @@ func (m *MCP) dispatchTool(ctx context.Context, toolName string, args map[string
 	switch toolName {
 	case "cms_schema":
 		return m.toolCmsSchema(ctx, args)
+	case "block_list":
+		return m.toolBlockList(ctx, args)
+	case "block_get":
+		return m.toolBlockGet(ctx, args)
+	case "block_upsert":
+		return m.toolBlockUpsert(ctx, args)
+	case "block_delete":
+		return m.toolBlockDelete(ctx, args)
+	case "menu_list":
+		return m.toolMenuList(ctx, args)
+	case "menu_upsert":
+		return m.toolMenuUpsert(ctx, args)
+	case "menu_get":
+		return m.toolMenuGet(ctx, args)
+	case "menu_delete":
+		return m.toolMenuDelete(ctx, args)
+	case "menu_item_list":
+		return m.toolMenuItemList(ctx, args)
+	case "menu_item_get":
+		return m.toolMenuItemGet(ctx, args)
+	case "menu_item_upsert":
+		return m.toolMenuItemUpsert(ctx, args)
+	case "menu_item_delete":
+		return m.toolMenuItemDelete(ctx, args)
 	case "page_list":
 		return m.toolPageList(ctx, args)
 	case "page_upsert":
@@ -317,19 +619,31 @@ func (m *MCP) dispatchTool(ctx context.Context, toolName string, args map[string
 		return m.toolPageGet(ctx, args)
 	case "page_delete":
 		return m.toolPageDelete(ctx, args)
-	case "menu_list":
-		return m.toolMenuList(ctx, args)
-	case "menu_upsert":
-		return m.toolMenuUpsert(ctx, args)
-	case "menu_get":
-		return m.toolMenuGet(ctx, args)
 	case "site_list":
 		return m.toolSiteList(ctx, args)
+	case "site_get":
+		return m.toolSiteGet(ctx, args)
+	case "site_upsert":
+		return m.toolSiteUpsert(ctx, args)
+	case "site_delete":
+		return m.toolSiteDelete(ctx, args)
+	case "template_list":
+		return m.toolTemplateList(ctx, args)
+	case "template_get":
+		return m.toolTemplateGet(ctx, args)
+	case "template_upsert":
+		return m.toolTemplateUpsert(ctx, args)
+	case "template_delete":
+		return m.toolTemplateDelete(ctx, args)
+	case "translation_list":
+		return m.toolTranslationList(ctx, args)
+	case "translation_get":
+		return m.toolTranslationGet(ctx, args)
+	case "translation_upsert":
+		return m.toolTranslationUpsert(ctx, args)
+	case "translation_delete":
+		return m.toolTranslationDelete(ctx, args)
 	default:
 		return "", errors.New("tool not found")
 	}
 }
-
-// 	// Return the menu data as a text result
-// 	return mcp.NewToolResultText(string(result)), nil
-// }

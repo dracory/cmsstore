@@ -333,3 +333,23 @@ func (o *menuItemImplementation) SetURL(url string) MenuItemInterface {
 	o.Set(COLUMN_URL, url)
 	return o
 }
+
+// MarshalToVersioning marshals the menu item data to a versioned JSON string, excluding timestamps and soft delete information.
+func (o *menuItemImplementation) MarshalToVersioning() (string, error) {
+	versionedData := map[string]string{}
+
+	for k, v := range o.Data() {
+		if k == COLUMN_CREATED_AT ||
+			k == COLUMN_UPDATED_AT ||
+			k == COLUMN_SOFT_DELETED_AT {
+			continue
+		}
+		versionedData[k] = v
+	}
+
+	b, err := json.Marshal(versionedData)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}

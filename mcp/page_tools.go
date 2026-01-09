@@ -233,6 +233,14 @@ func (m *MCP) toolPageUpsert(ctx context.Context, args map[string]any) (string, 
 		}
 	}
 
+	// Create versioning record if versioning is enabled
+	if m.store.VersioningEnabled() {
+		if err := m.createPageVersioning(ctx, page); err != nil {
+			// Log error but don't fail the operation
+			// In a production environment, you might want to handle this differently
+		}
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
 		"id":      page.ID(),
 		"title":   page.Title(),
@@ -244,4 +252,47 @@ func (m *MCP) toolPageUpsert(ctx context.Context, args map[string]any) (string, 
 		return "", err
 	}
 	return string(respBytes), nil
+}
+
+// createPageVersioning creates a versioning record for a page if versioning is enabled
+func (m *MCP) createPageVersioning(ctx context.Context, page cmsstore.PageInterface) error {
+	if !m.store.VersioningEnabled() {
+		return nil
+	}
+
+	if page == nil {
+		return errors.New("page is nil")
+	}
+
+	// Get last versioning to check if content has changed
+	lastVersioningList, err := m.store.VersioningList(ctx, cmsstore.NewVersioningQuery().
+		SetEntityType(cmsstore.VERSIONING_TYPE_PAGE).
+		SetEntityID(page.ID()).
+		SetOrderBy("created_at").
+		SetSortOrder("DESC").
+		SetLimit(1))
+
+	if err != nil {
+		return err
+	}
+
+	// Marshal page content for versioning
+	content, err := page.MarshalToVersioning()
+	if err != nil {
+		return err
+	}
+
+	// Check if last versioning has the same content
+	if len(lastVersioningList) > 0 {
+		lastVersioning := lastVersioningList[0]
+		if lastVersioning.Content() == content {
+			return nil // No change needed
+		}
+	}
+
+	// Create new versioning record
+	return m.store.VersioningCreate(ctx, cmsstore.NewVersioning().
+		SetEntityID(page.ID()).
+		SetEntityType(cmsstore.VERSIONING_TYPE_PAGE).
+		SetContent(content))
 }

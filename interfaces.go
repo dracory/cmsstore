@@ -92,6 +92,12 @@ type MenuInterface interface {
 	DataChanged() map[string]string
 	MarkAsNotDirty()
 
+	// Methods
+
+	MarshalToVersioning() (string, error)
+
+	// Setters and Getters
+
 	CreatedAt() string
 	SetCreatedAt(createdAt string) MenuInterface
 	CreatedAtCarbon() *carbon.Carbon
@@ -137,6 +143,12 @@ type MenuItemInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
 	MarkAsNotDirty()
+
+	// Methods
+
+	MarshalToVersioning() (string, error)
+
+	// Setters and Getters
 
 	CreatedAt() string
 	SetCreatedAt(createdAt string) MenuItemInterface
@@ -285,6 +297,12 @@ type SiteInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
 	MarkAsNotDirty()
+
+	// Methods
+
+	MarshalToVersioning() (string, error)
+
+	// Setters and Getters
 
 	CreatedAt() string
 	SetCreatedAt(createdAt string) SiteInterface
