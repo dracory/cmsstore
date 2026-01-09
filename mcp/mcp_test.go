@@ -109,8 +109,8 @@ func Test_MCP_ListTools(t *testing.T) {
 	if !strings.Contains(respStr, "list_tools") && !strings.Contains(respStr, "tools") {
 		t.Fatalf("Unexpected response: %s", respStr)
 	}
-	if !strings.Contains(respStr, "page_create") {
-		t.Fatalf("Expected tools list to contain page_create: %s", respStr)
+	if !strings.Contains(respStr, "page_upsert") {
+		t.Fatalf("Expected tools list to contain page_upsert: %s", respStr)
 	}
 	if !strings.Contains(respStr, "cms_schema") {
 		t.Fatalf("Expected tools list to contain cms_schema: %s", respStr)
@@ -126,7 +126,7 @@ func Test_MCP_PageCreate_And_PageGet(t *testing.T) {
 		"id":      "create",
 		"method":  "call_tool",
 		"params": map[string]any{
-			"tool_name": "page_create",
+			"tool_name": "page_upsert",
 			"arguments": map[string]any{
 				"title":   "Test Page",
 				"content": "Hello",
@@ -206,7 +206,7 @@ func Test_MCP_PageList(t *testing.T) {
 		"id":      "create",
 		"method":  "call_tool",
 		"params": map[string]any{
-			"tool_name": "page_create",
+			"tool_name": "page_upsert",
 			"arguments": map[string]any{
 				"title":   "List Page",
 				"content": "Hello",
@@ -231,7 +231,7 @@ func Test_MCP_PageList(t *testing.T) {
 	}
 	createText := rpcResultText(t, createRespBytes)
 	if !strings.Contains(createText, "List Page") {
-		t.Fatalf("Expected page_create response to contain created page title. Got: %s", createText)
+		t.Fatalf("Expected page_upsert response to contain created page title. Got: %s", createText)
 	}
 
 	listPayload := map[string]any{
@@ -375,8 +375,8 @@ func Test_MCP_ToolsList_StandardMethod(t *testing.T) {
 	}
 
 	respStr := string(bodyBytes)
-	if !strings.Contains(respStr, "page_create") {
-		t.Fatalf("Expected tools list to contain page_create: %s", respStr)
+	if !strings.Contains(respStr, "page_upsert") {
+		t.Fatalf("Expected tools list to contain page_upsert: %s", respStr)
 	}
 	if !strings.Contains(respStr, "cms_schema") {
 		t.Fatalf("Expected tools list to contain cms_schema: %s", respStr)
@@ -392,7 +392,7 @@ func Test_MCP_ToolsCall_StandardMethod(t *testing.T) {
 		"id":      "create",
 		"method":  "tools/call",
 		"params": map[string]any{
-			"name": "page_create",
+			"name": "page_upsert",
 			"arguments": map[string]any{
 				"title":   "Tools Call Page",
 				"content": "Hello",
@@ -418,7 +418,7 @@ func Test_MCP_ToolsCall_StandardMethod(t *testing.T) {
 	}
 
 	if !strings.Contains(string(createRespBytes), "Tools Call Page") {
-		t.Fatalf("Expected tools/call page_create response to contain title: %s", string(createRespBytes))
+		t.Fatalf("Expected tools/call page_upsert response to contain title: %s", string(createRespBytes))
 	}
 }
 
@@ -431,7 +431,7 @@ func Test_MCP_PageUpdate_WithUpdatesObject(t *testing.T) {
 		"id":      "create",
 		"method":  "call_tool",
 		"params": map[string]any{
-			"tool_name": "page_create",
+			"tool_name": "page_upsert",
 			"arguments": map[string]any{
 				"title":   "Before Update",
 				"content": "Hello",
@@ -471,13 +471,11 @@ func Test_MCP_PageUpdate_WithUpdatesObject(t *testing.T) {
 		"id":      "update",
 		"method":  "call_tool",
 		"params": map[string]any{
-			"tool_name": "page_update",
+			"tool_name": "page_upsert",
 			"arguments": map[string]any{
-				"id": pageID,
-				"updates": map[string]any{
-					"title": "After Update",
-					"alias": "/after-update",
-				},
+				"id":    pageID,
+				"title": "After Update",
+				"alias": "/after-update",
 			},
 		},
 	}
@@ -499,7 +497,7 @@ func Test_MCP_PageUpdate_WithUpdatesObject(t *testing.T) {
 	}
 
 	if !strings.Contains(string(updateRespBytes), "After Update") {
-		t.Fatalf("Expected page_update response to contain updated title: %s", string(updateRespBytes))
+		t.Fatalf("Expected page_upsert response to contain updated title: %s", string(updateRespBytes))
 	}
 }
 
@@ -577,7 +575,7 @@ func Test_MCP_MenuList(t *testing.T) {
 		"id":      "create",
 		"method":  "call_tool",
 		"params": map[string]any{
-			"tool_name": "menu_create",
+			"tool_name": "menu_upsert",
 			"arguments": map[string]any{
 				"name":   "Main Menu",
 				"status": "active",
