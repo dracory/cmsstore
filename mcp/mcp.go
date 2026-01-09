@@ -31,6 +31,12 @@ func (m *MCP) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if versioning is enabled
+	if !m.store.VersioningEnabled() {
+		writeJSON(w, http.StatusForbidden, jsonRPCErrorResponse(nil, -32000, "mcp disabled as versioning is required"))
+		return
+	}
+
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -157,7 +163,7 @@ type jsonRPCRequest struct {
 	Params  json.RawMessage `json:"params"`
 }
 
-func (m *MCP) handleInitialize(w http.ResponseWriter, ctx context.Context, id any, params json.RawMessage) {
+func (m *MCP) handleInitialize(w http.ResponseWriter, _ context.Context, id any, params json.RawMessage) {
 	var p struct {
 		ProtocolVersion string `json:"protocolVersion"`
 		ClientInfo      any    `json:"clientInfo"`
@@ -184,12 +190,12 @@ func (m *MCP) handleInitialize(w http.ResponseWriter, ctx context.Context, id an
 	writeJSON(w, http.StatusOK, jsonRPCResultResponse(id, result))
 }
 
-func (m *MCP) handleInitialized(w http.ResponseWriter, ctx context.Context) {
+func (m *MCP) handleInitialized(w http.ResponseWriter, _ context.Context) {
 	// JSON-RPC notifications do not expect a response.
 	w.WriteHeader(http.StatusOK)
 }
 
-func (m *MCP) handleToolsList(w http.ResponseWriter, ctx context.Context, id any) {
+func (m *MCP) handleToolsList(w http.ResponseWriter, _ context.Context, id any) {
 	tools := []map[string]any{
 		{
 			"name":        "cms_schema",
@@ -425,7 +431,7 @@ func (m *MCP) dispatchTool(ctx context.Context, toolName string, args map[string
 	}
 }
 
-func (m *MCP) toolCmsSchema(ctx context.Context, args map[string]any) (string, error) {
+func (m *MCP) toolCmsSchema(_ context.Context, _ map[string]any) (string, error) {
 	entities := map[string]any{
 		"page": map[string]any{
 			"fields": []map[string]any{

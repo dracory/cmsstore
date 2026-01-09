@@ -20,6 +20,21 @@ This package provides an MCP (Model Context Protocol) handler for the CMS Store,
 
 - Go 1.24 or later
 - A running instance of the CMS Store
+- **Versioning must be enabled** in the CMS Store configuration
+
+### Important Requirements
+
+**Versioning Required**: The MCP handler requires versioning to be enabled in the CMS Store. If versioning is not enabled, the MCP handler will return an error: "mcp disabled as versioning is required".
+
+To enable versioning, configure your CMS Store with:
+
+```go
+store := cmsstore.NewStore(cmsstore.NewStoreOptions{
+    VersioningEnabled: true,
+    VersioningTableName: "cms_versions",
+    // ... other options
+})
+```
 
 ### Installation
 
@@ -41,8 +56,13 @@ import (
 )
 
 func main() {
-	// Initialize your CMS store
-	store := cmsstore.NewStore(db) // Your database connection
+	// Initialize your CMS store with versioning enabled
+	store := cmsstore.NewStore(cmsstore.NewStoreOptions{
+		DB:                 db, // Your database connection
+		VersioningEnabled:  true,
+		VersioningTableName: "cms_versions",
+		// ... other required options
+	})
 
 	// Create the MCP handler
 	mcpHandler := mcp.NewMCP(store)
@@ -370,6 +390,23 @@ Errors are returned in the MCP format:
   }
 }
 ```
+
+### Versioning Requirement Error
+
+If versioning is not enabled in the CMS Store, the MCP handler will return:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": null,
+  "error": {
+    "code": -32000,
+    "message": "mcp disabled as versioning is required"
+  }
+}
+```
+
+This error indicates that you need to enable versioning in your CMS Store configuration as shown in the prerequisites section.
 
 ## Extending the Server
 
