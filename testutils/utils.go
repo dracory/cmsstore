@@ -41,15 +41,17 @@ func InitStore(filepath string) (cmsstore.StoreInterface, error) {
 	db := initDB(filepath)
 
 	store, err := cmsstore.NewStore(cmsstore.NewStoreOptions{
-		DB:                 db,
-		BlockTableName:     "block_table",
-		PageTableName:      "page_table",
-		SiteTableName:      "site_table",
-		TemplateTableName:  "template_table",
-		MenusEnabled:       true,
-		MenuTableName:      "menu_table",
-		MenuItemTableName:  "menu_item_table",
-		AutomigrateEnabled: true,
+		DB:                  db,
+		BlockTableName:      "block_table",
+		PageTableName:       "page_table",
+		SiteTableName:       "site_table",
+		TemplateTableName:   "template_table",
+		MenusEnabled:        true,
+		MenuTableName:       "menu_table",
+		MenuItemTableName:   "menu_item_table",
+		AutomigrateEnabled:  true,
+		VersioningEnabled:   true,
+		VersioningTableName: "versioning_table",
 	})
 
 	if err != nil {
