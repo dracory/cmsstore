@@ -15,6 +15,9 @@ import (
 )
 
 func (store *store) SiteCount(ctx context.Context, options SiteQueryInterface) (int64, error) {
+	if options == nil {
+		return -1, errors.New("site options cannot be nil")
+	}
 	options.SetCountOnly(true)
 
 	q, _, err := store.siteSelectQuery(options)
@@ -29,7 +32,7 @@ func (store *store) SiteCount(ctx context.Context, options SiteQueryInterface) (
 		ToSQL()
 
 	if errSql != nil {
-		return -1, nil
+		return -1, errSql
 	}
 
 	if store.debugEnabled {
@@ -52,7 +55,6 @@ func (store *store) SiteCount(ctx context.Context, options SiteQueryInterface) (
 
 	if err != nil {
 		return -1, err
-
 	}
 
 	return i, nil
@@ -360,8 +362,11 @@ func (store *store) siteSelectQuery(options SiteQueryInterface) (selectDataset *
 
 	columns = []any{}
 
-	for _, column := range options.Columns() {
-		columns = append(columns, column)
+	// Only return columns if this is not a count query
+	if !options.IsCountOnly() {
+		for _, column := range options.Columns() {
+			columns = append(columns, column)
+		}
 	}
 
 	if options.SoftDeletedIncluded() {

@@ -6,6 +6,13 @@ Based on the analysis of the project structure, database schema, store initializ
 2.  **Middleware Management:** Use a more structured approach for managing middlewares, instead of storing them as serialized text.
 3.  **Code Generation:** Use code generation to reduce boilerplate code in the query structs.
 
+## [2026-01-10] Site Manager SQL GROUP BY Error Fix
+- [X] Investigated SQL error: "column 'snv_cms_site.created_at' must appear in the GROUP BY clause"
+- [X] Root cause: SiteCount function was calling siteSelectQuery which returned columns, then adding COUNT(*) created SQL conflict
+- [X] Fixed by modifying siteSelectQuery to not return columns when IsCountOnly() is true
+- [X] Maintained DRY principles by keeping SiteCount using siteSelectQuery
+- [X] Applied minimal fix to avoid breaking existing functionality
+
 ## [2025-11-13] Site order_by validation error
 - [ ] Investigate where `siteQuery` is created without an order_by value
 - [ ] Implement validation or defaulting to avoid empty `order_by` values
