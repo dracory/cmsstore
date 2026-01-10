@@ -1028,15 +1028,9 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 		data.page.SetMetaRobots(data.formMetaRobots)
 	}
 
-	err := controller.createVersioning(data.request.Context(), data.page)
+	// versioning is handled by the store automatically
 
-	if err != nil {
-		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate > createVersioning", "error", err.Error())
-		data.formErrorMessage = "System error. Saving page failed. " + err.Error()
-		return data, ""
-	}
-
-	err = controller.ui.Store().PageUpdate(data.request.Context(), data.page)
+	err := controller.ui.Store().PageUpdate(data.request.Context(), data.page)
 
 	if err != nil {
 		controller.ui.Logger().Error("At pageUpdateController > prepareDataAndValidate", "error", err.Error())

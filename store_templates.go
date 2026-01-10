@@ -14,7 +14,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (store *store) TemplateCount(ctx context.Context, options TemplateQueryInterface) (int64, error) {
+func (store *storeImplementation) TemplateCount(ctx context.Context, options TemplateQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
 	q, _, err := store.templateSelectQuery(options)
@@ -58,7 +58,7 @@ func (store *store) TemplateCount(ctx context.Context, options TemplateQueryInte
 	return i, nil
 }
 
-func (store *store) TemplateCreate(ctx context.Context, template TemplateInterface) error {
+func (store *storeImplementation) TemplateCreate(ctx context.Context, template TemplateInterface) error {
 	if template == nil {
 		return errors.New("template is nil")
 	}
@@ -98,10 +98,14 @@ func (store *store) TemplateCreate(ctx context.Context, template TemplateInterfa
 
 	template.MarkAsNotDirty()
 
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_TEMPLATE, template.ID(), template); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (store *store) TemplateDelete(ctx context.Context, template TemplateInterface) error {
+func (store *storeImplementation) TemplateDelete(ctx context.Context, template TemplateInterface) error {
 	if template == nil {
 		return errors.New("template is nil")
 	}
@@ -109,7 +113,7 @@ func (store *store) TemplateDelete(ctx context.Context, template TemplateInterfa
 	return store.TemplateDeleteByID(ctx, template.ID())
 }
 
-func (store *store) TemplateDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) TemplateDeleteByID(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("template id is empty")
 	}
@@ -133,7 +137,7 @@ func (store *store) TemplateDeleteByID(ctx context.Context, id string) error {
 	return err
 }
 
-func (store *store) TemplateFindByHandle(ctx context.Context, handle string) (template TemplateInterface, err error) {
+func (store *storeImplementation) TemplateFindByHandle(ctx context.Context, handle string) (template TemplateInterface, err error) {
 	if handle == "" {
 		return nil, errors.New("template handle is empty")
 	}
@@ -153,7 +157,7 @@ func (store *store) TemplateFindByHandle(ctx context.Context, handle string) (te
 	return nil, nil
 }
 
-func (store *store) TemplateFindByID(ctx context.Context, id string) (template TemplateInterface, err error) {
+func (store *storeImplementation) TemplateFindByID(ctx context.Context, id string) (template TemplateInterface, err error) {
 	if id == "" {
 		return nil, errors.New("template id is empty")
 	}
@@ -171,7 +175,7 @@ func (store *store) TemplateFindByID(ctx context.Context, id string) (template T
 	return nil, nil
 }
 
-func (store *store) TemplateList(ctx context.Context, query TemplateQueryInterface) ([]TemplateInterface, error) {
+func (store *storeImplementation) TemplateList(ctx context.Context, query TemplateQueryInterface) ([]TemplateInterface, error) {
 	q, columns, err := store.templateSelectQuery(query)
 
 	if err != nil {
@@ -208,7 +212,7 @@ func (store *store) TemplateList(ctx context.Context, query TemplateQueryInterfa
 	return list, nil
 }
 
-func (store *store) TemplateSoftDelete(ctx context.Context, template TemplateInterface) error {
+func (store *storeImplementation) TemplateSoftDelete(ctx context.Context, template TemplateInterface) error {
 	if template == nil {
 		return errors.New("template is nil")
 	}
@@ -218,7 +222,7 @@ func (store *store) TemplateSoftDelete(ctx context.Context, template TemplateInt
 	return store.TemplateUpdate(ctx, template)
 }
 
-func (store *store) TemplateSoftDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) TemplateSoftDeleteByID(ctx context.Context, id string) error {
 	template, err := store.TemplateFindByID(ctx, id)
 
 	if err != nil {
@@ -228,7 +232,7 @@ func (store *store) TemplateSoftDeleteByID(ctx context.Context, id string) error
 	return store.TemplateSoftDelete(ctx, template)
 }
 
-func (store *store) TemplateUpdate(ctx context.Context, template TemplateInterface) error {
+func (store *storeImplementation) TemplateUpdate(ctx context.Context, template TemplateInterface) error {
 	if store.db == nil {
 		return errors.New("templatestore: database is nil")
 	}
@@ -270,10 +274,14 @@ func (store *store) TemplateUpdate(ctx context.Context, template TemplateInterfa
 
 	template.MarkAsNotDirty()
 
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_TEMPLATE, template.ID(), template); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (store *store) templateSelectQuery(options TemplateQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
+func (store *storeImplementation) templateSelectQuery(options TemplateQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	if options == nil {
 		return nil, nil, errors.New("template query cannot be nil")
 	}

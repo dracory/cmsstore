@@ -131,7 +131,7 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 	}
 
 	// Create a new store instance with the provided options
-	store := &store{
+	store := &storeImplementation{
 		automigrateEnabled: opts.AutomigrateEnabled,
 		db:                 opts.DB,
 		dbDriverName:       opts.DbDriverName,

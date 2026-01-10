@@ -12,7 +12,7 @@ import (
 // == TYPE ====================================================================
 
 // store represents the core structure for managing CMS data.
-type store struct {
+type storeImplementation struct {
 	blockTableName     string
 	pageTableName      string
 	siteTableName      string
@@ -44,12 +44,12 @@ type store struct {
 
 // == INTERFACE ===============================================================
 
-var _ StoreInterface = (*store)(nil) // verify it extends the interface
+var _ StoreInterface = (*storeImplementation)(nil) // verify it extends the interface
 
 // PUBLIC METHODS ============================================================
 
 // AutoMigrate performs automatic database migrations.
-func (store *store) AutoMigrate(ctx context.Context, opts ...Option) error {
+func (store *storeImplementation) AutoMigrate(ctx context.Context, opts ...Option) error {
 	if store.db == nil {
 		return errors.New("cms store: database is nil")
 	}
@@ -152,67 +152,67 @@ func (store *store) AutoMigrate(ctx context.Context, opts ...Option) error {
 }
 
 // EnableDebug enables or disables debug mode.
-func (st *store) EnableDebug(debug bool) {
+func (st *storeImplementation) EnableDebug(debug bool) {
 	st.debugEnabled = debug
 }
 
 // MenusEnabled checks if menus are enabled.
-func (store *store) MenusEnabled() bool {
+func (store *storeImplementation) MenusEnabled() bool {
 	return store.menusEnabled
 }
 
 // TranslationsEnabled checks if translations are enabled.
-func (store *store) TranslationsEnabled() bool {
+func (store *storeImplementation) TranslationsEnabled() bool {
 	return store.translationsEnabled
 }
 
 // VersioningEnabled checks if versioning is enabled.
-func (store *store) VersioningEnabled() bool {
+func (store *storeImplementation) VersioningEnabled() bool {
 	return store.versioningEnabled
 }
 
 // Shortcodes returns the list of shortcodes.
-func (store *store) Shortcodes() []ShortcodeInterface {
+func (store *storeImplementation) Shortcodes() []ShortcodeInterface {
 	return store.shortcodes
 }
 
 // AddShortcode adds a shortcode to the store.
-func (store *store) AddShortcode(shortcode ShortcodeInterface) {
+func (store *storeImplementation) AddShortcode(shortcode ShortcodeInterface) {
 	store.shortcodes = append(store.shortcodes, shortcode)
 }
 
 // AddShortcodes adds multiple shortcodes to the store.
-func (store *store) AddShortcodes(shortcodes []ShortcodeInterface) {
+func (store *storeImplementation) AddShortcodes(shortcodes []ShortcodeInterface) {
 	store.shortcodes = append(store.shortcodes, shortcodes...)
 }
 
 // SetShortcodes sets the list of shortcodes.
-func (store *store) SetShortcodes(shortcodes []ShortcodeInterface) {
+func (store *storeImplementation) SetShortcodes(shortcodes []ShortcodeInterface) {
 	store.shortcodes = shortcodes
 }
 
 // Middlewares returns the list of middlewares.
-func (store *store) Middlewares() []MiddlewareInterface {
+func (store *storeImplementation) Middlewares() []MiddlewareInterface {
 	return store.middlewares
 }
 
 // AddMiddleware adds a middleware to the store.
-func (store *store) AddMiddleware(middleware MiddlewareInterface) {
+func (store *storeImplementation) AddMiddleware(middleware MiddlewareInterface) {
 	store.middlewares = append(store.middlewares, middleware)
 }
 
 // AddMiddlewares adds multiple middlewares to the store.
-func (store *store) AddMiddlewares(middlewares []MiddlewareInterface) {
+func (store *storeImplementation) AddMiddlewares(middlewares []MiddlewareInterface) {
 	store.middlewares = append(store.middlewares, middlewares...)
 }
 
 // SetMiddlewares sets the list of middlewares.
-func (store *store) SetMiddlewares(middlewares []MiddlewareInterface) {
+func (store *storeImplementation) SetMiddlewares(middlewares []MiddlewareInterface) {
 	store.middlewares = middlewares
 }
 
 // toQuerableContext converts a context to a queryable context.
-func (store *store) toQuerableContext(ctx context.Context) database.QueryableContext {
+func (store *storeImplementation) toQuerableContext(ctx context.Context) database.QueryableContext {
 	if database.IsQueryableContext(ctx) {
 		return ctx.(database.QueryableContext)
 	}

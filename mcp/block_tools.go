@@ -200,14 +200,6 @@ func (m *MCP) toolBlockUpsert(ctx context.Context, args map[string]any) (string,
 		}
 	}
 
-	// Create versioning record if versioning is enabled
-	if m.store.VersioningEnabled() {
-		if err := m.createBlockVersioning(ctx, block); err != nil {
-			// Log error but don't fail the operation
-			// In a production environment, you might want to handle this differently
-		}
-	}
-
 	respBytes, err := json.Marshal(map[string]any{
 		"id":      block.ID(),
 		"type":    block.Type(),

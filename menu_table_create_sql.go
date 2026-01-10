@@ -5,7 +5,7 @@ import (
 )
 
 // SQLCreateTable returns a SQL string for creating the menu table
-func (st *store) menuTableCreateSql() string {
+func (st *storeImplementation) menuTableCreateSql() string {
 	// Initialize a new SQL builder using the database driver name from the store
 	sql := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
 		// Set the table name using the menuTableName from the store

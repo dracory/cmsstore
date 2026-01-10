@@ -14,7 +14,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (store *store) PageCount(ctx context.Context, options PageQueryInterface) (int64, error) {
+func (store *storeImplementation) PageCount(ctx context.Context, options PageQueryInterface) (int64, error) {
 	options.SetCountOnly(true)
 
 	q, _, err := store.pageSelectQuery(options)
@@ -58,7 +58,7 @@ func (store *store) PageCount(ctx context.Context, options PageQueryInterface) (
 	return i, nil
 }
 
-func (store *store) PageCreate(ctx context.Context, page PageInterface) error {
+func (store *storeImplementation) PageCreate(ctx context.Context, page PageInterface) error {
 	if page == nil {
 		return errors.New("page is nil")
 	}
@@ -94,10 +94,14 @@ func (store *store) PageCreate(ctx context.Context, page PageInterface) error {
 
 	page.MarkAsNotDirty()
 
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_PAGE, page.ID(), page); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (store *store) PageDelete(ctx context.Context, page PageInterface) error {
+func (store *storeImplementation) PageDelete(ctx context.Context, page PageInterface) error {
 	if page == nil {
 		return errors.New("page is nil")
 	}
@@ -105,7 +109,7 @@ func (store *store) PageDelete(ctx context.Context, page PageInterface) error {
 	return store.PageDeleteByID(ctx, page.ID())
 }
 
-func (store *store) PageDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) PageDeleteByID(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("page id is empty")
 	}
@@ -129,7 +133,7 @@ func (store *store) PageDeleteByID(ctx context.Context, id string) error {
 	return err
 }
 
-func (store *store) PageFindByHandle(ctx context.Context, handle string) (page PageInterface, err error) {
+func (store *storeImplementation) PageFindByHandle(ctx context.Context, handle string) (page PageInterface, err error) {
 	if handle == "" {
 		return nil, errors.New("page handle is empty")
 	}
@@ -149,7 +153,7 @@ func (store *store) PageFindByHandle(ctx context.Context, handle string) (page P
 	return nil, nil
 }
 
-func (store *store) PageFindByID(ctx context.Context, id string) (page PageInterface, err error) {
+func (store *storeImplementation) PageFindByID(ctx context.Context, id string) (page PageInterface, err error) {
 	if id == "" {
 		return nil, errors.New("page id is empty")
 	}
@@ -167,7 +171,7 @@ func (store *store) PageFindByID(ctx context.Context, id string) (page PageInter
 	return nil, nil
 }
 
-func (store *store) PageList(ctx context.Context, query PageQueryInterface) ([]PageInterface, error) {
+func (store *storeImplementation) PageList(ctx context.Context, query PageQueryInterface) ([]PageInterface, error) {
 	q, columns, err := store.pageSelectQuery(query)
 
 	if err != nil {
@@ -210,7 +214,7 @@ func (store *store) PageList(ctx context.Context, query PageQueryInterface) ([]P
 	return list, nil
 }
 
-func (store *store) PageSoftDelete(ctx context.Context, page PageInterface) error {
+func (store *storeImplementation) PageSoftDelete(ctx context.Context, page PageInterface) error {
 	if page == nil {
 		return errors.New("page is nil")
 	}
@@ -220,7 +224,7 @@ func (store *store) PageSoftDelete(ctx context.Context, page PageInterface) erro
 	return store.PageUpdate(ctx, page)
 }
 
-func (store *store) PageSoftDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) PageSoftDeleteByID(ctx context.Context, id string) error {
 	page, err := store.PageFindByID(ctx, id)
 
 	if err != nil {
@@ -230,7 +234,7 @@ func (store *store) PageSoftDeleteByID(ctx context.Context, id string) error {
 	return store.PageSoftDelete(ctx, page)
 }
 
-func (store *store) PageUpdate(ctx context.Context, page PageInterface) error {
+func (store *storeImplementation) PageUpdate(ctx context.Context, page PageInterface) error {
 	if page == nil {
 		return errors.New("page is nil")
 	}
@@ -265,13 +269,20 @@ func (store *store) PageUpdate(ctx context.Context, page PageInterface) error {
 	}
 
 	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+	if err != nil {
+		return err
+	}
 
 	page.MarkAsNotDirty()
 
-	return err
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_PAGE, page.ID(), page); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (store *store) pageSelectQuery(options PageQueryInterface) (selectDataset *goqu.SelectDataset, selectColumns []any, err error) {
+func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (selectDataset *goqu.SelectDataset, selectColumns []any, err error) {
 	if options == nil {
 		return nil, []any{}, errors.New("page options cannot be nil")
 	}

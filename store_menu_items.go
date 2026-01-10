@@ -15,7 +15,7 @@ import (
 )
 
 // MenuItemCount returns the count of menu items based on the provided query options.
-func (store *store) MenuItemCount(ctx context.Context, options MenuItemQueryInterface) (int64, error) {
+func (store *storeImplementation) MenuItemCount(ctx context.Context, options MenuItemQueryInterface) (int64, error) {
 	// Check if menus are enabled
 	if !store.menusEnabled {
 		return -1, errors.New("menus are disabled")
@@ -72,7 +72,7 @@ func (store *store) MenuItemCount(ctx context.Context, options MenuItemQueryInte
 }
 
 // MenuItemCreate creates a new menu item in the database.
-func (store *store) MenuItemCreate(ctx context.Context, menuItem MenuItemInterface) error {
+func (store *storeImplementation) MenuItemCreate(ctx context.Context, menuItem MenuItemInterface) error {
 	// Check if menus are enabled
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -127,11 +127,15 @@ func (store *store) MenuItemCreate(ctx context.Context, menuItem MenuItemInterfa
 	// Mark the menu item as not dirty
 	menuItem.MarkAsNotDirty()
 
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_MENU_ITEM, menuItem.ID(), menuItem); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // MenuItemDelete deletes a menu item from the database.
-func (store *store) MenuItemDelete(ctx context.Context, menuItem MenuItemInterface) error {
+func (store *storeImplementation) MenuItemDelete(ctx context.Context, menuItem MenuItemInterface) error {
 	// Check if menus are enabled
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -147,7 +151,7 @@ func (store *store) MenuItemDelete(ctx context.Context, menuItem MenuItemInterfa
 }
 
 // MenuItemDeleteByID deletes a menu item from the database by its ID.
-func (store *store) MenuItemDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) MenuItemDeleteByID(ctx context.Context, id string) error {
 	// Check if menus are enabled
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -181,7 +185,7 @@ func (store *store) MenuItemDeleteByID(ctx context.Context, id string) error {
 }
 
 // MenuItemFindByID finds a menu item by its ID.
-func (store *store) MenuItemFindByID(ctx context.Context, id string) (menuItem MenuItemInterface, err error) {
+func (store *storeImplementation) MenuItemFindByID(ctx context.Context, id string) (menuItem MenuItemInterface, err error) {
 	// Check if menus are enabled
 	if !store.menusEnabled {
 		return nil, errors.New("menus are disabled")
@@ -208,7 +212,7 @@ func (store *store) MenuItemFindByID(ctx context.Context, id string) (menuItem M
 }
 
 // MenuItemList returns a list of menu items based on the provided query options.
-func (store *store) MenuItemList(ctx context.Context, query MenuItemQueryInterface) ([]MenuItemInterface, error) {
+func (store *storeImplementation) MenuItemList(ctx context.Context, query MenuItemQueryInterface) ([]MenuItemInterface, error) {
 	// Check if menus are enabled
 	if !store.menusEnabled {
 		return []MenuItemInterface{}, errors.New("menus are disabled")
@@ -257,7 +261,7 @@ func (store *store) MenuItemList(ctx context.Context, query MenuItemQueryInterfa
 }
 
 // MenuItemSoftDelete soft deletes a menu item by setting the soft_deleted_at timestamp.
-func (store *store) MenuItemSoftDelete(ctx context.Context, menuItem MenuItemInterface) error {
+func (store *storeImplementation) MenuItemSoftDelete(ctx context.Context, menuItem MenuItemInterface) error {
 	// Check if menus are enabled
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -276,7 +280,7 @@ func (store *store) MenuItemSoftDelete(ctx context.Context, menuItem MenuItemInt
 }
 
 // MenuItemSoftDeleteByID soft deletes a menu item by its ID.
-func (store *store) MenuItemSoftDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) MenuItemSoftDeleteByID(ctx context.Context, id string) error {
 	// Check if menus are enabled
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -294,7 +298,7 @@ func (store *store) MenuItemSoftDeleteByID(ctx context.Context, id string) error
 }
 
 // MenuItemUpdate updates an existing menu item in the database.
-func (store *store) MenuItemUpdate(ctx context.Context, menuItem MenuItemInterface) error {
+func (store *storeImplementation) MenuItemUpdate(ctx context.Context, menuItem MenuItemInterface) error {
 	// Check if menus are enabled
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
@@ -343,15 +347,22 @@ func (store *store) MenuItemUpdate(ctx context.Context, menuItem MenuItemInterfa
 
 	// Execute the query to update the menu item
 	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+	if err != nil {
+		return err
+	}
 
 	// Mark the menu item as not dirty
 	menuItem.MarkAsNotDirty()
 
-	return err
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_MENU_ITEM, menuItem.ID(), menuItem); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // menuItemSelectQuery generates a select query based on the provided query options.
-func (store *store) menuItemSelectQuery(options MenuItemQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
+func (store *storeImplementation) menuItemSelectQuery(options MenuItemQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	// Validate the query options
 	if options == nil {
 		return nil, nil, errors.New("menuItem query cannot be nil")

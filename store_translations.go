@@ -14,7 +14,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (store *store) TranslationCount(ctx context.Context, options TranslationQueryInterface) (int64, error) {
+func (store *storeImplementation) TranslationCount(ctx context.Context, options TranslationQueryInterface) (int64, error) {
 	if store.db == nil {
 		return -1, errors.New("cms store: db is nil")
 	}
@@ -62,7 +62,7 @@ func (store *store) TranslationCount(ctx context.Context, options TranslationQue
 	return i, nil
 }
 
-func (store *store) TranslationCreate(ctx context.Context, translation TranslationInterface) error {
+func (store *storeImplementation) TranslationCreate(ctx context.Context, translation TranslationInterface) error {
 	if store.db == nil {
 		return errors.New("translationstore: database is nil")
 	}
@@ -103,10 +103,14 @@ func (store *store) TranslationCreate(ctx context.Context, translation Translati
 
 	translation.MarkAsNotDirty()
 
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_TRANSLATION, translation.ID(), translation); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (store *store) TranslationDelete(ctx context.Context, translation TranslationInterface) error {
+func (store *storeImplementation) TranslationDelete(ctx context.Context, translation TranslationInterface) error {
 	if store.db == nil {
 		return errors.New("cmsstore: database is nil")
 	}
@@ -118,7 +122,7 @@ func (store *store) TranslationDelete(ctx context.Context, translation Translati
 	return store.TranslationDeleteByID(ctx, translation.ID())
 }
 
-func (store *store) TranslationDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) TranslationDeleteByID(ctx context.Context, id string) error {
 	if store.db == nil {
 		return errors.New("cmsstore: database is nil")
 	}
@@ -146,7 +150,7 @@ func (store *store) TranslationDeleteByID(ctx context.Context, id string) error 
 	return err
 }
 
-func (store *store) TranslationFindByHandle(ctx context.Context, handle string) (translation TranslationInterface, err error) {
+func (store *storeImplementation) TranslationFindByHandle(ctx context.Context, handle string) (translation TranslationInterface, err error) {
 	if store.db == nil {
 		return nil, errors.New("cmsstore: database is nil")
 	}
@@ -170,7 +174,7 @@ func (store *store) TranslationFindByHandle(ctx context.Context, handle string) 
 	return nil, nil
 }
 
-func (store *store) TranslationFindByID(ctx context.Context, id string) (translation TranslationInterface, err error) {
+func (store *storeImplementation) TranslationFindByID(ctx context.Context, id string) (translation TranslationInterface, err error) {
 	if store.db == nil {
 		return nil, errors.New("cmsstore: database is nil")
 	}
@@ -192,7 +196,7 @@ func (store *store) TranslationFindByID(ctx context.Context, id string) (transla
 	return nil, nil
 }
 
-func (store *store) TranslationFindByHandleOrID(ctx context.Context, handleOrID string, language string) (translation TranslationInterface, err error) {
+func (store *storeImplementation) TranslationFindByHandleOrID(ctx context.Context, handleOrID string, language string) (translation TranslationInterface, err error) {
 	if store.db == nil {
 		return nil, errors.New("cmsstore: database is nil")
 	}
@@ -216,15 +220,15 @@ func (store *store) TranslationFindByHandleOrID(ctx context.Context, handleOrID 
 	return nil, nil
 }
 
-func (store *store) TranslationLanguageDefault() string {
+func (store *storeImplementation) TranslationLanguageDefault() string {
 	return store.translationLanguageDefault
 }
 
-func (store *store) TranslationLanguages() map[string]string {
+func (store *storeImplementation) TranslationLanguages() map[string]string {
 	return store.translationLanguages
 }
 
-func (store *store) TranslationList(ctx context.Context, query TranslationQueryInterface) ([]TranslationInterface, error) {
+func (store *storeImplementation) TranslationList(ctx context.Context, query TranslationQueryInterface) ([]TranslationInterface, error) {
 	if store.db == nil {
 		return []TranslationInterface{}, errors.New("cmsstore: database is nil")
 	}
@@ -271,7 +275,7 @@ func (store *store) TranslationList(ctx context.Context, query TranslationQueryI
 	return list, nil
 }
 
-func (store *store) TranslationSoftDelete(ctx context.Context, translation TranslationInterface) error {
+func (store *storeImplementation) TranslationSoftDelete(ctx context.Context, translation TranslationInterface) error {
 	if store.db == nil {
 		return errors.New("cmsstore: database is nil")
 	}
@@ -285,7 +289,7 @@ func (store *store) TranslationSoftDelete(ctx context.Context, translation Trans
 	return store.TranslationUpdate(ctx, translation)
 }
 
-func (store *store) TranslationSoftDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) TranslationSoftDeleteByID(ctx context.Context, id string) error {
 	if store.db == nil {
 		return errors.New("cmsstore: database is nil")
 	}
@@ -303,7 +307,7 @@ func (store *store) TranslationSoftDeleteByID(ctx context.Context, id string) er
 	return store.TranslationSoftDelete(ctx, translation)
 }
 
-func (store *store) TranslationUpdate(ctx context.Context, translation TranslationInterface) error {
+func (store *storeImplementation) TranslationUpdate(ctx context.Context, translation TranslationInterface) error {
 	if store.db == nil {
 		return errors.New("cmsstore: database is nil")
 	}
@@ -345,10 +349,14 @@ func (store *store) TranslationUpdate(ctx context.Context, translation Translati
 
 	translation.MarkAsNotDirty()
 
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_TRANSLATION, translation.ID(), translation); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (store *store) translationSelectQuery(options TranslationQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
+func (store *storeImplementation) translationSelectQuery(options TranslationQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	if options == nil {
 		return nil, nil, errors.New("translation query cannot be nil")
 	}

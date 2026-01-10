@@ -193,14 +193,6 @@ func (m *MCP) toolTranslationUpsert(ctx context.Context, args map[string]any) (s
 		}
 	}
 
-	// Create versioning record if versioning is enabled
-	if m.store.VersioningEnabled() {
-		if err := m.createTranslationVersioning(ctx, translation); err != nil {
-			// Log error but don't fail the operation
-			// In a production environment, you might want to handle this differently
-		}
-	}
-
 	content, err := translation.Content()
 	if err != nil {
 		return "", err

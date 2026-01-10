@@ -165,14 +165,6 @@ func (m *MCP) toolSiteUpsert(ctx context.Context, args map[string]any) (string, 
 		}
 	}
 
-	// Create versioning record if versioning is enabled
-	if m.store.VersioningEnabled() {
-		if err := m.createSiteVersioning(ctx, site); err != nil {
-			// Log error but don't fail the operation
-			// In a production environment, you might want to handle this differently
-		}
-	}
-
 	domains, _ := site.DomainNames()
 
 	respBytes, err := json.Marshal(map[string]any{

@@ -5,7 +5,7 @@ import (
 )
 
 // SQLCreateTable returns a SQL string for creating the country table
-func (st *store) translationTableCreateSql() string {
+func (st *storeImplementation) translationTableCreateSql() string {
 	sql := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
 		Table(st.translationTableName).
 		Column(sb.Column{

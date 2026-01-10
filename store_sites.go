@@ -14,7 +14,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (store *store) SiteCount(ctx context.Context, options SiteQueryInterface) (int64, error) {
+func (store *storeImplementation) SiteCount(ctx context.Context, options SiteQueryInterface) (int64, error) {
 	if options == nil {
 		return -1, errors.New("site options cannot be nil")
 	}
@@ -60,7 +60,7 @@ func (store *store) SiteCount(ctx context.Context, options SiteQueryInterface) (
 	return i, nil
 }
 
-func (store *store) SiteCreate(ctx context.Context, site SiteInterface) error {
+func (store *storeImplementation) SiteCreate(ctx context.Context, site SiteInterface) error {
 	if site == nil {
 		return errors.New("site is nil")
 	}
@@ -96,10 +96,14 @@ func (store *store) SiteCreate(ctx context.Context, site SiteInterface) error {
 
 	site.MarkAsNotDirty()
 
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_SITE, site.ID(), site); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (store *store) SiteDelete(ctx context.Context, site SiteInterface) error {
+func (store *storeImplementation) SiteDelete(ctx context.Context, site SiteInterface) error {
 	if site == nil {
 		return errors.New("site is nil")
 	}
@@ -107,7 +111,7 @@ func (store *store) SiteDelete(ctx context.Context, site SiteInterface) error {
 	return store.SiteDeleteByID(ctx, site.ID())
 }
 
-func (store *store) SiteDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) SiteDeleteByID(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("site id is empty")
 	}
@@ -131,7 +135,7 @@ func (store *store) SiteDeleteByID(ctx context.Context, id string) error {
 	return err
 }
 
-func (store *store) SiteFindByDomainName(ctx context.Context, domainName string) (site SiteInterface, err error) {
+func (store *storeImplementation) SiteFindByDomainName(ctx context.Context, domainName string) (site SiteInterface, err error) {
 	if domainName == "" {
 		return nil, errors.New("site domain is empty")
 	}
@@ -151,7 +155,7 @@ func (store *store) SiteFindByDomainName(ctx context.Context, domainName string)
 	return nil, nil
 }
 
-func (store *store) SiteFindByHandle(ctx context.Context, handle string) (site SiteInterface, err error) {
+func (store *storeImplementation) SiteFindByHandle(ctx context.Context, handle string) (site SiteInterface, err error) {
 	if handle == "" {
 		return nil, errors.New("site handle is empty")
 	}
@@ -171,7 +175,7 @@ func (store *store) SiteFindByHandle(ctx context.Context, handle string) (site S
 	return nil, nil
 }
 
-func (store *store) SiteFindByID(ctx context.Context, id string) (site SiteInterface, err error) {
+func (store *storeImplementation) SiteFindByID(ctx context.Context, id string) (site SiteInterface, err error) {
 	if id == "" {
 		return nil, errors.New("site id is empty")
 	}
@@ -189,7 +193,7 @@ func (store *store) SiteFindByID(ctx context.Context, id string) (site SiteInter
 	return nil, nil
 }
 
-func (store *store) SiteList(ctx context.Context, query SiteQueryInterface) ([]SiteInterface, error) {
+func (store *storeImplementation) SiteList(ctx context.Context, query SiteQueryInterface) ([]SiteInterface, error) {
 	q, columns, err := store.siteSelectQuery(query)
 
 	if err != nil {
@@ -233,7 +237,7 @@ func (store *store) SiteList(ctx context.Context, query SiteQueryInterface) ([]S
 	return list, nil
 }
 
-func (store *store) SiteSoftDelete(ctx context.Context, site SiteInterface) error {
+func (store *storeImplementation) SiteSoftDelete(ctx context.Context, site SiteInterface) error {
 	if site == nil {
 		return errors.New("site is nil")
 	}
@@ -243,7 +247,7 @@ func (store *store) SiteSoftDelete(ctx context.Context, site SiteInterface) erro
 	return store.SiteUpdate(ctx, site)
 }
 
-func (store *store) SiteSoftDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) SiteSoftDeleteByID(ctx context.Context, id string) error {
 	site, err := store.SiteFindByID(ctx, id)
 
 	if err != nil {
@@ -253,7 +257,7 @@ func (store *store) SiteSoftDeleteByID(ctx context.Context, id string) error {
 	return store.SiteSoftDelete(ctx, site)
 }
 
-func (store *store) SiteUpdate(ctx context.Context, site SiteInterface) error {
+func (store *storeImplementation) SiteUpdate(ctx context.Context, site SiteInterface) error {
 	if site == nil {
 		return errors.New("site is nil")
 	}
@@ -288,13 +292,20 @@ func (store *store) SiteUpdate(ctx context.Context, site SiteInterface) error {
 	}
 
 	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+	if err != nil {
+		return err
+	}
 
 	site.MarkAsNotDirty()
 
-	return err
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_SITE, site.ID(), site); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (store *store) siteSelectQuery(options SiteQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
+func (store *storeImplementation) siteSelectQuery(options SiteQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	if options == nil {
 		return nil, []any{}, errors.New("site options cannot be nil")
 	}

@@ -5,7 +5,7 @@ import (
 )
 
 // pageTableCreateSql returns a SQL string for creating the page table
-func (st *store) pageTableCreateSql() string {
+func (st *storeImplementation) pageTableCreateSql() string {
 	// Create a new SQL builder for the database driver used by the store
 	sql := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
 		// Define the table name using the store's page table name

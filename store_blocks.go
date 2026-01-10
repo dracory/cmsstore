@@ -15,7 +15,7 @@ import (
 )
 
 // BlockCount returns the count of blocks matching the provided query options.
-func (store *store) BlockCount(ctx context.Context, options BlockQueryInterface) (int64, error) {
+func (store *storeImplementation) BlockCount(ctx context.Context, options BlockQueryInterface) (int64, error) {
 	if store.db == nil {
 		return -1, errors.New("cms store: db is nil") // Return an error if the database connection is not established
 	}
@@ -63,7 +63,7 @@ func (store *store) BlockCount(ctx context.Context, options BlockQueryInterface)
 }
 
 // BlockCreate creates a new block in the database.
-func (store *store) BlockCreate(ctx context.Context, block BlockInterface) error {
+func (store *storeImplementation) BlockCreate(ctx context.Context, block BlockInterface) error {
 	if store.db == nil {
 		return errors.New("blockstore: database is nil") // Return an error if the database connection is not established
 	}
@@ -99,11 +99,15 @@ func (store *store) BlockCreate(ctx context.Context, block BlockInterface) error
 
 	block.MarkAsNotDirty() // Mark the block as not dirty after successful insertion
 
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_BLOCK, block.ID(), block); err != nil {
+		return err
+	}
+
 	return nil // Return success
 }
 
 // BlockDelete deletes a block from the database by its ID.
-func (store *store) BlockDelete(ctx context.Context, block BlockInterface) error {
+func (store *storeImplementation) BlockDelete(ctx context.Context, block BlockInterface) error {
 	if store.db == nil {
 		return errors.New("blockstore: database is nil") // Return an error if the database connection is not established
 	}
@@ -116,7 +120,7 @@ func (store *store) BlockDelete(ctx context.Context, block BlockInterface) error
 }
 
 // BlockDeleteByID deletes a block from the database by its ID.
-func (store *store) BlockDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) BlockDeleteByID(ctx context.Context, id string) error {
 	if store.db == nil {
 		return errors.New("blockstore: database is nil") // Return an error if the database connection is not established
 	}
@@ -145,7 +149,7 @@ func (store *store) BlockDeleteByID(ctx context.Context, id string) error {
 }
 
 // BlockFindByHandle finds a block by its handle (unique identifier).
-func (store *store) BlockFindByHandle(ctx context.Context, handle string) (block BlockInterface, err error) {
+func (store *storeImplementation) BlockFindByHandle(ctx context.Context, handle string) (block BlockInterface, err error) {
 	if store.db == nil {
 		return nil, errors.New("blockstore: database is nil") // Return an error if the database connection is not established
 	}
@@ -168,7 +172,7 @@ func (store *store) BlockFindByHandle(ctx context.Context, handle string) (block
 }
 
 // BlockFindByID finds a block by its ID.
-func (store *store) BlockFindByID(ctx context.Context, id string) (block BlockInterface, err error) {
+func (store *storeImplementation) BlockFindByID(ctx context.Context, id string) (block BlockInterface, err error) {
 	if store.db == nil {
 		return nil, errors.New("blockstore: database is nil") // Return an error if the database connection is not established
 	}
@@ -190,7 +194,7 @@ func (store *store) BlockFindByID(ctx context.Context, id string) (block BlockIn
 	return nil, nil // Return nil if no block is found
 }
 
-func (store *store) BlockList(ctx context.Context, query BlockQueryInterface) ([]BlockInterface, error) {
+func (store *storeImplementation) BlockList(ctx context.Context, query BlockQueryInterface) ([]BlockInterface, error) {
 	if store.db == nil {
 		return []BlockInterface{}, errors.New("blockstore: database is nil")
 	}
@@ -231,7 +235,7 @@ func (store *store) BlockList(ctx context.Context, query BlockQueryInterface) ([
 	return list, nil
 }
 
-func (store *store) BlockSoftDelete(ctx context.Context, block BlockInterface) error {
+func (store *storeImplementation) BlockSoftDelete(ctx context.Context, block BlockInterface) error {
 	if store.db == nil {
 		return errors.New("blockstore: database is nil")
 	}
@@ -245,7 +249,7 @@ func (store *store) BlockSoftDelete(ctx context.Context, block BlockInterface) e
 	return store.BlockUpdate(ctx, block)
 }
 
-func (store *store) BlockSoftDeleteByID(ctx context.Context, id string) error {
+func (store *storeImplementation) BlockSoftDeleteByID(ctx context.Context, id string) error {
 	if store.db == nil {
 		return errors.New("blockstore: database is nil")
 	}
@@ -259,7 +263,7 @@ func (store *store) BlockSoftDeleteByID(ctx context.Context, id string) error {
 	return store.BlockSoftDelete(ctx, block)
 }
 
-func (store *store) BlockUpdate(ctx context.Context, block BlockInterface) error {
+func (store *storeImplementation) BlockUpdate(ctx context.Context, block BlockInterface) error {
 	if store.db == nil {
 		return errors.New("blockstore: database is nil")
 	}
@@ -298,13 +302,20 @@ func (store *store) BlockUpdate(ctx context.Context, block BlockInterface) error
 	}
 
 	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+	if err != nil {
+		return err
+	}
 
 	block.MarkAsNotDirty()
 
-	return err
+	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_BLOCK, block.ID(), block); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (store *store) blockSelectQuery(options BlockQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
+func (store *storeImplementation) blockSelectQuery(options BlockQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	if options == nil {
 		return nil, []any{}, errors.New("block query: cannot be nil")
 	}

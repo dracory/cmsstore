@@ -5,7 +5,7 @@ import (
 )
 
 // siteTableCreateSql returns a SQL string for creating the site table
-func (st *store) siteTableCreateSql() string {
+func (st *storeImplementation) siteTableCreateSql() string {
 	// Start a new SQL builder for the database driver used by the store
 	sql := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
 		// Set the table name to the store's site table name

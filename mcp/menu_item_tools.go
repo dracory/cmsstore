@@ -193,18 +193,10 @@ func (m *MCP) toolMenuItemUpsert(ctx context.Context, args map[string]any) (stri
 		}
 	}
 
-	// Create versioning record if versioning is enabled
-	if m.store.VersioningEnabled() {
-		if err := m.createMenuItemVersioning(ctx, menuItem); err != nil {
-			// Log error but don't fail the operation
-			// In a production environment, you might want to handle this differently
-		}
-	}
-
 	respBytes, err := json.Marshal(map[string]any{
 		"id":      menuItem.ID(),
 		"name":    menuItem.Name(),
-		"url":     menuItem.URL(),
+		"handle":  menuItem.Handle(),
 		"target":  menuItem.Target(),
 		"status":  menuItem.Status(),
 		"menu_id": menuItem.MenuID(),

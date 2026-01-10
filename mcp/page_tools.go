@@ -233,17 +233,10 @@ func (m *MCP) toolPageUpsert(ctx context.Context, args map[string]any) (string, 
 		}
 	}
 
-	// Create versioning record if versioning is enabled
-	if m.store.VersioningEnabled() {
-		if err := m.createPageVersioning(ctx, page); err != nil {
-			// Log error but don't fail the operation
-			// In a production environment, you might want to handle this differently
-		}
-	}
-
 	respBytes, err := json.Marshal(map[string]any{
 		"id":      page.ID(),
 		"title":   page.Title(),
+		"name":    page.Name(),
 		"content": page.Content(),
 		"status":  page.Status(),
 		"site_id": page.SiteID(),
