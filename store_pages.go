@@ -348,7 +348,8 @@ func (store *store) pageSelectQuery(options PageQueryInterface) (selectDataset *
 		sortOrder = options.SortOrder()
 	}
 
-	if options.HasOrderBy() {
+	// Do not apply ORDER BY to COUNT queries in Postgres.
+	if !options.IsCountOnly() && options.HasOrderBy() {
 		if strings.EqualFold(sortOrder, sb.ASC) {
 			q = q.Order(goqu.I(options.OrderBy()).Asc())
 		} else {

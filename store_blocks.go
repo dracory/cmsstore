@@ -385,7 +385,7 @@ func (store *store) blockSelectQuery(options BlockQueryInterface) (selectDataset
 		sortOrder = options.SortOrder()
 	}
 
-	if options.HasOrderBy() && options.OrderBy() != "" {
+	if !options.IsCountOnly() && options.HasOrderBy() && options.OrderBy() != "" {
 		if strings.EqualFold(sortOrder, sb.ASC) {
 			q = q.Order(goqu.I(options.OrderBy()).Asc())
 		} else {

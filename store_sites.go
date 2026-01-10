@@ -196,10 +196,17 @@ func (store *store) SiteList(ctx context.Context, query SiteQueryInterface) ([]S
 		return []SiteInterface{}, err
 	}
 
-	sqlStr, _, errSql := q.Select(columns...).ToSQL()
+	var sqlStr string
+	var params []interface{}
+	var errSql error
+	if len(columns) < 1 {
+		sqlStr, params, errSql = q.Select(goqu.Star()).ToSQL()
+	} else {
+		sqlStr, params, errSql = q.Select(columns...).ToSQL()
+	}
 
 	if errSql != nil {
-		return []SiteInterface{}, nil
+		return []SiteInterface{}, errSql
 	}
 
 	if store.debugEnabled {
@@ -210,7 +217,7 @@ func (store *store) SiteList(ctx context.Context, query SiteQueryInterface) ([]S
 		return []SiteInterface{}, errors.New("sitestore: database is nil")
 	}
 
-	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
+	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
 
 	if err != nil {
 		return []SiteInterface{}, err
@@ -352,11 +359,13 @@ func (store *store) siteSelectQuery(options SiteQueryInterface) (selectDataset *
 		sortOrder = options.SortOrder()
 	}
 
-	if options.HasOrderBy() {
+	// ORDER BY must NOT be applied to COUNT queries in Postgres, otherwise it can
+	// trigger: column "<table>.<col>" must appear in the GROUP BY clause...
+	if !options.IsCountOnly() && options.HasOrderBy() {
 		if strings.EqualFold(sortOrder, sb.ASC) {
-			q = q.Order(goqu.I(options.OrderBy()).Asc())
+			q = q.Order(goqu.C(options.OrderBy()).Asc())
 		} else {
-			q = q.Order(goqu.I(options.OrderBy()).Desc())
+			q = q.Order(goqu.C(options.OrderBy()).Desc())
 		}
 	}
 

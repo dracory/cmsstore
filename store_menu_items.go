@@ -421,7 +421,7 @@ func (store *store) menuItemSelectQuery(options MenuItemQueryInterface) (selectD
 		sortOrder = options.SortOrder()
 	}
 
-	if options.HasOrderBy() {
+	if !options.IsCountOnly() && options.HasOrderBy() {
 		if strings.EqualFold(sortOrder, sb.ASC) {
 			q = q.Order(goqu.I(options.OrderBy()).Asc())
 		} else {

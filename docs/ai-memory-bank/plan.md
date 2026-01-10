@@ -8,8 +8,9 @@ Based on the analysis of the project structure, database schema, store initializ
 
 ## [2026-01-10] Site Manager SQL GROUP BY Error Fix
 - [X] Investigated SQL error: "column 'snv_cms_site.created_at' must appear in the GROUP BY clause"
-- [X] Root cause: SiteCount function was calling siteSelectQuery which returned columns, then adding COUNT(*) created SQL conflict
-- [X] Fixed by modifying siteSelectQuery to not return columns when IsCountOnly() is true
+- [X] Root cause: Using goqu.I() instead of goqu.C() in ORDER BY clause was causing SQL syntax issues
+- [X] Fixed by changing goqu.I(options.OrderBy()) to goqu.C(options.OrderBy()) in siteSelectQuery
+- [X] Also fixed SiteList to handle empty columns properly by selecting "*" when no columns specified
 - [X] Maintained DRY principles by keeping SiteCount using siteSelectQuery
 - [X] Applied minimal fix to avoid breaking existing functionality
 
