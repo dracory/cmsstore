@@ -182,49 +182,6 @@ func (m *MCP) toolMenuUpsert(ctx context.Context, args map[string]any) (string, 
 	return string(respBytes), nil
 }
 
-// createMenuVersioning creates a versioning record for a menu if versioning is enabled
-func (m *MCP) createMenuVersioning(ctx context.Context, menu cmsstore.MenuInterface) error {
-	if !m.store.VersioningEnabled() {
-		return nil
-	}
-
-	if menu == nil {
-		return errors.New("menu is nil")
-	}
-
-	// Get last versioning to check if content has changed
-	lastVersioningList, err := m.store.VersioningList(ctx, cmsstore.NewVersioningQuery().
-		SetEntityType(cmsstore.VERSIONING_TYPE_MENU).
-		SetEntityID(menu.ID()).
-		SetOrderBy("created_at").
-		SetSortOrder("DESC").
-		SetLimit(1))
-
-	if err != nil {
-		return err
-	}
-
-	// Marshal menu content for versioning
-	content, err := menu.MarshalToVersioning()
-	if err != nil {
-		return err
-	}
-
-	// Check if last versioning has the same content
-	if len(lastVersioningList) > 0 {
-		lastVersioning := lastVersioningList[0]
-		if lastVersioning.Content() == content {
-			return nil // No change needed
-		}
-	}
-
-	// Create new versioning record
-	return m.store.VersioningCreate(ctx, cmsstore.NewVersioning().
-		SetEntityID(menu.ID()).
-		SetEntityType(cmsstore.VERSIONING_TYPE_MENU).
-		SetContent(content))
-}
-
 func (m *MCP) toolMenuDelete(ctx context.Context, args map[string]any) (string, error) {
 	id := argString(args, "id")
 	if strings.TrimSpace(id) == "" {
