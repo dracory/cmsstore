@@ -21,6 +21,7 @@ import (
 type frontend struct {
 	blockEditorRenderer func(blocks []ui.BlockInterface) string
 	logger              *slog.Logger
+	shortcodes          []cmsstore.ShortcodeInterface
 	store               cmsstore.StoreInterface
 	cacheEnabled        bool
 	cacheExpireSeconds  int
@@ -715,7 +716,12 @@ func (frontend *frontend) applyShortcodes(req *http.Request, content string) (st
 		return "", err
 	}
 
-	for _, shortcode := range frontend.store.Shortcodes() {
+	shortcodes := frontend.store.Shortcodes()
+	for _, shortcode := range frontend.shortcodes {
+		shortcodes = append(shortcodes, shortcode)
+	}
+
+	for _, shortcode := range shortcodes {
 		content = sh.RenderWithRequest(req, content, shortcode.Alias(), shortcode.Render)
 	}
 
