@@ -5,7 +5,6 @@ import (
 
 	"github.com/dracory/dataobject"
 	"github.com/dracory/sb"
-	"github.com/dracory/uid"
 	"github.com/dromara/carbon/v2"
 	"github.com/spf13/cast"
 )
@@ -26,7 +25,7 @@ var _ MenuItemInterface = (*menuItemImplementation)(nil)
 // NewMenuItem creates a new menu item with default values.
 func NewMenuItem() MenuItemInterface {
 	o := &menuItemImplementation{}
-	o.SetID(uid.HumanUid())
+	o.SetID(GenerateShortID())
 	o.SetMemo("")
 	o.SetMetas(map[string]string{})
 	o.SetName("")

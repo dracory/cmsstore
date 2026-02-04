@@ -24,11 +24,11 @@ func (m *MCP) toolTemplateGet(ctx context.Context, args map[string]any) (string,
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      template.ID(),
+		"id":      cmsstore.ShortenID(template.ID()),
 		"name":    template.Name(),
 		"content": template.Content(),
 		"status":  template.Status(),
-		"site_id": template.SiteID(),
+		"site_id": cmsstore.ShortenID(template.SiteID()),
 	})
 	if err != nil {
 		return "", err
@@ -78,11 +78,11 @@ func (m *MCP) toolTemplateList(ctx context.Context, args map[string]any) (string
 			continue
 		}
 		items = append(items, map[string]any{
-			"id":         template.ID(),
+			"id":         cmsstore.ShortenID(template.ID()),
 			"name":       template.Name(),
 			"handle":     template.Handle(),
 			"status":     template.Status(),
-			"site_id":    template.SiteID(),
+			"site_id":    cmsstore.ShortenID(template.SiteID()),
 			"created_at": template.CreatedAt(),
 			"updated_at": template.UpdatedAt(),
 		})
@@ -180,11 +180,11 @@ func (m *MCP) toolTemplateUpsert(ctx context.Context, args map[string]any) (stri
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      template.ID(),
+		"id":      cmsstore.ShortenID(template.ID()),
 		"name":    template.Name(),
 		"content": template.Content(),
 		"status":  template.Status(),
-		"site_id": template.SiteID(),
+		"site_id": cmsstore.ShortenID(template.SiteID()),
 	})
 	if err != nil {
 		return "", err
@@ -212,7 +212,7 @@ func (m *MCP) toolTemplateDelete(ctx context.Context, args map[string]any) (stri
 		}
 	}
 
-	respBytes, err := json.Marshal(map[string]any{"id": id})
+	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(id)})
 	if err != nil {
 		return "", err
 	}

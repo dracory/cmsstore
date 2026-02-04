@@ -162,6 +162,10 @@ func (store *storeImplementation) TemplateFindByID(ctx context.Context, id strin
 		return nil, errors.New("template id is empty")
 	}
 
+	// Normalize ID to lowercase for consistent lookups
+	id = NormalizeID(id)
+
+	// Try direct lookup first (handles both 9-char and 32-char IDs)
 	list, err := store.TemplateList(ctx, TemplateQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
@@ -170,6 +174,20 @@ func (store *storeImplementation) TemplateFindByID(ctx context.Context, id strin
 
 	if len(list) > 0 {
 		return list[0], nil
+	}
+
+	// If not found and ID looks shortened, try unshortening
+	if IsShortID(id) {
+		unshortenedID := UnshortenID(id)
+		if unshortenedID != id {
+			list, err = store.TemplateList(ctx, TemplateQuery().SetID(unshortenedID).SetLimit(1))
+			if err != nil {
+				return nil, err
+			}
+			if len(list) > 0 {
+				return list[0], nil
+			}
+		}
 	}
 
 	return nil, nil

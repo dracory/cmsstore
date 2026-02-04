@@ -5,7 +5,6 @@ import (
 
 	"github.com/dracory/dataobject"
 	"github.com/dracory/sb"
-	"github.com/dracory/uid"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -27,7 +26,7 @@ func NewTemplate() TemplateInterface {
 	o.SetContent("")
 	o.SetEditor("")
 	o.SetHandle("")
-	o.SetID(uid.HumanUid())
+	o.SetID(GenerateShortID())
 	o.SetMemo("")
 	o.SetMetas(map[string]string{})
 	o.SetName("")

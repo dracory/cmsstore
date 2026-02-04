@@ -6,7 +6,6 @@ import (
 
 	"github.com/dracory/dataobject"
 	"github.com/dracory/sb"
-	"github.com/dracory/uid"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -32,7 +31,7 @@ func NewPage() PageInterface {
 	o.SetContent("")
 	o.SetEditor("")
 	o.SetHandle("")
-	o.SetID(uid.HumanUid())
+	o.SetID(GenerateShortID())
 	o.SetMemo("")
 	o.SetMetaDescription("")
 	o.SetMetaKeywords("")

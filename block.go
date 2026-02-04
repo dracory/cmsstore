@@ -5,7 +5,6 @@ import (
 
 	"github.com/dracory/dataobject"
 	"github.com/dracory/sb"
-	"github.com/dracory/uid"
 	"github.com/dromara/carbon/v2"
 	"github.com/spf13/cast"
 )
@@ -28,7 +27,7 @@ func NewBlock() BlockInterface {
 	o.SetContent("")
 	o.SetEditor("")
 	o.SetHandle("")
-	o.SetID(uid.HumanUid())
+	o.SetID(GenerateShortID())
 	o.SetMemo("")
 	o.SetMetas(map[string]string{})
 	o.SetName("")

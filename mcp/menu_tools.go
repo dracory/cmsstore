@@ -24,7 +24,7 @@ func (m *MCP) toolMenuGet(ctx context.Context, args map[string]any) (string, err
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":     menu.ID(),
+		"id":     cmsstore.ShortenID(menu.ID()),
 		"name":   menu.Name(),
 		"status": menu.Status(),
 	})
@@ -76,11 +76,11 @@ func (m *MCP) toolMenuList(ctx context.Context, args map[string]any) (string, er
 			continue
 		}
 		items = append(items, map[string]any{
-			"id":         menu.ID(),
+			"id":         cmsstore.ShortenID(menu.ID()),
 			"name":       menu.Name(),
 			"handle":     menu.Handle(),
 			"status":     menu.Status(),
-			"site_id":    menu.SiteID(),
+			"site_id":    cmsstore.ShortenID(menu.SiteID()),
 			"created_at": menu.CreatedAt(),
 			"updated_at": menu.UpdatedAt(),
 		})
@@ -171,10 +171,10 @@ func (m *MCP) toolMenuUpsert(ctx context.Context, args map[string]any) (string, 
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      menu.ID(),
+		"id":      cmsstore.ShortenID(menu.ID()),
 		"name":    menu.Name(),
 		"handle":  menu.Handle(),
-		"site_id": menu.SiteID(),
+		"site_id": cmsstore.ShortenID(menu.SiteID()),
 	})
 	if err != nil {
 		return "", err
@@ -202,7 +202,7 @@ func (m *MCP) toolMenuDelete(ctx context.Context, args map[string]any) (string, 
 		}
 	}
 
-	respBytes, err := json.Marshal(map[string]any{"id": id})
+	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(id)})
 	if err != nil {
 		return "", err
 	}

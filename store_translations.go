@@ -183,6 +183,10 @@ func (store *storeImplementation) TranslationFindByID(ctx context.Context, id st
 		return nil, errors.New("translation id is empty")
 	}
 
+	// Normalize ID to lowercase for consistent lookups
+	id = NormalizeID(id)
+
+	// Try direct lookup first (handles both 9-char and 32-char IDs)
 	list, err := store.TranslationList(ctx, TranslationQuery().SetID(id).SetLimit(1))
 
 	if err != nil {
@@ -191,6 +195,20 @@ func (store *storeImplementation) TranslationFindByID(ctx context.Context, id st
 
 	if len(list) > 0 {
 		return list[0], nil
+	}
+
+	// If not found and ID looks shortened, try unshortening
+	if IsShortID(id) {
+		unshortenedID := UnshortenID(id)
+		if unshortenedID != id {
+			list, err = store.TranslationList(ctx, TranslationQuery().SetID(unshortenedID).SetLimit(1))
+			if err != nil {
+				return nil, err
+			}
+			if len(list) > 0 {
+				return list[0], nil
+			}
+		}
 	}
 
 	return nil, nil

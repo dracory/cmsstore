@@ -24,12 +24,12 @@ func (m *MCP) toolBlockGet(ctx context.Context, args map[string]any) (string, er
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      block.ID(),
+		"id":      cmsstore.ShortenID(block.ID()),
 		"type":    block.Type(),
 		"content": block.Content(),
 		"status":  block.Status(),
-		"site_id": block.SiteID(),
-		"page_id": block.PageID(),
+		"site_id": cmsstore.ShortenID(block.SiteID()),
+		"page_id": cmsstore.ShortenID(block.PageID()),
 	})
 	if err != nil {
 		return "", err
@@ -79,15 +79,15 @@ func (m *MCP) toolBlockList(ctx context.Context, args map[string]any) (string, e
 			continue
 		}
 		items = append(items, map[string]any{
-			"id":          block.ID(),
+			"id":          cmsstore.ShortenID(block.ID()),
 			"type":        block.Type(),
 			"name":        block.Name(),
 			"handle":      block.Handle(),
 			"status":      block.Status(),
-			"site_id":     block.SiteID(),
-			"page_id":     block.PageID(),
-			"template_id": block.TemplateID(),
-			"parent_id":   block.ParentID(),
+			"site_id":     cmsstore.ShortenID(block.SiteID()),
+			"page_id":     cmsstore.ShortenID(block.PageID()),
+			"template_id": cmsstore.ShortenID(block.TemplateID()),
+			"parent_id":   cmsstore.ShortenID(block.ParentID()),
 			"sequence":    block.Sequence(),
 			"created_at":  block.CreatedAt(),
 			"updated_at":  block.UpdatedAt(),
@@ -201,12 +201,12 @@ func (m *MCP) toolBlockUpsert(ctx context.Context, args map[string]any) (string,
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      block.ID(),
+		"id":      cmsstore.ShortenID(block.ID()),
 		"type":    block.Type(),
 		"content": block.Content(),
 		"status":  block.Status(),
-		"site_id": block.SiteID(),
-		"page_id": block.PageID(),
+		"site_id": cmsstore.ShortenID(block.SiteID()),
+		"page_id": cmsstore.ShortenID(block.PageID()),
 	})
 	if err != nil {
 		return "", err
@@ -234,7 +234,7 @@ func (m *MCP) toolBlockDelete(ctx context.Context, args map[string]any) (string,
 		}
 	}
 
-	respBytes, err := json.Marshal(map[string]any{"id": id})
+	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(id)})
 	if err != nil {
 		return "", err
 	}

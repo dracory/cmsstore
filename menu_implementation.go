@@ -6,7 +6,6 @@ import (
 
 	"github.com/dracory/dataobject"
 	"github.com/dracory/sb"
-	"github.com/dracory/uid"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -35,7 +34,7 @@ var _ MenuInterface = (*menuImplementation)(nil)
 func NewMenu() MenuInterface {
 	o := &menuImplementation{}
 	o.SetHandle("")
-	o.SetID(uid.HumanUid())
+	o.SetID(GenerateShortID())
 	o.SetMemo("")
 	o.SetMetas(map[string]string{})
 	o.SetName("")

@@ -113,7 +113,7 @@ func Test_TemplateUpdateController_Index_Success(t *testing.T) {
 		t.Fatalf("Failed to initialize controller: %v", err)
 	}
 
-	_, err = testutils.SeedTemplate(store, testutils.SITE_01, testutils.TEMPLATE_01)
+	seededTemplate, err := testutils.SeedTemplate(store, testutils.SITE_01, testutils.TEMPLATE_01)
 
 	if err != nil {
 		t.Fatalf("Failed to seed template: %v", err)
@@ -121,7 +121,7 @@ func Test_TemplateUpdateController_Index_Success(t *testing.T) {
 
 	body, response, err := test.CallStringEndpoint(http.MethodPost, handler, test.NewRequestOptions{
 		GetValues: url.Values{
-			"template_id": {testutils.TEMPLATE_01},
+			"template_id": {seededTemplate.ID()},
 			"view":        {VIEW_SETTINGS},
 		},
 	})
@@ -364,7 +364,7 @@ func Test_TemplateUpdateController_Index_Success_SettingsView(t *testing.T) { //
 		t.Fatalf("Failed to initialize controller: %v", err)
 	}
 
-	_, err = testutils.SeedTemplate(store, testutils.SITE_01, testutils.TEMPLATE_01)
+	seededTemplate, err := testutils.SeedTemplate(store, testutils.SITE_01, testutils.TEMPLATE_01)
 	if err != nil {
 		t.Fatalf("Failed to seed template: %v", err)
 	}
@@ -373,7 +373,7 @@ func Test_TemplateUpdateController_Index_Success_SettingsView(t *testing.T) { //
 	// Changed to GET as per original test
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
 		GetValues: url.Values{
-			"template_id": {testutils.TEMPLATE_01},
+			"template_id": {seededTemplate.ID()},
 			"view":        {VIEW_SETTINGS}, // Explicitly request settings view
 		},
 	})
@@ -406,7 +406,7 @@ func Test_TemplateUpdateController_Index_Success_ContentView(t *testing.T) { // 
 		t.Fatalf("Failed to initialize controller: %v", err)
 	}
 
-	_, err = testutils.SeedTemplate(store, testutils.SITE_01, testutils.TEMPLATE_01)
+	seededTemplate, err := testutils.SeedTemplate(store, testutils.SITE_01, testutils.TEMPLATE_01)
 	if err != nil {
 		t.Fatalf("Failed to seed template: %v", err)
 	}
@@ -415,7 +415,7 @@ func Test_TemplateUpdateController_Index_Success_ContentView(t *testing.T) { // 
 	// Changed to GET as per original test
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
 		GetValues: url.Values{
-			"template_id": {testutils.TEMPLATE_01},
+			"template_id": {seededTemplate.ID()},
 			// "view":        {VIEW_CONTENT}, // Default view
 		},
 	})

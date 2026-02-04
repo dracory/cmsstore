@@ -177,6 +177,10 @@ func (store *storeImplementation) MenuFindByID(ctx context.Context, id string) (
 		return nil, errors.New("menu id is empty")
 	}
 
+	// Normalize ID to lowercase for consistent lookups
+	id = NormalizeID(id)
+
+	// Try direct lookup first (handles both 9-char and 32-char IDs)
 	list, err := store.MenuList(ctx, MenuQuery().SetID(id).SetLimit(1))
 	if err != nil {
 		return nil, err
@@ -184,6 +188,20 @@ func (store *storeImplementation) MenuFindByID(ctx context.Context, id string) (
 
 	if len(list) > 0 {
 		return list[0], nil
+	}
+
+	// If not found and ID looks shortened, try unshortening
+	if IsShortID(id) {
+		unshortenedID := UnshortenID(id)
+		if unshortenedID != id {
+			list, err = store.MenuList(ctx, MenuQuery().SetID(unshortenedID).SetLimit(1))
+			if err != nil {
+				return nil, err
+			}
+			if len(list) > 0 {
+				return list[0], nil
+			}
+		}
 	}
 
 	return nil, nil

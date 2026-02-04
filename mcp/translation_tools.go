@@ -29,12 +29,12 @@ func (m *MCP) toolTranslationGet(ctx context.Context, args map[string]any) (stri
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      translation.ID(),
+		"id":      cmsstore.ShortenID(translation.ID()),
 		"name":    translation.Name(),
 		"handle":  translation.Handle(),
 		"content": content,
 		"status":  translation.Status(),
-		"site_id": translation.SiteID(),
+		"site_id": cmsstore.ShortenID(translation.SiteID()),
 	})
 	if err != nil {
 		return "", err
@@ -84,11 +84,11 @@ func (m *MCP) toolTranslationList(ctx context.Context, args map[string]any) (str
 			continue
 		}
 		items = append(items, map[string]any{
-			"id":         translation.ID(),
+			"id":         cmsstore.ShortenID(translation.ID()),
 			"name":       translation.Name(),
 			"handle":     translation.Handle(),
 			"status":     translation.Status(),
-			"site_id":    translation.SiteID(),
+			"site_id":    cmsstore.ShortenID(translation.SiteID()),
 			"created_at": translation.CreatedAt(),
 			"updated_at": translation.UpdatedAt(),
 		})
@@ -199,12 +199,12 @@ func (m *MCP) toolTranslationUpsert(ctx context.Context, args map[string]any) (s
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      translation.ID(),
+		"id":      cmsstore.ShortenID(translation.ID()),
 		"name":    translation.Name(),
 		"handle":  translation.Handle(),
 		"content": content,
 		"status":  translation.Status(),
-		"site_id": translation.SiteID(),
+		"site_id": cmsstore.ShortenID(translation.SiteID()),
 	})
 	if err != nil {
 		return "", err
@@ -232,7 +232,7 @@ func (m *MCP) toolTranslationDelete(ctx context.Context, args map[string]any) (s
 		}
 	}
 
-	respBytes, err := json.Marshal(map[string]any{"id": id})
+	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(id)})
 	if err != nil {
 		return "", err
 	}

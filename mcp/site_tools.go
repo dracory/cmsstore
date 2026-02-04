@@ -26,7 +26,7 @@ func (m *MCP) toolSiteGet(ctx context.Context, args map[string]any) (string, err
 	domains, _ := site.DomainNames()
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":          site.ID(),
+		"id":          cmsstore.ShortenID(site.ID()),
 		"name":        site.Name(),
 		"handle":      site.Handle(),
 		"domainNames": domains,
@@ -81,7 +81,7 @@ func (m *MCP) toolSiteList(ctx context.Context, args map[string]any) (string, er
 		}
 		domains, _ := s.DomainNames()
 		items = append(items, map[string]any{
-			"id":          s.ID(),
+			"id":          cmsstore.ShortenID(s.ID()),
 			"name":        s.Name(),
 			"handle":      s.Handle(),
 			"status":      s.Status(),
@@ -168,7 +168,7 @@ func (m *MCP) toolSiteUpsert(ctx context.Context, args map[string]any) (string, 
 	domains, _ := site.DomainNames()
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":          site.ID(),
+		"id":          cmsstore.ShortenID(site.ID()),
 		"name":        site.Name(),
 		"handle":      site.Handle(),
 		"status":      site.Status(),
@@ -200,7 +200,7 @@ func (m *MCP) toolSiteDelete(ctx context.Context, args map[string]any) (string, 
 		}
 	}
 
-	respBytes, err := json.Marshal(map[string]any{"id": id})
+	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(id)})
 	if err != nil {
 		return "", err
 	}

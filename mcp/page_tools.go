@@ -24,11 +24,11 @@ func (m *MCP) toolPageGet(ctx context.Context, args map[string]any) (string, err
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      page.ID(),
+		"id":      cmsstore.ShortenID(page.ID()),
 		"title":   page.Title(),
 		"content": page.Content(),
 		"status":  page.Status(),
-		"site_id": page.SiteID(),
+		"site_id": cmsstore.ShortenID(page.SiteID()),
 	})
 	if err != nil {
 		return "", err
@@ -56,7 +56,7 @@ func (m *MCP) toolPageDelete(ctx context.Context, args map[string]any) (string, 
 		}
 	}
 
-	respBytes, err := json.Marshal(map[string]any{"id": id})
+	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(id)})
 	if err != nil {
 		return "", err
 	}
@@ -111,14 +111,14 @@ func (m *MCP) toolPageList(ctx context.Context, args map[string]any) (string, er
 			continue
 		}
 		items = append(items, map[string]any{
-			"id":          p.ID(),
+			"id":          cmsstore.ShortenID(p.ID()),
 			"title":       p.Title(),
 			"name":        p.Name(),
 			"handle":      p.Handle(),
 			"alias":       p.Alias(),
 			"status":      p.Status(),
-			"site_id":     p.SiteID(),
-			"template_id": p.TemplateID(),
+			"site_id":     cmsstore.ShortenID(p.SiteID()),
+			"template_id": cmsstore.ShortenID(p.TemplateID()),
 			"created_at":  p.CreatedAt(),
 			"updated_at":  p.UpdatedAt(),
 		})
@@ -234,12 +234,12 @@ func (m *MCP) toolPageUpsert(ctx context.Context, args map[string]any) (string, 
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      page.ID(),
+		"id":      cmsstore.ShortenID(page.ID()),
 		"title":   page.Title(),
 		"name":    page.Name(),
 		"content": page.Content(),
 		"status":  page.Status(),
-		"site_id": page.SiteID(),
+		"site_id": cmsstore.ShortenID(page.SiteID()),
 	})
 	if err != nil {
 		return "", err

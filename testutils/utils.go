@@ -64,7 +64,6 @@ func InitStore(filepath string) (cmsstore.StoreInterface, error) {
 func SeedPage(store cmsstore.StoreInterface, siteID string, pageID string) (cmsstore.PageInterface, error) {
 	page := cmsstore.NewPage().
 		SetSiteID(siteID).
-		SetID(pageID).
 		SetName(pageID).
 		SetStatus(cmsstore.PAGE_STATUS_ACTIVE)
 
@@ -75,7 +74,6 @@ func SeedPage(store cmsstore.StoreInterface, siteID string, pageID string) (cmss
 
 func SeedSite(store cmsstore.StoreInterface, siteID string) (cmsstore.SiteInterface, error) {
 	site := cmsstore.NewSite().
-		SetID(siteID).
 		SetName(siteID).
 		SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 
@@ -86,7 +84,6 @@ func SeedSite(store cmsstore.StoreInterface, siteID string) (cmsstore.SiteInterf
 
 func SeedTemplate(store cmsstore.StoreInterface, siteID string, templateID string) (cmsstore.TemplateInterface, error) {
 	template := cmsstore.NewTemplate().
-		SetID(templateID).
 		SetSiteID(siteID).
 		SetName("Template" + templateID).
 		SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
