@@ -11,6 +11,7 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
+	_ "modernc.org/sqlite"
 )
 
 func initHandler(store cmsstore.StoreInterface) (func(w http.ResponseWriter, r *http.Request) string, error) {

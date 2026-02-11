@@ -13,6 +13,7 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
+	_ "modernc.org/sqlite"
 )
 
 func initUI(store cmsstore.StoreInterface) UiInterface {
