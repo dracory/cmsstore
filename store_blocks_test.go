@@ -264,7 +264,7 @@ func TestStoreBlockSoftDelete(t *testing.T) {
 	}
 }
 
-func TestStoreBlockDelete(t *testing.T) {
+func TestStoreBlockDeleteByID(t *testing.T) {
 	db := initDB(":memory:")
 
 	store, err := NewStore(NewStoreOptions{
@@ -315,6 +315,98 @@ func TestStoreBlockDelete(t *testing.T) {
 
 	if len(blockFindWithDeleted) != 0 {
 		t.Fatal("Block MUST be deleted, but it is not")
+	}
+}
+
+func TestStoreBlockCount(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_count",
+		PageTableName:      "page_table_count",
+		SiteTableName:      "site_table_count",
+		TemplateTableName:  "template_table_count",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	// Create 3 blocks
+	for i := 0; i < 3; i++ {
+		block := NewBlock().
+			SetSiteID("Site1").
+			SetStatus(PAGE_STATUS_ACTIVE)
+		err = store.BlockCreate(ctx, block)
+		if err != nil {
+			t.Fatal("unexpected error:", err)
+		}
+	}
+
+	count, err := store.BlockCount(ctx, BlockQuery().SetSiteID("Site1"))
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if count != 3 {
+		t.Fatalf("Expected count 3, got %d", count)
+	}
+
+	count, err = store.BlockCount(ctx, BlockQuery().SetSiteID("NonExistent"))
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if count != 0 {
+		t.Fatalf("Expected count 0, got %d", count)
+	}
+}
+
+func TestStoreBlockDelete(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_delete_op",
+		PageTableName:      "page_table_delete_op",
+		SiteTableName:      "site_table_delete_op",
+		TemplateTableName:  "template_table_delete_op",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	block := NewBlock().
+		SetSiteID("Site1").
+		SetStatus(PAGE_STATUS_ACTIVE).
+		SetHandle("delete-me")
+
+	err = store.BlockCreate(ctx, block)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	// Delete by entity
+	err = store.BlockDelete(ctx, block)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	found, err := store.BlockFindByHandle(ctx, "delete-me")
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if found != nil {
+		t.Fatal("Block should have been deleted")
 	}
 }
 

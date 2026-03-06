@@ -257,7 +257,7 @@ func TestStoreMenuSoftDelete(t *testing.T) {
 	}
 }
 
-func TestStoreMenuDelete(t *testing.T) {
+func TestStoreMenuDeleteByID(t *testing.T) {
 	db := initDB(":memory:")
 
 	store, err := NewStore(NewStoreOptions{
@@ -307,6 +307,95 @@ func TestStoreMenuDelete(t *testing.T) {
 
 	if len(menuFindWithDeleted) != 0 {
 		t.Fatal("Menu MUST be deleted, but it is not")
+	}
+}
+
+func TestStoreMenuCount(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_count",
+		PageTableName:      "page_table_count",
+		SiteTableName:      "site_table_count",
+		TemplateTableName:  "template_table_count",
+		MenusEnabled:       true,
+		MenuTableName:      "menu_table_count",
+		MenuItemTableName:  "menu_item_table_count",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	// Create 3 menus
+	for i := 0; i < 3; i++ {
+		menu := NewMenu().
+			SetSiteID("Site1").
+			SetStatus(PAGE_STATUS_ACTIVE)
+		err = store.MenuCreate(ctx, menu)
+		if err != nil {
+			t.Fatal("unexpected error:", err)
+		}
+	}
+
+	count, err := store.MenuCount(ctx, MenuQuery().SetSiteID("Site1"))
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if count != 3 {
+		t.Fatalf("Expected count 3, got %d", count)
+	}
+}
+
+func TestStoreMenuDelete(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_delete_op",
+		PageTableName:      "page_table_delete_op",
+		SiteTableName:      "site_table_delete_op",
+		TemplateTableName:  "template_table_delete_op",
+		MenusEnabled:       true,
+		MenuTableName:      "menu_table_delete_op",
+		MenuItemTableName:  "menu_item_table_delete_op",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	menu := NewMenu().
+		SetSiteID("Site1").
+		SetStatus(PAGE_STATUS_ACTIVE).
+		SetHandle("delete-me")
+
+	err = store.MenuCreate(ctx, menu)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	// Delete by entity
+	err = store.MenuDelete(ctx, menu)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	found, err := store.MenuFindByHandle(ctx, "delete-me")
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if found != nil {
+		t.Fatal("Menu should have been deleted")
 	}
 }
 

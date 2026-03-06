@@ -242,7 +242,7 @@ func TestStoreSiteSoftDelete(t *testing.T) {
 	}
 }
 
-func TestStoreSiteDelete(t *testing.T) {
+func TestStoreSiteDeleteByID(t *testing.T) {
 	db := initDB(":memory:")
 
 	store, err := NewStore(NewStoreOptions{
@@ -288,6 +288,140 @@ func TestStoreSiteDelete(t *testing.T) {
 
 	if len(siteFindWithDeleted) != 0 {
 		t.Fatal("Site MUST be deleted, but it is not")
+	}
+}
+
+func TestStoreSiteCount(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_count",
+		PageTableName:      "page_table_count",
+		SiteTableName:      "site_table_count",
+		TemplateTableName:  "template_table_count",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	// Create 3 sites
+	for i := 0; i < 3; i++ {
+		site := NewSite().
+			SetStatus(PAGE_STATUS_ACTIVE).
+			SetName(strings.Repeat("a", i+1))
+		err = store.SiteCreate(ctx, site)
+		if err != nil {
+			t.Fatal("unexpected error:", err)
+		}
+	}
+
+	count, err := store.SiteCount(ctx, SiteQuery().SetStatus(PAGE_STATUS_ACTIVE))
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if count != 3 {
+		t.Fatalf("Expected count 3, got %d", count)
+	}
+}
+
+func TestStoreSiteDelete(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_delete_op",
+		PageTableName:      "page_table_delete_op",
+		SiteTableName:      "site_table_delete_op",
+		TemplateTableName:  "template_table_delete_op",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	site := NewSite().
+		SetStatus(PAGE_STATUS_ACTIVE).
+		SetHandle("delete-me")
+
+	err = store.SiteCreate(ctx, site)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	// Delete by entity
+	err = store.SiteDelete(ctx, site)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	found, err := store.SiteFindByHandle(ctx, "delete-me")
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if found != nil {
+		t.Fatal("Site should have been deleted")
+	}
+}
+
+func TestStoreSiteFindByDomainName(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_find_by_domain",
+		PageTableName:      "page_table_find_by_domain",
+		SiteTableName:      "site_table_find_by_domain",
+		TemplateTableName:  "template_table_find_by_domain",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	site := NewSite().
+		SetStatus(PAGE_STATUS_ACTIVE)
+	_, err = site.SetDomainNames([]string{"example.com"})
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	err = store.SiteCreate(ctx, site)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	found, err := store.SiteFindByDomainName(ctx, "example.com")
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if found == nil {
+		t.Fatal("Site should have been found")
+	}
+
+	domainNames, _ := found.DomainNames()
+	foundDomain := false
+	for _, d := range domainNames {
+		if d == "example.com" {
+			foundDomain = true
+			break
+		}
+	}
+	if !foundDomain {
+		t.Fatalf("Expected domain example.com, got %v", domainNames)
 	}
 }
 

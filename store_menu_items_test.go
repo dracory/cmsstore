@@ -182,7 +182,7 @@ func TestStoreMenuItemSoftDelete(t *testing.T) {
 	}
 }
 
-func TestStoreMenuItemDelete(t *testing.T) {
+func TestStoreMenuItemDeleteByID(t *testing.T) {
 	db := initDB(":memory:")
 
 	store, err := NewStore(NewStoreOptions{
@@ -234,6 +234,98 @@ func TestStoreMenuItemDelete(t *testing.T) {
 
 	if len(menuItemFindWithDeleted) != 0 {
 		t.Fatal("MenuItem MUST be deleted, but it is not")
+	}
+}
+
+func TestStoreMenuItemCount(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_count",
+		PageTableName:      "page_table_count",
+		SiteTableName:      "site_table_count",
+		TemplateTableName:  "template_table_count",
+		MenusEnabled:       true,
+		MenuTableName:      "menu_table_count",
+		MenuItemTableName:  "menu_item_table_count",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	// Create 3 menu items
+	for i := 0; i < 3; i++ {
+		menuItem := NewMenuItem().
+			SetMenuID("Menu1").
+			SetStatus(MENU_ITEM_STATUS_ACTIVE).
+			SetParentID("0").
+			SetSequence("0")
+		err = store.MenuItemCreate(ctx, menuItem)
+		if err != nil {
+			t.Fatal("unexpected error:", err)
+		}
+	}
+
+	count, err := store.MenuItemCount(ctx, MenuItemQuery().SetMenuID("Menu1"))
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if count != 3 {
+		t.Fatalf("Expected count 3, got %d", count)
+	}
+}
+
+func TestStoreMenuItemDelete(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_delete_op",
+		PageTableName:      "page_table_delete_op",
+		SiteTableName:      "site_table_delete_op",
+		TemplateTableName:  "template_table_delete_op",
+		MenusEnabled:       true,
+		MenuTableName:      "menu_table_delete_op",
+		MenuItemTableName:  "menu_item_table_delete_op",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	menuItem := NewMenuItem().
+		SetMenuID("Menu1").
+		SetStatus(MENU_ITEM_STATUS_ACTIVE).
+		SetParentID("0").
+		SetSequence("0")
+
+	err = store.MenuItemCreate(ctx, menuItem)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	// Delete by entity
+	err = store.MenuItemDelete(ctx, menuItem)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	found, err := store.MenuItemList(ctx, MenuItemQuery().SetID(menuItem.ID()))
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if len(found) != 0 {
+		t.Fatal("MenuItem should have been deleted")
 	}
 }
 

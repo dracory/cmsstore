@@ -245,7 +245,7 @@ func TestStorePageSoftDelete(t *testing.T) {
 	}
 }
 
-func TestStorePageDelete(t *testing.T) {
+func TestStorePageDeleteByID(t *testing.T) {
 	db := initDB(":memory:")
 
 	store, err := NewStore(NewStoreOptions{
@@ -292,6 +292,89 @@ func TestStorePageDelete(t *testing.T) {
 
 	if len(pageFindWithDeleted) != 0 {
 		t.Fatal("Page MUST be deleted, but it is not")
+	}
+}
+
+func TestStorePageCount(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_count",
+		PageTableName:      "page_table_count",
+		SiteTableName:      "site_table_count",
+		TemplateTableName:  "template_table_count",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	// Create 3 pages
+	for i := 0; i < 3; i++ {
+		page := NewPage().
+			SetSiteID("Site1").
+			SetStatus(PAGE_STATUS_ACTIVE)
+		err = store.PageCreate(ctx, page)
+		if err != nil {
+			t.Fatal("unexpected error:", err)
+		}
+	}
+
+	count, err := store.PageCount(ctx, PageQuery().SetSiteID("Site1"))
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if count != 3 {
+		t.Fatalf("Expected count 3, got %d", count)
+	}
+}
+
+func TestStorePageDelete(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		BlockTableName:     "block_table_delete_op",
+		PageTableName:      "page_table_delete_op",
+		SiteTableName:      "site_table_delete_op",
+		TemplateTableName:  "template_table_delete_op",
+		AutomigrateEnabled: true,
+	})
+
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	ctx := context.Background()
+
+	page := NewPage().
+		SetSiteID("Site1").
+		SetStatus(PAGE_STATUS_ACTIVE).
+		SetHandle("delete-me")
+
+	err = store.PageCreate(ctx, page)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	// Delete by entity
+	err = store.PageDelete(ctx, page)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+
+	found, err := store.PageFindByHandle(ctx, "delete-me")
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+		t.Fatal("unexpected error:", err)
+	}
+
+	if found != nil {
+		t.Fatal("Page should have been deleted")
 	}
 }
 

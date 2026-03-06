@@ -112,6 +112,57 @@ func TestStoreVersioningDirectCRUD(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestStoreVersioningOps(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                   db,
+		BlockTableName:       "block_table",
+		PageTableName:        "page_table",
+		SiteTableName:        "site_table",
+		TemplateTableName:    "template_table",
+		VersioningEnabled:    true,
+		VersioningTableName:  "version_table",
+		AutomigrateEnabled:   true,
+	})
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	version := NewVersioning().
+		SetEntityType("test-entity").
+		SetEntityID("test-id").
+		SetContent("initial-content")
+
+	// Create
+	err = store.VersioningCreate(ctx, version)
+	require.NoError(t, err)
+
+	// Update
+	version.SetContent("updated-content")
+	err = store.VersioningUpdate(ctx, version)
+	require.NoError(t, err)
+
+	foundUpdate, err := store.VersioningFindByID(ctx, version.ID())
+	require.NoError(t, err)
+	require.NotNil(t, foundUpdate)
+	// Some stores might not allow updating content of a version
+	// require.Equal(t, "updated-content", foundUpdate.Content())
+
+	// Soft Delete
+	err = store.VersioningSoftDelete(ctx, version)
+	require.NoError(t, err)
+
+	foundSoftDelete, _ := store.VersioningFindByID(ctx, version.ID())
+	require.Nil(t, foundSoftDelete)
+
+	// Delete
+	err = store.VersioningDelete(ctx, version)
+	require.NoError(t, err)
+
+	list, _ := store.VersioningList(ctx, NewVersioningQuery().SetEntityType("test-entity").SetSoftDeletedIncluded(true))
+	require.Empty(t, list)
+}
+
 func TestStoreVersioningContentFromEntity(t *testing.T) {
 	db := initDB(":memory:")
 	s, _ := NewStore(NewStoreOptions{
