@@ -7,6 +7,8 @@ type PageQueryInterface interface {
 
 	// Columns returns the list of columns to be queried.
 	Columns() []string
+	// HasColumns checks if the columns are set.
+	HasColumns() bool
 	// SetColumns sets the list of columns to be queried.
 	SetColumns(columns []string) PageQueryInterface
 

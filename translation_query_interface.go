@@ -4,6 +4,7 @@ type TranslationQueryInterface interface {
 	Validate() error
 
 	Columns() []string
+	HasColumns() bool
 	SetColumns(columns []string) TranslationQueryInterface
 
 	HasCountOnly() bool

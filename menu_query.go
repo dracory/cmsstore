@@ -75,6 +75,11 @@ func (q *menuQuery) Columns() []string {
 	return q.properties[propertyKeyColumns].([]string)
 }
 
+// HasColumns checks if the columns property is set.
+func (q *menuQuery) HasColumns() bool {
+	return q.hasProperty(propertyKeyColumns)
+}
+
 // SetColumns sets the list of columns to be queried.
 func (q *menuQuery) SetColumns(columns []string) MenuQueryInterface {
 	q.properties[propertyKeyColumns] = columns

@@ -5,6 +5,7 @@ type BlockQueryInterface interface {
 
 	IsCountOnly() bool
 
+	HasColumns() bool
 	Columns() []string
 	SetColumns(columns []string) BlockQueryInterface
 
@@ -47,6 +48,8 @@ type BlockQueryInterface interface {
 	TemplateID() string
 
 	SetCountOnly(countOnly bool) BlockQueryInterface
+	SetCreatedAtGte(createdAtGte string) BlockQueryInterface
+	SetCreatedAtLte(createdAtLte string) BlockQueryInterface
 	SetID(id string) BlockQueryInterface
 	SetIDIn(idIn []string) BlockQueryInterface
 	SetHandle(handle string) BlockQueryInterface

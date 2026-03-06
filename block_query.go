@@ -62,6 +62,10 @@ func (q *blockQuery) Columns() []string {
 	return q.properties[propertyKeyColumns].([]string)
 }
 
+func (q *blockQuery) HasColumns() bool {
+	return q.hasProperty(propertyKeyColumns)
+}
+
 func (q *blockQuery) SetColumns(columns []string) BlockQueryInterface {
 	q.properties[propertyKeyColumns] = columns
 	return q
@@ -221,6 +225,16 @@ func (q *blockQuery) StatusIn() []string {
 
 func (q *blockQuery) TemplateID() string {
 	return q.properties[propertyKeyTemplateID].(string)
+}
+
+func (q *blockQuery) SetCreatedAtGte(createdAtGte string) BlockQueryInterface {
+	q.properties[propertyKeyCreatedAtGte] = createdAtGte
+	return q
+}
+
+func (q *blockQuery) SetCreatedAtLte(createdAtLte string) BlockQueryInterface {
+	q.properties[propertyKeyCreatedAtLte] = createdAtLte
+	return q
 }
 
 func (q *blockQuery) SetCountOnly(countOnly bool) BlockQueryInterface {

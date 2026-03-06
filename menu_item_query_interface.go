@@ -8,6 +8,8 @@ type MenuItemQueryInterface interface {
 
 	// Columns returns the columns to be returned in the query.
 	Columns() []string
+	// HasColumns checks if the columns are set.
+	HasColumns() bool
 	// SetColumns sets the columns to be returned in the query.
 	SetColumns(columns []string) MenuItemQueryInterface
 

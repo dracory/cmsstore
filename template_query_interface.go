@@ -4,6 +4,7 @@ type TemplateQueryInterface interface {
 	Validate() error
 
 	Columns() []string
+	HasColumns() bool
 	SetColumns(columns []string) TemplateQueryInterface
 
 	HasCountOnly() bool

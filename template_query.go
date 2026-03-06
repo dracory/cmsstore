@@ -70,6 +70,10 @@ func (q *templateQuery) Columns() []string {
 	return q.properties[propertyKeyColumns].([]string)
 }
 
+func (q *templateQuery) HasColumns() bool {
+	return q.hasProperty(propertyKeyColumns)
+}
+
 func (q *templateQuery) SetColumns(columns []string) TemplateQueryInterface {
 	q.properties[propertyKeyColumns] = columns
 	return q

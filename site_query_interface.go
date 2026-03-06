@@ -7,6 +7,8 @@ type SiteQueryInterface interface {
 
 	// Columns returns the list of columns to be selected in the query.
 	Columns() []string
+	// HasColumns checks if the columns are set.
+	HasColumns() bool
 	// SetColumns sets the list of columns to be selected in the query.
 	SetColumns(columns []string) SiteQueryInterface
 

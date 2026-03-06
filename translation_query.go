@@ -78,6 +78,10 @@ func (q *translationQuery) Columns() []string {
 	return q.properties[propertyKeyColumns].([]string)
 }
 
+func (q *translationQuery) HasColumns() bool {
+	return q.hasProperty(propertyKeyColumns)
+}
+
 func (q *translationQuery) SetColumns(columns []string) TranslationQueryInterface {
 	q.properties[propertyKeyColumns] = columns
 	return q

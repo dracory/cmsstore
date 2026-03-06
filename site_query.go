@@ -97,6 +97,11 @@ func (q *siteQuery) Columns() []string {
 	return q.parameters[propertyKeyColumns].([]string)
 }
 
+// HasColumns checks if the columns parameter is set.
+func (q *siteQuery) HasColumns() bool {
+	return q.hasParameter(propertyKeyColumns)
+}
+
 // SetColumns sets the list of columns for the query.
 func (q *siteQuery) SetColumns(columns []string) SiteQueryInterface {
 	q.parameters[propertyKeyColumns] = columns
