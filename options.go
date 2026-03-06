@@ -27,6 +27,9 @@ func WithTransaction(tx *sql.Tx) Option {
 // WithDryRun sets the dry run flag for the CMS store operations.
 func WithDryRun(dryRun bool) Option {
 	return func(o *Options) {
+		if o.params == nil {
+			o.params = make(map[string]any)
+		}
 		o.params["dryRun"] = dryRun
 	}
 }
@@ -34,6 +37,9 @@ func WithDryRun(dryRun bool) Option {
 // WithContext sets the context for the CMS store operations.
 func WithContext(ctx context.Context) Option {
 	return func(o *Options) {
+		if o.params == nil {
+			o.params = make(map[string]any)
+		}
 		o.params["ctx"] = ctx
 	}
 }
