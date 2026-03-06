@@ -80,3 +80,55 @@ func TestTranslationSoftDeleteBehaviour(t *testing.T) {
     require.True(t, translation.IsSoftDeleted(), "Translation should be marked as soft deleted when past timestamp is set")
     require.Equal(t, past.ToDateTimeString(carbon.UTC), translation.SoftDeletedAt())
 }
+
+func TestNewTranslationFromExistingData(t *testing.T) {
+    data := map[string]string{
+        COLUMN_ID:      "test-id",
+        COLUMN_NAME:    "test-name",
+        COLUMN_STATUS:  PAGE_STATUS_ACTIVE,
+        COLUMN_CONTENT: "{\"en\":\"Hello\"}",
+    }
+
+    translation := NewTranslationFromExistingData(data)
+
+    require.Equal(t, "test-id", translation.ID())
+    require.Equal(t, "test-name", translation.Name())
+    require.Equal(t, PAGE_STATUS_ACTIVE, translation.Status())
+    
+    content, err := translation.Content()
+    require.NoError(t, err)
+    require.Equal(t, "Hello", content["en"])
+}
+
+func TestTranslationStatusChecks(t *testing.T) {
+    translation := NewTranslation()
+    
+    translation.SetStatus(PAGE_STATUS_ACTIVE)
+    require.True(t, translation.IsActive())
+    require.False(t, translation.IsInactive())
+
+    translation.SetStatus(PAGE_STATUS_INACTIVE)
+    require.False(t, translation.IsActive())
+    require.True(t, translation.IsInactive())
+}
+
+func TestTranslationSettersGetters(t *testing.T) {
+    translation := NewTranslation()
+
+    translation.SetHandle("test-handle")
+    require.Equal(t, "test-handle", translation.Handle())
+
+    translation.SetMemo("test-memo")
+    require.Equal(t, "test-memo", translation.Memo())
+
+    translation.SetName("test-name")
+    require.Equal(t, "test-name", translation.Name())
+
+    translation.SetSiteID("test-site")
+    require.Equal(t, "test-site", translation.SiteID())
+
+    translation.SetUpdatedAt("2023-01-01 12:00:00")
+    require.Equal(t, "2023-01-01 12:00:00", translation.UpdatedAt())
+    require.NotNil(t, translation.UpdatedAtCarbon())
+}
+

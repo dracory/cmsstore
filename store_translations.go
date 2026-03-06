@@ -402,8 +402,10 @@ func (store *storeImplementation) translationSelectQuery(options TranslationQuer
 
 	if options.HasHandleOrID() {
 		q = q.Where(
-			goqu.C(COLUMN_HANDLE).Eq(options.HandleOrID()),
-			goqu.C(COLUMN_ID).Eq(options.HandleOrID()),
+			goqu.Or(
+				goqu.C(COLUMN_HANDLE).Eq(options.HandleOrID()),
+				goqu.C(COLUMN_ID).Eq(options.HandleOrID()),
+			),
 		)
 	}
 
