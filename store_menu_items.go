@@ -42,7 +42,7 @@ func (store *storeImplementation) MenuItemCount(ctx context.Context, options Men
 		ToSQL()
 
 	if errSql != nil {
-		return -1, nil
+		return -1, errSql
 	}
 
 	// Log the SQL query if debug is enabled
@@ -254,7 +254,7 @@ func (store *storeImplementation) MenuItemList(ctx context.Context, query MenuIt
 	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 
 	if errSql != nil {
-		return []MenuItemInterface{}, nil
+		return []MenuItemInterface{}, errSql
 	}
 
 	// Log the SQL query if debug is enabled

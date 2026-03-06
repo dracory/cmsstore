@@ -230,7 +230,7 @@ func (store *storeImplementation) BlockList(ctx context.Context, query BlockQuer
 	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 
 	if errSql != nil {
-		return []BlockInterface{}, nil
+		return []BlockInterface{}, errSql
 	}
 
 	if store.debugEnabled {

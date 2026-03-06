@@ -32,7 +32,7 @@ func (store *storeImplementation) MenuCount(ctx context.Context, options MenuQue
 		Select(goqu.COUNT(goqu.Star()).As("count")).
 		ToSQL()
 	if errSql != nil {
-		return -1, nil
+		return -1, errSql
 	}
 
 	if store.debugEnabled {
@@ -228,7 +228,7 @@ func (store *storeImplementation) MenuList(ctx context.Context, query MenuQueryI
 
 	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 	if errSql != nil {
-		return []MenuInterface{}, nil
+		return []MenuInterface{}, errSql
 	}
 
 	if store.debugEnabled {

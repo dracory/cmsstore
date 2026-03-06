@@ -33,7 +33,7 @@ func (store *storeImplementation) TranslationCount(ctx context.Context, options 
 		ToSQL()
 
 	if errSql != nil {
-		return -1, nil
+		return -1, errSql
 	}
 
 	if store.debugEnabled {
@@ -260,7 +260,7 @@ func (store *storeImplementation) TranslationList(ctx context.Context, query Tra
 	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 
 	if errSql != nil {
-		return []TranslationInterface{}, nil
+		return []TranslationInterface{}, errSql
 	}
 
 	if store.debugEnabled {

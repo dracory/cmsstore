@@ -40,7 +40,7 @@ func initHandler() (func(w http.ResponseWriter, r *http.Request) string, cmsstor
 
 	return NewTemplateUpdateController(UI(shared.UiConfig{
 		Store:  store,
-		Logger: slog.New(slog.NewTextHandler(nil, nil)),
+		Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
 		Layout: shared.Layout,
 	})).Handler, store, nil
 }

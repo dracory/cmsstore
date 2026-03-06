@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
@@ -17,7 +18,7 @@ import (
 func initHandler(store cmsstore.StoreInterface) (func(w http.ResponseWriter, r *http.Request) string, error) {
 	return NewPageUpdateController(UI(shared.UiConfig{
 		Store:  store,
-		Logger: slog.New(slog.NewTextHandler(nil, nil)),
+		Logger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
 		Layout: shared.Layout,
 	})).Handler, nil
 }
