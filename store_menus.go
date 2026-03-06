@@ -20,6 +20,10 @@ func (store *storeImplementation) MenuCount(ctx context.Context, options MenuQue
 		return -1, errors.New("cms store: db is nil")
 	}
 
+	if !store.menusEnabled {
+		return -1, errors.New("menus are disabled")
+	}
+
 	options.SetCountOnly(true)
 
 	q, _, err := store.menuSelectQuery(options)

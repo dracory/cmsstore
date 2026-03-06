@@ -19,6 +19,10 @@ func (store *storeImplementation) TranslationCount(ctx context.Context, options 
 		return -1, errors.New("cms store: db is nil")
 	}
 
+	if !store.translationsEnabled {
+		return -1, errors.New("translations are disabled")
+	}
+
 	options.SetCountOnly(true)
 
 	q, _, err := store.translationSelectQuery(options)
@@ -249,6 +253,10 @@ func (store *storeImplementation) TranslationLanguages() map[string]string {
 func (store *storeImplementation) TranslationList(ctx context.Context, query TranslationQueryInterface) ([]TranslationInterface, error) {
 	if store.db == nil {
 		return []TranslationInterface{}, errors.New("cmsstore: database is nil")
+	}
+
+	if !store.translationsEnabled {
+		return []TranslationInterface{}, errors.New("translations are disabled")
 	}
 
 	q, columns, err := store.translationSelectQuery(query)
