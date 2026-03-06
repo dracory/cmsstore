@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStoreTemplateCreate(t *testing.T) {
@@ -376,6 +377,67 @@ func TestStoreTemplateDelete(t *testing.T) {
 	if found != nil {
 		t.Fatal("Template should have been deleted")
 	}
+}
+
+func TestStoreTemplateErrorPaths(t *testing.T) {
+	ctx := context.Background()
+	
+	// Test with nil DB
+	store := &storeImplementation{db: nil}
+	
+	_, err := store.TemplateCount(ctx, TemplateQuery())
+	require.Error(t, err)
+	
+	err = store.TemplateCreate(ctx, NewTemplate())
+	require.Error(t, err)
+
+	err = store.TemplateDelete(ctx, NewTemplate())
+	require.Error(t, err)
+
+	err = store.TemplateDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.TemplateFindByHandle(ctx, "handle")
+	require.Error(t, err)
+
+	_, err = store.TemplateFindByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.TemplateList(ctx, TemplateQuery())
+	require.Error(t, err)
+
+	err = store.TemplateSoftDelete(ctx, NewTemplate())
+	require.Error(t, err)
+
+	err = store.TemplateSoftDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	err = store.TemplateUpdate(ctx, NewTemplate())
+	require.Error(t, err)
+
+	// Test with nil entity
+	store.db = initDB(":memory:")
+	err = store.TemplateCreate(ctx, nil)
+	require.Error(t, err)
+
+	err = store.TemplateDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.TemplateSoftDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.TemplateUpdate(ctx, nil)
+	require.Error(t, err)
+
+	// Test with empty ID/handle
+	_, err = store.TemplateFindByHandle(ctx, "")
+	require.Error(t, err)
+
+	_, err = store.TemplateFindByID(ctx, "")
+	require.Error(t, err)
+
+	err = store.TemplateDeleteByID(ctx, "")
+	require.Error(t, err)
 }
 
 func TestStoreTemplateUpdate(t *testing.T) {

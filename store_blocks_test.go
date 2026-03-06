@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStoreBlockCreate(t *testing.T) {
@@ -408,6 +409,84 @@ func TestStoreBlockDelete(t *testing.T) {
 	if found != nil {
 		t.Fatal("Block should have been deleted")
 	}
+}
+
+func TestStoreBlockErrorPaths(t *testing.T) {
+	ctx := context.Background()
+	
+	// Test with nil DB
+	store := &storeImplementation{db: nil}
+	
+	_, err := store.BlockCount(ctx, BlockQuery())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "db is nil")
+
+	err = store.BlockCreate(ctx, NewBlock())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "database is nil")
+
+	err = store.BlockDelete(ctx, NewBlock())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "database is nil")
+
+	err = store.BlockDeleteByID(ctx, "id")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "database is nil")
+
+	_, err = store.BlockFindByHandle(ctx, "handle")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "database is nil")
+
+	_, err = store.BlockFindByID(ctx, "id")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "database is nil")
+
+	_, err = store.BlockList(ctx, BlockQuery())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "database is nil")
+
+	err = store.BlockSoftDelete(ctx, NewBlock())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "database is nil")
+
+	err = store.BlockSoftDeleteByID(ctx, "id")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "database is nil")
+
+	err = store.BlockUpdate(ctx, NewBlock())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "database is nil")
+
+	// Test with nil entity
+	store.db = initDB(":memory:")
+	err = store.BlockCreate(ctx, nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "block is nil")
+
+	err = store.BlockDelete(ctx, nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "block is nil")
+
+	err = store.BlockSoftDelete(ctx, nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "block is nil")
+
+	err = store.BlockUpdate(ctx, nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "block is nil")
+
+	// Test with empty ID/handle
+	_, err = store.BlockFindByHandle(ctx, "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "block handle is empty")
+
+	_, err = store.BlockFindByID(ctx, "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "block id is empty")
+
+	err = store.BlockDeleteByID(ctx, "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "block id is empty")
 }
 
 func TestStoreBlockUpdate(t *testing.T) {

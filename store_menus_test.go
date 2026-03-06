@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStoreMenuCreate(t *testing.T) {
@@ -397,6 +398,67 @@ func TestStoreMenuDelete(t *testing.T) {
 	if found != nil {
 		t.Fatal("Menu should have been deleted")
 	}
+}
+
+func TestStoreMenuErrorPaths(t *testing.T) {
+	ctx := context.Background()
+	
+	// Test with nil DB
+	store := &storeImplementation{db: nil}
+	
+	_, err := store.MenuCount(ctx, MenuQuery())
+	require.Error(t, err)
+	
+	err = store.MenuCreate(ctx, NewMenu())
+	require.Error(t, err)
+
+	err = store.MenuDelete(ctx, NewMenu())
+	require.Error(t, err)
+
+	err = store.MenuDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.MenuFindByHandle(ctx, "handle")
+	require.Error(t, err)
+
+	_, err = store.MenuFindByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.MenuList(ctx, MenuQuery())
+	require.Error(t, err)
+
+	err = store.MenuSoftDelete(ctx, NewMenu())
+	require.Error(t, err)
+
+	err = store.MenuSoftDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	err = store.MenuUpdate(ctx, NewMenu())
+	require.Error(t, err)
+
+	// Test with nil entity
+	store.db = initDB(":memory:")
+	err = store.MenuCreate(ctx, nil)
+	require.Error(t, err)
+
+	err = store.MenuDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.MenuSoftDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.MenuUpdate(ctx, nil)
+	require.Error(t, err)
+
+	// Test with empty ID/handle
+	_, err = store.MenuFindByHandle(ctx, "")
+	require.Error(t, err)
+
+	_, err = store.MenuFindByID(ctx, "")
+	require.Error(t, err)
+
+	err = store.MenuDeleteByID(ctx, "")
+	require.Error(t, err)
 }
 
 func TestStoreMenuUpdate(t *testing.T) {

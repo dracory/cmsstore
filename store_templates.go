@@ -15,6 +15,10 @@ import (
 )
 
 func (store *storeImplementation) TemplateCount(ctx context.Context, options TemplateQueryInterface) (int64, error) {
+	if store.db == nil {
+		return -1, errors.New("cms store: db is nil")
+	}
+
 	options.SetCountOnly(true)
 
 	q, _, err := store.templateSelectQuery(options)
@@ -29,7 +33,7 @@ func (store *storeImplementation) TemplateCount(ctx context.Context, options Tem
 		ToSQL()
 
 	if errSql != nil {
-		return -1, nil
+		return -1, errSql
 	}
 
 	if store.debugEnabled {
@@ -114,6 +118,10 @@ func (store *storeImplementation) TemplateDelete(ctx context.Context, template T
 }
 
 func (store *storeImplementation) TemplateDeleteByID(ctx context.Context, id string) error {
+	if store.db == nil {
+		return errors.New("templatestore: database is nil")
+	}
+
 	if id == "" {
 		return errors.New("template id is empty")
 	}
@@ -203,7 +211,7 @@ func (store *storeImplementation) TemplateList(ctx context.Context, query Templa
 	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 
 	if errSql != nil {
-		return []TemplateInterface{}, nil
+		return []TemplateInterface{}, errSql
 	}
 
 	if store.debugEnabled {

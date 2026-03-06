@@ -112,6 +112,18 @@ func TestTranslationStatusChecks(t *testing.T) {
     require.True(t, translation.IsInactive())
 }
 
+func TestTranslationSetMeta(t *testing.T) {
+    translation := NewTranslation()
+
+    err := translation.SetMeta("key1", "value1")
+    require.NoError(t, err)
+    require.Equal(t, "value1", translation.Meta("key1"))
+
+    err = translation.SetMeta("key1", "value2")
+    require.NoError(t, err)
+    require.Equal(t, "value2", translation.Meta("key1"))
+}
+
 func TestTranslationSettersGetters(t *testing.T) {
     translation := NewTranslation()
 

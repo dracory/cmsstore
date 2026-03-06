@@ -16,6 +16,10 @@ import (
 
 // MenuCount returns the count of menus that match the provided query options.
 func (store *storeImplementation) MenuCount(ctx context.Context, options MenuQueryInterface) (int64, error) {
+	if store.db == nil {
+		return -1, errors.New("cms store: db is nil")
+	}
+
 	options.SetCountOnly(true)
 
 	q, _, err := store.menuSelectQuery(options)
@@ -117,6 +121,10 @@ func (store *storeImplementation) MenuDelete(ctx context.Context, menu MenuInter
 
 // MenuDeleteByID deletes a menu from the database by its ID.
 func (store *storeImplementation) MenuDeleteByID(ctx context.Context, id string) error {
+	if store.db == nil {
+		return errors.New("menustore: database is nil")
+	}
+
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}

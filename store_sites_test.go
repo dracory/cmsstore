@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStoreSiteCreate(t *testing.T) {
@@ -423,6 +424,73 @@ func TestStoreSiteFindByDomainName(t *testing.T) {
 	if !foundDomain {
 		t.Fatalf("Expected domain example.com, got %v", domainNames)
 	}
+}
+
+func TestStoreSiteErrorPaths(t *testing.T) {
+	ctx := context.Background()
+	
+	// Test with nil DB
+	store := &storeImplementation{db: nil}
+	
+	_, err := store.SiteCount(ctx, SiteQuery())
+	require.Error(t, err)
+	
+	err = store.SiteCreate(ctx, NewSite())
+	require.Error(t, err)
+
+	err = store.SiteDelete(ctx, NewSite())
+	require.Error(t, err)
+
+	err = store.SiteDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.SiteFindByDomainName(ctx, "domain")
+	require.Error(t, err)
+
+	_, err = store.SiteFindByHandle(ctx, "handle")
+	require.Error(t, err)
+
+	_, err = store.SiteFindByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.SiteList(ctx, SiteQuery())
+	require.Error(t, err)
+
+	err = store.SiteSoftDelete(ctx, NewSite())
+	require.Error(t, err)
+
+	err = store.SiteSoftDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	err = store.SiteUpdate(ctx, NewSite())
+	require.Error(t, err)
+
+	// Test with nil entity
+	store.db = initDB(":memory:")
+	err = store.SiteCreate(ctx, nil)
+	require.Error(t, err)
+
+	err = store.SiteDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.SiteSoftDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.SiteUpdate(ctx, nil)
+	require.Error(t, err)
+
+	// Test with empty ID/handle/domain
+	_, err = store.SiteFindByDomainName(ctx, "")
+	require.Error(t, err)
+
+	_, err = store.SiteFindByHandle(ctx, "")
+	require.Error(t, err)
+
+	_, err = store.SiteFindByID(ctx, "")
+	require.Error(t, err)
+
+	err = store.SiteDeleteByID(ctx, "")
+	require.Error(t, err)
 }
 
 func TestStoreSiteUpdate(t *testing.T) {

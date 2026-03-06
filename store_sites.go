@@ -15,6 +15,10 @@ import (
 )
 
 func (store *storeImplementation) SiteCount(ctx context.Context, options SiteQueryInterface) (int64, error) {
+	if store.db == nil {
+		return -1, errors.New("cms store: db is nil")
+	}
+
 	if options == nil {
 		return -1, errors.New("site options cannot be nil")
 	}

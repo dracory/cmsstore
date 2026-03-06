@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStorePageCreate(t *testing.T) {
@@ -376,6 +377,68 @@ func TestStorePageDelete(t *testing.T) {
 	if found != nil {
 		t.Fatal("Page should have been deleted")
 	}
+}
+
+func TestStorePageErrorPaths(t *testing.T) {
+	ctx := context.Background()
+	
+	// Test with nil DB
+	store := &storeImplementation{db: nil}
+	
+	_, err := store.PageCount(ctx, PageQuery())
+	require.Error(t, err)
+	// Some implementations might return different error messages, but should be error
+	
+	err = store.PageCreate(ctx, NewPage())
+	require.Error(t, err)
+
+	err = store.PageDelete(ctx, NewPage())
+	require.Error(t, err)
+
+	err = store.PageDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.PageFindByHandle(ctx, "handle")
+	require.Error(t, err)
+
+	_, err = store.PageFindByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.PageList(ctx, PageQuery())
+	require.Error(t, err)
+
+	err = store.PageSoftDelete(ctx, NewPage())
+	require.Error(t, err)
+
+	err = store.PageSoftDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	err = store.PageUpdate(ctx, NewPage())
+	require.Error(t, err)
+
+	// Test with nil entity
+	store.db = initDB(":memory:")
+	err = store.PageCreate(ctx, nil)
+	require.Error(t, err)
+
+	err = store.PageDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.PageSoftDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.PageUpdate(ctx, nil)
+	require.Error(t, err)
+
+	// Test with empty ID/handle
+	_, err = store.PageFindByHandle(ctx, "")
+	require.Error(t, err)
+
+	_, err = store.PageFindByID(ctx, "")
+	require.Error(t, err)
+
+	err = store.PageDeleteByID(ctx, "")
+	require.Error(t, err)
 }
 
 func TestStorePageUpdate(t *testing.T) {

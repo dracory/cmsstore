@@ -15,6 +15,10 @@ import (
 )
 
 func (store *storeImplementation) PageCount(ctx context.Context, options PageQueryInterface) (int64, error) {
+	if store.db == nil {
+		return -1, errors.New("cms store: db is nil")
+	}
+
 	options.SetCountOnly(true)
 
 	q, _, err := store.pageSelectQuery(options)
@@ -29,7 +33,7 @@ func (store *storeImplementation) PageCount(ctx context.Context, options PageQue
 		ToSQL()
 
 	if errSql != nil {
-		return -1, nil
+		return -1, errSql
 	}
 
 	// Fix SQLite compatibility: replace ILIKE with LIKE
@@ -115,6 +119,10 @@ func (store *storeImplementation) PageDelete(ctx context.Context, page PageInter
 }
 
 func (store *storeImplementation) PageDeleteByID(ctx context.Context, id string) error {
+	if store.db == nil {
+		return errors.New("pagestore: database is nil")
+	}
+
 	if id == "" {
 		return errors.New("page id is empty")
 	}
@@ -204,7 +212,7 @@ func (store *storeImplementation) PageList(ctx context.Context, query PageQueryI
 	sqlStr, _, errSql := q.Select(columns...).ToSQL()
 
 	if errSql != nil {
-		return []PageInterface{}, nil
+		return []PageInterface{}, errSql
 	}
 
 	if store.debugEnabled {

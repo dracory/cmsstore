@@ -135,6 +135,73 @@ func TestStoreTranslationFindByHandleOrID(t *testing.T) {
 	require.NotNil(t, found)
 }
 
+func TestStoreTranslationErrorPaths(t *testing.T) {
+	ctx := context.Background()
+	
+	// Test with nil DB
+	store := &storeImplementation{db: nil}
+	
+	_, err := store.TranslationCount(ctx, TranslationQuery())
+	require.Error(t, err)
+	
+	err = store.TranslationCreate(ctx, NewTranslation())
+	require.Error(t, err)
+
+	err = store.TranslationDelete(ctx, NewTranslation())
+	require.Error(t, err)
+
+	err = store.TranslationDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.TranslationFindByHandle(ctx, "handle")
+	require.Error(t, err)
+
+	_, err = store.TranslationFindByID(ctx, "id")
+	require.Error(t, err)
+
+	_, err = store.TranslationFindByHandleOrID(ctx, "handle-or-id", "en")
+	require.Error(t, err)
+
+	_, err = store.TranslationList(ctx, TranslationQuery())
+	require.Error(t, err)
+
+	err = store.TranslationSoftDelete(ctx, NewTranslation())
+	require.Error(t, err)
+
+	err = store.TranslationSoftDeleteByID(ctx, "id")
+	require.Error(t, err)
+
+	err = store.TranslationUpdate(ctx, NewTranslation())
+	require.Error(t, err)
+
+	// Test with nil entity
+	store.db = initDB(":memory:")
+	err = store.TranslationCreate(ctx, nil)
+	require.Error(t, err)
+
+	err = store.TranslationDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.TranslationSoftDelete(ctx, nil)
+	require.Error(t, err)
+
+	err = store.TranslationUpdate(ctx, nil)
+	require.Error(t, err)
+
+	// Test with empty ID/handle
+	_, err = store.TranslationFindByHandle(ctx, "")
+	require.Error(t, err)
+
+	_, err = store.TranslationFindByID(ctx, "")
+	require.Error(t, err)
+
+	_, err = store.TranslationFindByHandleOrID(ctx, "", "en")
+	require.Error(t, err)
+
+	err = store.TranslationDeleteByID(ctx, "")
+	require.Error(t, err)
+}
+
 func TestStoreTranslationUpdate(t *testing.T) {
 	db := initDB(":memory:")
 
