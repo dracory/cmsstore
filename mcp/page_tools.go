@@ -50,13 +50,15 @@ func (m *MCP) toolPageDelete(ctx context.Context, args map[string]any) (string, 
 		return "", errors.New("page not found")
 	}
 
+	// Try soft delete first
 	if err := m.store.PageSoftDeleteByID(ctx, id); err != nil {
+		// If soft delete fails, try hard delete
 		if err := m.store.PageDelete(ctx, page); err != nil {
 			return "", err
 		}
 	}
 
-	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(id)})
+	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(page.ID())})
 	if err != nil {
 		return "", err
 	}

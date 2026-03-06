@@ -32,6 +32,11 @@ func (store *storeImplementation) PageCount(ctx context.Context, options PageQue
 		return -1, nil
 	}
 
+	// Fix SQLite compatibility: replace ILIKE with LIKE
+	if isSQLite(store.dbDriverName) {
+		sqlStr = strings.ReplaceAll(sqlStr, " ILIKE ", " LIKE ")
+	}
+
 	if store.debugEnabled {
 		log.Println(sqlStr)
 	}
@@ -316,7 +321,11 @@ func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (s
 	}
 
 	if options.HasAliasLike() {
-		q = q.Where(goqu.C(COLUMN_ALIAS).ILike(options.AliasLike()))
+		if store.dbDriverName == "sqlite" {
+			q = q.Where(goqu.C(COLUMN_ALIAS).Like(options.AliasLike()))
+		} else {
+			q = q.Where(goqu.C(COLUMN_ALIAS).ILike(options.AliasLike()))
+		}
 	}
 
 	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
@@ -335,7 +344,11 @@ func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (s
 	}
 
 	if options.HasNameLike() {
-		q = q.Where(goqu.C(COLUMN_NAME).ILike(options.NameLike()))
+		if store.dbDriverName == "sqlite" {
+			q = q.Where(goqu.C(COLUMN_NAME).Like(options.NameLike()))
+		} else {
+			q = q.Where(goqu.C(COLUMN_NAME).ILike(options.NameLike()))
+		}
 	}
 
 	if options.HasID() {

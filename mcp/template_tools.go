@@ -40,7 +40,10 @@ func (m *MCP) toolTemplateList(ctx context.Context, args map[string]any) (string
 	q := cmsstore.TemplateQuery()
 
 	if v, ok := args["site_id"].(string); ok && strings.TrimSpace(v) != "" {
-		q.SetSiteID(v)
+		// Unshorten the site_id before setting it in the query
+		// The database stores full IDs, so we need to unshorten shortened IDs
+		siteID := cmsstore.UnshortenID(v)
+		q.SetSiteID(siteID)
 	}
 	if v, ok := args["status"].(string); ok && strings.TrimSpace(v) != "" {
 		q.SetStatus(v)

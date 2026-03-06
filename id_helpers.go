@@ -72,3 +72,8 @@ func UnshortenID(id string) string {
 	// If unshortening fails, return original
 	return id
 }
+
+// isSQLite checks if the database driver is SQLite (supports both "sqlite" and "sqlite3")
+func isSQLite(driverName string) bool {
+	return strings.Contains(strings.ToLower(driverName), "sqlite")
+}

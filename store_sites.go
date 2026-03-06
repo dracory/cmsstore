@@ -35,6 +35,11 @@ func (store *storeImplementation) SiteCount(ctx context.Context, options SiteQue
 		return -1, errSql
 	}
 
+	// Fix SQLite compatibility: replace ILIKE with LIKE
+	if isSQLite(store.dbDriverName) {
+		sqlStr = strings.ReplaceAll(sqlStr, " ILIKE ", " LIKE ")
+	}
+
 	if store.debugEnabled {
 		log.Println(sqlStr)
 	}
@@ -231,6 +236,11 @@ func (store *storeImplementation) SiteList(ctx context.Context, query SiteQueryI
 		return []SiteInterface{}, errSql
 	}
 
+	// Fix SQLite compatibility: replace ILIKE with LIKE
+	if isSQLite(store.dbDriverName) {
+		sqlStr = strings.ReplaceAll(sqlStr, " ILIKE ", " LIKE ")
+	}
+
 	if store.debugEnabled {
 		log.Println(sqlStr)
 	}
@@ -346,7 +356,11 @@ func (store *storeImplementation) siteSelectQuery(options SiteQueryInterface) (s
 	}
 
 	if options.HasDomainName() {
-		q = q.Where(goqu.C(COLUMN_DOMAIN_NAMES).ILike(`%"` + options.DomainName() + `"%`))
+		if store.dbDriverName == "sqlite" {
+			q = q.Where(goqu.C(COLUMN_DOMAIN_NAMES).Like(`%"` + options.DomainName() + `"%`))
+		} else {
+			q = q.Where(goqu.C(COLUMN_DOMAIN_NAMES).ILike(`%"` + options.DomainName() + `"%`))
+		}
 	}
 
 	if options.HasHandle() {
@@ -362,7 +376,11 @@ func (store *storeImplementation) siteSelectQuery(options SiteQueryInterface) (s
 	}
 
 	if options.HasNameLike() {
-		q = q.Where(goqu.C(COLUMN_NAME).ILike(`%` + options.NameLike() + `%`))
+		if store.dbDriverName == "sqlite" {
+			q = q.Where(goqu.C(COLUMN_NAME).Like(`%` + options.NameLike() + `%`))
+		} else {
+			q = q.Where(goqu.C(COLUMN_NAME).ILike(`%` + options.NameLike() + `%`))
+		}
 	}
 
 	if options.HasStatus() {

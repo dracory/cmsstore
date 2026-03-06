@@ -194,13 +194,15 @@ func (m *MCP) toolSiteDelete(ctx context.Context, args map[string]any) (string, 
 		return "", errors.New("site not found")
 	}
 
+	// Try soft delete first
 	if err := m.store.SiteSoftDeleteByID(ctx, id); err != nil {
+		// If soft delete fails, try hard delete
 		if err := m.store.SiteDelete(ctx, site); err != nil {
 			return "", err
 		}
 	}
 
-	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(id)})
+	respBytes, err := json.Marshal(map[string]any{"id": cmsstore.ShortenID(site.ID())})
 	if err != nil {
 		return "", err
 	}
