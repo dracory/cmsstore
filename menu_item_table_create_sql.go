@@ -65,6 +65,12 @@ func (st *storeImplementation) menuItemTableCreateSql() string {
 			Type:   sb.COLUMN_TYPE_STRING,
 			Length: 40,
 		}).
+		// Define the HANDLE column as a string with a length of 40
+		Column(sb.Column{
+			Name:   COLUMN_HANDLE,
+			Type:   sb.COLUMN_TYPE_STRING,
+			Length: 40,
+		}).
 		// Define the METAS column as a text field
 		Column(sb.Column{
 			Name: COLUMN_METAS,

@@ -38,6 +38,7 @@ func NewMenu() MenuInterface {
 	o.SetMemo("")
 	o.SetMetas(map[string]string{})
 	o.SetName("")
+	o.SetSiteID("")
 	o.SetStatus(MENU_STATUS_DRAFT)
 	o.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	o.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))

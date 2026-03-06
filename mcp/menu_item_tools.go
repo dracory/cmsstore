@@ -24,12 +24,19 @@ func (m *MCP) toolMenuItemGet(ctx context.Context, args map[string]any) (string,
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      menuItem.ID(),
-		"name":    menuItem.Name(),
-		"url":     menuItem.URL(),
-		"target":  menuItem.Target(),
-		"status":  menuItem.Status(),
-		"menu_id": menuItem.MenuID(),
+		"id":         menuItem.ID(),
+		"name":       menuItem.Name(),
+		"handle":     menuItem.Handle(),
+		"url":        menuItem.URL(),
+		"target":     menuItem.Target(),
+		"status":     menuItem.Status(),
+		"menu_id":    menuItem.MenuID(),
+		"page_id":    menuItem.PageID(),
+		"parent_id":  menuItem.ParentID(),
+		"memo":       menuItem.Memo(),
+		"sequence":   menuItem.Sequence(),
+		"created_at": menuItem.CreatedAt(),
+		"updated_at": menuItem.UpdatedAt(),
 	})
 	if err != nil {
 		return "", err
@@ -194,12 +201,19 @@ func (m *MCP) toolMenuItemUpsert(ctx context.Context, args map[string]any) (stri
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      menuItem.ID(),
-		"name":    menuItem.Name(),
-		"handle":  menuItem.Handle(),
-		"target":  menuItem.Target(),
-		"status":  menuItem.Status(),
-		"menu_id": menuItem.MenuID(),
+		"id":         menuItem.ID(),
+		"name":       menuItem.Name(),
+		"handle":     menuItem.Handle(),
+		"url":        menuItem.URL(),
+		"target":     menuItem.Target(),
+		"status":     menuItem.Status(),
+		"menu_id":    menuItem.MenuID(),
+		"page_id":    menuItem.PageID(),
+		"parent_id":  menuItem.ParentID(),
+		"memo":       menuItem.Memo(),
+		"sequence":   menuItem.Sequence(),
+		"created_at": menuItem.CreatedAt(),
+		"updated_at": menuItem.UpdatedAt(),
 	})
 	if err != nil {
 		return "", err

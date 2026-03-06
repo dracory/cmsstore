@@ -30,6 +30,7 @@ func NewTemplate() TemplateInterface {
 	o.SetMemo("")
 	o.SetMetas(map[string]string{})
 	o.SetName("")
+	o.SetSiteID("")
 	o.SetStatus(TEMPLATE_STATUS_DRAFT)
 	o.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	o.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
