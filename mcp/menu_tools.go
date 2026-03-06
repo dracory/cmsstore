@@ -24,9 +24,14 @@ func (m *MCP) toolMenuGet(ctx context.Context, args map[string]any) (string, err
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":     cmsstore.ShortenID(menu.ID()),
-		"name":   menu.Name(),
-		"status": menu.Status(),
+		"id":         cmsstore.ShortenID(menu.ID()),
+		"name":       menu.Name(),
+		"handle":     menu.Handle(),
+		"status":     menu.Status(),
+		"site_id":    cmsstore.ShortenID(menu.SiteID()),
+		"memo":       menu.Memo(),
+		"created_at": menu.CreatedAt(),
+		"updated_at": menu.UpdatedAt(),
 	})
 	if err != nil {
 		return "", err
@@ -174,7 +179,9 @@ func (m *MCP) toolMenuUpsert(ctx context.Context, args map[string]any) (string, 
 		"id":      cmsstore.ShortenID(menu.ID()),
 		"name":    menu.Name(),
 		"handle":  menu.Handle(),
+		"status":  menu.Status(),
 		"site_id": cmsstore.ShortenID(menu.SiteID()),
+		"memo":    menu.Memo(),
 	})
 	if err != nil {
 		return "", err
