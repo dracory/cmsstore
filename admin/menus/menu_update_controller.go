@@ -466,16 +466,17 @@ func (controller menuUpdateController) saveMenu(r *http.Request, data menuUpdate
 	}
 
 	if data.view == VIEW_MENU_ITEMS {
-		err := controller.saveMenuItems(data)
+		err := SaveMenuItems(data.request.Context(), controller.ui.Store(), data.menuID, data.formMenuItemsJSON, data.menuItemList)
 
 		if err != nil {
 			data.formErrorMessage = err.Error()
 			return data, ""
 		}
 
+		data.menu.SetMenuItemsJSON(data.formMenuItemsJSON)
 	}
 
-	err := controller.ui.Store().MenuUpdate(d.request.Context(), data.menu)
+	err := controller.ui.Store().MenuUpdate(data.request.Context(), data.menu)
 
 	if err != nil {
 		//config.LogStore.ErrorWithContext("At menuUpdateController > prepareDataAndValidate", err.Error())
@@ -492,100 +493,6 @@ func (controller menuUpdateController) saveMenu(r *http.Request, data menuUpdate
 	}
 
 	return data, ""
-}
-
-func (controller menuUpdateController) saveMenuItems(data menuUpdateControllerData) error {
-	tree, err := NewTreeFromJSON(data.formMenuItemsJSON)
-
-	if err != nil {
-		return err
-	}
-
-	menuItemNodes := tree.List()
-
-	idsToRemove := []string{}
-
-	for _, existingMenuItem := range data.menuItemList {
-		if !tree.Exists(existingMenuItem.ID()) {
-			idsToRemove = append(idsToRemove, existingMenuItem.ID())
-		}
-	}
-
-	for _, node := range menuItemNodes {
-		menuItem, err := controller.ui.Store().MenuItemFindByID(data.request.Context(), node.ID)
-
-		if err != nil {
-			return err
-		}
-
-		if menuItem == nil {
-			menuItem = cmsstore.NewMenuItem()
-			menuItem.SetID(node.ID)
-			menuItem.SetMenuID(data.menuID)
-			menuItem.SetName(node.Name)
-			menuItem.SetParentID(node.ParentID)
-			menuItem.SetSequenceInt(node.Sequence)
-			menuItem.SetPageID(node.PageID)
-			menuItem.SetURL(node.URL)
-			menuItem.SetTarget(node.Target)
-
-			err = controller.ui.Store().MenuItemCreate(data.request.Context(), menuItem)
-
-			if err != nil {
-				return err
-			}
-		}
-
-		if menuItem.Name() != node.Name {
-			menuItem.SetName(node.Name)
-		}
-
-		if menuItem.ParentID() != node.ParentID {
-			menuItem.SetParentID(node.ParentID)
-		}
-
-		if menuItem.SequenceInt() != node.Sequence {
-			menuItem.SetSequenceInt(node.Sequence)
-		}
-
-		if menuItem.PageID() != node.PageID {
-			menuItem.SetPageID(node.PageID)
-		}
-
-		if menuItem.URL() != node.URL {
-			menuItem.SetURL(node.URL)
-		}
-
-		if menuItem.Target() != node.Target {
-			menuItem.SetTarget(node.Target)
-		}
-
-		err = controller.ui.Store().MenuItemUpdate(data.request.Context(), menuItem)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, id := range idsToRemove {
-		menuItem, err := controller.ui.Store().MenuItemFindByID(data.request.Context(), id)
-
-		if err != nil {
-			return err
-		}
-
-		if menuItem == nil {
-			continue // nothing to do, menu item not found
-		}
-
-		err = controller.ui.Store().MenuItemSoftDelete(data.request.Context(), menuItem)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (controller menuUpdateController) prepareDataAndValidate(r *http.Request) (data menuUpdateControllerData, errorMessage string) {

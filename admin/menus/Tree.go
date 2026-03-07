@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"encoding/json"
 	"sort"
 
@@ -592,4 +593,98 @@ func menuItemToNode(menuItem cmsstore.MenuItemInterface) Node {
 		URL:      menuItem.URL(),
 		Target:   menuItem.Target(),
 	}
+}
+
+func SaveMenuItems(ctx context.Context, store cmsstore.StoreInterface, menuID string, menuItemsJSON string, existingMenuItems []cmsstore.MenuItemInterface) error {
+	tree, err := NewTreeFromJSON(menuItemsJSON)
+
+	if err != nil {
+		return err
+	}
+
+	menuItemNodes := tree.List()
+
+	idsToRemove := []string{}
+
+	for _, existingMenuItem := range existingMenuItems {
+		if !tree.Exists(existingMenuItem.ID()) {
+			idsToRemove = append(idsToRemove, existingMenuItem.ID())
+		}
+	}
+
+	for _, node := range menuItemNodes {
+		menuItem, err := store.MenuItemFindByID(ctx, node.ID)
+
+		if err != nil {
+			return err
+		}
+
+		if menuItem == nil {
+			menuItem = cmsstore.NewMenuItem()
+			menuItem.SetID(node.ID)
+			menuItem.SetMenuID(menuID)
+			menuItem.SetName(node.Name)
+			menuItem.SetParentID(node.ParentID)
+			menuItem.SetSequenceInt(node.Sequence)
+			menuItem.SetPageID(node.PageID)
+			menuItem.SetURL(node.URL)
+			menuItem.SetTarget(node.Target)
+
+			err = store.MenuItemCreate(ctx, menuItem)
+
+			if err != nil {
+				return err
+			}
+		}
+
+		if menuItem.Name() != node.Name {
+			menuItem.SetName(node.Name)
+		}
+
+		if menuItem.ParentID() != node.ParentID {
+			menuItem.SetParentID(node.ParentID)
+		}
+
+		if menuItem.SequenceInt() != node.Sequence {
+			menuItem.SetSequenceInt(node.Sequence)
+		}
+
+		if menuItem.PageID() != node.PageID {
+			menuItem.SetPageID(node.PageID)
+		}
+
+		if menuItem.URL() != node.URL {
+			menuItem.SetURL(node.URL)
+		}
+
+		if menuItem.Target() != node.Target {
+			menuItem.SetTarget(node.Target)
+		}
+
+		err = store.MenuItemUpdate(ctx, menuItem)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, id := range idsToRemove {
+		menuItem, err := store.MenuItemFindByID(ctx, id)
+
+		if err != nil {
+			return err
+		}
+
+		if menuItem == nil {
+			continue // nothing to do, menu item not found
+		}
+
+		err = store.MenuItemSoftDelete(ctx, menuItem)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

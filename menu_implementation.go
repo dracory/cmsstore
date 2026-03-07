@@ -100,6 +100,15 @@ func (o *menuImplementation) SetID(id string) MenuInterface {
 	return o
 }
 
+func (o *menuImplementation) MenuItemsJSON() string {
+	return o.Get(COLUMN_CONTENT)
+}
+
+func (o *menuImplementation) SetMenuItemsJSON(menuItemsJSON string) MenuInterface {
+	o.Set(COLUMN_CONTENT, menuItemsJSON)
+	return o
+}
+
 // Handle returns the human-friendly unique identifier of the menu.
 //
 // A handle is a human-friendly unique identifier for the menu, unlike the ID.
@@ -258,7 +267,7 @@ func (o *menuImplementation) UpdatedAtCarbon() *carbon.Carbon {
 
 // MarshalToVersioning marshals the menu data to a versioned JSON string, excluding timestamps and soft delete information.
 func (o *menuImplementation) MarshalToVersioning() (string, error) {
-	versionedData := map[string]string{}
+	versionedData := map[string]any{}
 
 	for k, v := range o.Data() {
 		if k == COLUMN_CREATED_AT ||

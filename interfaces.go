@@ -108,6 +108,9 @@ type MenuInterface interface {
 	ID() string
 	SetID(id string) MenuInterface
 
+	MenuItemsJSON() string
+	SetMenuItemsJSON(menuItemsJSON string) MenuInterface
+
 	Memo() string
 	SetMemo(memo string) MenuInterface
 
