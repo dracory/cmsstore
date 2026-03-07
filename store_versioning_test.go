@@ -175,14 +175,46 @@ func TestStoreVersioningContentFromEntity(t *testing.T) {
 	store := s.(*storeImplementation)
 
 	// Nil entity
-	_, err := store.versioningContentFromEntity(nil)
+	_, err := store.versioningContentFromEntity(nil, "")
 	require.Error(t, err)
 	require.Equal(t, "entity is nil", err.Error())
 
 	// Unsupported entity
-	_, err = store.versioningContentFromEntity("string-is-not-supported")
+	_, err = store.versioningContentFromEntity("string-is-not-supported", "")
 	require.Error(t, err)
 	require.Equal(t, "entity does not support versioning", err.Error())
+}
+
+func TestStoreVersioningUserID(t *testing.T) {
+	db := initDB(":memory:")
+
+	store, err := NewStore(NewStoreOptions{
+		DB:                  db,
+		BlockTableName:      "block_table",
+		PageTableName:       "page_table",
+		SiteTableName:       "site_table",
+		TemplateTableName:   "template_table",
+		VersioningEnabled:   true,
+		VersioningTableName: "version_table",
+		AutomigrateEnabled:  true,
+	})
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	page := NewPage().
+		SetSiteID("test-site").
+		SetTitle("Test UserID").
+		SetEditor("user-123")
+
+	err = store.PageCreate(ctx, page)
+	require.NoError(t, err)
+
+	versions, err := store.VersioningList(ctx, NewVersioningQuery().
+		SetEntityType(VERSIONING_TYPE_PAGE).
+		SetEntityID(page.ID()))
+	require.NoError(t, err)
+	require.Len(t, versions, 1)
+	require.Contains(t, versions[0].Content(), "\"_userID\":\"user-123\"")
 }
 
 func TestStoreVersioningEnabledDisabled(t *testing.T) {

@@ -112,7 +112,8 @@ The CMS store ensures atomic integrity between entity updates and version tracki
 
 1.  **Automatic Transactions**: Every `Create` and `Update` operation (e.g., `PageCreate`, `BlockUpdate`) is automatically wrapped in a database transaction if one is not already present in the context.
 2.  **Version Tracking**: The version record is created *within* the same transaction as the entity data. If versioning fails, the entire transaction (including the entity change) is rolled back.
-3.  **Manual Transactions**: You can participate in this transactional flow by providing your own `*sql.Tx` via `cmsstore.WithTransaction(tx)` or by wrapping a transaction in the context using `database.Context(ctx, tx)`. If a transaction is detected in the context, the store will use it instead of starting a new one, allowing you to group multiple CMS operations into a single atomic unit.
+3.  **Attribution (UserID)**: Version records automatically capture the identity of the editor. If the entity implements an `Editor()` method (as `Page`, `Block`, and `Template` do), the returned ID is stored within the version snapshot as `_userID`.
+4.  **Manual Transactions**: You can participate in this transactional flow by providing your own `*sql.Tx` via `cmsstore.WithTransaction(tx)` or by wrapping a transaction in the context using `database.Context(ctx, tx)`. If a transaction is detected in the context, the store will use it instead of starting a new one, allowing you to group multiple CMS operations into a single atomic unit.
 
 ## Entity Interfaces
 

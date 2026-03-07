@@ -21,28 +21,46 @@ type versioningDataInterface interface {
 	Data() map[string]string
 }
 
-func (store *storeImplementation) versioningContentFromEntity(entity any) (string, error) {
+type versioningEditorInterface interface {
+	Editor() string
+}
+
+func (store *storeImplementation) versioningContentFromEntity(entity any, userID string) (string, error) {
 	if entity == nil {
 		return "", errors.New("entity is nil")
 	}
 
-	if v, ok := entity.(versioningMarshalToInterface); ok {
-		return v.MarshalToVersioning()
+	if userID == "" {
+		if v, ok := entity.(versioningEditorInterface); ok {
+			userID = v.Editor()
+		}
 	}
 
-	d, ok := entity.(versioningDataInterface)
-	if !ok {
+	versionedData := map[string]any{}
+
+	if v, ok := entity.(versioningMarshalToInterface); ok {
+		content, err := v.MarshalToVersioning()
+		if err != nil {
+			return "", err
+		}
+		if err := json.Unmarshal([]byte(content), &versionedData); err != nil {
+			return "", err
+		}
+	} else if d, ok := entity.(versioningDataInterface); ok {
+		for k, v := range d.Data() {
+			if k == COLUMN_CREATED_AT ||
+				k == COLUMN_UPDATED_AT ||
+				k == COLUMN_SOFT_DELETED_AT {
+				continue
+			}
+			versionedData[k] = v
+		}
+	} else {
 		return "", errors.New("entity does not support versioning")
 	}
 
-	versionedData := map[string]string{}
-	for k, v := range d.Data() {
-		if k == COLUMN_CREATED_AT ||
-			k == COLUMN_UPDATED_AT ||
-			k == COLUMN_SOFT_DELETED_AT {
-			continue
-		}
-		versionedData[k] = v
+	if userID != "" {
+		versionedData["_userID"] = userID
 	}
 
 	b, err := json.Marshal(versionedData)
@@ -98,7 +116,7 @@ func (store *storeImplementation) versioningTrackEntity(ctx context.Context, ent
 		return nil
 	}
 
-	content, err := store.versioningContentFromEntity(entity)
+	content, err := store.versioningContentFromEntity(entity, "")
 	if err != nil {
 		return err
 	}
