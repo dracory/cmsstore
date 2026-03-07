@@ -99,21 +99,29 @@ erDiagram
 
 ## Database Schema
 
-The system uses a relational database with the following key tables:
-- `site` - Stores site information and configuration
-- `page` - Stores page content and metadata
-- `block` - Stores reusable content blocks (with optional page_id for page-specific blocks)
-- `menu` - Stores menu structures
-- `menu_item` - Stores menu items and their relationships
-- `template` - Stores page templates
-- `translation` - Stores multi-language content
+The system uses a relational database with a modular schema. While some tables are required for core CMS functionality, others are optional and only used when specific features are enabled.
 
-Each table includes:
-- Unique identifiers
-- Timestamps (created_at, updated_at)
-- Soft delete support
-- Status tracking
-- Metadata storage
+### Core Entities (Required)
+- `site` - The root entity for multi-site management; stores site configuration and domain mapping.
+- `page` - Stores page content, URL aliases, SEO metadata, and template associations.
+- `block` - Stores reusable content blocks (can be global or page-specific).
+- `template` - Defines layouts and design structures for pages.
+
+### Optional Entities (Feature-Dependent)
+- `menu` - Stores navigation menu structures (Enabled via `MenusEnabled`).
+- `menu_item` - Stores individual links and hierarchy within menus (Enabled via `MenusEnabled`).
+- `translation` - Stores localized content for multi-language support (Enabled via `TranslationsEnabled`).
+- `versioning` - Stores historical snapshots of all the above entities for audit and rollback (Enabled via `VersioningEnabled`).
+
+Each table includes standard fields for:
+- Unique identifiers (Short IDs)
+- Timestamps (`created_at`, `updated_at`)
+- Soft delete support (`soft_deleted_at`)
+- Status tracking (`active`, `inactive`, `draft`)
+- Extensible metadata storage (JSON)
+
+### Transactional Versioning
+The system provides strong consistency between entity data and its version history. All write operations on versioned entities are performed within a single database transaction, ensuring that a version snapshot is never missed if an update succeeds, and vice versa.
 
 ## Middleware System
 

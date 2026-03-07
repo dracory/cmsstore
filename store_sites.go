@@ -77,39 +77,37 @@ func (store *storeImplementation) SiteCreate(ctx context.Context, site SiteInter
 	site.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	site.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	data := site.Data()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		data := site.Data()
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Insert(store.siteTableName).
-		Prepared(true).
-		Rows(data).
-		ToSQL()
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Insert(store.siteTableName).
+			Prepared(true).
+			Rows(data).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	if store.db == nil {
-		return errors.New("sitestore: database is nil")
-	}
+		if store.db == nil {
+			return errors.New("sitestore: database is nil")
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
 
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	site.MarkAsNotDirty()
+		site.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_SITE, site.ID(), site); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_SITE, site.ID(), site)
+	})
 }
 
 func (store *storeImplementation) SiteDelete(ctx context.Context, site SiteInterface) error {
@@ -296,45 +294,43 @@ func (store *storeImplementation) SiteUpdate(ctx context.Context, site SiteInter
 
 	site.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	dataChanged := site.DataChanged()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		dataChanged := site.DataChanged()
 
-	delete(dataChanged, COLUMN_ID) // ID is not updateable
+		delete(dataChanged, COLUMN_ID) // ID is not updateable
 
-	if len(dataChanged) < 1 {
-		return nil
-	}
+		if len(dataChanged) < 1 {
+			return nil
+		}
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Update(store.siteTableName).
-		Prepared(true).
-		Set(dataChanged).
-		Where(goqu.C(COLUMN_ID).Eq(site.ID())).
-		ToSQL()
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Update(store.siteTableName).
+			Prepared(true).
+			Set(dataChanged).
+			Where(goqu.C(COLUMN_ID).Eq(site.ID())).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	if store.db == nil {
-		return errors.New("sitestore: database is nil")
-	}
+		if store.db == nil {
+			return errors.New("sitestore: database is nil")
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
-	if err != nil {
-		return err
-	}
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		if err != nil {
+			return err
+		}
 
-	site.MarkAsNotDirty()
+		site.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_SITE, site.ID(), site); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_SITE, site.ID(), site)
+	})
 }
 
 func (store *storeImplementation) siteSelectQuery(options SiteQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {

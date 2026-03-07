@@ -75,39 +75,37 @@ func (store *storeImplementation) PageCreate(ctx context.Context, page PageInter
 	page.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	page.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 
-	data := page.Data()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		data := page.Data()
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Insert(store.pageTableName).
-		Prepared(true).
-		Rows(data).
-		ToSQL()
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Insert(store.pageTableName).
+			Prepared(true).
+			Rows(data).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	if store.db == nil {
-		return errors.New("pagestore: database is nil")
-	}
+		if store.db == nil {
+			return errors.New("pagestore: database is nil")
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
 
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	page.MarkAsNotDirty()
+		page.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_PAGE, page.ID(), page); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_PAGE, page.ID(), page)
+	})
 }
 
 func (store *storeImplementation) PageDelete(ctx context.Context, page PageInterface) error {
@@ -272,45 +270,43 @@ func (store *storeImplementation) PageUpdate(ctx context.Context, page PageInter
 
 	page.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	dataChanged := page.DataChanged()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		dataChanged := page.DataChanged()
 
-	delete(dataChanged, COLUMN_ID) // ID is not updateable
+		delete(dataChanged, COLUMN_ID) // ID is not updateable
 
-	if len(dataChanged) < 1 {
-		return nil
-	}
+		if len(dataChanged) < 1 {
+			return nil
+		}
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Update(store.pageTableName).
-		Prepared(true).
-		Set(dataChanged).
-		Where(goqu.C(COLUMN_ID).Eq(page.ID())).
-		ToSQL()
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Update(store.pageTableName).
+			Prepared(true).
+			Set(dataChanged).
+			Where(goqu.C(COLUMN_ID).Eq(page.ID())).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	if store.db == nil {
-		return errors.New("pagestore: database is nil")
-	}
+		if store.db == nil {
+			return errors.New("pagestore: database is nil")
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
-	if err != nil {
-		return err
-	}
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		if err != nil {
+			return err
+		}
 
-	page.MarkAsNotDirty()
+		page.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_PAGE, page.ID(), page); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_PAGE, page.ID(), page)
+	})
 }
 
 func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (selectDataset *goqu.SelectDataset, selectColumns []any, err error) {

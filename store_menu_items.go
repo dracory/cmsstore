@@ -97,45 +97,43 @@ func (store *storeImplementation) MenuItemCreate(ctx context.Context, menuItem M
 		menuItem.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	}
 
-	// Get the data from the menu item
-	data := menuItem.Data()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		// Get the data from the menu item
+		data := menuItem.Data()
 
-	// Prepare the SQL query to insert the menu item
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Insert(store.menuItemTableName).
-		Prepared(true).
-		Rows(data).
-		ToSQL()
+		// Prepare the SQL query to insert the menu item
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Insert(store.menuItemTableName).
+			Prepared(true).
+			Rows(data).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	// Log the SQL query if debug is enabled
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		// Log the SQL query if debug is enabled
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	// Check if the database connection is nil
-	if store.db == nil {
-		return errors.New("menuItemstore: database is nil")
-	}
+		// Check if the database connection is nil
+		if store.db == nil {
+			return errors.New("menuItemstore: database is nil")
+		}
 
-	// Execute the query to insert the menu item
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+		// Execute the query to insert the menu item
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
 
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	// Mark the menu item as not dirty
-	menuItem.MarkAsNotDirty()
+		// Mark the menu item as not dirty
+		menuItem.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_MENU_ITEM, menuItem.ID(), menuItem); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_MENU_ITEM, menuItem.ID(), menuItem)
+	})
 }
 
 // MenuItemDelete deletes a menu item from the database.
@@ -337,53 +335,51 @@ func (store *storeImplementation) MenuItemUpdate(ctx context.Context, menuItem M
 	// Set the update timestamp
 	menuItem.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	// Get the changed data from the menu item
-	dataChanged := menuItem.DataChanged()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		// Get the changed data from the menu item
+		dataChanged := menuItem.DataChanged()
 
-	// Remove the ID from the changed data as it is not updateable
-	delete(dataChanged, COLUMN_ID)
+		// Remove the ID from the changed data as it is not updateable
+		delete(dataChanged, COLUMN_ID)
 
-	// Check if there are any changes to update
-	if len(dataChanged) < 1 {
-		return nil
-	}
+		// Check if there are any changes to update
+		if len(dataChanged) < 1 {
+			return nil
+		}
 
-	// Prepare the SQL query to update the menu item
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Update(store.menuItemTableName).
-		Prepared(true).
-		Set(dataChanged).
-		Where(goqu.C(COLUMN_ID).Eq(menuItem.ID())).
-		ToSQL()
+		// Prepare the SQL query to update the menu item
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Update(store.menuItemTableName).
+			Prepared(true).
+			Set(dataChanged).
+			Where(goqu.C(COLUMN_ID).Eq(menuItem.ID())).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	// Log the SQL query if debug is enabled
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		// Log the SQL query if debug is enabled
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	// Check if the database connection is nil
-	if store.db == nil {
-		return errors.New("menuItemstore: database is nil")
-	}
+		// Check if the database connection is nil
+		if store.db == nil {
+			return errors.New("menuItemstore: database is nil")
+		}
 
-	// Execute the query to update the menu item
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
-	if err != nil {
-		return err
-	}
+		// Execute the query to update the menu item
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		if err != nil {
+			return err
+		}
 
-	// Mark the menu item as not dirty
-	menuItem.MarkAsNotDirty()
+		// Mark the menu item as not dirty
+		menuItem.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_MENU_ITEM, menuItem.ID(), menuItem); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_MENU_ITEM, menuItem.ID(), menuItem)
+	})
 }
 
 // menuItemSelectQuery generates a select query based on the provided query options.

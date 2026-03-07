@@ -75,35 +75,33 @@ func (store *storeImplementation) BlockCreate(ctx context.Context, block BlockIn
 	block.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC)) // Set the creation timestamp of the block
 	block.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC)) // Set the update timestamp of the block
 
-	data := block.Data() // Get the data from the block to be inserted
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		data := block.Data() // Get the data from the block to be inserted
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Insert(store.blockTableName). // Insert into the block table
-		Prepared(true).
-		Rows(data). // Insert the block data
-		ToSQL()     // Convert the query to SQL string and parameters
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Insert(store.blockTableName). // Insert into the block table
+			Prepared(true).
+			Rows(data). // Insert the block data
+			ToSQL()     // Convert the query to SQL string and parameters
 
-	if errSql != nil {
-		return errSql // Return the error if the SQL conversion failed
-	}
+		if errSql != nil {
+			return errSql // Return the error if the SQL conversion failed
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr) // Log the SQL query if debug mode is enabled
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr) // Log the SQL query if debug mode is enabled
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...) // Execute the SQL query
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...) // Execute the SQL query
 
-	if err != nil {
-		return err // Return the error if the query execution failed
-	}
+		if err != nil {
+			return err // Return the error if the query execution failed
+		}
 
-	block.MarkAsNotDirty() // Mark the block as not dirty after successful insertion
+		block.MarkAsNotDirty() // Mark the block as not dirty after successful insertion
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_BLOCK, block.ID(), block); err != nil {
-		return err
-	}
-
-	return nil // Return success
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_BLOCK, block.ID(), block)
+	})
 }
 
 // BlockDelete deletes a block from the database by its ID.
@@ -292,45 +290,43 @@ func (store *storeImplementation) BlockUpdate(ctx context.Context, block BlockIn
 
 	block.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	dataChanged := block.DataChanged()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		dataChanged := block.DataChanged()
 
-	delete(dataChanged, COLUMN_ID) // ID is not updateable
+		delete(dataChanged, COLUMN_ID) // ID is not updateable
 
-	if len(dataChanged) < 1 {
-		return nil
-	}
+		if len(dataChanged) < 1 {
+			return nil
+		}
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Update(store.blockTableName).
-		Prepared(true).
-		Set(dataChanged).
-		Where(goqu.C(COLUMN_ID).Eq(block.ID())).
-		ToSQL()
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Update(store.blockTableName).
+			Prepared(true).
+			Set(dataChanged).
+			Where(goqu.C(COLUMN_ID).Eq(block.ID())).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	if store.db == nil {
-		return errors.New("blockstore: database is nil")
-	}
+		if store.db == nil {
+			return errors.New("blockstore: database is nil")
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
-	if err != nil {
-		return err
-	}
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		if err != nil {
+			return err
+		}
 
-	block.MarkAsNotDirty()
+		block.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_BLOCK, block.ID(), block); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_BLOCK, block.ID(), block)
+	})
 }
 
 func (store *storeImplementation) blockSelectQuery(options BlockQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {

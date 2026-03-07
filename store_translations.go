@@ -83,35 +83,33 @@ func (store *storeImplementation) TranslationCreate(ctx context.Context, transla
 		translation.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	}
 
-	data := translation.Data()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		data := translation.Data()
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Insert(store.translationTableName).
-		Prepared(true).
-		Rows(data).
-		ToSQL()
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Insert(store.translationTableName).
+			Prepared(true).
+			Rows(data).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
 
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	translation.MarkAsNotDirty()
+		translation.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_TRANSLATION, translation.ID(), translation); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_TRANSLATION, translation.ID(), translation)
+	})
 }
 
 func (store *storeImplementation) TranslationDelete(ctx context.Context, translation TranslationInterface) error {
@@ -344,42 +342,40 @@ func (store *storeImplementation) TranslationUpdate(ctx context.Context, transla
 
 	translation.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	dataChanged := translation.DataChanged()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		dataChanged := translation.DataChanged()
 
-	delete(dataChanged, COLUMN_ID) // ID is not updateable
+		delete(dataChanged, COLUMN_ID) // ID is not updateable
 
-	if len(dataChanged) < 1 {
-		return nil
-	}
+		if len(dataChanged) < 1 {
+			return nil
+		}
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Update(store.translationTableName).
-		Prepared(true).
-		Set(dataChanged).
-		Where(goqu.C(COLUMN_ID).Eq(translation.ID())).
-		ToSQL()
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Update(store.translationTableName).
+			Prepared(true).
+			Set(dataChanged).
+			Where(goqu.C(COLUMN_ID).Eq(translation.ID())).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
 
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	translation.MarkAsNotDirty()
+		translation.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_TRANSLATION, translation.ID(), translation); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_TRANSLATION, translation.ID(), translation)
+	})
 }
 
 func (store *storeImplementation) translationSelectQuery(options TranslationQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {

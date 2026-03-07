@@ -74,39 +74,37 @@ func (store *storeImplementation) TemplateCreate(ctx context.Context, template T
 		template.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	}
 
-	data := template.Data()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		data := template.Data()
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Insert(store.templateTableName).
-		Prepared(true).
-		Rows(data).
-		ToSQL()
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Insert(store.templateTableName).
+			Prepared(true).
+			Rows(data).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	if store.db == nil {
-		return errors.New("templatestore: database is nil")
-	}
+		if store.db == nil {
+			return errors.New("templatestore: database is nil")
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
 
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	template.MarkAsNotDirty()
+		template.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_TEMPLATE, template.ID(), template); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_TEMPLATE, template.ID(), template)
+	})
 }
 
 func (store *storeImplementation) TemplateDelete(ctx context.Context, template TemplateInterface) error {
@@ -269,42 +267,40 @@ func (store *storeImplementation) TemplateUpdate(ctx context.Context, template T
 
 	template.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	dataChanged := template.DataChanged()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		dataChanged := template.DataChanged()
 
-	delete(dataChanged, COLUMN_ID) // ID is not updateable
+		delete(dataChanged, COLUMN_ID) // ID is not updateable
 
-	if len(dataChanged) < 1 {
-		return nil
-	}
+		if len(dataChanged) < 1 {
+			return nil
+		}
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Update(store.templateTableName).
-		Prepared(true).
-		Set(dataChanged).
-		Where(goqu.C(COLUMN_ID).Eq(template.ID())).
-		ToSQL()
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Update(store.templateTableName).
+			Prepared(true).
+			Set(dataChanged).
+			Where(goqu.C(COLUMN_ID).Eq(template.ID())).
+			ToSQL()
 
-	if errSql != nil {
-		return errSql
-	}
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
 
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	template.MarkAsNotDirty()
+		template.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_TEMPLATE, template.ID(), template); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_TEMPLATE, template.ID(), template)
+	})
 }
 
 func (store *storeImplementation) templateSelectQuery(options TemplateQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {

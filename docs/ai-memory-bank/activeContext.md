@@ -1,5 +1,7 @@
 ## Active Work Focus
 
+- **Completed**: Implemented transactional versioning across all CMS entities (Pages, Blocks, Sites, Templates, Menus, Menu Items, and Translations). This ensures atomic integrity between entity data and version history using a new `withTransaction` helper.
+- **Completed**: Updated `README.md`, `docs/api/README.md`, and `docs/architecture/overview.md` to document the new transactional integrity and automatic transaction management.
 - **Completed**: Added comments to `site_query_interface.go` to document the purpose of each method in the `SiteQueryInterface`.
 
 - **Comments Added to `page_query_interface.go`**: Added detailed comments to the `PageQueryInterface` methods to document their purposes and usage. The interface now includes descriptions for each method, enhancing code readability and maintainability.

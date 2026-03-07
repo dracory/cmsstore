@@ -106,6 +106,14 @@ query := PageQuery().
 - Metadata handling
 - Versioning support (where applicable)
 
+### Transaction & Versioning Integrity
+
+The CMS store ensures atomic integrity between entity updates and version tracking. When `VersioningEnabled` is set to `true`:
+
+1.  **Automatic Transactions**: Every `Create` and `Update` operation (e.g., `PageCreate`, `BlockUpdate`) is automatically wrapped in a database transaction if one is not already present in the context.
+2.  **Version Tracking**: The version record is created *within* the same transaction as the entity data. If versioning fails, the entire transaction (including the entity change) is rolled back.
+3.  **Manual Transactions**: You can participate in this transactional flow by providing your own `*sql.Tx` via `cmsstore.WithTransaction(tx)` or by wrapping a transaction in the context using `database.Context(ctx, tx)`. If a transaction is detected in the context, the store will use it instead of starting a new one, allowing you to group multiple CMS operations into a single atomic unit.
+
 ## Entity Interfaces
 
 Each entity implements its specific interface (e.g., PageInterface, MenuInterface) which provides:

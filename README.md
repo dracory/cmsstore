@@ -167,7 +167,7 @@ for custom processing.
 - **Organized Content:** Pages provide a structured way to organize and manage website content.
 - **SEO Optimization:** Built-in support for SEO metadata helps improve search engine rankings.
 - **Flexible Templating:**  The use of templates allows for consistent design and branding across the site.
-- **Version Control:** Versioning capabilities allow for easy rollback to previous versions.
+- **Atomic Version Control:** Versioning capabilities ensure that every change is atomically tracked. The system uses database transactions to guarantee that a version snapshot is always created successfully whenever a change is saved, maintaining perfect historical consistency.
 - **Customizable Workflows:** Middleware support enables custom processing and workflows.
 
 ### SEO Capabilities
@@ -202,7 +202,7 @@ The system supports template versioning and management through a dedicated admin
 - **Consistent Design:** Templates ensure a consistent look and feel across the website.
 - **Reusable Layouts:**  Templates allow for the creation of reusable layouts, reducing development time and effort.
 - **Flexible Layouts:**  Templates can be customized to create various page layouts.
-- **Version Control:** Versioning capabilities allow for easy rollback to previous versions.
+- **Atomic Version Control:** Versioning capabilities ensure that every change is atomically tracked. The system uses database transactions to guarantee that a version snapshot is always created successfully whenever a change is saved, maintaining perfect historical consistency.
 
 ## Translations
 

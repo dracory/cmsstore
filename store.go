@@ -219,3 +219,23 @@ func (store *storeImplementation) toQuerableContext(ctx context.Context) databas
 
 	return database.Context(ctx, store.db)
 }
+
+func (store *storeImplementation) withTransaction(ctx context.Context, fn func(txCtx context.Context) error) error {
+	if !store.VersioningEnabled() || database.IsQueryableContext(ctx) {
+		return fn(ctx)
+	}
+
+	tx, err := store.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	txCtx := database.Context(ctx, tx)
+	if err := fn(txCtx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}

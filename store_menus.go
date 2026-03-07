@@ -77,37 +77,35 @@ func (store *storeImplementation) MenuCreate(ctx context.Context, menu MenuInter
 		menu.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	}
 
-	data := menu.Data()
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		data := menu.Data()
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Insert(store.menuTableName).
-		Prepared(true).
-		Rows(data).
-		ToSQL()
-	if errSql != nil {
-		return errSql
-	}
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Insert(store.menuTableName).
+			Prepared(true).
+			Rows(data).
+			ToSQL()
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	if store.db == nil {
-		return errors.New("menustore: database is nil")
-	}
+		if store.db == nil {
+			return errors.New("menustore: database is nil")
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
-	if err != nil {
-		return err
-	}
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		if err != nil {
+			return err
+		}
 
-	menu.MarkAsNotDirty()
+		menu.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_MENU, menu.ID(), menu); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_MENU, menu.ID(), menu)
+	})
 }
 
 // MenuDelete deletes a menu from the database by its ID.
@@ -298,43 +296,41 @@ func (store *storeImplementation) MenuUpdate(ctx context.Context, menu MenuInter
 
 	menu.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
-	dataChanged := menu.DataChanged()
-	delete(dataChanged, COLUMN_ID) // ID is not updateable
+	return store.withTransaction(ctx, func(txCtx context.Context) error {
+		dataChanged := menu.DataChanged()
+		delete(dataChanged, COLUMN_ID) // ID is not updateable
 
-	if len(dataChanged) < 1 {
-		return nil
-	}
+		if len(dataChanged) < 1 {
+			return nil
+		}
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Update(store.menuTableName).
-		Prepared(true).
-		Set(dataChanged).
-		Where(goqu.C(COLUMN_ID).Eq(menu.ID())).
-		ToSQL()
-	if errSql != nil {
-		return errSql
-	}
+		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
+			Update(store.menuTableName).
+			Prepared(true).
+			Set(dataChanged).
+			Where(goqu.C(COLUMN_ID).Eq(menu.ID())).
+			ToSQL()
+		if errSql != nil {
+			return errSql
+		}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
+		if store.debugEnabled {
+			log.Println(sqlStr)
+		}
 
-	if store.db == nil {
-		return errors.New("menustore: database is nil")
-	}
+		if store.db == nil {
+			return errors.New("menustore: database is nil")
+		}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
-	if err != nil {
-		return err
-	}
+		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		if err != nil {
+			return err
+		}
 
-	menu.MarkAsNotDirty()
+		menu.MarkAsNotDirty()
 
-	if err := store.versioningTrackEntity(ctx, VERSIONING_TYPE_MENU, menu.ID(), menu); err != nil {
-		return err
-	}
-
-	return nil
+		return store.versioningTrackEntity(txCtx, VERSIONING_TYPE_MENU, menu.ID(), menu)
+	})
 }
 
 // menuSelectQuery constructs a SQL query for selecting menus based on the provided query options.
