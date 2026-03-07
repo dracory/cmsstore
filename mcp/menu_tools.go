@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dromara/carbon/v2"
 )
 
 func (m *MCP) toolMenuGet(ctx context.Context, args map[string]any) (string, error) {
@@ -23,15 +24,22 @@ func (m *MCP) toolMenuGet(ctx context.Context, args map[string]any) (string, err
 		return "", errors.New("menu not found")
 	}
 
+	metas, err := menu.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":         cmsstore.ShortenID(menu.ID()),
-		"name":       menu.Name(),
-		"handle":     menu.Handle(),
-		"status":     menu.Status(),
-		"site_id":    cmsstore.ShortenID(menu.SiteID()),
-		"memo":       menu.Memo(),
-		"created_at": menu.CreatedAt(),
-		"updated_at": menu.UpdatedAt(),
+		"id":              cmsstore.ShortenID(menu.ID()),
+		"name":            menu.Name(),
+		"handle":          menu.Handle(),
+		"status":          menu.Status(),
+		"site_id":         cmsstore.ShortenID(menu.SiteID()),
+		"memo":            menu.Memo(),
+		"created_at":      menu.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      menu.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": menu.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":           metas,
 	})
 	if err != nil {
 		return "", err
@@ -80,14 +88,21 @@ func (m *MCP) toolMenuList(ctx context.Context, args map[string]any) (string, er
 		if menu == nil {
 			continue
 		}
+		metas, err := menu.Metas()
+		if err != nil {
+			return "", err
+		}
 		items = append(items, map[string]any{
-			"id":         cmsstore.ShortenID(menu.ID()),
-			"name":       menu.Name(),
-			"handle":     menu.Handle(),
-			"status":     menu.Status(),
-			"site_id":    cmsstore.ShortenID(menu.SiteID()),
-			"created_at": menu.CreatedAt(),
-			"updated_at": menu.UpdatedAt(),
+			"id":              cmsstore.ShortenID(menu.ID()),
+			"name":            menu.Name(),
+			"handle":          menu.Handle(),
+			"status":          menu.Status(),
+			"site_id":         cmsstore.ShortenID(menu.SiteID()),
+			"memo":            menu.Memo(),
+			"created_at":      menu.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at":      menu.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"soft_deleted_at": menu.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+			"metas":           metas,
 		})
 	}
 
@@ -175,13 +190,22 @@ func (m *MCP) toolMenuUpsert(ctx context.Context, args map[string]any) (string, 
 		}
 	}
 
+	metas, err := menu.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      cmsstore.ShortenID(menu.ID()),
-		"name":    menu.Name(),
-		"handle":  menu.Handle(),
-		"status":  menu.Status(),
-		"site_id": cmsstore.ShortenID(menu.SiteID()),
-		"memo":    menu.Memo(),
+		"id":              cmsstore.ShortenID(menu.ID()),
+		"name":            menu.Name(),
+		"handle":          menu.Handle(),
+		"status":          menu.Status(),
+		"site_id":         cmsstore.ShortenID(menu.SiteID()),
+		"memo":            menu.Memo(),
+		"created_at":      menu.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      menu.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": menu.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":           metas,
 	})
 	if err != nil {
 		return "", err

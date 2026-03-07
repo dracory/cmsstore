@@ -129,6 +129,20 @@ func TestPageGet(t *testing.T) {
 				assert.Equal(t, "Test content", pageData["content"].(string))
 				assert.Equal(t, cmsstore.PAGE_STATUS_ACTIVE, pageData["status"].(string))
 				assert.Equal(t, cmsstore.ShortenID(site.ID()), pageData["site_id"].(string))
+
+				// Check for new fields
+				assert.Contains(t, pageData, "memo")
+				assert.Contains(t, pageData, "alias")
+				assert.Contains(t, pageData, "name")
+				assert.Contains(t, pageData, "handle")
+				assert.Contains(t, pageData, "canonical_url")
+				assert.Contains(t, pageData, "meta_description")
+				assert.Contains(t, pageData, "meta_keywords")
+				assert.Contains(t, pageData, "meta_robots")
+				assert.Contains(t, pageData, "created_at")
+				assert.Contains(t, pageData, "updated_at")
+				assert.Contains(t, pageData, "soft_deleted_at")
+				assert.Contains(t, pageData, "metas")
 			}
 		})
 	}

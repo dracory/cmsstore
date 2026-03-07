@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dromara/carbon/v2"
 )
 
 func (m *MCP) toolSiteGet(ctx context.Context, args map[string]any) (string, error) {
@@ -24,13 +25,22 @@ func (m *MCP) toolSiteGet(ctx context.Context, args map[string]any) (string, err
 	}
 
 	domains, _ := site.DomainNames()
+	metas, err := site.Metas()
+	if err != nil {
+		return "", err
+	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":          cmsstore.ShortenID(site.ID()),
-		"name":        site.Name(),
-		"handle":      site.Handle(),
-		"domainNames": domains,
-		"status":      site.Status(),
+		"id":              cmsstore.ShortenID(site.ID()),
+		"name":            site.Name(),
+		"handle":          site.Handle(),
+		"domainNames":     domains,
+		"status":          site.Status(),
+		"memo":            site.Memo(),
+		"created_at":      site.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      site.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": site.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":           metas,
 	})
 	if err != nil {
 		return "", err
@@ -80,14 +90,21 @@ func (m *MCP) toolSiteList(ctx context.Context, args map[string]any) (string, er
 			continue
 		}
 		domains, _ := s.DomainNames()
+		metas, err := s.Metas()
+		if err != nil {
+			return "", err
+		}
 		items = append(items, map[string]any{
-			"id":          cmsstore.ShortenID(s.ID()),
-			"name":        s.Name(),
-			"handle":      s.Handle(),
-			"status":      s.Status(),
-			"domainNames": domains,
-			"created_at":  s.CreatedAt(),
-			"updated_at":  s.UpdatedAt(),
+			"id":              cmsstore.ShortenID(s.ID()),
+			"name":            s.Name(),
+			"handle":          s.Handle(),
+			"status":          s.Status(),
+			"domainNames":     domains,
+			"memo":            s.Memo(),
+			"created_at":      s.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at":      s.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"soft_deleted_at": s.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+			"metas":           metas,
 		})
 	}
 
@@ -166,13 +183,22 @@ func (m *MCP) toolSiteUpsert(ctx context.Context, args map[string]any) (string, 
 	}
 
 	domains, _ := site.DomainNames()
+	metas, err := site.Metas()
+	if err != nil {
+		return "", err
+	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":          cmsstore.ShortenID(site.ID()),
-		"name":        site.Name(),
-		"handle":      site.Handle(),
-		"status":      site.Status(),
-		"domainNames": domains,
+		"id":              cmsstore.ShortenID(site.ID()),
+		"name":            site.Name(),
+		"handle":          site.Handle(),
+		"status":          site.Status(),
+		"domainNames":     domains,
+		"memo":            site.Memo(),
+		"created_at":      site.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      site.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": site.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":           metas,
 	})
 	if err != nil {
 		return "", err

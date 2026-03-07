@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dromara/carbon/v2"
 )
 
 func (m *MCP) toolPageGet(ctx context.Context, args map[string]any) (string, error) {
@@ -23,12 +24,30 @@ func (m *MCP) toolPageGet(ctx context.Context, args map[string]any) (string, err
 		return "", errors.New("page not found")
 	}
 
+	metas, err := page.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      cmsstore.ShortenID(page.ID()),
-		"title":   page.Title(),
-		"content": page.Content(),
-		"status":  page.Status(),
-		"site_id": cmsstore.ShortenID(page.SiteID()),
+		"id":               cmsstore.ShortenID(page.ID()),
+		"title":            page.Title(),
+		"content":          page.Content(),
+		"status":           page.Status(),
+		"site_id":          cmsstore.ShortenID(page.SiteID()),
+		"name":             page.Name(),
+		"handle":           page.Handle(),
+		"alias":            page.Alias(),
+		"template_id":      cmsstore.ShortenID(page.TemplateID()),
+		"canonical_url":    page.CanonicalUrl(),
+		"meta_description": page.MetaDescription(),
+		"meta_keywords":    page.MetaKeywords(),
+		"meta_robots":      page.MetaRobots(),
+		"memo":             page.Memo(),
+		"created_at":       page.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":       page.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at":  page.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":            metas,
 	})
 	if err != nil {
 		return "", err
@@ -112,17 +131,28 @@ func (m *MCP) toolPageList(ctx context.Context, args map[string]any) (string, er
 		if p == nil {
 			continue
 		}
+		metas, err := p.Metas()
+		if err != nil {
+			return "", err
+		}
 		items = append(items, map[string]any{
-			"id":          cmsstore.ShortenID(p.ID()),
-			"title":       p.Title(),
-			"name":        p.Name(),
-			"handle":      p.Handle(),
-			"alias":       p.Alias(),
-			"status":      p.Status(),
-			"site_id":     cmsstore.ShortenID(p.SiteID()),
-			"template_id": cmsstore.ShortenID(p.TemplateID()),
-			"created_at":  p.CreatedAt(),
-			"updated_at":  p.UpdatedAt(),
+			"id":               cmsstore.ShortenID(p.ID()),
+			"title":            p.Title(),
+			"name":             p.Name(),
+			"handle":           p.Handle(),
+			"alias":            p.Alias(),
+			"status":           p.Status(),
+			"site_id":          cmsstore.ShortenID(p.SiteID()),
+			"template_id":      cmsstore.ShortenID(p.TemplateID()),
+			"canonical_url":    p.CanonicalUrl(),
+			"meta_description": p.MetaDescription(),
+			"meta_keywords":    p.MetaKeywords(),
+			"meta_robots":      p.MetaRobots(),
+			"memo":             p.Memo(),
+			"created_at":       p.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at":       p.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"soft_deleted_at":  p.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+			"metas":            metas,
 		})
 	}
 
@@ -235,13 +265,30 @@ func (m *MCP) toolPageUpsert(ctx context.Context, args map[string]any) (string, 
 		}
 	}
 
+	metas, err := page.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      cmsstore.ShortenID(page.ID()),
-		"title":   page.Title(),
-		"name":    page.Name(),
-		"content": page.Content(),
-		"status":  page.Status(),
-		"site_id": cmsstore.ShortenID(page.SiteID()),
+		"id":               cmsstore.ShortenID(page.ID()),
+		"title":            page.Title(),
+		"content":          page.Content(),
+		"status":           page.Status(),
+		"site_id":          cmsstore.ShortenID(page.SiteID()),
+		"name":             page.Name(),
+		"handle":           page.Handle(),
+		"alias":            page.Alias(),
+		"template_id":      cmsstore.ShortenID(page.TemplateID()),
+		"canonical_url":    page.CanonicalUrl(),
+		"meta_description": page.MetaDescription(),
+		"meta_keywords":    page.MetaKeywords(),
+		"meta_robots":      page.MetaRobots(),
+		"memo":             page.Memo(),
+		"created_at":       page.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":       page.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at":  page.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":            metas,
 	})
 	if err != nil {
 		return "", err

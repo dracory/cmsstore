@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dromara/carbon/v2"
 )
 
 func (m *MCP) toolMenuItemGet(ctx context.Context, args map[string]any) (string, error) {
@@ -23,20 +24,27 @@ func (m *MCP) toolMenuItemGet(ctx context.Context, args map[string]any) (string,
 		return "", errors.New("menu item not found")
 	}
 
+	metas, err := menuItem.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":         menuItem.ID(),
-		"name":       menuItem.Name(),
-		"handle":     menuItem.Handle(),
-		"url":        menuItem.URL(),
-		"target":     menuItem.Target(),
-		"status":     menuItem.Status(),
-		"menu_id":    menuItem.MenuID(),
-		"page_id":    menuItem.PageID(),
-		"parent_id":  menuItem.ParentID(),
-		"memo":       menuItem.Memo(),
-		"sequence":   menuItem.Sequence(),
-		"created_at": menuItem.CreatedAt(),
-		"updated_at": menuItem.UpdatedAt(),
+		"id":              menuItem.ID(),
+		"name":            menuItem.Name(),
+		"handle":          menuItem.Handle(),
+		"url":             menuItem.URL(),
+		"target":          menuItem.Target(),
+		"status":          menuItem.Status(),
+		"menu_id":         menuItem.MenuID(),
+		"page_id":         menuItem.PageID(),
+		"parent_id":       menuItem.ParentID(),
+		"memo":            menuItem.Memo(),
+		"sequence":        menuItem.Sequence(),
+		"created_at":      menuItem.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      menuItem.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": menuItem.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":           metas,
 	})
 	if err != nil {
 		return "", err
@@ -82,19 +90,26 @@ func (m *MCP) toolMenuItemList(ctx context.Context, args map[string]any) (string
 		if menuItem == nil {
 			continue
 		}
+		metas, err := menuItem.Metas()
+		if err != nil {
+			return "", err
+		}
 		items = append(items, map[string]any{
-			"id":         menuItem.ID(),
-			"name":       menuItem.Name(),
-			"handle":     menuItem.Handle(),
-			"url":        menuItem.URL(),
-			"target":     menuItem.Target(),
-			"status":     menuItem.Status(),
-			"menu_id":    menuItem.MenuID(),
-			"page_id":    menuItem.PageID(),
-			"parent_id":  menuItem.ParentID(),
-			"sequence":   menuItem.Sequence(),
-			"created_at": menuItem.CreatedAt(),
-			"updated_at": menuItem.UpdatedAt(),
+			"id":              menuItem.ID(),
+			"name":            menuItem.Name(),
+			"handle":          menuItem.Handle(),
+			"url":             menuItem.URL(),
+			"target":          menuItem.Target(),
+			"status":          menuItem.Status(),
+			"menu_id":         menuItem.MenuID(),
+			"page_id":         menuItem.PageID(),
+			"parent_id":       menuItem.ParentID(),
+			"memo":            menuItem.Memo(),
+			"sequence":        menuItem.Sequence(),
+			"created_at":      menuItem.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at":      menuItem.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"soft_deleted_at": menuItem.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+			"metas":           metas,
 		})
 	}
 
@@ -200,20 +215,27 @@ func (m *MCP) toolMenuItemUpsert(ctx context.Context, args map[string]any) (stri
 		}
 	}
 
+	metas, err := menuItem.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":         menuItem.ID(),
-		"name":       menuItem.Name(),
-		"handle":     menuItem.Handle(),
-		"url":        menuItem.URL(),
-		"target":     menuItem.Target(),
-		"status":     menuItem.Status(),
-		"menu_id":    menuItem.MenuID(),
-		"page_id":    menuItem.PageID(),
-		"parent_id":  menuItem.ParentID(),
-		"memo":       menuItem.Memo(),
-		"sequence":   menuItem.Sequence(),
-		"created_at": menuItem.CreatedAt(),
-		"updated_at": menuItem.UpdatedAt(),
+		"id":              menuItem.ID(),
+		"name":            menuItem.Name(),
+		"handle":          menuItem.Handle(),
+		"url":             menuItem.URL(),
+		"target":          menuItem.Target(),
+		"status":          menuItem.Status(),
+		"menu_id":         menuItem.MenuID(),
+		"page_id":         menuItem.PageID(),
+		"parent_id":       menuItem.ParentID(),
+		"memo":            menuItem.Memo(),
+		"sequence":        menuItem.Sequence(),
+		"created_at":      menuItem.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      menuItem.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": menuItem.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":           metas,
 	})
 	if err != nil {
 		return "", err

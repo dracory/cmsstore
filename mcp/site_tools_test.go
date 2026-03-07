@@ -127,6 +127,13 @@ func TestSiteGet(t *testing.T) {
 				assert.Len(t, domains, 2)
 				assert.Contains(t, domains, "example.com")
 				assert.Contains(t, domains, "www.example.com")
+
+				// Check for new fields
+				assert.Contains(t, siteData, "memo")
+				assert.Contains(t, siteData, "created_at")
+				assert.Contains(t, siteData, "updated_at")
+				assert.Contains(t, siteData, "soft_deleted_at")
+				assert.Contains(t, siteData, "metas")
 			}
 		})
 	}

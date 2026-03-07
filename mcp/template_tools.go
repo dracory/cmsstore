@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dromara/carbon/v2"
 )
 
 func (m *MCP) toolTemplateGet(ctx context.Context, args map[string]any) (string, error) {
@@ -23,12 +24,24 @@ func (m *MCP) toolTemplateGet(ctx context.Context, args map[string]any) (string,
 		return "", errors.New("template not found")
 	}
 
+	metas, err := template.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      cmsstore.ShortenID(template.ID()),
-		"name":    template.Name(),
-		"content": template.Content(),
-		"status":  template.Status(),
-		"site_id": cmsstore.ShortenID(template.SiteID()),
+		"id":              cmsstore.ShortenID(template.ID()),
+		"name":            template.Name(),
+		"content":         template.Content(),
+		"status":          template.Status(),
+		"site_id":         cmsstore.ShortenID(template.SiteID()),
+		"handle":          template.Handle(),
+		"editor":          template.Editor(),
+		"memo":            template.Memo(),
+		"created_at":      template.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      template.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": template.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":           metas,
 	})
 	if err != nil {
 		return "", err
@@ -80,14 +93,22 @@ func (m *MCP) toolTemplateList(ctx context.Context, args map[string]any) (string
 		if template == nil {
 			continue
 		}
+		metas, err := template.Metas()
+		if err != nil {
+			return "", err
+		}
 		items = append(items, map[string]any{
-			"id":         cmsstore.ShortenID(template.ID()),
-			"name":       template.Name(),
-			"handle":     template.Handle(),
-			"status":     template.Status(),
-			"site_id":    cmsstore.ShortenID(template.SiteID()),
-			"created_at": template.CreatedAt(),
-			"updated_at": template.UpdatedAt(),
+			"id":              cmsstore.ShortenID(template.ID()),
+			"name":            template.Name(),
+			"handle":          template.Handle(),
+			"status":          template.Status(),
+			"site_id":         cmsstore.ShortenID(template.SiteID()),
+			"editor":          template.Editor(),
+			"memo":            template.Memo(),
+			"created_at":      template.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at":      template.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"soft_deleted_at": template.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+			"metas":           metas,
 		})
 	}
 
@@ -182,12 +203,24 @@ func (m *MCP) toolTemplateUpsert(ctx context.Context, args map[string]any) (stri
 		}
 	}
 
+	metas, err := template.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      cmsstore.ShortenID(template.ID()),
-		"name":    template.Name(),
-		"content": template.Content(),
-		"status":  template.Status(),
-		"site_id": cmsstore.ShortenID(template.SiteID()),
+		"id":              cmsstore.ShortenID(template.ID()),
+		"name":            template.Name(),
+		"content":         template.Content(),
+		"status":          template.Status(),
+		"site_id":         cmsstore.ShortenID(template.SiteID()),
+		"handle":          template.Handle(),
+		"editor":          template.Editor(),
+		"memo":            template.Memo(),
+		"created_at":      template.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      template.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": template.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":           metas,
 	})
 	if err != nil {
 		return "", err

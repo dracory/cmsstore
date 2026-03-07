@@ -143,6 +143,16 @@ func TestMenuItemGet(t *testing.T) {
 				assert.Equal(t, "_self", menuItemData["target"].(string))
 				assert.Equal(t, cmsstore.MENU_ITEM_STATUS_ACTIVE, menuItemData["status"].(string))
 				assert.Equal(t, cmsstore.ShortenID(menu.ID()), menuItemData["menu_id"].(string))
+
+				// Check for new fields
+				assert.Contains(t, menuItemData, "memo")
+				assert.Contains(t, menuItemData, "page_id")
+				assert.Contains(t, menuItemData, "parent_id")
+				assert.Contains(t, menuItemData, "sequence")
+				assert.Contains(t, menuItemData, "created_at")
+				assert.Contains(t, menuItemData, "updated_at")
+				assert.Contains(t, menuItemData, "soft_deleted_at")
+				assert.Contains(t, menuItemData, "metas")
 			}
 		})
 	}

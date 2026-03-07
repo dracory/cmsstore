@@ -117,6 +117,15 @@ func TestTemplateList_SiteIDUnshortening(t *testing.T) {
 			if tt.expectedCount > 0 {
 				item := items[0].(map[string]interface{})
 				assert.Equal(t, tt.expectedSiteID, item["site_id"].(string))
+
+				// Check for new fields
+				assert.Contains(t, item, "memo")
+				assert.Contains(t, item, "handle")
+				assert.Contains(t, item, "editor")
+				assert.Contains(t, item, "created_at")
+				assert.Contains(t, item, "updated_at")
+				assert.Contains(t, item, "soft_deleted_at")
+				assert.Contains(t, item, "metas")
 			}
 		})
 	}
