@@ -201,11 +201,12 @@ func (controller *pageVersioningController) tableRevision(data pageVersioningCon
 					Attr("readonly", "readonly").
 					Value(value)
 
-				if key == cmsstore.COLUMN_CONTENT {
+		if key == cmsstore.COLUMN_CONTENT {
 					valueContainer = hb.TextArea().
 						Class("form-control w-100").
 						Style(`background-color:#eee;`).
 						Attr("readonly", "readonly").
+						Attr("rows", "5").
 						Text(value)
 				}
 
@@ -391,6 +392,14 @@ func (controller *pageVersioningController) restoreRevisionAttributes(ctx contex
 		if attr == cmsstore.COLUMN_TITLE {
 			page.SetTitle(value)
 		}
+
+		if attr == cmsstore.COLUMN_SITE_ID {
+			page.SetSiteID(value)
+		}
+
+		if attr == cmsstore.COLUMN_TEMPLATE_ID {
+			page.SetTemplateID(value)
+		}
 	}
 
 	err = controller.ui.Store().PageUpdate(ctx, page)
@@ -415,5 +424,7 @@ func (controller *pageVersioningController) supportedAttributes() []string {
 		cmsstore.COLUMN_NAME,
 		cmsstore.COLUMN_STATUS,
 		cmsstore.COLUMN_TITLE,
+		cmsstore.COLUMN_SITE_ID,
+		cmsstore.COLUMN_TEMPLATE_ID,
 	}
 }
