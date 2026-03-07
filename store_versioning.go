@@ -152,10 +152,18 @@ func (store *storeImplementation) VersioningList(ctx context.Context, query Vers
 		return nil, err
 	}
 
-	newlist := make([]VersioningInterface, len(list))
+	newlist := []VersioningInterface{}
 
-	for i, v := range list {
-		newlist[i] = v
+	for _, v := range list {
+		// Manual filtering as a workaround for a bug in the versionstore library where it
+		// sometimes ignores EntityType and EntityID filters.
+		if query.HasEntityType() && v.EntityType() != query.EntityType() {
+			continue
+		}
+		if query.HasEntityID() && v.EntityID() != query.EntityID() {
+			continue
+		}
+		newlist = append(newlist, v)
 	}
 
 	return newlist, nil
