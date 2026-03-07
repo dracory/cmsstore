@@ -28,13 +28,23 @@ func (m *MCP) toolTranslationGet(ctx context.Context, args map[string]any) (stri
 		return "", err
 	}
 
+	metas, err := translation.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      cmsstore.ShortenID(translation.ID()),
-		"name":    translation.Name(),
-		"handle":  translation.Handle(),
-		"content": content,
-		"status":  translation.Status(),
-		"site_id": cmsstore.ShortenID(translation.SiteID()),
+		"id":              cmsstore.ShortenID(translation.ID()),
+		"name":            translation.Name(),
+		"handle":          translation.Handle(),
+		"content":         content,
+		"status":          translation.Status(),
+		"site_id":         cmsstore.ShortenID(translation.SiteID()),
+		"metas":           metas,
+		"memo":            translation.Memo(),
+		"created_at":      translation.CreatedAt(),
+		"updated_at":      translation.UpdatedAt(),
+		"soft_deleted_at": translation.SoftDeletedAt(),
 	})
 	if err != nil {
 		return "", err
@@ -198,13 +208,23 @@ func (m *MCP) toolTranslationUpsert(ctx context.Context, args map[string]any) (s
 		return "", err
 	}
 
+	metas, err := translation.Metas()
+	if err != nil {
+		return "", err
+	}
+
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      cmsstore.ShortenID(translation.ID()),
-		"name":    translation.Name(),
-		"handle":  translation.Handle(),
-		"content": content,
-		"status":  translation.Status(),
-		"site_id": cmsstore.ShortenID(translation.SiteID()),
+		"id":              cmsstore.ShortenID(translation.ID()),
+		"name":            translation.Name(),
+		"handle":          translation.Handle(),
+		"content":         content,
+		"status":          translation.Status(),
+		"site_id":         cmsstore.ShortenID(translation.SiteID()),
+		"metas":           metas,
+		"memo":            translation.Memo(),
+		"created_at":      translation.CreatedAt(),
+		"updated_at":      translation.UpdatedAt(),
+		"soft_deleted_at": translation.SoftDeletedAt(),
 	})
 	if err != nil {
 		return "", err

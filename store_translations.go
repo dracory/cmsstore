@@ -384,11 +384,11 @@ func (store *storeImplementation) TranslationUpdate(ctx context.Context, transla
 
 func (store *storeImplementation) translationSelectQuery(options TranslationQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
 	if options == nil {
-		return nil, nil, errors.New("translation query cannot be nil")
+		return nil, []any{}, errors.New("translation query cannot be nil")
 	}
 
 	if err := options.Validate(); err != nil {
-		return nil, nil, err
+		return nil, []any{}, err
 	}
 
 	q := goqu.Dialect(store.dbDriverName).From(store.translationTableName)
