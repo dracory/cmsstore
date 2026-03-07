@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dromara/carbon/v2"
 )
 
 func (m *MCP) toolBlockGet(ctx context.Context, args map[string]any) (string, error) {
@@ -22,14 +23,29 @@ func (m *MCP) toolBlockGet(ctx context.Context, args map[string]any) (string, er
 	if block == nil {
 		return "", errors.New("block not found")
 	}
+	metas, err := block.Metas()
+	if err != nil {
+		return "", err
+	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      cmsstore.ShortenID(block.ID()),
-		"type":    block.Type(),
-		"content": block.Content(),
-		"status":  block.Status(),
-		"site_id": cmsstore.ShortenID(block.SiteID()),
-		"page_id": cmsstore.ShortenID(block.PageID()),
+		"id":              cmsstore.ShortenID(block.ID()),
+		"type":            block.Type(),
+		"content":         block.Content(),
+		"status":          block.Status(),
+		"site_id":         cmsstore.ShortenID(block.SiteID()),
+		"page_id":         cmsstore.ShortenID(block.PageID()),
+		"name":            block.Name(),
+		"handle":          block.Handle(),
+		"template_id":     cmsstore.ShortenID(block.TemplateID()),
+		"parent_id":       cmsstore.ShortenID(block.ParentID()),
+		"sequence":        block.Sequence(),
+		"editor":          block.Editor(),
+		"memo":            block.Memo(),
+		"created_at":      block.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      block.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": block.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
+		"metas":           metas,
 	})
 	if err != nil {
 		return "", err
@@ -89,8 +105,8 @@ func (m *MCP) toolBlockList(ctx context.Context, args map[string]any) (string, e
 			"template_id": cmsstore.ShortenID(block.TemplateID()),
 			"parent_id":   cmsstore.ShortenID(block.ParentID()),
 			"sequence":    block.Sequence(),
-			"created_at":  block.CreatedAt(),
-			"updated_at":  block.UpdatedAt(),
+			"created_at":  block.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at":  block.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
 		})
 	}
 
@@ -199,14 +215,29 @@ func (m *MCP) toolBlockUpsert(ctx context.Context, args map[string]any) (string,
 			return "", err
 		}
 	}
+	metas, err := block.Metas()
+	if err != nil {
+		return "", err
+	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":      cmsstore.ShortenID(block.ID()),
-		"type":    block.Type(),
-		"content": block.Content(),
-		"status":  block.Status(),
-		"site_id": cmsstore.ShortenID(block.SiteID()),
-		"page_id": cmsstore.ShortenID(block.PageID()),
+		"id":              cmsstore.ShortenID(block.ID()),
+		"type":            block.Type(),
+		"content":         block.Content(),
+		"status":          block.Status(),
+		"site_id":         cmsstore.ShortenID(block.SiteID()),
+		"page_id":         cmsstore.ShortenID(block.PageID()),
+		"name":            block.Name(),
+		"handle":          block.Handle(),
+		"template_id":     cmsstore.ShortenID(block.TemplateID()),
+		"parent_id":       cmsstore.ShortenID(block.ParentID()),
+		"sequence":        block.Sequence(),
+		"editor":          block.Editor(),
+		"metas":           metas,
+		"memo":            block.Memo(),
+		"created_at":      block.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":      block.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"soft_deleted_at": block.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
 	})
 	if err != nil {
 		return "", err

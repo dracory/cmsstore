@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/dracory/cmsstore"
+	"github.com/spf13/cast"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
@@ -130,6 +131,18 @@ func TestBlockGet(t *testing.T) {
 				assert.Equal(t, cmsstore.BLOCK_STATUS_ACTIVE, blockData["status"].(string))
 				assert.Equal(t, cmsstore.ShortenID(site.ID()), blockData["site_id"].(string))
 				assert.Equal(t, "", blockData["page_id"].(string))
+				// New fields assertions
+				assert.Equal(t, "", blockData["name"].(string))
+				assert.Equal(t, "", blockData["handle"].(string))
+				assert.Equal(t, "", blockData["template_id"].(string))
+				assert.Equal(t, "", blockData["parent_id"].(string))
+				assert.Equal(t, "0", blockData["sequence"].(string))
+				assert.Equal(t, "", blockData["editor"].(string))
+				assert.Equal(t, "", blockData["memo"].(string))
+				assert.NotEmpty(t, blockData["created_at"].(string))
+				assert.NotEmpty(t, blockData["updated_at"].(string))
+				assert.Equal(t, "9999-12-31 23:59:59", blockData["soft_deleted_at"].(string))
+				assert.NotNil(t, blockData["metas"])
 			}
 		})
 	}
@@ -585,6 +598,19 @@ func TestBlockUpsert_Create(t *testing.T) {
 				assert.Equal(t, tt.content, blockData["content"].(string))
 				assert.Equal(t, tt.status, blockData["status"].(string))
 				assert.Equal(t, cmsstore.ShortenID(site.ID()), blockData["site_id"].(string))
+				// New fields assertions
+				assert.Equal(t, tt.blockName, blockData["name"].(string))
+				assert.Equal(t, tt.handle, blockData["handle"].(string))
+				assert.Equal(t, "", blockData["page_id"].(string))
+				assert.Equal(t, "", blockData["template_id"].(string))
+				assert.Equal(t, "", blockData["parent_id"].(string))
+				assert.Equal(t, cast.ToString(tt.sequence), blockData["sequence"].(string))
+				assert.Equal(t, tt.editor, blockData["editor"].(string))
+				assert.Equal(t, tt.memo, blockData["memo"].(string))
+				assert.NotEmpty(t, blockData["created_at"].(string))
+				assert.NotEmpty(t, blockData["updated_at"].(string))
+				assert.Equal(t, "9999-12-31 23:59:59", blockData["soft_deleted_at"].(string))
+				assert.NotNil(t, blockData["metas"])
 			}
 		})
 	}
