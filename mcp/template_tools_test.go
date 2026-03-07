@@ -302,3 +302,170 @@ func TestTemplateList_WithOtherFilters(t *testing.T) {
 	item := items[0].(map[string]interface{})
 	assert.Equal(t, cmsstore.TEMPLATE_STATUS_ACTIVE, item["status"].(string))
 }
+
+func TestTemplateUpsert_Create(t *testing.T) {
+	server, cleanup := initMCPServer(t)
+	defer cleanup()
+
+	createPayload := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      "create",
+		"method":  "call_tool",
+		"params": map[string]any{
+			"tool_name": "template_upsert",
+			"arguments": map[string]any{
+				"name":    "New Template",
+				"content": "Template content",
+				"status":  "active",
+			},
+		},
+	}
+
+	createBody, err := json.Marshal(createPayload)
+	require.NoError(t, err)
+
+	createResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(createBody))
+	require.NoError(t, err)
+	defer createResp.Body.Close()
+
+	createRespBytes, err := io.ReadAll(createResp.Body)
+	require.NoError(t, err)
+
+	text := rpcResultText(t, createRespBytes)
+	var templateData map[string]any
+	err = json.Unmarshal([]byte(text), &templateData)
+	require.NoError(t, err)
+
+	assert.Equal(t, "New Template", templateData["name"])
+	assert.Equal(t, "active", templateData["status"])
+	assert.NotEmpty(t, templateData["id"])
+}
+
+func TestTemplateUpsert_Update(t *testing.T) {
+	server, store, cleanup := initMCPServerWithStore(t)
+	defer cleanup()
+
+	template := cmsstore.NewTemplate()
+	template.SetName("Original Name")
+	template.SetContent("Original content")
+	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
+	err := store.TemplateCreate(context.Background(), template)
+	require.NoError(t, err)
+
+	updatePayload := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      "update",
+		"method":  "call_tool",
+		"params": map[string]any{
+			"tool_name": "template_upsert",
+			"arguments": map[string]any{
+				"id":   template.ID(),
+				"name": "Updated Name",
+			},
+		},
+	}
+
+	updateBody, err := json.Marshal(updatePayload)
+	require.NoError(t, err)
+
+	updateResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(updateBody))
+	require.NoError(t, err)
+	defer updateResp.Body.Close()
+
+	updateRespBytes, err := io.ReadAll(updateResp.Body)
+	require.NoError(t, err)
+
+	text := rpcResultText(t, updateRespBytes)
+	var templateData map[string]any
+	err = json.Unmarshal([]byte(text), &templateData)
+	require.NoError(t, err)
+
+	assert.Equal(t, template.ID(), templateData["id"])
+	assert.Equal(t, "Updated Name", templateData["name"])
+	assert.Equal(t, "Original content", templateData["content"]) // Should remain unchanged
+}
+
+func TestTemplateGet(t *testing.T) {
+	server, store, cleanup := initMCPServerWithStore(t)
+	defer cleanup()
+
+	template := cmsstore.NewTemplate()
+	template.SetName("Get Template")
+	template.SetContent("Content")
+	err := store.TemplateCreate(context.Background(), template)
+	require.NoError(t, err)
+
+	getPayload := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      "get",
+		"method":  "call_tool",
+		"params": map[string]any{
+			"tool_name": "template_get",
+			"arguments": map[string]any{
+				"id": template.ID(),
+			},
+		},
+	}
+
+	getBody, err := json.Marshal(getPayload)
+	require.NoError(t, err)
+
+	getResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(getBody))
+	require.NoError(t, err)
+	defer getResp.Body.Close()
+
+	getRespBytes, err := io.ReadAll(getResp.Body)
+	require.NoError(t, err)
+
+	text := rpcResultText(t, getRespBytes)
+	var templateData map[string]any
+	err = json.Unmarshal([]byte(text), &templateData)
+	require.NoError(t, err)
+
+	assert.Equal(t, template.ID(), templateData["id"])
+	assert.Equal(t, "Get Template", templateData["name"])
+}
+
+func TestTemplateDelete(t *testing.T) {
+	server, store, cleanup := initMCPServerWithStore(t)
+	defer cleanup()
+
+	template := cmsstore.NewTemplate()
+	template.SetName("Delete Template")
+	err := store.TemplateCreate(context.Background(), template)
+	require.NoError(t, err)
+
+	deletePayload := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      "delete",
+		"method":  "call_tool",
+		"params": map[string]any{
+			"tool_name": "template_delete",
+			"arguments": map[string]any{
+				"id": template.ID(),
+			},
+		},
+	}
+
+	deleteBody, err := json.Marshal(deletePayload)
+	require.NoError(t, err)
+
+	deleteResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(deleteBody))
+	require.NoError(t, err)
+	defer deleteResp.Body.Close()
+
+	deleteRespBytes, err := io.ReadAll(deleteResp.Body)
+	require.NoError(t, err)
+
+	text := rpcResultText(t, deleteRespBytes)
+	var deleteData map[string]any
+	err = json.Unmarshal([]byte(text), &deleteData)
+	require.NoError(t, err)
+
+	assert.Equal(t, cmsstore.ShortenID(template.ID()), deleteData["id"])
+
+	// Verify it's gone
+	deletedTemplate, err := store.TemplateFindByID(context.Background(), template.ID())
+	require.NoError(t, err)
+	assert.Nil(t, deletedTemplate)
+}
