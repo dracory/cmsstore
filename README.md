@@ -14,7 +14,7 @@ For commercial use, please use my [contact page](https://lesichkov.co.uk/contact
 
 ## Introduction
 
-All of the existing GoLang CMSs require a full installations from scratch. 
+All of the existing GoLang CMSs require a full installations from scratch.
 Its impossible to just add them to an exiting Go application, and even when added
 feel like you don't get what you hoped for.
 
@@ -138,6 +138,7 @@ This Content Management System (CMS) offers a robust multisite functionality,
 enabling you to manage multiple websites from a single installation.
 
 Each site has its own:
+
 - Templates: layouts for your pages
 - Pages: individual content pages for each site
 - Blocks: reusable content blocks that can be used across multiple pages and sites, i.e. header, footer, sidebar, galleries, sliders, carousels, testimonials, FAQs, etc.
@@ -145,6 +146,7 @@ Each site has its own:
 - Translations: support for multiple languages
 
 It alows you to:
+
 - Manage multiple brands, regions, or languages from a single installation
 - Create separate websites for specific campaigns or events
 - Easily setup different themes for each site
@@ -152,13 +154,13 @@ It alows you to:
 
 ## Pages
 
-Pages are the core content units of the CMS.  They are structured using a flexible
-data model that allows for rich content and metadata.  
+Pages are the core content units of the CMS. They are structured using a flexible
+data model that allows for rich content and metadata.
 
 Pages can be created, updated, deleted, and versioned through
 a dedicated admin interface.
 
-They support various features such as custom templates, SEO metadata 
+They support various features such as custom templates, SEO metadata
 (keywords, descriptions, robots directives), and middleware
 for custom processing.
 
@@ -166,7 +168,7 @@ for custom processing.
 
 - **Organized Content:** Pages provide a structured way to organize and manage website content.
 - **SEO Optimization:** Built-in support for SEO metadata helps improve search engine rankings.
-- **Flexible Templating:**  The use of templates allows for consistent design and branding across the site.
+- **Flexible Templating:** The use of templates allows for consistent design and branding across the site.
 - **Atomic Version Control:** Versioning capabilities ensure that every change is atomically tracked. The system uses database transactions to guarantee that a version snapshot is always created successfully whenever a change is saved, maintaining perfect historical consistency.
 - **Customizable Workflows:** Middleware support enables custom processing and workflows.
 
@@ -185,10 +187,11 @@ Pages can be edited through a user-friendly admin interface.
 The admin interface provides tools for creating, updating, and deleting pages,
 as well as managing page versions.
 Page content can be easily managed using a variety of editors:
+
 - **CodeMirror Editor:** Raw HTML editing for advanced customization.
 - **WYSIWYG Editor:** Rich text editing for advanced formatting.
 - **Markdown Editor:** Markdown syntax for simple text formatting.
-TODO: Access control can be implemented to restrict editing permissions.
+  TODO: Access control can be implemented to restrict editing permissions.
 
 ## Templates
 
@@ -200,13 +203,13 @@ The system supports template versioning and management through a dedicated admin
 ### Benefits
 
 - **Consistent Design:** Templates ensure a consistent look and feel across the website.
-- **Reusable Layouts:**  Templates allow for the creation of reusable layouts, reducing development time and effort.
-- **Flexible Layouts:**  Templates can be customized to create various page layouts.
+- **Reusable Layouts:** Templates allow for the creation of reusable layouts, reducing development time and effort.
+- **Flexible Layouts:** Templates can be customized to create various page layouts.
 - **Atomic Version Control:** Versioning capabilities ensure that every change is atomically tracked. The system uses database transactions to guarantee that a version snapshot is always created successfully whenever a change is saved, maintaining perfect historical consistency.
 
 ## Translations
 
-This CMS supports multilingual content through a robust translation system.  Translations are managed as individual entities, allowing for efficient management and updates.  Each translation is associated with a specific content item and language code.  The system supports multiple languages and allows for easy switching between languages.
+This CMS supports multilingual content through a robust translation system. Translations are managed as individual entities, allowing for efficient management and updates. Each translation is associated with a specific content item and language code. The system supports multiple languages and allows for easy switching between languages.
 
 ### Benefits of Using Translations
 
@@ -217,7 +220,7 @@ This CMS supports multilingual content through a robust translation system.  Tra
 
 ### Using Translations
 
-Translations are inserted into content using placeholders of the form `[[TRANSLATION_translationID]]`. The frontend code then replaces these placeholders with the appropriate translated text based on the user's selected language.  Administrators can manage translations through a dedicated admin interface, providing tools for creating, updating, and deleting translations.  The system automatically selects the appropriate translation based on the user's language preference.
+Translations are inserted into content using placeholders of the form `[[TRANSLATION_translationID]]`. The frontend code then replaces these placeholders with the appropriate translated text based on the user's selected language. Administrators can manage translations through a dedicated admin interface, providing tools for creating, updating, and deleting translations. The system automatically selects the appropriate translation based on the user's language preference.
 
 ## Blocks
 
@@ -248,7 +251,7 @@ providing tools for creating, updating, and deleting blocks.
 
 ## Menus
 
-This CMS provides a robust menu management system, allowing you to create and manage hierarchical menus for your website.  Menus are structured as trees, enabling you to organize your navigation in a clear and intuitive way.  The system supports creating, updating, deleting, and filtering menus through a dedicated admin interface.
+This CMS provides a robust menu management system, allowing you to create and manage hierarchical menus for your website. Menus are structured as trees, enabling you to organize your navigation in a clear and intuitive way. The system supports creating, updating, deleting, and filtering menus through a dedicated admin interface.
 
 ### Benefits of Using Menus
 
@@ -259,7 +262,7 @@ This CMS provides a robust menu management system, allowing you to create and ma
 
 ### Using Menus
 
-Menus are created and managed through the admin interface, which provides tools for creating, updating, and deleting menu items.  The hierarchical structure of menus allows you to organize your navigation in a clear and intuitive way.  The system supports various menu types and allows for customization of menu items.
+Menus are created and managed through the admin interface, which provides tools for creating, updating, and deleting menu items. The hierarchical structure of menus allows you to organize your navigation in a clear and intuitive way. The system supports various menu types and allows for customization of menu items.
 
 ## CMS URL Patterns
 
@@ -267,18 +270,34 @@ The following URL patterns are supported:
 
 - :any - ([^/]+)
 - :num - ([0-9]+)
-- :all - (.*)
+- :all - (.\*)
 - :string - ([a-zA-Z]+)
 - :number - ([0-9]+)
 - :numeric - ([0-9-.]+)
 - :alpha - ([a-zA-Z0-9-_]+)
 
 Example:
+
 ```
 /blog/:num/:any
 /shop/product/:num/:any
 ```
 
+## MCP Example
+
+```
+my-website": {
+    "type": "streamableHttp",
+    "disabled": false,
+    "headers": {
+    "Content-Type": "application/json",
+    "X-MCP-API-Key": "YOUR_APi_KEY"
+    },
+    "url": "https://YOUR-DOMAIN/mcp/cms"
+}
+```
+
 # Documentation
 
+For more information, please refer to the [Documentation](./docs/README.md).
 For more information, please refer to the [Documentation](./docs/README.md).
