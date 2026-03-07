@@ -24,6 +24,7 @@ type UiInterface interface {
 	TemplateManager(w http.ResponseWriter, r *http.Request)
 	TemplateDelete(w http.ResponseWriter, r *http.Request)
 	TemplateUpdate(w http.ResponseWriter, r *http.Request)
+	TemplateVersioning(w http.ResponseWriter, r *http.Request)
 }
 
 type ui struct {
@@ -88,6 +89,13 @@ func (ui ui) TemplateDelete(w http.ResponseWriter, r *http.Request) {
 
 func (ui ui) TemplateUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewTemplateUpdateController(ui)
+	html := controller.Handler(w, r)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
+}
+
+func (ui ui) TemplateVersioning(w http.ResponseWriter, r *http.Request) {
+	controller := NewTemplateVersioningController(ui)
 	html := controller.Handler(w, r)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write([]byte(html))

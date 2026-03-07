@@ -121,6 +121,16 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		HTML("Back").
 		Href(shared.URLR(data.request, shared.PathTemplatesTemplateManager, nil))
 
+	buttonVersion := hb.Button().
+		Class("btn btn-primary ms-2 float-end").
+		Child(hb.I().Class("bi bi-code-slash").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
+		HTML("Version History").
+		HxGet(shared.URLR(data.request, shared.PathTemplatesTemplateVersioning, map[string]string{
+			"template_id": data.templateID,
+		})).
+		HxTarget("body").
+		HxSwap("beforeend")
+
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
 		ClassIf(data.template.Status() == cmsstore.TEMPLATE_STATUS_ACTIVE, "bg-success").
@@ -134,6 +144,7 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Text(data.template.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).
+		Child(buttonVersion).
 		Child(buttonCancel)
 
 	card := hb.Div().

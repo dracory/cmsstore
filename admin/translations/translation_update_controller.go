@@ -105,12 +105,23 @@ func (controller translationUpdateController) page(data translationUpdateControl
 		ClassIf(data.translation.Status() == cmsstore.TEMPLATE_STATUS_DRAFT, "bg-warning").
 		Text(data.translation.Status())
 
+	buttonVersion := hb.Button().
+		Class("btn btn-primary ms-2 float-end").
+		Child(hb.I().Class("bi bi-code-slash").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
+		HTML("Version History").
+		HxGet(shared.URLR(data.request, shared.PathTranslationsTranslationVersioning, map[string]string{
+			"translation_id": data.translationID,
+		})).
+		HxTarget("body").
+		HxSwap("beforeend")
+
 	pageTitle := hb.Heading1().
 		Text("Edit Translation:").
 		Text(" ").
 		Text(data.translation.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).
+		Child(buttonVersion).
 		Child(buttonCancel)
 
 	card := hb.Div().

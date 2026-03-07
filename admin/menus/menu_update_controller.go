@@ -141,11 +141,21 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 		HTML("Back").
 		Href(shared.URLR(data.request, shared.PathMenusMenuManager, nil))
 
+	buttonVersion := hb.Button().
+		Class("btn btn-primary ms-2 float-end").
+		Child(hb.I().Class("bi bi-code-slash").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
+		HTML("Version History").
+		HxGet(shared.URLR(data.request, shared.PathMenusMenuVersioning, map[string]string{
+			"menu_id": data.menuID,
+		})).
+		HxTarget("body").
+		HxSwap("beforeend")
+
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
-		ClassIf(data.menu.Status() == cmsstore.TEMPLATE_STATUS_ACTIVE, "bg-success").
-		ClassIf(data.menu.Status() == cmsstore.TEMPLATE_STATUS_INACTIVE, "bg-secondary").
-		ClassIf(data.menu.Status() == cmsstore.TEMPLATE_STATUS_DRAFT, "bg-warning").
+		ClassIf(data.menu.Status() == cmsstore.MENU_STATUS_ACTIVE, "bg-success").
+		ClassIf(data.menu.Status() == cmsstore.MENU_STATUS_INACTIVE, "bg-secondary").
+		ClassIf(data.menu.Status() == cmsstore.MENU_STATUS_DRAFT, "bg-warning").
 		Text(data.menu.Status())
 
 	pageTitle := hb.Heading1().
@@ -154,7 +164,9 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 		Text(data.menu.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).
+		Child(buttonVersion).
 		Child(buttonCancel)
+
 
 	card := hb.Div().
 		Class("card").

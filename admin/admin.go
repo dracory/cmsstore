@@ -126,6 +126,7 @@ func (a *admin) menuRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 		shared.PathMenusMenuDelete:  adminMenus.UI(a.uiConfig()).MenuDelete,
 		shared.PathMenusMenuManager: adminMenus.UI(a.uiConfig()).MenuManager,
 		shared.PathMenusMenuUpdate:  adminMenus.UI(a.uiConfig()).MenuUpdate,
+		shared.PathMenusMenuVersioning: adminMenus.UI(a.uiConfig()).MenuVersioning,
 	}
 	return menuRoutes
 }
@@ -159,6 +160,7 @@ func (a *admin) templateRoutes() map[string]func(w http.ResponseWriter, r *http.
 		shared.PathTemplatesTemplateDelete:  adminTemplates.UI(a.uiConfig()).TemplateDelete,
 		shared.PathTemplatesTemplateManager: adminTemplates.UI(a.uiConfig()).TemplateManager,
 		shared.PathTemplatesTemplateUpdate:  adminTemplates.UI(a.uiConfig()).TemplateUpdate,
+		shared.PathTemplatesTemplateVersioning: adminTemplates.UI(a.uiConfig()).TemplateVersioning,
 	}
 	return templateRoutes
 }
@@ -169,6 +171,7 @@ func (a *admin) translationRoutes() map[string]func(w http.ResponseWriter, r *ht
 		shared.PathTranslationsTranslationDelete:  adminTranslations.UI(a.uiConfig()).TranslationDelete,
 		shared.PathTranslationsTranslationManager: adminTranslations.UI(a.uiConfig()).TranslationManager,
 		shared.PathTranslationsTranslationUpdate:  adminTranslations.UI(a.uiConfig()).TranslationUpdate,
+		shared.PathTranslationsTranslationVersioning: adminTranslations.UI(a.uiConfig()).TranslationVersioning,
 	}
 	return translationsRoutes
 }

@@ -23,6 +23,7 @@ type UiInterface interface {
 	TranslationManager(w http.ResponseWriter, r *http.Request)
 	TranslationDelete(w http.ResponseWriter, r *http.Request)
 	TranslationUpdate(w http.ResponseWriter, r *http.Request)
+	TranslationVersioning(w http.ResponseWriter, r *http.Request)
 }
 
 type ui struct {
@@ -81,6 +82,13 @@ func (ui ui) TranslationDelete(w http.ResponseWriter, r *http.Request) {
 
 func (ui ui) TranslationUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewTranslationUpdateController(ui)
+	html := controller.Handler(w, r)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
+}
+
+func (ui ui) TranslationVersioning(w http.ResponseWriter, r *http.Request) {
+	controller := NewTranslationVersioningController(ui)
 	html := controller.Handler(w, r)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write([]byte(html))
