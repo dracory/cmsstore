@@ -115,6 +115,7 @@ func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Req
 		shared.PathBlocksBlockDelete:  adminBlocks.UI(a.uiConfig()).BlockDelete,
 		shared.PathBlocksBlockManager: adminBlocks.UI(a.uiConfig()).BlockManager,
 		shared.PathBlocksBlockUpdate:  adminBlocks.UI(a.uiConfig()).BlockUpdate,
+		shared.PathBlocksBlockVersioning: adminBlocks.UI(a.uiConfig()).BlockVersioning,
 	}
 	return blockRoutes
 }
@@ -145,6 +146,7 @@ func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 		shared.PathSitesSiteCreate:  adminSites.UI(a.uiConfig()).SiteCreate,
 		shared.PathSitesSiteDelete:  adminSites.UI(a.uiConfig()).SiteDelete,
 		shared.PathSitesSiteUpdate:  adminSites.UI(a.uiConfig()).SiteUpdate,
+		shared.PathSitesSiteVersioning: adminSites.UI(a.uiConfig()).SiteVersioning,
 		shared.PathSitesSiteManager: adminSites.UI(a.uiConfig()).SiteManager,
 	}
 

@@ -115,6 +115,16 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		HTML("Back").
 		Href(shared.URLR(data.request, shared.PathSitesSiteManager, nil))
 
+	buttonVersion := hb.Button().
+		Class("btn btn-primary ms-2 float-end").
+		Child(hb.I().Class("bi bi-code-slash").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
+		HTML("Version History").
+		HxGet(shared.URLR(data.request, shared.PathSitesSiteVersioning, map[string]string{
+			"site_id": data.siteID,
+		})).
+		HxTarget("body").
+		HxSwap("beforeend")
+
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
 		ClassIf(data.site.Status() == cmsstore.SITE_STATUS_ACTIVE, "bg-success").
@@ -128,6 +138,7 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		Text(data.site.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).
+		Child(buttonVersion).
 		Child(buttonCancel)
 
 	card := hb.Div().

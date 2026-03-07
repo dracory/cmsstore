@@ -22,6 +22,7 @@ type UiInterface interface {
 	SiteManager(w http.ResponseWriter, r *http.Request)
 	SiteDelete(w http.ResponseWriter, r *http.Request)
 	SiteUpdate(w http.ResponseWriter, r *http.Request)
+	SiteVersioning(w http.ResponseWriter, r *http.Request)
 }
 
 type ui struct {
@@ -80,6 +81,13 @@ func (ui ui) SiteDelete(w http.ResponseWriter, r *http.Request) {
 
 func (ui ui) SiteUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewSiteUpdateController(ui)
+	html := controller.Handler(w, r)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
+}
+
+func (ui ui) SiteVersioning(w http.ResponseWriter, r *http.Request) {
+	controller := NewSiteVersioningController(ui)
 	html := controller.Handler(w, r)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write([]byte(html))

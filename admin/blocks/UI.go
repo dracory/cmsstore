@@ -23,6 +23,7 @@ type UiInterface interface {
 	BlockManager(w http.ResponseWriter, r *http.Request)
 	BlockDelete(w http.ResponseWriter, r *http.Request)
 	BlockUpdate(w http.ResponseWriter, r *http.Request)
+	BlockVersioning(w http.ResponseWriter, r *http.Request)
 }
 
 type ui struct {
@@ -81,6 +82,13 @@ func (ui ui) BlockDelete(w http.ResponseWriter, r *http.Request) {
 
 func (ui ui) BlockUpdate(w http.ResponseWriter, r *http.Request) {
 	controller := NewBlockUpdateController(ui)
+	html := controller.Handler(w, r)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(html))
+}
+
+func (ui ui) BlockVersioning(w http.ResponseWriter, r *http.Request) {
+	controller := NewBlockVersioningController(ui)
 	html := controller.Handler(w, r)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write([]byte(html))

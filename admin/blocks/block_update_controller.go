@@ -121,6 +121,16 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		HTML("Back").
 		Href(shared.URLR(data.request, shared.PathBlocksBlockManager, nil))
 
+	buttonVersion := hb.Button().
+		Class("btn btn-primary ms-2 float-end").
+		Child(hb.I().Class("bi bi-code-slash").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
+		HTML("Version History").
+		HxGet(shared.URLR(data.request, shared.PathBlocksBlockVersioning, map[string]string{
+			"block_id": data.blockID,
+		})).
+		HxTarget("body").
+		HxSwap("beforeend")
+
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
 		ClassIf(data.block.Status() == cmsstore.TEMPLATE_STATUS_ACTIVE, "bg-success").
@@ -134,6 +144,7 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Text(data.block.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).
+		Child(buttonVersion).
 		Child(buttonCancel)
 
 	card := hb.Div().
