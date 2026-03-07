@@ -30,16 +30,16 @@ func (m *MCP) toolMenuGet(ctx context.Context, args map[string]any) (string, err
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":              cmsstore.ShortenID(menu.ID()),
-		"name":            menu.Name(),
-		"handle":          menu.Handle(),
-		"status":          menu.Status(),
-		"site_id":         cmsstore.ShortenID(menu.SiteID()),
-		"memo":            menu.Memo(),
-		"created_at":      menu.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"updated_at":      menu.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at": menu.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":           metas,
+		"id":         cmsstore.ShortenID(menu.ID()),
+		"name":       menu.Name(),
+		"handle":     menu.Handle(),
+		"status":     menu.Status(),
+		"site_id":    cmsstore.ShortenID(menu.SiteID()),
+		"memo":       menu.Memo(),
+		"created_at": menu.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at": menu.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		// "soft_deleted_at": menu.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err
@@ -93,16 +93,16 @@ func (m *MCP) toolMenuList(ctx context.Context, args map[string]any) (string, er
 			return "", err
 		}
 		items = append(items, map[string]any{
-			"id":              cmsstore.ShortenID(menu.ID()),
-			"name":            menu.Name(),
-			"handle":          menu.Handle(),
-			"status":          menu.Status(),
-			"site_id":         cmsstore.ShortenID(menu.SiteID()),
-			"memo":            menu.Memo(),
-			"created_at":      menu.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-			"updated_at":      menu.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-			"soft_deleted_at": menu.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-			"metas":           metas,
+			"id":         cmsstore.ShortenID(menu.ID()),
+			"name":       menu.Name(),
+			"handle":     menu.Handle(),
+			"status":     menu.Status(),
+			"site_id":    cmsstore.ShortenID(menu.SiteID()),
+			"memo":       menu.Memo(),
+			"created_at": menu.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at": menu.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+			// "soft_deleted_at": menu.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+			"metas": metas,
 		})
 	}
 
@@ -196,16 +196,16 @@ func (m *MCP) toolMenuUpsert(ctx context.Context, args map[string]any) (string, 
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":              cmsstore.ShortenID(menu.ID()),
-		"name":            menu.Name(),
-		"handle":          menu.Handle(),
-		"status":          menu.Status(),
-		"site_id":         cmsstore.ShortenID(menu.SiteID()),
-		"memo":            menu.Memo(),
-		"created_at":      menu.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"updated_at":      menu.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at": menu.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":           metas,
+		"id":         cmsstore.ShortenID(menu.ID()),
+		"name":       menu.Name(),
+		"handle":     menu.Handle(),
+		"status":     menu.Status(),
+		"site_id":    cmsstore.ShortenID(menu.SiteID()),
+		"memo":       menu.Memo(),
+		"created_at": menu.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at": menu.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		// "soft_deleted_at": menu.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err

@@ -30,21 +30,21 @@ func (m *MCP) toolMenuItemGet(ctx context.Context, args map[string]any) (string,
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":              menuItem.ID(),
-		"name":            menuItem.Name(),
-		"handle":          menuItem.Handle(),
-		"url":             menuItem.URL(),
-		"target":          menuItem.Target(),
-		"status":          menuItem.Status(),
-		"menu_id":         menuItem.MenuID(),
-		"page_id":         menuItem.PageID(),
-		"parent_id":       menuItem.ParentID(),
-		"memo":            menuItem.Memo(),
-		"sequence":        menuItem.Sequence(),
-		"created_at":      menuItem.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"updated_at":      menuItem.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at": menuItem.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":           metas,
+		"id":         cmsstore.ShortenID(menuItem.ID()),
+		"name":       menuItem.Name(),
+		"handle":     menuItem.Handle(),
+		"status":     menuItem.Status(),
+		"menu_id":    cmsstore.ShortenID(menuItem.MenuID()),
+		"page_id":    cmsstore.ShortenID(menuItem.PageID()),
+		"parent_id":  cmsstore.ShortenID(menuItem.ParentID()),
+		"sequence":   menuItem.Sequence(),
+		"target":     menuItem.Target(),
+		"url":        menuItem.URL(),
+		"memo":       menuItem.Memo(),
+		"created_at": menuItem.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at": menuItem.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		// "soft_deleted_at": menuItem.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err
@@ -95,21 +95,21 @@ func (m *MCP) toolMenuItemList(ctx context.Context, args map[string]any) (string
 			return "", err
 		}
 		items = append(items, map[string]any{
-			"id":              menuItem.ID(),
-			"name":            menuItem.Name(),
-			"handle":          menuItem.Handle(),
-			"url":             menuItem.URL(),
-			"target":          menuItem.Target(),
-			"status":          menuItem.Status(),
-			"menu_id":         menuItem.MenuID(),
-			"page_id":         menuItem.PageID(),
-			"parent_id":       menuItem.ParentID(),
-			"memo":            menuItem.Memo(),
-			"sequence":        menuItem.Sequence(),
-			"created_at":      menuItem.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-			"updated_at":      menuItem.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-			"soft_deleted_at": menuItem.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-			"metas":           metas,
+			"id":         menuItem.ID(),
+			"name":       menuItem.Name(),
+			"handle":     menuItem.Handle(),
+			"url":        menuItem.URL(),
+			"target":     menuItem.Target(),
+			"status":     menuItem.Status(),
+			"menu_id":    menuItem.MenuID(),
+			"page_id":    menuItem.PageID(),
+			"parent_id":  menuItem.ParentID(),
+			"memo":       menuItem.Memo(),
+			"sequence":   menuItem.Sequence(),
+			"created_at": menuItem.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at": menuItem.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+			// "soft_deleted_at": menuItem.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+			"metas": metas,
 		})
 	}
 
@@ -221,21 +221,21 @@ func (m *MCP) toolMenuItemUpsert(ctx context.Context, args map[string]any) (stri
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":              menuItem.ID(),
-		"name":            menuItem.Name(),
-		"handle":          menuItem.Handle(),
-		"url":             menuItem.URL(),
-		"target":          menuItem.Target(),
-		"status":          menuItem.Status(),
-		"menu_id":         menuItem.MenuID(),
-		"page_id":         menuItem.PageID(),
-		"parent_id":       menuItem.ParentID(),
-		"memo":            menuItem.Memo(),
-		"sequence":        menuItem.Sequence(),
-		"created_at":      menuItem.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"updated_at":      menuItem.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at": menuItem.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":           metas,
+		"id":         menuItem.ID(),
+		"name":       menuItem.Name(),
+		"handle":     menuItem.Handle(),
+		"url":        menuItem.URL(),
+		"target":     menuItem.Target(),
+		"status":     menuItem.Status(),
+		"menu_id":    menuItem.MenuID(),
+		"page_id":    menuItem.PageID(),
+		"parent_id":  menuItem.ParentID(),
+		"memo":       menuItem.Memo(),
+		"sequence":   menuItem.Sequence(),
+		"created_at": menuItem.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at": menuItem.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		// "soft_deleted_at": menuItem.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err

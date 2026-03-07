@@ -46,8 +46,8 @@ func (m *MCP) toolPageGet(ctx context.Context, args map[string]any) (string, err
 		"memo":             page.Memo(),
 		"created_at":       page.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
 		"updated_at":       page.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at":  page.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":            metas,
+		// "soft_deleted_at":  page.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err
@@ -151,8 +151,8 @@ func (m *MCP) toolPageList(ctx context.Context, args map[string]any) (string, er
 			"memo":             p.Memo(),
 			"created_at":       p.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
 			"updated_at":       p.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-			"soft_deleted_at":  p.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-			"metas":            metas,
+			// "soft_deleted_at":  p.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+			"metas": metas,
 		})
 	}
 
@@ -287,8 +287,8 @@ func (m *MCP) toolPageUpsert(ctx context.Context, args map[string]any) (string, 
 		"memo":             page.Memo(),
 		"created_at":       page.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
 		"updated_at":       page.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at":  page.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":            metas,
+		// "soft_deleted_at":  page.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err

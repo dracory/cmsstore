@@ -31,16 +31,16 @@ func (m *MCP) toolSiteGet(ctx context.Context, args map[string]any) (string, err
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":              cmsstore.ShortenID(site.ID()),
-		"name":            site.Name(),
-		"handle":          site.Handle(),
-		"domainNames":     domains,
-		"status":          site.Status(),
-		"memo":            site.Memo(),
-		"created_at":      site.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"updated_at":      site.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at": site.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":           metas,
+		"id":          cmsstore.ShortenID(site.ID()),
+		"name":        site.Name(),
+		"handle":      site.Handle(),
+		"domainNames": domains,
+		"status":      site.Status(),
+		"memo":        site.Memo(),
+		"created_at":  site.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":  site.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		// "soft_deleted_at": site.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err
@@ -95,16 +95,16 @@ func (m *MCP) toolSiteList(ctx context.Context, args map[string]any) (string, er
 			return "", err
 		}
 		items = append(items, map[string]any{
-			"id":              cmsstore.ShortenID(s.ID()),
-			"name":            s.Name(),
-			"handle":          s.Handle(),
-			"status":          s.Status(),
-			"domainNames":     domains,
-			"memo":            s.Memo(),
-			"created_at":      s.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-			"updated_at":      s.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-			"soft_deleted_at": s.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-			"metas":           metas,
+			"id":          cmsstore.ShortenID(s.ID()),
+			"name":        s.Name(),
+			"handle":      s.Handle(),
+			"status":      s.Status(),
+			"domainNames": domains,
+			"memo":        s.Memo(),
+			"created_at":  s.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at":  s.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+			// "soft_deleted_at": s.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+			"metas": metas,
 		})
 	}
 
@@ -189,16 +189,16 @@ func (m *MCP) toolSiteUpsert(ctx context.Context, args map[string]any) (string, 
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":              cmsstore.ShortenID(site.ID()),
-		"name":            site.Name(),
-		"handle":          site.Handle(),
-		"status":          site.Status(),
-		"domainNames":     domains,
-		"memo":            site.Memo(),
-		"created_at":      site.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"updated_at":      site.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at": site.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":           metas,
+		"id":          cmsstore.ShortenID(site.ID()),
+		"name":        site.Name(),
+		"handle":      site.Handle(),
+		"status":      site.Status(),
+		"domainNames": domains,
+		"memo":        site.Memo(),
+		"created_at":  site.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at":  site.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		// "soft_deleted_at": site.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err

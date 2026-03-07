@@ -30,18 +30,18 @@ func (m *MCP) toolTemplateGet(ctx context.Context, args map[string]any) (string,
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":              cmsstore.ShortenID(template.ID()),
-		"name":            template.Name(),
-		"content":         template.Content(),
-		"status":          template.Status(),
-		"site_id":         cmsstore.ShortenID(template.SiteID()),
-		"handle":          template.Handle(),
-		"editor":          template.Editor(),
-		"memo":            template.Memo(),
-		"created_at":      template.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"updated_at":      template.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at": template.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":           metas,
+		"id":         cmsstore.ShortenID(template.ID()),
+		"name":       template.Name(),
+		"handle":     template.Handle(),
+		"status":     template.Status(),
+		"editor":     template.Editor(),
+		"content":    template.Content(),
+		"site_id":    cmsstore.ShortenID(template.SiteID()),
+		"memo":       template.Memo(),
+		"created_at": template.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at": template.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		// "soft_deleted_at": template.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err
@@ -98,17 +98,17 @@ func (m *MCP) toolTemplateList(ctx context.Context, args map[string]any) (string
 			return "", err
 		}
 		items = append(items, map[string]any{
-			"id":              cmsstore.ShortenID(template.ID()),
-			"name":            template.Name(),
-			"handle":          template.Handle(),
-			"status":          template.Status(),
-			"site_id":         cmsstore.ShortenID(template.SiteID()),
-			"editor":          template.Editor(),
-			"memo":            template.Memo(),
-			"created_at":      template.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-			"updated_at":      template.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-			"soft_deleted_at": template.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-			"metas":           metas,
+			"id":         cmsstore.ShortenID(template.ID()),
+			"name":       template.Name(),
+			"handle":     template.Handle(),
+			"status":     template.Status(),
+			"site_id":    cmsstore.ShortenID(template.SiteID()),
+			"editor":     template.Editor(),
+			"memo":       template.Memo(),
+			"created_at": template.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+			"updated_at": template.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+			// "soft_deleted_at": template.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+			"metas": metas,
 		})
 	}
 
@@ -209,18 +209,18 @@ func (m *MCP) toolTemplateUpsert(ctx context.Context, args map[string]any) (stri
 	}
 
 	respBytes, err := json.Marshal(map[string]any{
-		"id":              cmsstore.ShortenID(template.ID()),
-		"name":            template.Name(),
-		"content":         template.Content(),
-		"status":          template.Status(),
-		"site_id":         cmsstore.ShortenID(template.SiteID()),
-		"handle":          template.Handle(),
-		"editor":          template.Editor(),
-		"memo":            template.Memo(),
-		"created_at":      template.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"updated_at":      template.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
-		"soft_deleted_at": template.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC),
-		"metas":           metas,
+		"id":         cmsstore.ShortenID(template.ID()),
+		"name":       template.Name(),
+		"content":    template.Content(),
+		"status":     template.Status(),
+		"site_id":    cmsstore.ShortenID(template.SiteID()),
+		"handle":     template.Handle(),
+		"editor":     template.Editor(),
+		"memo":       template.Memo(),
+		"created_at": template.CreatedAtCarbon().ToDateTimeString(carbon.UTC),
+		"updated_at": template.UpdatedAtCarbon().ToDateTimeString(carbon.UTC),
+		// "soft_deleted_at": template.SoftDeletedAtCarbon().ToDateTimeString(carbon.UTC), // commented out to avoid confusing LLMs since list operations exclude soft deleted items by default
+		"metas": metas,
 	})
 	if err != nil {
 		return "", err
