@@ -29,10 +29,11 @@ type admin struct {
 		Scripts    []string
 		ScriptURLs []string
 	}) string
-	logger       *slog.Logger
-	store        cmsstore.StoreInterface
-	adminHomeURL string
-	flags        map[string]bool
+	logger          *slog.Logger
+	store           cmsstore.StoreInterface
+	adminHomeURL    string
+	mediaManagerURL string
+	flags           map[string]bool
 }
 
 // == INTERFACE IMPLEMENTATION CHECK ==========================================
@@ -50,6 +51,7 @@ func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.WithValue(r.Context(), shared.KeyEndpoint, r.URL.Path)
 	ctx = context.WithValue(ctx, shared.KeyAdminHomeURL, a.adminHomeURL)
+	ctx = context.WithValue(ctx, shared.KeyMediaManagerURL, a.mediaManagerURL)
 
 	routeFunc := a.getRoute(path)
 	routeFunc(w, r.WithContext(ctx))
@@ -111,10 +113,10 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 
 func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	blockRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathBlocksBlockCreate:  adminBlocks.UI(a.uiConfig()).BlockCreate,
-		shared.PathBlocksBlockDelete:  adminBlocks.UI(a.uiConfig()).BlockDelete,
-		shared.PathBlocksBlockManager: adminBlocks.UI(a.uiConfig()).BlockManager,
-		shared.PathBlocksBlockUpdate:  adminBlocks.UI(a.uiConfig()).BlockUpdate,
+		shared.PathBlocksBlockCreate:     adminBlocks.UI(a.uiConfig()).BlockCreate,
+		shared.PathBlocksBlockDelete:     adminBlocks.UI(a.uiConfig()).BlockDelete,
+		shared.PathBlocksBlockManager:    adminBlocks.UI(a.uiConfig()).BlockManager,
+		shared.PathBlocksBlockUpdate:     adminBlocks.UI(a.uiConfig()).BlockUpdate,
 		shared.PathBlocksBlockVersioning: adminBlocks.UI(a.uiConfig()).BlockVersioning,
 	}
 	return blockRoutes
@@ -122,10 +124,10 @@ func (a *admin) blockRoutes() map[string]func(w http.ResponseWriter, r *http.Req
 
 func (a *admin) menuRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	menuRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathMenusMenuCreate:  adminMenus.UI(a.uiConfig()).MenuCreate,
-		shared.PathMenusMenuDelete:  adminMenus.UI(a.uiConfig()).MenuDelete,
-		shared.PathMenusMenuManager: adminMenus.UI(a.uiConfig()).MenuManager,
-		shared.PathMenusMenuUpdate:  adminMenus.UI(a.uiConfig()).MenuUpdate,
+		shared.PathMenusMenuCreate:     adminMenus.UI(a.uiConfig()).MenuCreate,
+		shared.PathMenusMenuDelete:     adminMenus.UI(a.uiConfig()).MenuDelete,
+		shared.PathMenusMenuManager:    adminMenus.UI(a.uiConfig()).MenuManager,
+		shared.PathMenusMenuUpdate:     adminMenus.UI(a.uiConfig()).MenuUpdate,
 		shared.PathMenusMenuVersioning: adminMenus.UI(a.uiConfig()).MenuVersioning,
 	}
 	return menuRoutes
@@ -144,11 +146,11 @@ func (a *admin) pageRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	siteRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathSitesSiteCreate:  adminSites.UI(a.uiConfig()).SiteCreate,
-		shared.PathSitesSiteDelete:  adminSites.UI(a.uiConfig()).SiteDelete,
-		shared.PathSitesSiteUpdate:  adminSites.UI(a.uiConfig()).SiteUpdate,
+		shared.PathSitesSiteCreate:     adminSites.UI(a.uiConfig()).SiteCreate,
+		shared.PathSitesSiteDelete:     adminSites.UI(a.uiConfig()).SiteDelete,
+		shared.PathSitesSiteUpdate:     adminSites.UI(a.uiConfig()).SiteUpdate,
 		shared.PathSitesSiteVersioning: adminSites.UI(a.uiConfig()).SiteVersioning,
-		shared.PathSitesSiteManager: adminSites.UI(a.uiConfig()).SiteManager,
+		shared.PathSitesSiteManager:    adminSites.UI(a.uiConfig()).SiteManager,
 	}
 
 	return siteRoutes
@@ -156,10 +158,10 @@ func (a *admin) siteRoutes() map[string]func(w http.ResponseWriter, r *http.Requ
 
 func (a *admin) templateRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	templateRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathTemplatesTemplateCreate:  adminTemplates.UI(a.uiConfig()).TemplateCreate,
-		shared.PathTemplatesTemplateDelete:  adminTemplates.UI(a.uiConfig()).TemplateDelete,
-		shared.PathTemplatesTemplateManager: adminTemplates.UI(a.uiConfig()).TemplateManager,
-		shared.PathTemplatesTemplateUpdate:  adminTemplates.UI(a.uiConfig()).TemplateUpdate,
+		shared.PathTemplatesTemplateCreate:     adminTemplates.UI(a.uiConfig()).TemplateCreate,
+		shared.PathTemplatesTemplateDelete:     adminTemplates.UI(a.uiConfig()).TemplateDelete,
+		shared.PathTemplatesTemplateManager:    adminTemplates.UI(a.uiConfig()).TemplateManager,
+		shared.PathTemplatesTemplateUpdate:     adminTemplates.UI(a.uiConfig()).TemplateUpdate,
 		shared.PathTemplatesTemplateVersioning: adminTemplates.UI(a.uiConfig()).TemplateVersioning,
 	}
 	return templateRoutes
@@ -167,10 +169,10 @@ func (a *admin) templateRoutes() map[string]func(w http.ResponseWriter, r *http.
 
 func (a *admin) translationRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	translationsRoutes := map[string]func(w http.ResponseWriter, r *http.Request){
-		shared.PathTranslationsTranslationCreate:  adminTranslations.UI(a.uiConfig()).TranslationCreate,
-		shared.PathTranslationsTranslationDelete:  adminTranslations.UI(a.uiConfig()).TranslationDelete,
-		shared.PathTranslationsTranslationManager: adminTranslations.UI(a.uiConfig()).TranslationManager,
-		shared.PathTranslationsTranslationUpdate:  adminTranslations.UI(a.uiConfig()).TranslationUpdate,
+		shared.PathTranslationsTranslationCreate:     adminTranslations.UI(a.uiConfig()).TranslationCreate,
+		shared.PathTranslationsTranslationDelete:     adminTranslations.UI(a.uiConfig()).TranslationDelete,
+		shared.PathTranslationsTranslationManager:    adminTranslations.UI(a.uiConfig()).TranslationManager,
+		shared.PathTranslationsTranslationUpdate:     adminTranslations.UI(a.uiConfig()).TranslationUpdate,
 		shared.PathTranslationsTranslationVersioning: adminTranslations.UI(a.uiConfig()).TranslationVersioning,
 	}
 	return translationsRoutes

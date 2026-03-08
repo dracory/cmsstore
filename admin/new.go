@@ -32,7 +32,8 @@ type AdminOptions struct {
 	// Store is the cmsstore.StoreInterface to use by the admin panel
 	Store cmsstore.StoreInterface
 
-	AdminHomeURL string
+	AdminHomeURL    string
+	MediaManagerURL string
 
 	// flags holds a map of feature flags for internal use
 	Flags map[string]bool
@@ -53,6 +54,7 @@ func New(options AdminOptions) (*admin, error) {
 		store:                  options.Store,
 		funcLayout:             options.FuncLayout,
 		adminHomeURL:           options.AdminHomeURL,
+		mediaManagerURL:        options.MediaManagerURL,
 		flags:                  lo.Ternary(options.Flags != nil, options.Flags, map[string]bool{}),
 	}, nil
 }

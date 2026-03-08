@@ -46,6 +46,7 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Req
 		HTML("Translations").
 		Href(URLR(r, PathTranslationsTranslationManager, nil)).
 		Class("nav-link")
+	mediaManagerURL := MediaManagerURL(r)
 
 	templatesCount, err := store.TemplateCount(r.Context(), cmsstore.TemplateQuery())
 
@@ -144,6 +145,17 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Req
 				Child(hb.NewSpan().
 					Class("badge bg-secondary ms-1").
 					HTML(cast.ToString(translationsCount)))))
+	}
+
+	if mediaManagerURL != "" {
+		linkMedia := hb.Hyperlink().
+			HTML("Media").
+			Href(mediaManagerURL).
+			Class("nav-link")
+
+		ulNav.Child(hb.LI().
+			Class("nav-item").
+			Child(linkMedia))
 	}
 
 	// if cms.settingsEnabled {

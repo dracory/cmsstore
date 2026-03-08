@@ -1,6 +1,7 @@
 package shared
 
 const KeyAdminHomeURL = "admin_home_uRL"
+const KeyMediaManagerURL = "media_manager_url"
 const KeyEndpoint = "endpoint"
 const PathHome = "/"
 
