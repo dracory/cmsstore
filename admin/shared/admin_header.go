@@ -151,6 +151,7 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Req
 		linkMedia := hb.Hyperlink().
 			HTML("Media").
 			Href(mediaManagerURL).
+			Target("_blank").
 			Class("nav-link")
 
 		ulNav.Child(hb.LI().
