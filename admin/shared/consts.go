@@ -2,6 +2,10 @@ package shared
 
 const KeyAdminHomeURL = "admin_home_uRL"
 const KeyMediaManagerURL = "media_manager_url"
+const KeyPaddingTopPx = "padding_top_px"
+const KeyPaddingRightPx = "padding_right_px"
+const KeyPaddingBottomPx = "padding_bottom_px"
+const KeyPaddingLeftPx = "padding_left_px"
 const KeyEndpoint = "endpoint"
 const PathHome = "/"
 

@@ -34,6 +34,10 @@ type AdminOptions struct {
 
 	AdminHomeURL    string
 	MediaManagerURL string
+	PaddingTopPx    int
+	PaddingRightPx  int
+	PaddingBottomPx int
+	PaddingLeftPx   int
 
 	// flags holds a map of feature flags for internal use
 	Flags map[string]bool
@@ -55,6 +59,10 @@ func New(options AdminOptions) (*admin, error) {
 		funcLayout:             options.FuncLayout,
 		adminHomeURL:           options.AdminHomeURL,
 		mediaManagerURL:        options.MediaManagerURL,
+		paddingTopPx:           options.PaddingTopPx,
+		paddingRightPx:         options.PaddingRightPx,
+		paddingBottomPx:        options.PaddingBottomPx,
+		paddingLeftPx:          options.PaddingLeftPx,
 		flags:                  lo.Ternary(options.Flags != nil, options.Flags, map[string]bool{}),
 	}, nil
 }

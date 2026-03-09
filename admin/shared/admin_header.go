@@ -170,6 +170,6 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Req
 	// }
 
 	divCard := hb.NewDiv().Class("card card-default mt-3 mb-3")
-	divCardBody := hb.NewDiv().Class("card-body").Style("padding: 2px;")
+	divCardBody := hb.NewDiv().Class("card-body")
 	return divCard.AddChild(divCardBody.AddChild(ulNav))
 }

@@ -33,6 +33,10 @@ type admin struct {
 	store           cmsstore.StoreInterface
 	adminHomeURL    string
 	mediaManagerURL string
+	paddingTopPx    int
+	paddingRightPx  int
+	paddingBottomPx int
+	paddingLeftPx   int
 	flags           map[string]bool
 }
 
@@ -52,6 +56,10 @@ func (a *admin) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := context.WithValue(r.Context(), shared.KeyEndpoint, r.URL.Path)
 	ctx = context.WithValue(ctx, shared.KeyAdminHomeURL, a.adminHomeURL)
 	ctx = context.WithValue(ctx, shared.KeyMediaManagerURL, a.mediaManagerURL)
+	ctx = context.WithValue(ctx, shared.KeyPaddingTopPx, a.paddingTopPx)
+	ctx = context.WithValue(ctx, shared.KeyPaddingRightPx, a.paddingRightPx)
+	ctx = context.WithValue(ctx, shared.KeyPaddingBottomPx, a.paddingBottomPx)
+	ctx = context.WithValue(ctx, shared.KeyPaddingLeftPx, a.paddingLeftPx)
 
 	routeFunc := a.getRoute(path)
 	routeFunc(w, r.WithContext(ctx))
@@ -92,7 +100,8 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 	Scripts    []string
 	ScriptURLs []string
 }) string {
-	webpage := shared.Layout(w, r, webpageTitle, webpageHtml, options)
+	wrappedPageContent := shared.CMSContainer(r, webpageHtml)
+	webpage := shared.Layout(w, r, webpageTitle, wrappedPageContent, options)
 
 	if a.funcLayout != nil {
 		isNotEmpty := a.funcLayout("", "", struct {
@@ -102,7 +111,7 @@ func (a *admin) render(w http.ResponseWriter, r *http.Request, webpageTitle, web
 			ScriptURLs []string
 		}{}) != ""
 		if isNotEmpty {
-			webpage = a.funcLayout(webpageTitle, webpageHtml, options)
+			webpage = a.funcLayout(webpageTitle, wrappedPageContent, options)
 		}
 	}
 

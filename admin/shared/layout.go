@@ -13,6 +13,7 @@ func Layout(w http.ResponseWriter, r *http.Request, webpageTitle, webpageHtml st
 	Scripts    []string
 	ScriptURLs []string
 }) string {
+	_ = r // kept for layout signature compatibility
 	return webpageComplete(webpageTitle, webpageHtml, options).ToHTML()
 }
 
