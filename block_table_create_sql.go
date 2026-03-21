@@ -5,8 +5,8 @@ import (
 )
 
 // SQLCreateTable returns a SQL string for creating the country table
-func (st *storeImplementation) blockTableCreateSql() string {
-	sql := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+func (st *storeImplementation) blockTableCreateSql() (string, error) {
+	sql, err := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
 		Table(st.blockTableName).
 		Column(sb.Column{
 			Name:       COLUMN_ID,
@@ -89,6 +89,9 @@ func (st *storeImplementation) blockTableCreateSql() string {
 			Type: sb.COLUMN_TYPE_DATETIME,
 		}).
 		CreateIfNotExists()
+	if err != nil {
+		return "", err
+	}
 
-	return sql
+	return sql, nil
 }

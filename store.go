@@ -62,13 +62,41 @@ func (store *storeImplementation) AutoMigrate(ctx context.Context, opts ...Optio
 	transaction, hasTransaction := options.params["tx"].(*sql.Tx)
 	isDryRun, hasDryRun := options.params["dryRun"].(bool)
 
-	blockSql := store.blockTableCreateSql()
-	menuSql := store.menuTableCreateSql()
-	menuItemSql := store.menuItemTableCreateSql()
-	pageSql := store.pageTableCreateSql()
-	tableSql := store.siteTableCreateSql()
-	templateSql := store.templateTableCreateSql()
-	translationSql := store.translationTableCreateSql()
+	blockSql, err := store.blockTableCreateSql()
+	if err != nil {
+		return err
+	}
+	pageSql, err := store.pageTableCreateSql()
+	if err != nil {
+		return err
+	}
+	tableSql, err := store.siteTableCreateSql()
+	if err != nil {
+		return err
+	}
+	templateSql, err := store.templateTableCreateSql()
+	if err != nil {
+		return err
+	}
+
+	var menuSql, menuItemSql, translationSql string
+	if store.menusEnabled {
+		menuSql, err = store.menuTableCreateSql()
+		if err != nil {
+			return err
+		}
+		menuItemSql, err = store.menuItemTableCreateSql()
+		if err != nil {
+			return err
+		}
+	}
+
+	if store.translationsEnabled {
+		translationSql, err = store.translationTableCreateSql()
+		if err != nil {
+			return err
+		}
+	}
 
 	if blockSql == "" {
 		return errors.New("block table create sql is empty")

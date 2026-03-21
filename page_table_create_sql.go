@@ -5,9 +5,9 @@ import (
 )
 
 // pageTableCreateSql returns a SQL string for creating the page table
-func (st *storeImplementation) pageTableCreateSql() string {
+func (st *storeImplementation) pageTableCreateSql() (string, error) {
 	// Create a new SQL builder for the database driver used by the store
-	sql := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+	sql, err := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
 		// Define the table name using the store's page table name
 		Table(st.pageTableName).
 		// Define the ID column as a primary key string with a length of 40 characters
@@ -131,6 +131,9 @@ func (st *storeImplementation) pageTableCreateSql() string {
 		}).
 		// Generate the SQL statement to create the table if it does not already exist
 		CreateIfNotExists()
+	if err != nil {
+		return "", err
+	}
 
-	return sql
+	return sql, nil
 }

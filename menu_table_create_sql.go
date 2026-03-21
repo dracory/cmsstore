@@ -5,9 +5,9 @@ import (
 )
 
 // SQLCreateTable returns a SQL string for creating the menu table
-func (st *storeImplementation) menuTableCreateSql() string {
+func (st *storeImplementation) menuTableCreateSql() (string, error) {
 	// Initialize a new SQL builder using the database driver name from the store
-	sql := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+	sql, err := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
 		// Set the table name using the menuTableName from the store
 		Table(st.menuTableName).
 		// Define the ID column, which is the primary key with a length of 40 characters
@@ -68,7 +68,10 @@ func (st *storeImplementation) menuTableCreateSql() string {
 		}).
 		// Create the table if it does not exist
 		CreateIfNotExists()
+	if err != nil {
+		return "", err
+	}
 
 	// Return the generated SQL string
-	return sql
+	return sql, nil
 }

@@ -137,13 +137,13 @@ func TestStoreTranslationFindByHandleOrID(t *testing.T) {
 
 func TestStoreTranslationErrorPaths(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test with nil DB
 	store := &storeImplementation{db: nil}
-	
+
 	_, err := store.TranslationCount(ctx, TranslationQuery())
 	require.Error(t, err)
-	
+
 	err = store.TranslationCreate(ctx, NewTranslation())
 	require.Error(t, err)
 
@@ -352,95 +352,95 @@ func TestStoreTranslationCount(t *testing.T) {
 
 func TestTranslationQueryMethods(t *testing.T) {
 	q := TranslationQuery()
-	
+
 	q.SetColumns([]string{"id", "name"})
 	require.Equal(t, []string{"id", "name"}, q.Columns())
-	
+
 	q.SetCountOnly(true)
 	require.True(t, q.IsCountOnly())
-	
+
 	q.SetCreatedAtGte("2023-01-01")
 	require.Equal(t, "2023-01-01", q.CreatedAtGte())
-	
+
 	q.SetCreatedAtLte("2023-12-31")
 	require.Equal(t, "2023-12-31", q.CreatedAtLte())
-	
+
 	q.SetHandle("handle")
 	require.Equal(t, "handle", q.Handle())
-	
+
 	q.SetHandleOrID("handleorid")
 	require.Equal(t, "handleorid", q.HandleOrID())
-	
+
 	q.SetID("id")
 	require.Equal(t, "id", q.ID())
-	
+
 	q.SetIDIn([]string{"id1", "id2"})
 	require.Equal(t, []string{"id1", "id2"}, q.IDIn())
-	
+
 	q.SetLimit(10)
 	require.Equal(t, 10, q.Limit())
-	
+
 	q.SetNameLike("%test%")
 	require.Equal(t, "%test%", q.NameLike())
-	
+
 	q.SetOffset(5)
 	require.Equal(t, 5, q.Offset())
-	
+
 	q.SetOrderBy("name")
 	require.Equal(t, "name", q.OrderBy())
-	
+
 	q.SetSiteID("siteid")
 	require.Equal(t, "siteid", q.SiteID())
-	
+
 	q.SetSoftDeletedIncluded(true)
 	require.True(t, q.SoftDeletedIncluded())
-	
+
 	q.SetSortOrder(sb.ASC)
 	require.Equal(t, sb.ASC, q.SortOrder())
-	
+
 	q.SetStatus(TRANSLATION_STATUS_ACTIVE)
 	require.Equal(t, TRANSLATION_STATUS_ACTIVE, q.Status())
-	
+
 	q.SetStatusIn([]string{TRANSLATION_STATUS_ACTIVE, TRANSLATION_STATUS_DRAFT})
 	require.Equal(t, []string{TRANSLATION_STATUS_ACTIVE, TRANSLATION_STATUS_DRAFT}, q.StatusIn())
-	
+
 	// Validate success
 	require.NoError(t, q.Validate())
-	
+
 	// Validate failure cases
 	errQ := TranslationQuery().SetCreatedAtGte("")
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetCreatedAtLte("")
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetHandle("")
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetHandleOrID("")
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetID("")
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetIDIn([]string{})
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetLimit(-1)
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetNameLike("")
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetOffset(-1)
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetSiteID("")
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetStatus("")
 	require.Error(t, errQ.Validate())
-	
+
 	errQ = TranslationQuery().SetStatusIn([]string{})
 	require.Error(t, errQ.Validate())
 }
@@ -460,7 +460,7 @@ func TestStoreTranslationLanguages(t *testing.T) {
 		AutomigrateEnabled:         true,
 	})
 	require.NoError(t, err)
-	
+
 	require.Equal(t, "en", store.TranslationLanguageDefault())
 	require.Equal(t, langs, store.TranslationLanguages())
 }

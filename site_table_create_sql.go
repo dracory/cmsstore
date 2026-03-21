@@ -5,9 +5,9 @@ import (
 )
 
 // siteTableCreateSql returns a SQL string for creating the site table
-func (st *storeImplementation) siteTableCreateSql() string {
+func (st *storeImplementation) siteTableCreateSql() (string, error) {
 	// Start a new SQL builder for the database driver used by the store
-	sql := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+	sql, err := sb.NewBuilder(sb.DatabaseDriverName(st.db)).
 		// Set the table name to the store's site table name
 		Table(st.siteTableName).
 		// Define the ID column
@@ -67,6 +67,9 @@ func (st *storeImplementation) siteTableCreateSql() string {
 		}).
 		// Create the table if it does not exist
 		CreateIfNotExists()
+	if err != nil {
+		return "", err
+	}
 
-	return sql
+	return sql, nil
 }

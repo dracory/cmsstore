@@ -1,31 +1,31 @@
 module github.com/dracory/cmsstore
 
-go 1.26.1
+go 1.26
 
 require (
 	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/dracory/api v1.7.0
 	github.com/dracory/blockeditor v0.24.0
 	github.com/dracory/bs v0.16.0
-	github.com/dracory/cdn v1.9.0
+	github.com/dracory/cdn v1.10.0
 	github.com/dracory/database v0.6.0
 	github.com/dracory/dataobject v1.6.0
 	github.com/dracory/env v1.0.0
-	github.com/dracory/form v0.20.0
+	github.com/dracory/form v0.21.0
 	github.com/dracory/hb v1.88.0
 	github.com/dracory/req v0.1.0
-	github.com/dracory/sb v0.15.0
+	github.com/dracory/sb v0.20.0
 	github.com/dracory/test v0.6.0
 	github.com/dracory/ui v0.17.0
 	github.com/dracory/uid v1.9.0
-	github.com/dracory/versionstore v0.5.0
+	github.com/dracory/versionstore v0.6.0
 	github.com/dromara/carbon/v2 v2.6.16
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/lib/pq v1.11.2
+	github.com/lib/pq v1.12.0
 	github.com/samber/lo v1.53.0
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
-	modernc.org/sqlite v1.46.1
+	modernc.org/sqlite v1.47.0
 )
 
 require (
@@ -39,12 +39,11 @@ require (
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/tools v0.42.0 // indirect
+	golang.org/x/mod v0.34.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/libc v1.69.0 // indirect
+	modernc.org/libc v1.70.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
@@ -59,10 +58,10 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mingrammer/cfmt v1.1.0
-	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/net v0.51.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/term v0.40.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
+	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/term v0.41.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 )
