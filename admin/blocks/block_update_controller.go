@@ -255,14 +255,25 @@ func (controller blockUpdateController) form(data blockUpdateControllerData) hb.
 	return formpageUpdate.Build()
 }
 
-func (blockUpdateController) fieldsContent(data blockUpdateControllerData) []form.FieldInterface {
-	fieldsContent := []form.FieldInterface{
-		form.NewField(form.FieldOptions{
-			Label: "Content (HTML)",
-			Name:  "block_content",
-			Type:  form.FORM_FIELD_TYPE_TEXTAREA,
-			Value: data.formContent,
-		}),
+func (controller blockUpdateController) fieldsContent(data blockUpdateControllerData) []form.FieldInterface {
+	blockType := data.block.Type()
+
+	if blockType == "" {
+		blockType = cmsstore.BLOCK_TYPE_HTML
+	}
+
+	var fieldsContent []form.FieldInterface
+
+	switch blockType {
+	case cmsstore.BLOCK_TYPE_MENU:
+		fieldsContent = controller.fieldsContentMenu(data)
+	case cmsstore.BLOCK_TYPE_HTML:
+		fieldsContent = controller.fieldsContentHTML(data)
+	default:
+		fieldsContent = controller.fieldsContentHTML(data)
+	}
+
+	fieldsContent = append(fieldsContent,
 		form.NewField(form.FieldOptions{
 			Label:    "Block ID",
 			Name:     "block_id",
@@ -276,6 +287,19 @@ func (blockUpdateController) fieldsContent(data blockUpdateControllerData) []for
 			Type:     form.FORM_FIELD_TYPE_HIDDEN,
 			Value:    VIEW_CONTENT,
 			Readonly: true,
+		}),
+	)
+
+	return fieldsContent
+}
+
+func (blockUpdateController) fieldsContentHTML(data blockUpdateControllerData) []form.FieldInterface {
+	fieldsContent := []form.FieldInterface{
+		form.NewField(form.FieldOptions{
+			Label: "Content (HTML)",
+			Name:  "block_content",
+			Type:  form.FORM_FIELD_TYPE_TEXTAREA,
+			Value: data.formContent,
 		}),
 	}
 
@@ -314,6 +338,103 @@ setTimeout(function () {
 		Type:  form.FORM_FIELD_TYPE_RAW,
 		Value: contentScript,
 	})
+
+	return fieldsContent
+}
+
+func (controller blockUpdateController) fieldsContentMenu(data blockUpdateControllerData) []form.FieldInterface {
+	menusEnabled := controller.ui.Store().MenusEnabled()
+
+	if !menusEnabled {
+		return []form.FieldInterface{
+			form.NewField(form.FieldOptions{
+				Label: "Menu Blocks Not Available",
+				Type:  form.FORM_FIELD_TYPE_RAW,
+				Value: hb.Div().Class("alert alert-warning").Text("Menu functionality is not enabled in this CMS installation.").ToHTML(),
+			}),
+		}
+	}
+
+	menuList, err := controller.ui.Store().MenuList(data.request.Context(), cmsstore.MenuQuery().
+		SetStatus(cmsstore.MENU_STATUS_ACTIVE).
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder(sb.ASC))
+
+	if err != nil {
+		controller.ui.Logger().Error("Error loading menus", "error", err.Error())
+	}
+
+	menuOptions := []form.FieldOption{
+		{
+			Value: "- Select Menu -",
+			Key:   "",
+		},
+	}
+
+	for _, menu := range menuList {
+		menuOptions = append(menuOptions, form.FieldOption{
+			Value: menu.Name(),
+			Key:   menu.ID(),
+		})
+	}
+
+	fieldsContent := []form.FieldInterface{
+		form.NewField(form.FieldOptions{
+			Label:    "Menu",
+			Name:     "menu_id",
+			Type:     form.FORM_FIELD_TYPE_SELECT,
+			Value:    data.block.Meta(cmsstore.BLOCK_META_MENU_ID),
+			Required: true,
+			Help:     "Select the menu to display in this block",
+			Options:  menuOptions,
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Menu Style",
+			Name:  "menu_style",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: data.block.Meta(cmsstore.BLOCK_META_MENU_STYLE),
+			Help:  "Choose how the menu should be displayed",
+			Options: []form.FieldOption{
+				{
+					Value: "Vertical (default)",
+					Key:   cmsstore.BLOCK_MENU_STYLE_VERTICAL,
+				},
+				{
+					Value: "Horizontal",
+					Key:   cmsstore.BLOCK_MENU_STYLE_HORIZONTAL,
+				},
+				{
+					Value: "Dropdown",
+					Key:   cmsstore.BLOCK_MENU_STYLE_DROPDOWN,
+				},
+				{
+					Value: "Breadcrumb",
+					Key:   cmsstore.BLOCK_MENU_STYLE_BREADCRUMB,
+				},
+			},
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "CSS Class",
+			Name:  "menu_css_class",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: data.block.Meta(cmsstore.BLOCK_META_MENU_CSS_CLASS),
+			Help:  "Optional CSS class for custom styling",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Start Level",
+			Name:  "menu_start_level",
+			Type:  form.FORM_FIELD_TYPE_NUMBER,
+			Value: data.block.Meta(cmsstore.BLOCK_META_MENU_START_LEVEL),
+			Help:  "Start rendering from this level (0 = root level)",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Max Depth",
+			Name:  "menu_max_depth",
+			Type:  form.FORM_FIELD_TYPE_NUMBER,
+			Value: data.block.Meta(cmsstore.BLOCK_META_MENU_MAX_DEPTH),
+			Help:  "Maximum depth to render (0 = unlimited)",
+		}),
+	}
 
 	return fieldsContent
 }
@@ -438,7 +559,35 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 	}
 
 	if data.view == VIEW_CONTENT {
-		data.block.SetContent(data.formContent)
+		blockType := data.block.Type()
+		if blockType == "" {
+			blockType = cmsstore.BLOCK_TYPE_HTML
+		}
+
+		switch blockType {
+		case cmsstore.BLOCK_TYPE_MENU:
+			menuID := req.GetStringTrimmed(r, "menu_id")
+			menuStyle := req.GetStringTrimmed(r, "menu_style")
+			menuCSSClass := req.GetStringTrimmed(r, "menu_css_class")
+			menuStartLevel := req.GetStringTrimmed(r, "menu_start_level")
+			menuMaxDepth := req.GetStringTrimmed(r, "menu_max_depth")
+
+			if menuID == "" {
+				data.formErrorMessage = "Menu selection is required"
+				return data, ""
+			}
+
+			data.block.SetMeta(cmsstore.BLOCK_META_MENU_ID, menuID)
+			data.block.SetMeta(cmsstore.BLOCK_META_MENU_STYLE, menuStyle)
+			data.block.SetMeta(cmsstore.BLOCK_META_MENU_CSS_CLASS, menuCSSClass)
+			data.block.SetMeta(cmsstore.BLOCK_META_MENU_START_LEVEL, menuStartLevel)
+			data.block.SetMeta(cmsstore.BLOCK_META_MENU_MAX_DEPTH, menuMaxDepth)
+
+		case cmsstore.BLOCK_TYPE_HTML:
+			data.block.SetContent(data.formContent)
+		default:
+			data.block.SetContent(data.formContent)
+		}
 	}
 
 	err := controller.ui.Store().BlockUpdate(r.Context(), data.block)

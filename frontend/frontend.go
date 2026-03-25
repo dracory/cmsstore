@@ -101,7 +101,8 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 // Business Logic:
 // - if the block find returns an error error is returned
 // - if the block is not active an empty string is returned
-// - the block content is returned
+// - dispatches to type-specific renderer based on block type
+// - the rendered block content is returned
 //
 // Parameters:
 // - blockID: the ID of the block
@@ -140,12 +141,289 @@ func (frontend *frontend) fetchBlockContent(ctx context.Context, blockID string)
 	content := ""
 
 	if block.IsActive() {
-		content = block.Content()
+		content, err = frontend.renderBlockByType(ctx, block)
+		if err != nil {
+			frontend.logger.Error("fetchBlockContent: Error rendering block", "blockID", blockID, "type", block.Type(), "error", err)
+			frontend.CacheSet(key, "", 10) // 10 seconds only, error
+			return "", err
+		}
 	}
 
 	frontend.CacheSet(key, content, frontend.cacheExpireSeconds)
 
 	return content, nil
+}
+
+// renderBlockByType dispatches to the appropriate renderer based on block type
+func (frontend *frontend) renderBlockByType(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+	switch block.Type() {
+	case cmsstore.BLOCK_TYPE_MENU:
+		return frontend.renderMenuBlock(ctx, block)
+	case cmsstore.BLOCK_TYPE_HTML:
+		return frontend.renderHTMLBlock(block), nil
+	default:
+		return frontend.renderHTMLBlock(block), nil
+	}
+}
+
+// renderHTMLBlock renders an HTML block by returning its content
+func (frontend *frontend) renderHTMLBlock(block cmsstore.BlockInterface) string {
+	return block.Content()
+}
+
+// renderMenuBlock renders a menu block by loading the menu and rendering it as HTML
+func (frontend *frontend) renderMenuBlock(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+	if !frontend.store.MenusEnabled() {
+		return "<!-- Menus not enabled -->", nil
+	}
+
+	menuID := block.Meta(cmsstore.BLOCK_META_MENU_ID)
+	if menuID == "" {
+		return "<!-- No menu selected -->", nil
+	}
+
+	menu, err := frontend.store.MenuFindByID(ctx, menuID)
+	if err != nil {
+		return "", err
+	}
+
+	if menu == nil {
+		return "<!-- Menu not found -->", nil
+	}
+
+	if !menu.IsActive() {
+		return "<!-- Menu not active -->", nil
+	}
+
+	menuItems, err := frontend.store.MenuItemList(ctx, cmsstore.MenuItemQuery().
+		SetMenuID(menuID).
+		SetStatus(cmsstore.MENU_ITEM_STATUS_ACTIVE).
+		SetOrderBy(cmsstore.COLUMN_SEQUENCE).
+		SetSortOrder("asc"))
+
+	if err != nil {
+		return "", err
+	}
+
+	style := block.Meta(cmsstore.BLOCK_META_MENU_STYLE)
+	if style == "" {
+		style = cmsstore.BLOCK_MENU_STYLE_VERTICAL
+	}
+
+	cssClass := block.Meta(cmsstore.BLOCK_META_MENU_CSS_CLASS)
+	startLevel := cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_START_LEVEL))
+	maxDepth := cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_MAX_DEPTH))
+
+	return frontend.renderMenuHTML(ctx, menuItems, style, cssClass, startLevel, maxDepth)
+}
+
+// renderMenuHTML renders menu items as HTML based on the specified style
+func (frontend *frontend) renderMenuHTML(ctx context.Context, menuItems []cmsstore.MenuItemInterface, style, cssClass string, startLevel, maxDepth int) (string, error) {
+	if len(menuItems) == 0 {
+		return "", nil
+	}
+
+	tree := frontend.buildMenuTree(menuItems, "")
+
+	if startLevel > 0 {
+		tree = frontend.filterMenuTreeByLevel(tree, startLevel)
+	}
+
+	if maxDepth > 0 {
+		tree = frontend.limitMenuTreeDepth(tree, maxDepth)
+	}
+
+	switch style {
+	case cmsstore.BLOCK_MENU_STYLE_HORIZONTAL:
+		return frontend.renderMenuHorizontal(ctx, tree, cssClass), nil
+	case cmsstore.BLOCK_MENU_STYLE_VERTICAL:
+		return frontend.renderMenuVertical(ctx, tree, cssClass), nil
+	case cmsstore.BLOCK_MENU_STYLE_DROPDOWN:
+		return frontend.renderMenuDropdown(ctx, tree, cssClass), nil
+	case cmsstore.BLOCK_MENU_STYLE_BREADCRUMB:
+		return frontend.renderMenuBreadcrumb(ctx, tree, cssClass), nil
+	default:
+		return frontend.renderMenuVertical(ctx, tree, cssClass), nil
+	}
+}
+
+// menuTreeNode represents a node in the menu tree
+type menuTreeNode struct {
+	Item     cmsstore.MenuItemInterface
+	Children []*menuTreeNode
+}
+
+// buildMenuTree builds a hierarchical tree structure from flat menu items
+func (frontend *frontend) buildMenuTree(items []cmsstore.MenuItemInterface, parentID string) []*menuTreeNode {
+	var nodes []*menuTreeNode
+
+	for _, item := range items {
+		if item.ParentID() == parentID {
+			node := &menuTreeNode{
+				Item:     item,
+				Children: frontend.buildMenuTree(items, item.ID()),
+			}
+			nodes = append(nodes, node)
+		}
+	}
+
+	return nodes
+}
+
+// filterMenuTreeByLevel filters the tree to start at a specific level
+func (frontend *frontend) filterMenuTreeByLevel(tree []*menuTreeNode, level int) []*menuTreeNode {
+	if level <= 0 {
+		return tree
+	}
+
+	var result []*menuTreeNode
+	for _, node := range tree {
+		result = append(result, frontend.filterMenuTreeByLevel(node.Children, level-1)...)
+	}
+
+	return result
+}
+
+// limitMenuTreeDepth limits the depth of the menu tree
+func (frontend *frontend) limitMenuTreeDepth(tree []*menuTreeNode, maxDepth int) []*menuTreeNode {
+	if maxDepth <= 0 {
+		return nil
+	}
+
+	var result []*menuTreeNode
+	for _, node := range tree {
+		newNode := &menuTreeNode{
+			Item:     node.Item,
+			Children: frontend.limitMenuTreeDepth(node.Children, maxDepth-1),
+		}
+		result = append(result, newNode)
+	}
+
+	return result
+}
+
+// renderMenuHorizontal renders a horizontal menu
+func (frontend *frontend) renderMenuHorizontal(ctx context.Context, tree []*menuTreeNode, cssClass string) string {
+	if len(tree) == 0 {
+		return ""
+	}
+
+	class := lo.If(cssClass != "", cssClass).Else("menu-horizontal")
+	html := `<ul class="` + class + `">`
+
+	for _, node := range tree {
+		html += frontend.renderMenuItemHTML(ctx, node, false)
+	}
+
+	html += `</ul>`
+	return html
+}
+
+// renderMenuVertical renders a vertical menu
+func (frontend *frontend) renderMenuVertical(ctx context.Context, tree []*menuTreeNode, cssClass string) string {
+	if len(tree) == 0 {
+		return ""
+	}
+
+	class := lo.If(cssClass != "", cssClass).Else("menu-vertical")
+	html := `<ul class="` + class + `">`
+
+	for _, node := range tree {
+		html += frontend.renderMenuItemHTML(ctx, node, true)
+	}
+
+	html += `</ul>`
+	return html
+}
+
+// renderMenuDropdown renders a dropdown menu
+func (frontend *frontend) renderMenuDropdown(ctx context.Context, tree []*menuTreeNode, cssClass string) string {
+	if len(tree) == 0 {
+		return ""
+	}
+
+	class := lo.If(cssClass != "", cssClass).Else("menu-dropdown")
+	html := `<ul class="` + class + `">`
+
+	for _, node := range tree {
+		html += frontend.renderMenuItemHTML(ctx, node, true)
+	}
+
+	html += `</ul>`
+	return html
+}
+
+// renderMenuBreadcrumb renders a breadcrumb menu
+func (frontend *frontend) renderMenuBreadcrumb(ctx context.Context, tree []*menuTreeNode, cssClass string) string {
+	if len(tree) == 0 {
+		return ""
+	}
+
+	class := lo.If(cssClass != "", cssClass).Else("menu-breadcrumb")
+	html := `<ul class="` + class + `">`
+
+	for i, node := range tree {
+		url := frontend.resolveMenuItemURL(ctx, node.Item)
+		html += `<li>`
+		if url != "" {
+			html += `<a href="` + url + `">` + node.Item.Name() + `</a>`
+		} else {
+			html += node.Item.Name()
+		}
+		if i < len(tree)-1 {
+			html += ` / `
+		}
+		html += `</li>`
+	}
+
+	html += `</ul>`
+	return html
+}
+
+// renderMenuItemHTML renders a single menu item with its children
+func (frontend *frontend) renderMenuItemHTML(ctx context.Context, node *menuTreeNode, renderChildren bool) string {
+	url := frontend.resolveMenuItemURL(ctx, node.Item)
+	target := node.Item.Target()
+
+	html := `<li>`
+
+	if url != "" {
+		html += `<a href="` + url + `"`
+		if target != "" {
+			html += ` target="` + target + `"`
+		}
+		html += `>` + node.Item.Name() + `</a>`
+	} else {
+		html += node.Item.Name()
+	}
+
+	if renderChildren && len(node.Children) > 0 {
+		html += `<ul>`
+		for _, child := range node.Children {
+			html += frontend.renderMenuItemHTML(ctx, child, true)
+		}
+		html += `</ul>`
+	}
+
+	html += `</li>`
+	return html
+}
+
+// resolveMenuItemURL resolves the URL for a menu item
+func (frontend *frontend) resolveMenuItemURL(ctx context.Context, item cmsstore.MenuItemInterface) string {
+	if item.URL() != "" {
+		return item.URL()
+	}
+
+	if item.PageID() != "" {
+		page, err := frontend.store.PageFindByID(ctx, item.PageID())
+		if err != nil || page == nil {
+			return ""
+		}
+		return "/" + strings.TrimPrefix(page.Alias(), "/")
+	}
+
+	return ""
 }
 
 // fetchPageAliasMapBySite fetches the page alias map for a given site ID

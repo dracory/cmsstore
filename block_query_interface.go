@@ -27,6 +27,7 @@ type BlockQueryInterface interface {
 	HasStatus() bool
 	HasStatusIn() bool
 	HasTemplateID() bool
+	HasType() bool
 
 	CreatedAtGte() string
 	CreatedAtLte() string
@@ -46,6 +47,7 @@ type BlockQueryInterface interface {
 	Status() string
 	StatusIn() []string
 	TemplateID() string
+	Type() string
 
 	SetCountOnly(countOnly bool) BlockQueryInterface
 	SetCreatedAtGte(createdAtGte string) BlockQueryInterface
@@ -66,6 +68,7 @@ type BlockQueryInterface interface {
 	SetStatus(status string) BlockQueryInterface
 	SetStatusIn(statusIn []string) BlockQueryInterface
 	SetTemplateID(templateID string) BlockQueryInterface
+	SetType(blockType string) BlockQueryInterface
 
 	// ID() string
 	// SetID(id string) (BlockQueryInterface, error)

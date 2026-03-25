@@ -1,5 +1,28 @@
 package cmsstore
 
+// Block Types
+const (
+	BLOCK_TYPE_HTML = "html"
+	BLOCK_TYPE_MENU = "menu"
+)
+
+// Block Meta Keys for Menu Type
+const (
+	BLOCK_META_MENU_ID          = "menu_id"
+	BLOCK_META_MENU_CSS_CLASS   = "menu_css_class"
+	BLOCK_META_MENU_STYLE       = "menu_style"
+	BLOCK_META_MENU_START_LEVEL = "menu_start_level"
+	BLOCK_META_MENU_MAX_DEPTH   = "menu_max_depth"
+)
+
+// Block Menu Styles
+const (
+	BLOCK_MENU_STYLE_HORIZONTAL = "horizontal"
+	BLOCK_MENU_STYLE_VERTICAL   = "vertical"
+	BLOCK_MENU_STYLE_DROPDOWN   = "dropdown"
+	BLOCK_MENU_STYLE_BREADCRUMB = "breadcrumb"
+)
+
 // Block Statuses
 const (
 	BLOCK_STATUS_DRAFT    = "draft"
@@ -137,6 +160,7 @@ const (
 	propertyKeyStatus             = "status"
 	propertyKeyStatusIn           = "status_in"
 	propertyKeyTemplateID         = "template_id"
+	propertyKeyType               = "type"
 	propertyKeyCountOnly          = "count_only"
 	propertyKeyDomainName         = "domain_name"
 	propertyKeyAlias              = "alias"

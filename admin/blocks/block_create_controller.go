@@ -26,6 +26,7 @@ type blockCreateControllerData struct {
 	pageID         string
 	templateID     string
 	name           string
+	blockType      string
 	successMessage string
 }
 
@@ -74,6 +75,24 @@ func (controller *blockCreateController) modal(data blockCreateControllerData) h
 				Type:     form.FORM_FIELD_TYPE_STRING,
 				Value:    data.name,
 				Required: true,
+			}),
+			form.NewField(form.FieldOptions{
+				Label:    "Block type",
+				Name:     "block_type",
+				Type:     form.FORM_FIELD_TYPE_SELECT,
+				Value:    cmsstore.BLOCK_TYPE_HTML,
+				Required: true,
+				Help:     "Block type cannot be changed after creation",
+				Options: []form.FieldOption{
+					{
+						Value: "HTML Block",
+						Key:   cmsstore.BLOCK_TYPE_HTML,
+					},
+					{
+						Value: "Menu Block",
+						Key:   cmsstore.BLOCK_TYPE_MENU,
+					},
+				},
 			}),
 			form.NewField(form.FieldOptions{
 				Label:    "Site",
@@ -161,6 +180,7 @@ func (controller *blockCreateController) modal(data blockCreateControllerData) h
 func (controller *blockCreateController) prepareDataAndValidate(r *http.Request) (data blockCreateControllerData, errorMessage string) {
 	data.request = r
 	data.name = req.GetStringTrimmed(r, "block_name")
+	data.blockType = req.GetStringTrimmed(r, "block_type")
 	data.siteID = req.GetStringTrimmed(r, "site_id")
 	data.pageID = req.GetStringTrimmed(r, "page_id")         // empty for now
 	data.templateID = req.GetStringTrimmed(r, "template_id") // empty for now
@@ -192,11 +212,20 @@ func (controller *blockCreateController) saveBlock(r *http.Request, data blockCr
 		return data, "block name is required"
 	}
 
+	if data.blockType == "" {
+		data.blockType = cmsstore.BLOCK_TYPE_HTML
+	}
+
+	if data.blockType != cmsstore.BLOCK_TYPE_HTML && data.blockType != cmsstore.BLOCK_TYPE_MENU {
+		return data, "invalid block type"
+	}
+
 	block := cmsstore.NewBlock()
 	block.SetPageID(data.pageID) // this is empty at the moment
 	block.SetSiteID(data.siteID)
 	block.SetTemplateID(data.templateID) // this is empty at the moment
 	block.SetName(data.name)
+	block.SetType(data.blockType)
 	block.SetParentID("")    // not needed here at the moment
 	block.SetSequenceInt(-1) // not needed here at the moment
 

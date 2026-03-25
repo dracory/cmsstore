@@ -143,6 +143,10 @@ func (q *blockQuery) HasTemplateID() bool {
 	return q.hasProperty(propertyKeyTemplateID)
 }
 
+func (q *blockQuery) HasType() bool {
+	return q.hasProperty(propertyKeyType)
+}
+
 func (q *blockQuery) IsCountOnly() bool {
 	if q.hasProperty(propertyKeyCountOnly) {
 		return q.properties[propertyKeyCountOnly].(bool)
@@ -225,6 +229,10 @@ func (q *blockQuery) StatusIn() []string {
 
 func (q *blockQuery) TemplateID() string {
 	return q.properties[propertyKeyTemplateID].(string)
+}
+
+func (q *blockQuery) Type() string {
+	return q.properties[propertyKeyType].(string)
 }
 
 func (q *blockQuery) SetCreatedAtGte(createdAtGte string) BlockQueryInterface {
@@ -319,6 +327,11 @@ func (q *blockQuery) SetStatusIn(statusIn []string) BlockQueryInterface {
 
 func (q *blockQuery) SetTemplateID(templateID string) BlockQueryInterface {
 	q.properties[propertyKeyTemplateID] = templateID
+	return q
+}
+
+func (q *blockQuery) SetType(blockType string) BlockQueryInterface {
+	q.properties[propertyKeyType] = blockType
 	return q
 }
 

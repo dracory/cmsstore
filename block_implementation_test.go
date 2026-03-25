@@ -50,7 +50,7 @@ func TestBlockGetterMethods(t *testing.T) {
 	require.Equal(t, 0, block.SequenceInt())
 	require.Equal(t, "", block.SiteID())
 	require.Equal(t, "", block.TemplateID())
-	require.Equal(t, "", block.Type())
+	require.Equal(t, BLOCK_TYPE_HTML, block.Type())
 }
 
 func TestBlockStatusMethods(t *testing.T) {
@@ -126,8 +126,8 @@ func TestBlockMetasMethods(t *testing.T) {
 	// Test UpsertMetas
 	err = block.UpsertMetas(map[string]string{"layout": "sidebar", "color": "blue"})
 	require.NoError(t, err)
-	require.Equal(t, "sidebar", block.Meta("layout")) // Updated
-	require.Equal(t, "dark", block.Meta("theme"))     // Preserved
+	require.Equal(t, "sidebar", block.Meta("layout"))  // Updated
+	require.Equal(t, "dark", block.Meta("theme"))      // Preserved
 	require.Equal(t, "newvalue", block.Meta("newkey")) // Preserved
 	require.Equal(t, "blue", block.Meta("color"))      // Added
 }
@@ -342,8 +342,8 @@ func TestBlockTemplateIDMethods(t *testing.T) {
 func TestBlockTypeMethods(t *testing.T) {
 	block := NewBlock()
 
-	// Test default type
-	require.Equal(t, "", block.Type())
+	// Test default type (HTML)
+	require.Equal(t, BLOCK_TYPE_HTML, block.Type())
 
 	// Test SetType
 	blockType := "text"

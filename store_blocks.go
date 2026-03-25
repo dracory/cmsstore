@@ -395,6 +395,10 @@ func (store *storeImplementation) blockSelectQuery(options BlockQueryInterface) 
 		q = q.Where(goqu.C(COLUMN_TEMPLATE_ID).Eq(options.TemplateID()))
 	}
 
+	if options.HasType() {
+		q = q.Where(goqu.C(COLUMN_TYPE).Eq(options.Type()))
+	}
+
 	if !options.IsCountOnly() {
 		if options.HasLimit() {
 			q = q.Limit(uint(options.Limit()))

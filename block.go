@@ -37,7 +37,7 @@ func NewBlock() BlockInterface {
 	o.SetSiteID("")
 	o.SetStatus(BLOCK_STATUS_DRAFT)
 	o.SetTemplateID("")
-	o.SetType("")
+	o.SetType(BLOCK_TYPE_HTML)
 	o.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	o.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	o.SetSoftDeletedAt(sb.MAX_DATETIME)
