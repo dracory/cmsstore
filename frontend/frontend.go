@@ -513,6 +513,12 @@ func (frontend *frontend) renderContentToHtml(
 		return "", err
 	}
 
+	content, err = frontend.contentRenderPageURLs(r.Context(), content)
+
+	if err != nil {
+		return "", err
+	}
+
 	content, err = frontend.applyShortcodes(r, content)
 
 	if err != nil {
@@ -643,6 +649,64 @@ func (frontend *frontend) contentRenderBlocks(ctx context.Context, content strin
 	}
 
 	return content, nil
+}
+
+// contentRenderPageURLs renders the PAGE_URL placeholders in a string
+func (frontend *frontend) contentRenderPageURLs(ctx context.Context, content string) (string, error) {
+	pageIDs := contentFindIdsByPatternPrefix(content, "PAGE_URL")
+
+	if len(pageIDs) == 0 {
+		return content, nil
+	}
+
+	var err error
+
+	for _, pageID := range pageIDs {
+		content, err = frontend.contentRenderPageURLByID(ctx, content, pageID)
+
+		if err != nil {
+			return content, err
+		}
+	}
+
+	return content, nil
+}
+
+// contentRenderPageURLByID renders the PAGE_URL placeholder for a specific page ID
+func (frontend *frontend) contentRenderPageURLByID(ctx context.Context, content string, pageID string) (string, error) {
+	if pageID == "" {
+		return content, nil
+	}
+
+	key := "page_url_" + pageID
+
+	if frontend.CacheHas(key) {
+		pageURL := frontend.CacheGet(key)
+
+		if pageURL == nil {
+			return content, nil
+		}
+
+		return strings.ReplaceAll(content, "[[PAGE_URL_"+pageID+"]]", pageURL.(string)), nil
+	}
+
+	page, err := frontend.store.PageFindByID(ctx, pageID)
+
+	if err != nil {
+		frontend.CacheSet(key, "", 10) // 10 seconds only, error
+		return "", err
+	}
+
+	if page == nil {
+		frontend.CacheSet(key, "", frontend.cacheExpireSeconds)
+		// Replace with empty string if page not found
+		return strings.ReplaceAll(content, "[[PAGE_URL_"+pageID+"]]", ""), nil
+	}
+
+	pagePath := "/" + strings.TrimPrefix(page.Alias(), "/")
+	frontend.CacheSet(key, pagePath, frontend.cacheExpireSeconds)
+
+	return strings.ReplaceAll(content, "[[PAGE_URL_"+pageID+"]]", pagePath), nil
 }
 
 // contentRenderTranslations renders the translations in a string

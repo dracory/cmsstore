@@ -3,6 +3,16 @@
 ## Overview
 Analysis of test coverage for CMS Store MCP (Model Context Protocol) tools conducted on 2026-03-06.
 
+## [2026-03-25] PAGE_URL Placeholder System
+- **Issue**: Need for page URL placeholders in content that reference pages by ID
+- **Solution**: `[PAGE_URL_{PAGE_ID}]` placeholder system replaces with page alias
+- **Implementation**: Direct use of page.Alias() with strings.TrimPrefix() in frontend content rendering
+- **Integration**: Added to frontend content processing pipeline between blocks and shortcodes
+- **Files Modified**: `interfaces.go`, `page_implementation.go`, `frontend/frontend.go`, `admin/pages/page_update_controller.go`
+- **Admin UI**: Added copy-paste shortcode display to page editor following block editor pattern
+- **Documentation**: Created `docs/url-systems.md` explaining the system
+- **Application**: Use `[PAGE_URL_pageID]` in content to automatically link to page by alias
+
 ## Findings
 
 ### Tools with Full Test Coverage ✅

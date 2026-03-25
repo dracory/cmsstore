@@ -280,7 +280,19 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		Child(hb.HR()).
 		Child(pageTitle).
 		Child(tabs).
-		Child(card)
+		Child(card).
+		Child(hb.HR().Class("mt-4")).
+		Child(hb.Div().
+			Class("text-info mb-2").
+			Text("To link to this page in content, use the following shortcode:").
+			Child(hb.BR())).
+		Child(hb.PRE().
+			Child(hb.Code().
+				Text(`<!-- START: Page: ` + data.page.Name() + ` -->`).
+				Text("\n").
+				Text(`[[PAGE_URL_` + data.pageID + `]]`).
+				Text("\n").
+				Text(`<!-- END: Page: ` + data.page.Name() + ` -->`)))
 }
 
 func (controller pageUpdateController) form(data pageUpdateControllerData) hb.TagInterface {
