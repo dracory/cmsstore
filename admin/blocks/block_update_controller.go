@@ -12,6 +12,7 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
+	"github.com/samber/lo"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -491,6 +492,24 @@ func (controller blockUpdateController) fieldsSettings(data blockUpdateControlle
 		},
 	})
 
+	// Get block type and create display value
+	blockType := data.block.Type()
+	if blockType == "" {
+		blockType = cmsstore.BLOCK_TYPE_HTML
+	}
+	typeDisplay := lo.If(blockType == cmsstore.BLOCK_TYPE_HTML, "HTML Block").
+		ElseIf(blockType == cmsstore.BLOCK_TYPE_MENU, "Menu Block").
+		Else("Unknown")
+
+	fieldType := form.NewField(form.FieldOptions{
+		Label:    "Block Type",
+		Name:     "block_type",
+		Type:     form.FORM_FIELD_TYPE_STRING,
+		Value:    typeDisplay,
+		Readonly: true,
+		Help:     "Block type cannot be changed after creation. This determines how the block is rendered.",
+	})
+
 	fieldBlockName := form.NewField(form.FieldOptions{
 		Label: "Block Name (Internal)",
 		Name:  "block_name",
@@ -526,6 +545,7 @@ func (controller blockUpdateController) fieldsSettings(data blockUpdateControlle
 
 	fieldsSettings := []form.FieldInterface{
 		fieldStatus,
+		fieldType,
 		fieldBlockName,
 		fieldSiteID,
 		fieldMemo,
