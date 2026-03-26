@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dracory/form"
 )
 
 // NavbarBlockType represents a navbar block for navigation
@@ -82,19 +83,142 @@ func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterf
 
 // GetAdminFields returns form fields for editing navbar block configuration.
 func (t *NavbarBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.Request) interface{} {
-	fields := map[string]interface{}{
-		"menu_id":               block.Meta(cmsstore.BLOCK_META_MENU_ID),
-		"navbar_style":          block.Meta(cmsstore.BLOCK_META_NAVBAR_STYLE),
-		"navbar_rendering_mode": block.Meta(cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE),
-		"navbar_brand_text":     block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_TEXT),
-		"navbar_brand_url":      block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_URL),
-		"navbar_fixed":          block.Meta(cmsstore.BLOCK_META_NAVBAR_FIXED),
-		"navbar_dark":           block.Meta(cmsstore.BLOCK_META_NAVBAR_DARK),
-		"navbar_css_class":      block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_CLASS),
-		"navbar_css_id":         block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_ID),
+	menuList, err := t.store.MenuList(r.Context(), cmsstore.MenuQuery().
+		SetStatus(cmsstore.MENU_STATUS_ACTIVE).
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder("asc"))
+
+	if err != nil {
+		// Log error but continue with empty menu list
 	}
 
-	return fields
+	menuOptions := []form.FieldOption{
+		{
+			Value: "- Select Menu -",
+			Key:   "",
+		},
+	}
+
+	for _, menu := range menuList {
+		menuOptions = append(menuOptions, form.FieldOption{
+			Value: menu.Name(),
+			Key:   menu.ID(),
+		})
+	}
+
+	fieldsContent := []form.FieldInterface{
+		form.NewField(form.FieldOptions{
+			Label:    "Menu",
+			Name:     "menu_id",
+			Type:     form.FORM_FIELD_TYPE_SELECT,
+			Value:    block.Meta(cmsstore.BLOCK_META_MENU_ID),
+			Required: true,
+			Help:     "Select the menu to display in this navbar",
+			Options:  menuOptions,
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Navbar Style",
+			Name:  "navbar_style",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_STYLE),
+			Help:  "Choose the navbar layout style",
+			Options: []form.FieldOption{
+				{
+					Value: "Default",
+					Key:   cmsstore.BLOCK_NAVBAR_STYLE_DEFAULT,
+				},
+				{
+					Value: "Centered",
+					Key:   cmsstore.BLOCK_NAVBAR_STYLE_CENTERED,
+				},
+				{
+					Value: "Bottom",
+					Key:   cmsstore.BLOCK_NAVBAR_STYLE_BOTTOM,
+				},
+			},
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Rendering Mode",
+			Name:  "navbar_rendering_mode",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE),
+			Help:  "Choose the rendering framework",
+			Options: []form.FieldOption{
+				{
+					Value: "Plain",
+					Key:   cmsstore.BLOCK_NAVBAR_RENDERING_PLAIN,
+				},
+				{
+					Value: "Bootstrap 5",
+					Key:   cmsstore.BLOCK_NAVBAR_RENDERING_BOOTSTRAP5,
+				},
+			},
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Brand Text",
+			Name:  "navbar_brand_text",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_TEXT),
+			Help:  "Text displayed as the navbar brand/logo",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Brand URL",
+			Name:  "navbar_brand_url",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_URL),
+			Help:  "URL for the brand link (default: /)",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "CSS ID",
+			Name:  "navbar_css_id",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_ID),
+			Help:  "Optional CSS ID for the navbar",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "CSS Class",
+			Name:  "navbar_css_class",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_CLASS),
+			Help:  "Optional CSS classes for styling",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Fixed Position",
+			Name:  "navbar_fixed",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_FIXED),
+			Help:  "Fix the navbar to top or bottom of the page",
+			Options: []form.FieldOption{
+				{
+					Value: "No",
+					Key:   "",
+				},
+				{
+					Value: "Top",
+					Key:   "true",
+				},
+			},
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Dark Theme",
+			Name:  "navbar_dark",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_DARK),
+			Help:  "Use dark color scheme",
+			Options: []form.FieldOption{
+				{
+					Value: "No",
+					Key:   "",
+				},
+				{
+					Value: "Yes",
+					Key:   "true",
+				},
+			},
+		}),
+	}
+
+	return fieldsContent
 }
 
 // SaveAdminFields processes form submission and updates the navbar block.

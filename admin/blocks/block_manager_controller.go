@@ -129,7 +129,7 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 			}),
 			form.NewField(form.FieldOptions{
 				Label: "Block Type",
-				Name:  "filter_type",
+				Name:  "type",
 				Type:  form.FORM_FIELD_TYPE_SELECT,
 				Help:  `Filter by block type.`,
 				Value: data.formType,
@@ -145,6 +145,14 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 					{
 						Value: "Menu",
 						Key:   cmsstore.BLOCK_TYPE_MENU,
+					},
+					{
+						Value: "Navbar",
+						Key:   cmsstore.BLOCK_TYPE_NAVBAR,
+					},
+					{
+						Value: "Breadcrumbs",
+						Key:   cmsstore.BLOCK_TYPE_BREADCRUMBS,
 					},
 				},
 			}),
@@ -295,7 +303,15 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 						HTML("Actions"),
 				}),
 			}),
-			hb.Tbody().Children(lo.Map(data.recordList, func(block cmsstore.BlockInterface, _ int) hb.TagInterface {
+			hb.Tbody().ChildrenIf(len(data.recordList) == 0, []hb.TagInterface{
+				hb.TR().Child(
+					hb.TD().
+						Attr("colspan", "6").
+						Class("text-center").
+						Style("padding: 3rem;").
+						HTML("No blocks found"),
+				),
+			}).Children(lo.Map(data.recordList, func(block cmsstore.BlockInterface, _ int) hb.TagInterface {
 				site, siteFound := lo.Find(data.siteList, func(site cmsstore.SiteInterface) bool {
 					return site.ID() == block.SiteID()
 				})
@@ -325,6 +341,16 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 						"block_id": block.ID(),
 					}))
 
+				buttonVersion := hb.Button().
+					Class("btn btn-primary me-2").
+					Child(hb.I().Class("bi bi-code-slash")).
+					Title("Version History").
+					HxGet(shared.URLR(data.request, shared.PathBlocksBlockVersioning, map[string]string{
+						"block_id": block.ID(),
+					})).
+					HxTarget("body").
+					HxSwap("beforeend")
+
 				buttonDelete := hb.Hyperlink().
 					Class("btn btn-danger").
 					Child(hb.I().Class("bi bi-trash")).
@@ -342,9 +368,13 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 					Style("font-size: 11px;").
 					ClassIf(blockType == cmsstore.BLOCK_TYPE_HTML, "bg-primary").
 					ClassIf(blockType == cmsstore.BLOCK_TYPE_MENU, "bg-success").
+					ClassIf(blockType == cmsstore.BLOCK_TYPE_NAVBAR, "bg-info").
+					ClassIf(blockType == cmsstore.BLOCK_TYPE_BREADCRUMBS, "bg-warning").
 					ClassIf(blockType == "", "bg-secondary").
 					HTML(lo.If(blockType == cmsstore.BLOCK_TYPE_HTML, "HTML").
 						ElseIf(blockType == cmsstore.BLOCK_TYPE_MENU, "Menu").
+						ElseIf(blockType == cmsstore.BLOCK_TYPE_NAVBAR, "Navbar").
+						ElseIf(blockType == cmsstore.BLOCK_TYPE_BREADCRUMBS, "Breadcrumbs").
 						Else("Unknown"))
 
 				return hb.TR().Children([]hb.TagInterface{
@@ -372,7 +402,7 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 							HTML(block.UpdatedAtCarbon().Format("d M Y"))),
 					hb.TD().
 						Child(buttonEdit).
-						// Child(buttonImpersonate).
+						Child(buttonVersion).
 						Child(buttonDelete),
 				})
 			})),
@@ -404,7 +434,7 @@ func (controller *blockManagerController) sortableColumnLabel(data blockManagerC
 		"date_to":     data.formCreatedTo,
 		"status":      data.formStatus,
 		"block_id":    data.formBlockID,
-		"filter_type": data.formType,
+		"type":        data.formType,
 	})
 	return hb.Hyperlink().
 		HTML(tableLabel).
@@ -441,7 +471,7 @@ func (controller *blockManagerController) tableFilter(data blockManagerControlle
 			"block_id":     data.formBlockID,
 			"created_from": data.formCreatedFrom,
 			"created_to":   data.formCreatedTo,
-			"filter_type":  data.formType,
+			"type":         data.formType,
 		})).
 		HxTarget("body").
 		HxSwap("beforeend")
@@ -461,7 +491,11 @@ func (controller *blockManagerController) tableFilter(data blockManagerControlle
 	}
 
 	if data.formType != "" {
-		typeLabel := lo.If(data.formType == cmsstore.BLOCK_TYPE_HTML, "HTML").ElseIf(data.formType == cmsstore.BLOCK_TYPE_MENU, "Menu").Else(data.formType)
+		typeLabel := lo.If(data.formType == cmsstore.BLOCK_TYPE_HTML, "HTML").
+			ElseIf(data.formType == cmsstore.BLOCK_TYPE_MENU, "Menu").
+			ElseIf(data.formType == cmsstore.BLOCK_TYPE_NAVBAR, "Navbar").
+			ElseIf(data.formType == cmsstore.BLOCK_TYPE_BREADCRUMBS, "Breadcrumbs").
+			Else(data.formType)
 		description = append(description, hb.Span().Text("and type: "+typeLabel).ToHTML())
 	}
 
@@ -496,7 +530,7 @@ func (controller *blockManagerController) tablePagination(data blockManagerContr
 	url := shared.URLR(data.request, shared.PathBlocksBlockManager, map[string]string{
 		"status":       data.formStatus,
 		"name":         data.formName,
-		"filter_type":  data.formType,
+		"type":         data.formType,
 		"created_from": data.formCreatedFrom,
 		"created_to":   data.formCreatedTo,
 		"by":           data.sortBy,
@@ -529,13 +563,13 @@ func (controller *blockManagerController) prepareData(r *http.Request) (data blo
 	data.sortOrder = req.GetStringTrimmed(r, "sort")
 	data.sortBy = req.GetStringTrimmed(r, "by")
 
-	data.formBlockID = req.GetStringTrimmed(r, "filter_block_id")
-	data.formCreatedFrom = req.GetStringTrimmed(r, "filter_created_from")
-	data.formCreatedTo = req.GetStringTrimmed(r, "filter_created_to")
-	data.formName = req.GetStringTrimmed(r, "filter_name")
+	data.formBlockID = req.GetStringTrimmed(r, "block_id")
+	data.formCreatedFrom = req.GetStringTrimmed(r, "created_from")
+	data.formCreatedTo = req.GetStringTrimmed(r, "created_to")
+	data.formName = req.GetStringTrimmed(r, "name")
 	data.formSiteID = req.GetStringTrimmed(r, "filter_site_id")
-	data.formStatus = req.GetStringTrimmed(r, "filter_status")
-	data.formType = req.GetStringTrimmed(r, "filter_type")
+	data.formStatus = req.GetStringTrimmed(r, "status")
+	data.formType = req.GetStringTrimmed(r, "type")
 
 	recordList, recordCount, err := controller.fetchRecordList(data)
 

@@ -199,7 +199,7 @@ func (controller *blockVersioningController) tableRevision(data blockVersioningC
 					Style(`background-color:#eee;`).
 					Attr("readonly", "readonly").
 					Value(value)
-				
+
 				if key == cmsstore.COLUMN_CONTENT {
 					valueContainer = hb.TextArea().
 						Class("form-control w-100").
@@ -295,6 +295,10 @@ func (controller *blockVersioningController) prepareDataAndValidate(r *http.Requ
 			controller.ui.Logger().Error("At blockVersioningController > prepareDataAndValidate", "error", err.Error())
 			return data, err.Error()
 		}
+
+		if data.versioning == nil {
+			return data, "Versioning not found"
+		}
 	}
 
 	if r.Method != http.MethodPost {
@@ -307,7 +311,10 @@ func (controller *blockVersioningController) prepareDataAndValidate(r *http.Requ
 		return data, "No revision attributes were selected. Aborted"
 	}
 
-	controller.restoreRevisionAttributes(data.request.Context(), block, data.versioning, attrs)
+	err = controller.restoreRevisionAttributes(data.request.Context(), block, data.versioning, attrs)
+	if err != nil {
+		return data, err.Error()
+	}
 
 	data.successMessage = "revision attributes restored successfully."
 
@@ -360,11 +367,11 @@ func (controller *blockVersioningController) restoreRevisionAttributes(ctx conte
 		if attr == cmsstore.COLUMN_STATUS {
 			block.SetStatus(value)
 		}
-		
+
 		if attr == cmsstore.COLUMN_SITE_ID {
 			block.SetSiteID(value)
 		}
-		
+
 		if attr == cmsstore.COLUMN_PAGE_ID {
 			block.SetPageID(value)
 		}

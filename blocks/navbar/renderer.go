@@ -3,6 +3,7 @@ package navbar
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/hb"
@@ -12,15 +13,15 @@ import (
 func renderNavbarHTML(ctx context.Context, store cmsstore.StoreInterface, menuItems []cmsstore.MenuItemInterface, style, renderingMode, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
 	// Handle Bootstrap 5 rendering
 	if renderingMode == cmsstore.BLOCK_NAVBAR_RENDERING_BOOTSTRAP5 {
-		return renderBootstrap5Navbar(menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
+		return renderBootstrap5Navbar(ctx, store, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
 	}
 
 	// Handle plain rendering
-	return renderPlainNavbar(menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
+	return renderPlainNavbar(ctx, store, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
 }
 
 // renderBootstrap5Navbar renders a Bootstrap 5 navbar
-func renderBootstrap5Navbar(menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
+func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
 	nav := hb.Nav()
 
 	// Base Bootstrap navbar classes
@@ -73,7 +74,7 @@ func renderBootstrap5Navbar(menuItems []cmsstore.MenuItemInterface, style, cssCl
 	toggler.Attr("aria-controls", "navbarContent")
 	toggler.Attr("aria-expanded", "false")
 	toggler.Attr("aria-label", "Toggle navigation")
-	
+
 	// Add hamburger icon
 	span1 := hb.Span()
 	span1.Class("navbar-toggler-icon")
@@ -95,17 +96,30 @@ func renderBootstrap5Navbar(menuItems []cmsstore.MenuItemInterface, style, cssCl
 		navbarMenu.Class("ms-auto")
 	}
 
-	// Add menu items
+	// Add menu items (flat list for now)
 	for _, item := range menuItems {
+		url := resolveMenuItemURL(ctx, store, item)
+
 		navItem := hb.Li()
 		navItem.Class("nav-item")
 
-		navLink := hb.A()
-		navLink.Class("nav-link")
-		navLink.Href(item.URL())
-		navLink.Text(item.Name())
-		
-		navItem.AddChild(navLink)
+		if url != "" {
+			navLink := hb.A()
+			navLink.Class("nav-link")
+			navLink.Href(url)
+			navLink.Text(item.Name())
+
+			// Add target attribute if set
+			if item.Target() != "" {
+				navLink.Attr("target", item.Target())
+			}
+
+			navItem.AddChild(navLink)
+		} else {
+			// Render as plain text without link
+			navItem.Text(item.Name())
+		}
+
 		navbarMenu.AddChild(navItem)
 	}
 
@@ -116,7 +130,7 @@ func renderBootstrap5Navbar(menuItems []cmsstore.MenuItemInterface, style, cssCl
 }
 
 // renderPlainNavbar renders a plain navbar without Bootstrap classes
-func renderPlainNavbar(menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
+func renderPlainNavbar(ctx context.Context, store cmsstore.StoreInterface, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
 	nav := hb.Nav()
 
 	// Base classes
@@ -165,21 +179,53 @@ func renderPlainNavbar(menuItems []cmsstore.MenuItemInterface, style, cssClass, 
 		menu.Class("navbar-bottom")
 	}
 
-	// Add menu items
+	// Add menu items (flat list)
 	for _, item := range menuItems {
-		 menuItem := hb.Li()
-	 menuItem.Class("navbar-item")
+		url := resolveMenuItemURL(ctx, store, item)
 
-	 link := hb.A()
-	 link.Class("navbar-link")
-	 link.Href(item.URL())
-	 link.Text(item.Name())
-	 
-	 menuItem.AddChild(link)
-	 menu.AddChild(menuItem)
+		menuItem := hb.Li()
+		menuItem.Class("navbar-item")
+
+		if url != "" {
+			link := hb.A()
+			link.Class("navbar-link")
+			link.Href(url)
+			link.Text(item.Name())
+
+			// Add target attribute if set
+			if item.Target() != "" {
+				link.Attr("target", item.Target())
+			}
+
+			menuItem.AddChild(link)
+		} else {
+			// Render as plain text without link
+			menuItem.Text(item.Name())
+		}
+
+		menu.AddChild(menuItem)
 	}
 
 	nav.AddChild(menu)
 
 	return nav.ToHTML(), nil
+}
+
+// resolveMenuItemURL resolves the URL for a menu item
+// If the item has a direct URL, it returns that.
+// Otherwise, if the item has a PageID, it looks up the page and returns its alias.
+func resolveMenuItemURL(ctx context.Context, store cmsstore.StoreInterface, item cmsstore.MenuItemInterface) string {
+	if item.URL() != "" {
+		return item.URL()
+	}
+
+	if item.PageID() != "" {
+		page, err := store.PageFindByID(ctx, item.PageID())
+		if err != nil || page == nil {
+			return ""
+		}
+		return "/" + strings.TrimPrefix(page.Alias(), "/")
+	}
+
+	return ""
 }

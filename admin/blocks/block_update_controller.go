@@ -526,6 +526,11 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 			return data, ""
 		}
 
+		if data.formName == "" {
+			data.formErrorMessage = "Name is required"
+			return data, ""
+		}
+
 		// Validate block type change constraints
 		if data.formType != "" && data.formType != data.block.Type() {
 			// Only allow type changes for draft blocks
@@ -607,7 +612,7 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 		return data, ""
 	}
 
-	data.formSuccessMessage = "block saved successfully"
+	data.formSuccessMessage = "block updated successfully"
 
 	data.formRedirectURL = shared.URLR(data.request, shared.PathBlocksBlockUpdate, map[string]string{
 		"block_id": data.blockID,

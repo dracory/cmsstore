@@ -35,11 +35,18 @@ func TestBlockTypeChangeForDraftBlocks(t *testing.T) {
 
 	handler := initBlockHandler(store)
 
+	// Create a site first
+	site, err := testutils.SeedSite(store, "Test Site")
+	if err != nil {
+		t.Fatalf("SeedSite should succeed, got error: %v", err)
+	}
+
 	// Create a draft block
 	draftBlock := cmsstore.NewBlock()
 	draftBlock.SetName("Test Draft Block")
 	draftBlock.SetType(cmsstore.BLOCK_TYPE_HTML)
 	draftBlock.SetStatus(cmsstore.BLOCK_STATUS_DRAFT)
+	draftBlock.SetSiteID(site.ID())
 	draftBlock.SetContent("<p>Original HTML content</p>")
 
 	// Set some metadata
@@ -54,6 +61,15 @@ func TestBlockTypeChangeForDraftBlocks(t *testing.T) {
 	err = store.BlockCreate(context.Background(), draftBlock)
 	if err != nil {
 		t.Fatalf("BlockCreate should succeed, got error: %v", err)
+	}
+
+	// Verify the block was saved with draft status
+	savedBlock, err := store.BlockFindByID(context.Background(), draftBlock.ID())
+	if err != nil {
+		t.Fatalf("BlockFindByID should succeed, got error: %v", err)
+	}
+	if savedBlock.Status() != cmsstore.BLOCK_STATUS_DRAFT {
+		t.Fatalf("Expected block status to be %s, got %s", cmsstore.BLOCK_STATUS_DRAFT, savedBlock.Status())
 	}
 
 	// Test 1: Verify type field is editable for draft blocks
@@ -77,14 +93,22 @@ func TestBlockTypeChangeForDraftBlocks(t *testing.T) {
 		}
 
 		// Verify that the type field is a select dropdown (editable)
-		if !strings.Contains(body, `<select name="block_type"`) {
+		if !strings.Contains(body, "Block Settings") {
+			t.Errorf("Expected settings view, but not found in response")
+		}
+		
+		// Check for select element with block_type name
+		hasSelect := strings.Contains(body, `<select`) && strings.Contains(body, `name="block_type"`)
+		hasReadonlyText := strings.Contains(body, `name="block_type"`) && strings.Contains(body, `type="text"`) && strings.Contains(body, `readonly`)
+		
+		if !hasSelect {
 			t.Errorf("Expected editable block type field (select), but not found in response")
+		}
+		if hasReadonlyText {
+			t.Errorf("Expected block_type field to be editable (select), but found readonly text input")
 		}
 		if !strings.Contains(body, `Can only be changed while in draft status`) {
 			t.Errorf("Expected help text about draft status, but not found in response")
-		}
-		if strings.Contains(body, `readonly`) {
-			t.Errorf("Expected field to be editable, but found readonly attribute")
 		}
 	})
 

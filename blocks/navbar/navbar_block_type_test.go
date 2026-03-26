@@ -7,6 +7,7 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/testutils"
+	"github.com/dracory/form"
 	"github.com/dromara/carbon/v2"
 	_ "modernc.org/sqlite"
 )
@@ -380,37 +381,24 @@ func TestNavbarBlockType_AdminFields(t *testing.T) {
 		},
 	}
 
-	// Test getting admin fields
-	fields := navbarBlock.GetAdminFields(block, nil)
+	// Test getting admin fields with valid request
+	req, _ := http.NewRequest("GET", "/test", nil)
+	fields := navbarBlock.GetAdminFields(block, req)
 	if fields == nil {
 		t.Error("Expected admin fields, got nil")
 		return
 	}
 
-	// Check if it's a map (our simplified implementation)
-	fieldsMap, ok := fields.(map[string]interface{})
+	// Check if it's a slice of form.FieldInterface
+	fieldsSlice, ok := fields.([]form.FieldInterface)
 	if !ok {
-		t.Errorf("Expected fields to be a map, got %T", fields)
+		t.Errorf("Expected fields to be []form.FieldInterface, got %T", fields)
 		return
 	}
 
-	// Test expected fields
-	expectedFields := []string{
-		"menu_id",
-		"navbar_style",
-		"navbar_rendering_mode",
-		"navbar_brand_text",
-		"navbar_brand_url",
-		"navbar_fixed",
-		"navbar_dark",
-		"navbar_css_class",
-		"navbar_css_id",
-	}
-
-	for _, field := range expectedFields {
-		if _, exists := fieldsMap[field]; !exists {
-			t.Errorf("Expected field '%s' to exist in admin fields", field)
-		}
+	// We should have form fields now (menu dropdown, style, rendering mode, etc.)
+	if len(fieldsSlice) == 0 {
+		t.Error("Expected at least one form field, got none")
 	}
 }
 

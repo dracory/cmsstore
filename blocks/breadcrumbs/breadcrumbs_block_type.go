@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dracory/form"
 )
 
 // BreadcrumbsBlockType represents a breadcrumbs block for navigation
@@ -68,18 +69,114 @@ func (t *BreadcrumbsBlockType) Render(ctx context.Context, block cmsstore.BlockI
 
 // GetAdminFields returns form fields for editing breadcrumbs block configuration.
 func (t *BreadcrumbsBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.Request) interface{} {
-	fields := map[string]interface{}{
-		"breadcrumbs_menu_id":        block.Meta(cmsstore.BLOCK_META_MENU_ID),
-		"breadcrumbs_style":          block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_STYLE),
-		"breadcrumbs_rendering_mode": block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_RENDERING_MODE),
-		"breadcrumbs_separator":      block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR),
-		"breadcrumbs_home_text":      block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_HOME_TEXT),
-		"breadcrumbs_home_url":       block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_HOME_URL),
-		"breadcrumbs_css_class":      block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_CSS_CLASS),
-		"breadcrumbs_css_id":         block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_CSS_ID),
+	menuList, err := t.store.MenuList(r.Context(), cmsstore.MenuQuery().
+		SetStatus(cmsstore.MENU_STATUS_ACTIVE).
+		SetOrderBy(cmsstore.COLUMN_NAME).
+		SetSortOrder("asc"))
+
+	if err != nil {
+		// Continue with empty menu list
 	}
 
-	return fields
+	menuOptions := []form.FieldOption{
+		{
+			Value: "- No Menu -",
+			Key:   "",
+		},
+	}
+
+	for _, menu := range menuList {
+		menuOptions = append(menuOptions, form.FieldOption{
+			Value: menu.Name(),
+			Key:   menu.ID(),
+		})
+	}
+
+	fieldsContent := []form.FieldInterface{
+		form.NewField(form.FieldOptions{
+			Label:   "Menu (optional)",
+			Name:    "breadcrumbs_menu_id",
+			Type:    form.FORM_FIELD_TYPE_SELECT,
+			Value:   block.Meta(cmsstore.BLOCK_META_MENU_ID),
+			Help:    "Select menu to generate breadcrumbs from page hierarchy (optional)",
+			Options: menuOptions,
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Breadcrumbs Style",
+			Name:  "breadcrumbs_style",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_STYLE),
+			Help:  "Choose the breadcrumbs layout style",
+			Options: []form.FieldOption{
+				{
+					Value: "Default",
+					Key:   cmsstore.BLOCK_BREADCRUMBS_STYLE_DEFAULT,
+				},
+				{
+					Value: "Centered",
+					Key:   cmsstore.BLOCK_BREADCRUMBS_STYLE_CENTERED,
+				},
+				{
+					Value: "Right",
+					Key:   cmsstore.BLOCK_BREADCRUMBS_STYLE_RIGHT,
+				},
+			},
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Rendering Mode",
+			Name:  "breadcrumbs_rendering_mode",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_RENDERING_MODE),
+			Help:  "Choose the rendering framework",
+			Options: []form.FieldOption{
+				{
+					Value: "Plain",
+					Key:   cmsstore.BLOCK_BREADCRUMBS_RENDERING_PLAIN,
+				},
+				{
+					Value: "Bootstrap 5",
+					Key:   cmsstore.BLOCK_BREADCRUMBS_RENDERING_BOOTSTRAP5,
+				},
+			},
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Home Text",
+			Name:  "breadcrumbs_home_text",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_HOME_TEXT),
+			Help:  "Text for the home breadcrumb (default: Home)",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Home URL",
+			Name:  "breadcrumbs_home_url",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_HOME_URL),
+			Help:  "URL for the home link (default: /)",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Separator",
+			Name:  "breadcrumbs_separator",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR),
+			Help:  "Separator between breadcrumbs (default: /)",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "CSS ID",
+			Name:  "breadcrumbs_css_id",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_CSS_ID),
+			Help:  "Optional CSS ID for the breadcrumbs container",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "CSS Class",
+			Name:  "breadcrumbs_css_class",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_CSS_CLASS),
+			Help:  "Optional CSS classes for styling",
+		}),
+	}
+
+	return fieldsContent
 }
 
 // SaveAdminFields processes form submission and updates the breadcrumbs block.
