@@ -18,7 +18,7 @@ type FrontendStore interface {
 	MenuFindByID(ctx context.Context, id string) (cmsstore.MenuInterface, error)
 	MenuItemList(ctx context.Context, query cmsstore.MenuItemQueryInterface) ([]cmsstore.MenuItemInterface, error)
 	MenusEnabled() bool
-	RenderMenuHTML(ctx context.Context, menuItems []cmsstore.MenuItemInterface, style, cssClass string, startLevel, maxDepth int) (string, error)
+	PageFindByID(ctx context.Context, id string) (cmsstore.PageInterface, error)
 	Logger() *slog.Logger
 }
 
@@ -97,5 +97,6 @@ func (r *BlockRenderer) Render(ctx context.Context, block cmsstore.BlockInterfac
 		maxDepth = 0 // default value
 	}
 
-	return r.store.RenderMenuHTML(ctx, menuItems, style, cssClass, startLevel, maxDepth)
+	menuRenderer := NewMenuRenderer(r.store)
+	return menuRenderer.RenderMenuHTML(ctx, menuItems, style, cssClass, startLevel, maxDepth)
 }

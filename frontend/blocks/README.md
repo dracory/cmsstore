@@ -7,10 +7,11 @@ This directory contains individual block renderers organized by block type. Each
 ```
 blocks/
 ├── html/
-│   ├── renderer.go          # HTML block renderer implementation
+│   ├── renderer.go          # HTMLRenderer implementation
 │   └── assets/              # CSS, JS, images for HTML blocks (if needed)
 ├── menu/
-│   ├── renderer.go          # Menu block renderer implementation
+│   ├── renderer.go          # Menu BlockRenderer implementation
+│   ├── menu_renderer.go     # MenuRenderer (comprehensive menu rendering)
 │   └── assets/              # CSS, JS, images for menu blocks (if needed)
 └── [block-type]/
     ├── renderer.go          # Block renderer implementation
@@ -29,7 +30,7 @@ blocks/
    ```
 4. Register the renderer in `frontend/block_renderer.go`:
    ```go
-   registry.Register(cmsstore.BLOCK_TYPE_[TYPE], [type].NewBlockRenderer(f))
+   registry.Register(cmsstore.BLOCK_TYPE_[TYPE], [type].New[Type]Renderer(f))
    ```
 5. Add any assets to the `assets/` subfolder
 
@@ -42,7 +43,27 @@ type FrontendStore interface {
     MenuFindByID(ctx context.Context, id string) (cmsstore.MenuInterface, error)
     MenuItemList(ctx context.Context, query cmsstore.MenuItemQueryInterface) ([]cmsstore.MenuItemInterface, error)
     MenusEnabled() bool
-    RenderMenuHTML(ctx context.Context, menuItems []cmsstore.MenuItemInterface, style, cssClass string, startLevel, maxDepth int) (string, error)
+    PageFindByID(ctx context.Context, id string) (cmsstore.PageInterface, error)
     Logger() *slog.Logger
 }
+```
+
+## Architecture Pattern
+
+All renderers follow a consistent pattern:
+
+1. **Renderer Struct**: Each renderer has its own struct (e.g., `HTMLRenderer`, `MenuRenderer`)
+2. **Constructor Function**: `New[Type]Renderer()` creates renderer instances
+3. **Interface Implementation**: All implement the `BlockRenderer` interface
+4. **Delegation**: Main `frontend.go` delegates to specialized renderers for consistency
+
+**Example Pattern:**
+```go
+// In frontend/blocks/[type]/renderer.go
+type [Type]Renderer struct { ... }
+func New[Type]Renderer(store FrontendStore) *[Type]Renderer { ... }
+func (r *[Type]Renderer) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) { ... }
+
+// In frontend/block_renderer.go
+registry.Register(cmsstore.BLOCK_TYPE_[TYPE], [type].New[Type]Renderer(f))
 ```

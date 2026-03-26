@@ -3,9 +3,9 @@
 ## Overview
 Analysis of test coverage for CMS Store MCP (Model Context Protocol) tools conducted on 2026-03-06.
 
-## [2026-03-26] Block Renderer Architecture Fixes
-- **Issue**: Multiple critical bugs in refactored block renderer system
-- **Root Cause**: Missing nil checks, improper error handling, thread safety issues
+## [2026-03-26] Block Renderer Architecture Fixes & Refactoring
+- **Issue**: Multiple critical bugs in refactored block renderer system + architectural inconsistency
+- **Root Cause**: Missing nil checks, improper error handling, thread safety issues, menu rendering logic still in main frontend
 - **Fixes Applied**:
   - Added nil pointer protection in `BlockRendererRegistry.GetRenderer()` with fallback `NoOpRenderer`
   - Added nil block validation in `RenderBlock()` method
@@ -13,9 +13,13 @@ Analysis of test coverage for CMS Store MCP (Model Context Protocol) tools condu
   - Added thread safety with `sync.RWMutex` to `BlockRendererRegistry`
   - Added nil and content validation in HTML renderer
   - Fixed consistency in empty menu handling (HTML comments vs empty string)
-- **Files Modified**: `frontend/block_renderer.go`, `frontend/blocks/html/renderer.go`, `frontend/blocks/menu/renderer.go`, `frontend/frontend.go`
-- **Impact**: All tests pass, robust error handling, thread-safe renderer registry
-- **Application**: Always validate inputs, handle errors properly, and consider thread safety in concurrent systems
+  - **Completed architectural refactoring**: Moved all menu rendering logic to `frontend/blocks/menu/menu_renderer.go`
+  - Created comprehensive `MenuRenderer` with all rendering methods
+  - Updated main `frontend.go` to only contain interface implementations that delegate to menu renderer
+  - Added `PageFindByID` to `FrontendStore` interface for menu URL resolution
+- **Files Modified**: `frontend/block_renderer.go`, `frontend/blocks/html/renderer.go`, `frontend/blocks/menu/renderer.go`, `frontend/blocks/menu/menu_renderer.go`, `frontend/frontend.go`
+- **Impact**: All tests pass, robust error handling, thread-safe renderer registry, clean modular architecture
+- **Application**: Always validate inputs, handle errors properly, consider thread safety, and maintain architectural consistency
 
 ## [2026-03-25] PAGE_URL Placeholder System
 - **Issue**: Need for page URL placeholders in content that reference pages by ID

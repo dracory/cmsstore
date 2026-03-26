@@ -6,16 +6,16 @@ import (
 	"github.com/dracory/cmsstore"
 )
 
-// BlockRenderer renders HTML blocks by returning their content
-type BlockRenderer struct{}
+// HTMLRenderer provides HTML block rendering functionality
+type HTMLRenderer struct{}
 
-// NewBlockRenderer creates a new HTML block renderer
-func NewBlockRenderer() *BlockRenderer {
-	return &BlockRenderer{}
+// NewHTMLRenderer creates a new HTML renderer
+func NewHTMLRenderer() *HTMLRenderer {
+	return &HTMLRenderer{}
 }
 
 // Render renders an HTML block by returning its content
-func (r *BlockRenderer) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+func (r *HTMLRenderer) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
 	if block == nil {
 		return "<!-- Block is nil -->", nil
 	}

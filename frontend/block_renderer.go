@@ -72,7 +72,7 @@ func initBlockRenderers(f *frontend) *BlockRendererRegistry {
 	registry := NewBlockRendererRegistry()
 
 	// Register HTML renderer (default)
-	registry.Register(cmsstore.BLOCK_TYPE_HTML, html.NewBlockRenderer())
+	registry.Register(cmsstore.BLOCK_TYPE_HTML, html.NewHTMLRenderer())
 
 	// Register Menu renderer
 	registry.Register(cmsstore.BLOCK_TYPE_MENU, menu.NewBlockRenderer(f))
