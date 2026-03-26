@@ -3,7 +3,6 @@ package menu
 import (
 	"context"
 	"fmt"
-	"html"
 	"net/http"
 
 	"github.com/dracory/cmsstore"
@@ -98,12 +97,13 @@ func (t *MenuBlockType) Render(ctx context.Context, block cmsstore.BlockInterfac
 	}
 
 	cssClass := block.Meta(cmsstore.BLOCK_META_MENU_CSS_CLASS)
+	cssID := block.Meta(cmsstore.BLOCK_META_MENU_CSS_ID)
 	startLevel := parseInt(block.Meta(cmsstore.BLOCK_META_MENU_START_LEVEL), 0)
 	maxDepth := parseInt(block.Meta(cmsstore.BLOCK_META_MENU_MAX_DEPTH), 0)
 
 	// Use the menu renderer from frontend/blocks/menu package
 	// This delegates to the existing comprehensive menu rendering logic
-	return renderMenuHTML(ctx, t.store, menuItems, style, cssClass, startLevel, maxDepth)
+	return renderMenuHTML(ctx, t.store, menuItems, style, cssClass, cssID, startLevel, maxDepth)
 }
 
 // GetAdminFields returns form fields for editing menu block configuration.
@@ -179,6 +179,13 @@ func (t *MenuBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.Re
 			},
 		}),
 		form.NewField(form.FieldOptions{
+			Label: "CSS ID",
+			Name:  "menu_css_id",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_MENU_CSS_ID),
+			Help:  "Optional CSS ID for unique identification",
+		}),
+		form.NewField(form.FieldOptions{
 			Label: "CSS Class",
 			Name:  "menu_css_class",
 			Type:  form.FORM_FIELD_TYPE_STRING,
@@ -209,6 +216,7 @@ func (t *MenuBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInt
 	menuID := req.GetStringTrimmed(r, "menu_id")
 	menuStyle := req.GetStringTrimmed(r, "menu_style")
 	menuCSSClass := req.GetStringTrimmed(r, "menu_css_class")
+	menuCSSID := req.GetStringTrimmed(r, "menu_css_id")
 	menuStartLevel := req.GetStringTrimmed(r, "menu_start_level")
 	menuMaxDepth := req.GetStringTrimmed(r, "menu_max_depth")
 
@@ -219,6 +227,7 @@ func (t *MenuBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInt
 	block.SetMeta(cmsstore.BLOCK_META_MENU_ID, menuID)
 	block.SetMeta(cmsstore.BLOCK_META_MENU_STYLE, menuStyle)
 	block.SetMeta(cmsstore.BLOCK_META_MENU_CSS_CLASS, menuCSSClass)
+	block.SetMeta(cmsstore.BLOCK_META_MENU_CSS_ID, menuCSSID)
 	block.SetMeta(cmsstore.BLOCK_META_MENU_START_LEVEL, menuStartLevel)
 	block.SetMeta(cmsstore.BLOCK_META_MENU_MAX_DEPTH, menuMaxDepth)
 
@@ -252,12 +261,25 @@ func parseInt(s string, defaultVal int) int {
 // This simplified version is provided to avoid circular dependencies between
 // the blocks package and the frontend package, while still allowing basic
 // menu block functionality.
-func renderMenuHTML(ctx context.Context, store cmsstore.StoreInterface, menuItems []cmsstore.MenuItemInterface, style, cssClass string, startLevel, maxDepth int) (string, error) {
-	// Simplified flat menu rendering with XSS protection
-	output := fmt.Sprintf(`<nav class="menu menu-style-%s %s">`, html.EscapeString(style), html.EscapeString(cssClass))
-	for _, item := range menuItems {
-		output += fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(item.URL()), html.EscapeString(item.Name()))
+func renderMenuHTML(ctx context.Context, store cmsstore.StoreInterface, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID string, startLevel, maxDepth int) (string, error) {
+	// Build nav element using hb library
+	nav := hb.Nav()
+
+	// Add CSS classes
+	nav.Class(fmt.Sprintf("menu menu-style-%s", style))
+	if cssClass != "" {
+		nav.Class(cssClass)
 	}
-	output += `</nav>`
-	return output, nil
+
+	// Add CSS ID if provided
+	if cssID != "" {
+		nav.ID(cssID)
+	}
+
+	// Add menu items
+	for _, item := range menuItems {
+		nav.AddChild(hb.A().Href(item.URL()).Text(item.Name()))
+	}
+
+	return nav.ToHTML(), nil
 }

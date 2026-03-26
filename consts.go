@@ -10,6 +10,7 @@ const (
 const (
 	BLOCK_META_MENU_ID          = "menu_id"
 	BLOCK_META_MENU_CSS_CLASS   = "menu_css_class"
+	BLOCK_META_MENU_CSS_ID      = "menu_css_id"
 	BLOCK_META_MENU_STYLE       = "menu_style"
 	BLOCK_META_MENU_START_LEVEL = "menu_start_level"
 	BLOCK_META_MENU_MAX_DEPTH   = "menu_max_depth"
