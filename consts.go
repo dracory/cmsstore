@@ -2,9 +2,10 @@ package cmsstore
 
 // Block Types (lowercase for consistency with other constants)
 const (
-	BLOCK_TYPE_HTML   = "html"
-	BLOCK_TYPE_MENU   = "menu"
-	BLOCK_TYPE_NAVBAR = "navbar"
+	BLOCK_TYPE_HTML        = "html"
+	BLOCK_TYPE_MENU        = "menu"
+	BLOCK_TYPE_NAVBAR      = "navbar"
+	BLOCK_TYPE_BREADCRUMBS = "breadcrumbs"
 )
 
 // Block Meta Keys for Menu Type
@@ -55,6 +56,30 @@ const (
 const (
 	BLOCK_NAVBAR_RENDERING_PLAIN      = "plain"
 	BLOCK_NAVBAR_RENDERING_BOOTSTRAP5 = "bootstrap5"
+)
+
+// Block Meta Keys for Breadcrumbs Type
+const (
+	BLOCK_META_BREADCRUMBS_STYLE          = "breadcrumbs_style"
+	BLOCK_META_BREADCRUMBS_RENDERING_MODE = "breadcrumbs_rendering_mode"
+	BLOCK_META_BREADCRUMBS_CSS_CLASS      = "breadcrumbs_css_class"
+	BLOCK_META_BREADCRUMBS_CSS_ID         = "breadcrumbs_css_id"
+	BLOCK_META_BREADCRUMBS_SEPARATOR      = "breadcrumbs_separator"
+	BLOCK_META_BREADCRUMBS_HOME_TEXT      = "breadcrumbs_home_text"
+	BLOCK_META_BREADCRUMBS_HOME_URL       = "breadcrumbs_home_url"
+)
+
+// Block Breadcrumbs Styles
+const (
+	BLOCK_BREADCRUMBS_STYLE_DEFAULT  = "default"
+	BLOCK_BREADCRUMBS_STYLE_CENTERED = "centered"
+	BLOCK_BREADCRUMBS_STYLE_RIGHT    = "right"
+)
+
+// Block Breadcrumbs Rendering Modes
+const (
+	BLOCK_BREADCRUMBS_RENDERING_PLAIN      = "plain"
+	BLOCK_BREADCRUMBS_RENDERING_BOOTSTRAP5 = "bootstrap5"
 )
 
 // Block Statuses
