@@ -14,8 +14,8 @@ const PAGE_01 = "PAGE_01"
 const PAGE_02 = "PAGE_02"
 const TEMPLATE_01 = "TEMPLATE_01"
 const TEMPLATE_02 = "TEMPLATE_02"
-const BLOCK_01 = "BLOCK_01"
-const BLOCK_02 = "BLOCK_02"
+const TRANSLATION_01 = "TRANSLATION_01"
+const TRANSLATION_02 = "TRANSLATION_02"
 
 func initDB(filepath string) *sql.DB {
 	if filepath != ":memory:" && fileExists(filepath) {
@@ -93,6 +93,17 @@ func SeedTemplate(store cmsstore.StoreInterface, siteID string, templateID strin
 	err := store.TemplateCreate(context.Background(), template)
 
 	return template, err
+}
+
+func SeedTranslation(store cmsstore.StoreInterface, siteID string, translationID string) (cmsstore.TranslationInterface, error) {
+	translation := cmsstore.NewTranslation().
+		SetSiteID(siteID).
+		SetName("Translation" + translationID).
+		SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
+
+	err := store.TranslationCreate(context.Background(), translation)
+
+	return translation, err
 }
 
 func fileExists(path string) bool {
