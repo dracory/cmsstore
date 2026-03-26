@@ -20,33 +20,18 @@ func NewBreadcrumbsBlockType(store cmsstore.StoreInterface) *BreadcrumbsBlockTyp
 	}
 }
 
-// Type returns the block type identifier
-func (t *BreadcrumbsBlockType) Type() string {
+// TypeKey returns the unique identifier for this block type
+func (t *BreadcrumbsBlockType) TypeKey() string {
 	return cmsstore.BLOCK_TYPE_BREADCRUMBS
 }
 
-// Name returns the display name for this block type
-func (t *BreadcrumbsBlockType) Name() string {
+// TypeLabel returns the human-readable display name
+func (t *BreadcrumbsBlockType) TypeLabel() string {
 	return "Breadcrumbs"
 }
 
-// Description returns a description of this block type
-func (t *BreadcrumbsBlockType) Description() string {
-	return "Breadcrumb navigation trail showing current page location"
-}
-
-// Icon returns the icon for this block type
-func (t *BreadcrumbsBlockType) Icon() string {
-	return "🍞"
-}
-
-// Category returns the category for this block type
-func (t *BreadcrumbsBlockType) Category() string {
-	return "Navigation"
-}
-
-// Render renders the breadcrumbs block
-func (t *BreadcrumbsBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, page cmsstore.PageInterface, site cmsstore.SiteInterface) (string, error) {
+// Render renders the breadcrumbs block for frontend display
+func (t *BreadcrumbsBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
 	style := block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_STYLE)
 	if style == "" {
 		style = cmsstore.BLOCK_BREADCRUMBS_STYLE_DEFAULT
@@ -75,7 +60,7 @@ func (t *BreadcrumbsBlockType) Render(ctx context.Context, block cmsstore.BlockI
 	}
 
 	// Generate breadcrumb items based on current page
-	breadcrumbs := t.generateBreadcrumbs(ctx, page, homeText, homeURL)
+	breadcrumbs := t.generateBreadcrumbs(ctx, homeText, homeURL)
 
 	// Use the breadcrumbs renderer
 	return renderBreadcrumbsHTML(breadcrumbs, style, renderingMode, cssClass, cssID, separator)
@@ -141,7 +126,7 @@ func (t *BreadcrumbsBlockType) GetPreview(block cmsstore.BlockInterface) string 
 }
 
 // generateBreadcrumbs creates breadcrumb items based on the current page context
-func (t *BreadcrumbsBlockType) generateBreadcrumbs(ctx context.Context, page cmsstore.PageInterface, homeText, homeURL string) []BreadcrumbItem {
+func (t *BreadcrumbsBlockType) generateBreadcrumbs(ctx context.Context, homeText, homeURL string) []BreadcrumbItem {
 	var breadcrumbs []BreadcrumbItem
 
 	// Add home breadcrumb
@@ -151,14 +136,12 @@ func (t *BreadcrumbsBlockType) generateBreadcrumbs(ctx context.Context, page cms
 		Active: false,
 	})
 
-	if page != nil {
-		// Add current page breadcrumb
-		breadcrumbs = append(breadcrumbs, BreadcrumbItem{
-			Name:   page.Name(),
-			URL:    "", // Current page has no URL
-			Active: true,
-		})
-	}
+	// Add current page breadcrumb (simplified for now)
+	breadcrumbs = append(breadcrumbs, BreadcrumbItem{
+		Name:   "Current Page",
+		URL:    "", // Current page has no URL
+		Active: true,
+	})
 
 	return breadcrumbs
 }

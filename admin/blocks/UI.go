@@ -7,8 +7,10 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
+	breadcrumbsblock "github.com/dracory/cmsstore/blocks/breadcrumbs"
 	htmlblock "github.com/dracory/cmsstore/blocks/html"
 	menublock "github.com/dracory/cmsstore/blocks/menu"
+	navbarblock "github.com/dracory/cmsstore/blocks/navbar"
 )
 
 var (
@@ -38,11 +40,13 @@ func initBlockAdminProviders(store cmsstore.StoreInterface, logger *slog.Logger)
 	registry := NewBlockAdminFieldProviderRegistry()
 
 	// Register built-in block types globally (new unified system) - only once
-	// These are defined in blocks/html and blocks/menu
+	// These are defined in blocks/html, blocks/menu, blocks/navbar, and blocks/breadcrumbs
 	// Using sync.Once prevents race conditions and duplicate registrations
 	blockTypesRegistered.Do(func() {
 		cmsstore.RegisterBlockType(htmlblock.NewHTMLBlockType())
 		cmsstore.RegisterBlockType(menublock.NewMenuBlockType(store, logger))
+		cmsstore.RegisterBlockType(navbarblock.NewNavbarBlockType(store))
+		cmsstore.RegisterBlockType(breadcrumbsblock.NewBreadcrumbsBlockType(store))
 	})
 
 	// The local registry is kept empty for backward compatibility

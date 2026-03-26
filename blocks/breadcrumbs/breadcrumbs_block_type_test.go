@@ -21,27 +21,12 @@ func TestBreadcrumbsBlockType_BasicProperties(t *testing.T) {
 	breadcrumbsBlock := NewBreadcrumbsBlockType(store)
 
 	// Test basic properties
-	if breadcrumbsBlock.Type() != cmsstore.BLOCK_TYPE_BREADCRUMBS {
-		t.Errorf("Expected type %s, got %s", cmsstore.BLOCK_TYPE_BREADCRUMBS, breadcrumbsBlock.Type())
+	if breadcrumbsBlock.TypeKey() != cmsstore.BLOCK_TYPE_BREADCRUMBS {
+		t.Errorf("Expected type %s, got %s", cmsstore.BLOCK_TYPE_BREADCRUMBS, breadcrumbsBlock.TypeKey())
 	}
 
-	if breadcrumbsBlock.Name() != "Breadcrumbs" {
-		t.Errorf("Expected name 'Breadcrumbs', got '%s'", breadcrumbsBlock.Name())
-	}
-
-	if breadcrumbsBlock.Category() != "Navigation" {
-		t.Errorf("Expected category 'Navigation', got '%s'", breadcrumbsBlock.Category())
-	}
-
-	// Test icon
-	if breadcrumbsBlock.Icon() != "🍞" {
-		t.Errorf("Expected icon '🍞', got '%s'", breadcrumbsBlock.Icon())
-	}
-
-	// Test description
-	expectedDesc := "Breadcrumb navigation trail showing current page location"
-	if breadcrumbsBlock.Description() != expectedDesc {
-		t.Errorf("Expected description '%s', got '%s'", expectedDesc, breadcrumbsBlock.Description())
+	if breadcrumbsBlock.TypeLabel() != "Breadcrumbs" {
+		t.Errorf("Expected name 'Breadcrumbs', got '%s'", breadcrumbsBlock.TypeLabel())
 	}
 }
 
@@ -62,14 +47,14 @@ func TestBreadcrumbsBlockType_RenderBootstrap5(t *testing.T) {
 			cmsstore.BLOCK_META_BREADCRUMBS_RENDERING_MODE: "bootstrap5",
 			cmsstore.BLOCK_META_BREADCRUMBS_CSS_CLASS:      "custom-breadcrumbs",
 			cmsstore.BLOCK_META_BREADCRUMBS_CSS_ID:         "main-breadcrumbs",
-			cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR:       "→",
-			cmsstore.BLOCK_META_BREADCRUMBS_HOME_TEXT:       "Home",
-			cmsstore.BLOCK_META_BREADCRUMBS_HOME_URL:        "https://example.com",
+			cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR:      "→",
+			cmsstore.BLOCK_META_BREADCRUMBS_HOME_TEXT:      "Home",
+			cmsstore.BLOCK_META_BREADCRUMBS_HOME_URL:       "https://example.com",
 		},
 	}
 
 	// Test rendering with Bootstrap 5 (no page needed for basic test)
-	result, err := breadcrumbsBlock.Render(ctx, block, nil, nil)
+	result, err := breadcrumbsBlock.Render(ctx, block)
 	if err != nil {
 		t.Errorf("Render returned error: %v", err)
 		return
@@ -121,12 +106,12 @@ func TestBreadcrumbsBlockType_RenderPlain(t *testing.T) {
 			cmsstore.BLOCK_META_BREADCRUMBS_STYLE:          "centered",
 			cmsstore.BLOCK_META_BREADCRUMBS_RENDERING_MODE: "plain",
 			cmsstore.BLOCK_META_BREADCRUMBS_CSS_CLASS:      "plain-breadcrumbs",
-			cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR:       ">",
+			cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR:      ">",
 		},
 	}
 
 	// Test rendering with plain mode
-	result, err := breadcrumbsBlock.Render(ctx, block, nil, nil)
+	result, err := breadcrumbsBlock.Render(ctx, block)
 	if err != nil {
 		t.Errorf("Render returned error: %v", err)
 		return
@@ -188,7 +173,7 @@ func TestBreadcrumbsBlockType_GetPreview(t *testing.T) {
 	// Test preview with custom configuration
 	block.meta[cmsstore.BLOCK_META_BREADCRUMBS_STYLE] = "centered"
 	block.meta[cmsstore.BLOCK_META_BREADCRUMBS_RENDERING_MODE] = "plain"
-	
+
 	preview = breadcrumbsBlock.GetPreview(block)
 	if preview != "Breadcrumbs: centered (plain)" {
 		t.Errorf("Expected preview 'Breadcrumbs: centered (plain)', got '%s'", preview)
@@ -209,8 +194,8 @@ func TestBreadcrumbsBlockType_AdminFields(t *testing.T) {
 		meta: map[string]string{
 			cmsstore.BLOCK_META_BREADCRUMBS_STYLE:          "default",
 			cmsstore.BLOCK_META_BREADCRUMBS_RENDERING_MODE: "bootstrap5",
-			cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR:       "→",
-			cmsstore.BLOCK_META_BREADCRUMBS_HOME_TEXT:       "Home",
+			cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR:      "→",
+			cmsstore.BLOCK_META_BREADCRUMBS_HOME_TEXT:      "Home",
 			cmsstore.BLOCK_META_BREADCRUMBS_CSS_CLASS:      "custom-class",
 		},
 	}
@@ -264,11 +249,11 @@ func TestBreadcrumbsBlockType_SaveAdminFields(t *testing.T) {
 	// Create a real http.Request with form data
 	req, _ := http.NewRequest("POST", "/test", nil)
 	req.Form = map[string][]string{
-		"breadcrumbs_style":           {"default"},
-		"breadcrumbs_rendering_mode":  {"bootstrap5"},
-		"breadcrumbs_separator":       {"→"},
-		"breadcrumbs_home_text":       {"Home"},
-		"breadcrumbs_home_url":        {"https://example.com"},
+		"breadcrumbs_style":          {"default"},
+		"breadcrumbs_rendering_mode": {"bootstrap5"},
+		"breadcrumbs_separator":      {"→"},
+		"breadcrumbs_home_text":      {"Home"},
+		"breadcrumbs_home_url":       {"https://example.com"},
 		"breadcrumbs_css_class":      {"custom-class"},
 		"breadcrumbs_css_id":         {"main-breadcrumbs"},
 	}
@@ -302,57 +287,59 @@ func (b *TestBreadcrumbsBlock) Data() map[string]string {
 	return b.meta
 }
 func (b *TestBreadcrumbsBlock) DataChanged() map[string]string { return make(map[string]string) }
-func (b *TestBreadcrumbsBlock) MarkAsNotDirty()          {}
+func (b *TestBreadcrumbsBlock) MarkAsNotDirty()                {}
 
-func (b *TestBreadcrumbsBlock) ID() string                { return "test-block" }
+func (b *TestBreadcrumbsBlock) ID() string                                        { return "test-block" }
 func (b *TestBreadcrumbsBlock) SetID(id string) cmsstore.BlockInterface           { return b }
-func (b *TestBreadcrumbsBlock) Type() string              { return cmsstore.BLOCK_TYPE_BREADCRUMBS }
+func (b *TestBreadcrumbsBlock) Type() string                                      { return cmsstore.BLOCK_TYPE_BREADCRUMBS }
 func (b *TestBreadcrumbsBlock) SetType(blockType string) cmsstore.BlockInterface  { return b }
-func (b *TestBreadcrumbsBlock) Content() string           { return "test content" }
+func (b *TestBreadcrumbsBlock) Content() string                                   { return "test content" }
 func (b *TestBreadcrumbsBlock) SetContent(content string) cmsstore.BlockInterface { return b }
-func (b *TestBreadcrumbsBlock) CreatedAt() string         { return "2023-01-01 00:00:00" }
+func (b *TestBreadcrumbsBlock) CreatedAt() string                                 { return "2023-01-01 00:00:00" }
 func (b *TestBreadcrumbsBlock) CreatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse("2023-01-01 00:00:00")
 }
-func (b *TestBreadcrumbsBlock) SetCreatedAt(createdAt string) cmsstore.BlockInterface { return b }
-func (b *TestBreadcrumbsBlock) Editor() string                        { return "blockeditor" }
-func (b *TestBreadcrumbsBlock) SetEditor(editor string) cmsstore.BlockInterface     { return b }
-func (b *TestBreadcrumbsBlock) Handle() string                        { return "test-handle" }
-func (b *TestBreadcrumbsBlock) SetHandle(handle string) cmsstore.BlockInterface     { return b }
-func (b *TestBreadcrumbsBlock) Memo() string                          { return "" }
-func (b *TestBreadcrumbsBlock) SetMemo(memo string) cmsstore.BlockInterface         { return b }
-func (b *TestBreadcrumbsBlock) Name() string                          { return "Test Block" }
-func (b *TestBreadcrumbsBlock) SetName(name string) cmsstore.BlockInterface         { return b }
-func (b *TestBreadcrumbsBlock) PageID() string                        { return "" }
-func (b *TestBreadcrumbsBlock) SetPageID(pageID string) cmsstore.BlockInterface     { return b }
-func (b *TestBreadcrumbsBlock) ParentID() string                      { return "" }
-func (b *TestBreadcrumbsBlock) SetParentID(parentID string) cmsstore.BlockInterface { return b }
-func (b *TestBreadcrumbsBlock) Sequence() string                      { return "1" }
-func (b *TestBreadcrumbsBlock) SequenceInt() int                      { return 1 }
-func (b *TestBreadcrumbsBlock) SetSequence(sequence string) cmsstore.BlockInterface { return b }
-func (b *TestBreadcrumbsBlock) SetSequenceInt(sequence int) cmsstore.BlockInterface { return b }
-func (b *TestBreadcrumbsBlock) SiteID() string                        { return "" }
-func (b *TestBreadcrumbsBlock) SetSiteID(siteID string) cmsstore.BlockInterface     { return b }
-func (b *TestBreadcrumbsBlock) TemplateID() string                    { return "" }
+func (b *TestBreadcrumbsBlock) SetCreatedAt(createdAt string) cmsstore.BlockInterface   { return b }
+func (b *TestBreadcrumbsBlock) Editor() string                                          { return "blockeditor" }
+func (b *TestBreadcrumbsBlock) SetEditor(editor string) cmsstore.BlockInterface         { return b }
+func (b *TestBreadcrumbsBlock) Handle() string                                          { return "test-handle" }
+func (b *TestBreadcrumbsBlock) SetHandle(handle string) cmsstore.BlockInterface         { return b }
+func (b *TestBreadcrumbsBlock) Memo() string                                            { return "" }
+func (b *TestBreadcrumbsBlock) SetMemo(memo string) cmsstore.BlockInterface             { return b }
+func (b *TestBreadcrumbsBlock) Name() string                                            { return "Test Block" }
+func (b *TestBreadcrumbsBlock) SetName(name string) cmsstore.BlockInterface             { return b }
+func (b *TestBreadcrumbsBlock) PageID() string                                          { return "" }
+func (b *TestBreadcrumbsBlock) SetPageID(pageID string) cmsstore.BlockInterface         { return b }
+func (b *TestBreadcrumbsBlock) ParentID() string                                        { return "" }
+func (b *TestBreadcrumbsBlock) SetParentID(parentID string) cmsstore.BlockInterface     { return b }
+func (b *TestBreadcrumbsBlock) Sequence() string                                        { return "1" }
+func (b *TestBreadcrumbsBlock) SequenceInt() int                                        { return 1 }
+func (b *TestBreadcrumbsBlock) SetSequence(sequence string) cmsstore.BlockInterface     { return b }
+func (b *TestBreadcrumbsBlock) SetSequenceInt(sequence int) cmsstore.BlockInterface     { return b }
+func (b *TestBreadcrumbsBlock) SiteID() string                                          { return "" }
+func (b *TestBreadcrumbsBlock) SetSiteID(siteID string) cmsstore.BlockInterface         { return b }
+func (b *TestBreadcrumbsBlock) TemplateID() string                                      { return "" }
 func (b *TestBreadcrumbsBlock) SetTemplateID(templateID string) cmsstore.BlockInterface { return b }
-func (b *TestBreadcrumbsBlock) SoftDeletedAt() string                 { return "" }
-func (b *TestBreadcrumbsBlock) SoftDeletedAtCarbon() *carbon.Carbon   { return nil }
-func (b *TestBreadcrumbsBlock) SetSoftDeletedAt(softDeletedAt string) cmsstore.BlockInterface { return b }
-func (b *TestBreadcrumbsBlock) Status() string                        { return cmsstore.BLOCK_STATUS_ACTIVE }
-func (b *TestBreadcrumbsBlock) SetStatus(status string) cmsstore.BlockInterface     { return b }
-func (b *TestBreadcrumbsBlock) UpdatedAt() string                     { return "2023-01-01 00:00:00" }
+func (b *TestBreadcrumbsBlock) SoftDeletedAt() string                                   { return "" }
+func (b *TestBreadcrumbsBlock) SoftDeletedAtCarbon() *carbon.Carbon                     { return nil }
+func (b *TestBreadcrumbsBlock) SetSoftDeletedAt(softDeletedAt string) cmsstore.BlockInterface {
+	return b
+}
+func (b *TestBreadcrumbsBlock) Status() string                                  { return cmsstore.BLOCK_STATUS_ACTIVE }
+func (b *TestBreadcrumbsBlock) SetStatus(status string) cmsstore.BlockInterface { return b }
+func (b *TestBreadcrumbsBlock) UpdatedAt() string                               { return "2023-01-01 00:00:00" }
 func (b *TestBreadcrumbsBlock) UpdatedAtCarbon() *carbon.Carbon {
 	return carbon.Parse("2023-01-01 00:00:00")
 }
 func (b *TestBreadcrumbsBlock) SetUpdatedAt(updatedAt string) cmsstore.BlockInterface { return b }
-func (b *TestBreadcrumbsBlock) IsActive() bool                        { return true }
-func (b *TestBreadcrumbsBlock) IsInactive() bool                      { return false }
-func (b *TestBreadcrumbsBlock) IsSoftDeleted() bool                   { return false }
-func (b *TestBreadcrumbsBlock) MarshalToVersioning() (string, error)   { return "", nil }
-func (b *TestBreadcrumbsBlock) Meta(key string) string                 { return b.meta[key] }
-func (b *TestBreadcrumbsBlock) SetMeta(key, value string) error        { b.meta[key] = value; return nil }
-func (b *TestBreadcrumbsBlock) Metas() (map[string]string, error)      { return b.meta, nil }
-func (b *TestBreadcrumbsBlock) SetMetas(metas map[string]string) error { b.meta = metas; return nil }
+func (b *TestBreadcrumbsBlock) IsActive() bool                                        { return true }
+func (b *TestBreadcrumbsBlock) IsInactive() bool                                      { return false }
+func (b *TestBreadcrumbsBlock) IsSoftDeleted() bool                                   { return false }
+func (b *TestBreadcrumbsBlock) MarshalToVersioning() (string, error)                  { return "", nil }
+func (b *TestBreadcrumbsBlock) Meta(key string) string                                { return b.meta[key] }
+func (b *TestBreadcrumbsBlock) SetMeta(key, value string) error                       { b.meta[key] = value; return nil }
+func (b *TestBreadcrumbsBlock) Metas() (map[string]string, error)                     { return b.meta, nil }
+func (b *TestBreadcrumbsBlock) SetMetas(metas map[string]string) error                { b.meta = metas; return nil }
 func (b *TestBreadcrumbsBlock) UpsertMetas(metas map[string]string) error {
 	if b.meta == nil {
 		b.meta = make(map[string]string)

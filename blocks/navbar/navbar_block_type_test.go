@@ -182,27 +182,12 @@ func TestNavbarBlockType_BasicProperties(t *testing.T) {
 	navbarBlock := NewNavbarBlockType(store)
 
 	// Test basic properties
-	if navbarBlock.Type() != cmsstore.BLOCK_TYPE_NAVBAR {
-		t.Errorf("Expected type %s, got %s", cmsstore.BLOCK_TYPE_NAVBAR, navbarBlock.Type())
+	if navbarBlock.TypeKey() != cmsstore.BLOCK_TYPE_NAVBAR {
+		t.Errorf("Expected type %s, got %s", cmsstore.BLOCK_TYPE_NAVBAR, navbarBlock.TypeKey())
 	}
 
-	if navbarBlock.Name() != "Navbar" {
-		t.Errorf("Expected name 'Navbar', got '%s'", navbarBlock.Name())
-	}
-
-	if navbarBlock.Category() != "Navigation" {
-		t.Errorf("Expected category 'Navigation', got '%s'", navbarBlock.Category())
-	}
-
-	// Test icon
-	if navbarBlock.Icon() != "🧭" {
-		t.Errorf("Expected icon '🧭', got '%s'", navbarBlock.Icon())
-	}
-
-	// Test description
-	expectedDesc := "Navigation bar with Bootstrap 5 dropdown support and plain rendering options"
-	if navbarBlock.Description() != expectedDesc {
-		t.Errorf("Expected description '%s', got '%s'", expectedDesc, navbarBlock.Description())
+	if navbarBlock.TypeLabel() != "Navbar" {
+		t.Errorf("Expected name 'Navbar', got '%s'", navbarBlock.TypeLabel())
 	}
 }
 
@@ -231,8 +216,8 @@ func TestNavbarBlockType_RenderBootstrap5(t *testing.T) {
 		},
 	}
 
-	// Test rendering with Bootstrap 5
-	result, err := navbarBlock.Render(ctx, block, nil, nil)
+	// Test rendering with Bootstrap 5 (no page needed for basic test)
+	result, err := navbarBlock.Render(ctx, block)
 	if err != nil {
 		t.Errorf("Render returned error: %v", err)
 		return
@@ -293,7 +278,7 @@ func TestNavbarBlockType_RenderPlain(t *testing.T) {
 	}
 
 	// Test rendering with plain mode
-	result, err := navbarBlock.Render(ctx, block, nil, nil)
+	result, err := navbarBlock.Render(ctx, block)
 	if err != nil {
 		t.Errorf("Render returned error: %v", err)
 		return

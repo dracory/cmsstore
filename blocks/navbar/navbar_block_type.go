@@ -20,33 +20,18 @@ func NewNavbarBlockType(store cmsstore.StoreInterface) *NavbarBlockType {
 	}
 }
 
-// Type returns the block type identifier
-func (t *NavbarBlockType) Type() string {
+// TypeKey returns the unique identifier for this block type
+func (t *NavbarBlockType) TypeKey() string {
 	return cmsstore.BLOCK_TYPE_NAVBAR
 }
 
-// Name returns the display name for this block type
-func (t *NavbarBlockType) Name() string {
+// TypeLabel returns the human-readable display name
+func (t *NavbarBlockType) TypeLabel() string {
 	return "Navbar"
 }
 
-// Description returns a description of this block type
-func (t *NavbarBlockType) Description() string {
-	return "Navigation bar with Bootstrap 5 dropdown support and plain rendering options"
-}
-
-// Icon returns the icon for this block type
-func (t *NavbarBlockType) Icon() string {
-	return "🧭"
-}
-
-// Category returns the category for this block type
-func (t *NavbarBlockType) Category() string {
-	return "Navigation"
-}
-
-// Render renders the navbar block
-func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, page cmsstore.PageInterface, site cmsstore.SiteInterface) (string, error) {
+// Render renders the navbar block for frontend display
+func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
 	menuID := block.Meta(cmsstore.BLOCK_META_MENU_ID)
 	if menuID == "" {
 		return "", fmt.Errorf("no menu ID specified for navbar block")
@@ -58,16 +43,17 @@ func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterf
 		return "", fmt.Errorf("failed to get menu %s: %w", menuID, err)
 	}
 
-	// Get active menu items
-	query := cmsstore.MenuItemQuery()
-	query.SetMenuID(menuID)
-	query.SetStatus(cmsstore.MENU_ITEM_STATUS_ACTIVE)
-
-	menuItems, err := t.store.MenuItemList(ctx, query)
+	// Get menu items
+	menuItems, err := t.store.MenuItemList(ctx, cmsstore.MenuItemQuery().
+		SetMenuID(menuID).
+		SetStatus(cmsstore.MENU_ITEM_STATUS_ACTIVE).
+		SetOrderBy(cmsstore.COLUMN_SEQUENCE).
+		SetSortOrder("asc"))
 	if err != nil {
-		return "", fmt.Errorf("failed to get menu items for menu %s: %w", menuID, err)
+		return "", fmt.Errorf("failed to get menu items: %w", err)
 	}
 
+	// Get rendering configuration
 	style := block.Meta(cmsstore.BLOCK_META_NAVBAR_STYLE)
 	if style == "" {
 		style = cmsstore.BLOCK_NAVBAR_STYLE_DEFAULT
@@ -80,11 +66,17 @@ func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterf
 
 	cssClass := block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_CLASS)
 	cssID := block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_ID)
+
 	brandText := block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_TEXT)
 	brandURL := block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_URL)
+	if brandURL == "" {
+		brandURL = "/"
+	}
+
 	fixed := block.Meta(cmsstore.BLOCK_META_NAVBAR_FIXED) == "true"
 	dark := block.Meta(cmsstore.BLOCK_META_NAVBAR_DARK) == "true"
 
+	// Use the navbar renderer
 	return renderNavbarHTML(ctx, t.store, menuItems, style, renderingMode, cssClass, cssID, brandText, brandURL, fixed, dark)
 }
 
@@ -110,7 +102,7 @@ func (t *NavbarBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockI
 	r.ParseForm()
 
 	menuID := r.FormValue("menu_id")
-	navbarStyle := r.FormValue("navbar_style")
+	style := r.FormValue("navbar_style")
 	renderingMode := r.FormValue("navbar_rendering_mode")
 	brandText := r.FormValue("navbar_brand_text")
 	brandURL := r.FormValue("navbar_brand_url")
@@ -119,12 +111,8 @@ func (t *NavbarBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockI
 	cssClass := r.FormValue("navbar_css_class")
 	cssID := r.FormValue("navbar_css_id")
 
-	if menuID == "" {
-		return fmt.Errorf("menu selection is required")
-	}
-
 	block.SetMeta(cmsstore.BLOCK_META_MENU_ID, menuID)
-	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_STYLE, navbarStyle)
+	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_STYLE, style)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE, renderingMode)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_BRAND_TEXT, brandText)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_BRAND_URL, brandURL)
@@ -143,7 +131,7 @@ func (t *NavbarBlockType) Validate(block cmsstore.BlockInterface) error {
 		return fmt.Errorf("menu ID is required for navbar block")
 	}
 
-	// Validate that the menu exists
+	// Validate menu exists
 	_, err := t.store.MenuFindByID(context.Background(), menuID)
 	if err != nil {
 		return fmt.Errorf("invalid menu ID: %s", menuID)
