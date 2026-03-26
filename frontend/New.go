@@ -21,7 +21,7 @@ func New(config Config) FrontendInterface {
 		config.CacheExpireSeconds = 10 * 60 // 10 minutes
 	}
 
-	frontend := frontend{
+	f := frontend{
 		blockEditorRenderer: config.BlockEditorRenderer,
 		logger:              config.Logger,
 		shortcodes:          config.Shortcodes,
@@ -29,17 +29,18 @@ func New(config Config) FrontendInterface {
 		cacheEnabled:        config.CacheEnabled,
 		cacheExpireSeconds:  config.CacheExpireSeconds,
 	}
+	f.blockRenderers = initBlockRenderers(&f)
 
 	if config.CacheEnabled {
 		cache := initCache()
 
 		if cache != nil {
-			frontend.cache = cache
+			f.cache = cache
 
-			go frontend.warmUpCache()
+			go f.warmUpCache()
 		}
 
 	}
 
-	return &frontend
+	return &f
 }

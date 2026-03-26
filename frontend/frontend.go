@@ -26,6 +26,7 @@ type frontend struct {
 	cacheEnabled        bool
 	cacheExpireSeconds  int
 	cache               *ttlcache.Cache[string, any]
+	blockRenderers      *BlockRendererRegistry
 }
 
 var _ FrontendInterface = (*frontend)(nil)
@@ -156,75 +157,7 @@ func (frontend *frontend) fetchBlockContent(ctx context.Context, blockID string)
 
 // renderBlockByType dispatches to the appropriate renderer based on block type
 func (frontend *frontend) renderBlockByType(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
-	switch block.Type() {
-	case cmsstore.BLOCK_TYPE_MENU:
-		return frontend.renderMenuBlock(ctx, block)
-	case cmsstore.BLOCK_TYPE_HTML:
-		return frontend.renderHTMLBlock(block), nil
-	default:
-		return frontend.renderHTMLBlock(block), nil
-	}
-}
-
-// renderHTMLBlock renders an HTML block by returning its content
-func (frontend *frontend) renderHTMLBlock(block cmsstore.BlockInterface) string {
-	return block.Content()
-}
-
-// renderMenuBlock renders a menu block by loading the menu and rendering it as HTML
-func (frontend *frontend) renderMenuBlock(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
-	if !frontend.store.MenusEnabled() {
-		frontend.logger.Debug("renderMenuBlock: Menus not enabled")
-		return "<!-- Menus not enabled -->", nil
-	}
-
-	menuID := block.Meta(cmsstore.BLOCK_META_MENU_ID)
-	if menuID == "" {
-		frontend.logger.Debug("renderMenuBlock: No menu ID in block meta", "blockID", block.ID())
-		return "<!-- No menu selected -->", nil
-	}
-
-	menu, err := frontend.store.MenuFindByID(ctx, menuID)
-	if err != nil {
-		frontend.logger.Error("renderMenuBlock: Error finding menu", "menuID", menuID, "error", err)
-		return "", err
-	}
-
-	if menu == nil {
-		frontend.logger.Debug("renderMenuBlock: Menu not found", "menuID", menuID)
-		return "<!-- Menu not found -->", nil
-	}
-
-	if !menu.IsActive() {
-		frontend.logger.Debug("renderMenuBlock: Menu not active", "menuID", menuID, "status", menu.Status())
-		return "<!-- Menu not active -->", nil
-	}
-
-	menuItems, err := frontend.store.MenuItemList(ctx, cmsstore.MenuItemQuery().
-		SetMenuID(menuID).
-		SetStatus(cmsstore.MENU_ITEM_STATUS_ACTIVE).
-		SetOrderBy(cmsstore.COLUMN_SEQUENCE).
-		SetSortOrder("asc"))
-
-	if err != nil {
-		frontend.logger.Error("renderMenuBlock: Error listing menu items", "menuID", menuID, "error", err)
-		return "", err
-	}
-
-	if len(menuItems) == 0 {
-		frontend.logger.Debug("renderMenuBlock: No active menu items found", "menuID", menuID, "menuName", menu.Name())
-	}
-
-	style := block.Meta(cmsstore.BLOCK_META_MENU_STYLE)
-	if style == "" {
-		style = cmsstore.BLOCK_MENU_STYLE_VERTICAL
-	}
-
-	cssClass := block.Meta(cmsstore.BLOCK_META_MENU_CSS_CLASS)
-	startLevel := cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_START_LEVEL))
-	maxDepth := cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_MAX_DEPTH))
-
-	return frontend.renderMenuHTML(ctx, menuItems, style, cssClass, startLevel, maxDepth)
+	return frontend.blockRenderers.RenderBlock(ctx, block)
 }
 
 // renderMenuHTML renders menu items as HTML based on the specified style
