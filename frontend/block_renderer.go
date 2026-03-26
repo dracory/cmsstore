@@ -2,8 +2,11 @@ package frontend
 
 import (
 	"context"
+	"sync"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/frontend/blocks/html"
+	"github.com/dracory/cmsstore/frontend/blocks/menu"
 )
 
 // BlockRenderer interface defines how different block types are rendered
@@ -15,6 +18,7 @@ type BlockRenderer interface {
 // BlockRendererRegistry manages all registered block renderers
 type BlockRendererRegistry struct {
 	renderers map[string]BlockRenderer
+	mu        sync.RWMutex
 }
 
 // NewBlockRendererRegistry creates a new registry for block renderers
@@ -26,22 +30,41 @@ func NewBlockRendererRegistry() *BlockRendererRegistry {
 
 // Register registers a renderer for a specific block type
 func (r *BlockRendererRegistry) Register(blockType string, renderer BlockRenderer) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.renderers[blockType] = renderer
 }
 
 // GetRenderer returns the renderer for the given block type
 func (r *BlockRendererRegistry) GetRenderer(blockType string) BlockRenderer {
-	if renderer, exists := r.renderers[blockType]; exists {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if renderer, exists := r.renderers[blockType]; exists && renderer != nil {
 		return renderer
 	}
-	// Return HTML renderer as default
-	return r.renderers[cmsstore.BLOCK_TYPE_HTML]
+	// Return HTML renderer as default if it exists
+	if renderer, exists := r.renderers[cmsstore.BLOCK_TYPE_HTML]; exists && renderer != nil {
+		return renderer
+	}
+	// Return no-op renderer as ultimate fallback
+	return &NoOpRenderer{}
 }
 
 // RenderBlock renders a block using the appropriate renderer
 func (r *BlockRendererRegistry) RenderBlock(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+	if block == nil {
+		return "<!-- Block is nil -->", nil
+	}
 	renderer := r.GetRenderer(block.Type())
 	return renderer.Render(ctx, block)
+}
+
+// NoOpRenderer is a fallback renderer that returns empty content
+type NoOpRenderer struct{}
+
+// Render implements BlockRenderer interface
+func (r *NoOpRenderer) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+	return "<!-- No renderer available for block type: " + block.Type() + " -->", nil
 }
 
 // initBlockRenderers initializes and registers all block renderers
@@ -49,10 +72,10 @@ func initBlockRenderers(f *frontend) *BlockRendererRegistry {
 	registry := NewBlockRendererRegistry()
 
 	// Register HTML renderer (default)
-	registry.Register(cmsstore.BLOCK_TYPE_HTML, NewHTMLBlockRenderer())
+	registry.Register(cmsstore.BLOCK_TYPE_HTML, html.NewBlockRenderer())
 
 	// Register Menu renderer
-	registry.Register(cmsstore.BLOCK_TYPE_MENU, NewMenuBlockRenderer(f))
+	registry.Register(cmsstore.BLOCK_TYPE_MENU, menu.NewBlockRenderer(f))
 
 	return registry
 }

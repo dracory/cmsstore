@@ -29,6 +29,27 @@ type frontend struct {
 	blockRenderers      *BlockRendererRegistry
 }
 
+// Implement menu.FrontendStore interface
+func (f *frontend) MenuFindByID(ctx context.Context, id string) (cmsstore.MenuInterface, error) {
+	return f.store.MenuFindByID(ctx, id)
+}
+
+func (f *frontend) MenuItemList(ctx context.Context, query cmsstore.MenuItemQueryInterface) ([]cmsstore.MenuItemInterface, error) {
+	return f.store.MenuItemList(ctx, query)
+}
+
+func (f *frontend) MenusEnabled() bool {
+	return f.store.MenusEnabled()
+}
+
+func (f *frontend) RenderMenuHTML(ctx context.Context, menuItems []cmsstore.MenuItemInterface, style, cssClass string, startLevel, maxDepth int) (string, error) {
+	return f.renderMenuHTML(ctx, menuItems, style, cssClass, startLevel, maxDepth)
+}
+
+func (f *frontend) Logger() *slog.Logger {
+	return f.logger
+}
+
 var _ FrontendInterface = (*frontend)(nil)
 
 type contextKey string
@@ -163,7 +184,7 @@ func (frontend *frontend) renderBlockByType(ctx context.Context, block cmsstore.
 // renderMenuHTML renders menu items as HTML based on the specified style
 func (frontend *frontend) renderMenuHTML(ctx context.Context, menuItems []cmsstore.MenuItemInterface, style, cssClass string, startLevel, maxDepth int) (string, error) {
 	if len(menuItems) == 0 {
-		return "", nil
+		return "<!-- No menu items to render -->", nil
 	}
 
 	tree := frontend.buildMenuTree(menuItems, "")
