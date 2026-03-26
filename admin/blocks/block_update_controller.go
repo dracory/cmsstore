@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/dracory/api"
@@ -264,27 +265,62 @@ func (controller blockUpdateController) fieldsContent(data blockUpdateController
 
 	var fieldsContent []form.FieldInterface
 
-	// Get provider from registry
-	registry := controller.ui.BlockAdminRegistry()
-	provider := registry.GetProvider(blockType)
-
-	if provider != nil {
-		fieldsContent = provider.GetContentFields(data.block, data.request)
-	} else {
-		// Fallback to HTML provider if block type not registered
-		htmlProvider := registry.GetProvider(cmsstore.BLOCK_TYPE_HTML)
-		if htmlProvider != nil {
-			fieldsContent = htmlProvider.GetContentFields(data.block, data.request)
+	// First, check global BlockType registry
+	globalBlockType := cmsstore.GetBlockType(blockType)
+	if globalBlockType != nil {
+		fields := globalBlockType.GetAdminFields(data.block, data.request)
+		if formFields, ok := fields.([]form.FieldInterface); ok {
+			fieldsContent = formFields
 		} else {
-			// Ultimate fallback - basic textarea
-			fieldsContent = []form.FieldInterface{
-				form.NewField(form.FieldOptions{
-					Label: "Content",
-					Name:  "block_content",
-					Type:  form.FORM_FIELD_TYPE_TEXTAREA,
-					Value: data.block.Content(),
-					Help:  "No admin provider registered for block type: " + blockType,
-				}),
+			controller.ui.Logger().Error("GetAdminFields returned unexpected type",
+				"blockType", blockType,
+				"actualType", fmt.Sprintf("%T", fields))
+			// Fall through to legacy provider fallback
+		}
+	}
+
+	if len(fieldsContent) == 0 {
+		// Fall back to local admin provider registry
+		registry := controller.ui.BlockAdminRegistry()
+		provider := registry.GetProvider(blockType)
+
+		if provider != nil {
+			fields := provider.GetContentFields(data.block, data.request)
+			if formFields, ok := fields.([]form.FieldInterface); ok {
+				fieldsContent = formFields
+			} else {
+				controller.ui.Logger().Error("GetContentFields returned unexpected type",
+					"blockType", blockType,
+					"actualType", fmt.Sprintf("%T", fields))
+				// Fall through to HTML provider fallback
+			}
+		}
+
+		if len(fieldsContent) == 0 && provider == nil {
+			// Fallback to HTML provider if block type not registered
+			htmlProvider := registry.GetProvider(cmsstore.BLOCK_TYPE_HTML)
+			if htmlProvider != nil {
+				fields := htmlProvider.GetContentFields(data.block, data.request)
+				if formFields, ok := fields.([]form.FieldInterface); ok {
+					fieldsContent = formFields
+				} else {
+					controller.ui.Logger().Error("HTML provider GetContentFields returned unexpected type",
+						"actualType", fmt.Sprintf("%T", fields))
+					// Fall through to ultimate fallback
+				}
+			}
+
+			if len(fieldsContent) == 0 {
+				// Ultimate fallback - basic textarea
+				fieldsContent = []form.FieldInterface{
+					form.NewField(form.FieldOptions{
+						Label: "Content",
+						Name:  "block_content",
+						Type:  form.FORM_FIELD_TYPE_TEXTAREA,
+						Value: data.block.Content(),
+						Help:  "No admin provider registered for block type: " + blockType,
+					}),
+				}
 			}
 		}
 	}
@@ -367,12 +403,17 @@ func (controller blockUpdateController) fieldsSettings(data blockUpdateControlle
 		blockType = cmsstore.BLOCK_TYPE_HTML
 	}
 
-	// Get type label from provider
-	registry := controller.ui.BlockAdminRegistry()
-	provider := registry.GetProvider(blockType)
+	// Get type label from global registry first, then local provider
 	typeDisplay := "Unknown"
-	if provider != nil {
-		typeDisplay = provider.GetTypeLabel()
+	globalBlockType := cmsstore.GetBlockType(blockType)
+	if globalBlockType != nil {
+		typeDisplay = globalBlockType.TypeLabel()
+	} else {
+		registry := controller.ui.BlockAdminRegistry()
+		provider := registry.GetProvider(blockType)
+		if provider != nil {
+			typeDisplay = provider.GetTypeLabel()
+		}
 	}
 
 	fieldType := form.NewField(form.FieldOptions{
@@ -458,19 +499,29 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 			blockType = cmsstore.BLOCK_TYPE_HTML
 		}
 
-		// Use provider to save content fields
-		registry := controller.ui.BlockAdminRegistry()
-		provider := registry.GetProvider(blockType)
-
-		if provider != nil {
-			err := provider.SaveContentFields(r, data.block)
+		// First, check global BlockType registry
+		globalBlockType := cmsstore.GetBlockType(blockType)
+		if globalBlockType != nil {
+			err := globalBlockType.SaveAdminFields(r, data.block)
 			if err != nil {
 				data.formErrorMessage = err.Error()
 				return data, ""
 			}
 		} else {
-			// Fallback to basic content save if no provider
-			data.block.SetContent(data.formContent)
+			// Fall back to local admin provider registry
+			registry := controller.ui.BlockAdminRegistry()
+			provider := registry.GetProvider(blockType)
+
+			if provider != nil {
+				err := provider.SaveContentFields(r, data.block)
+				if err != nil {
+					data.formErrorMessage = err.Error()
+					return data, ""
+				}
+			} else {
+				// Fallback to basic content save if no provider
+				data.block.SetContent(data.formContent)
+			}
 		}
 	}
 

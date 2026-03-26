@@ -12,14 +12,24 @@ The cmsstore block system is fully extensible, allowing external packages to:
 
 ## Architecture
 
-### Frontend Rendering
+### Unified Block Types (Recommended)
+
+- **Interface**: `BlockType`
+- **Registry**: Global `BlockTypeRegistry`
+- **Location**: `block_type.go`
+- **Built-in Types**: `blocks/html/`, `blocks/menu/`
+- **Registration**: `cmsstore.RegisterBlockType()`
+
+### Legacy Separate Systems (Backward Compatible)
+
+#### Frontend Rendering
 
 - **Interface**: `BlockRenderer`
 - **Registry**: `BlockRendererRegistry`
 - **Location**: `frontend/block_renderer.go`
 - **Access**: `frontend.BlockRegistry()`
 
-### Admin UI
+#### Admin UI
 
 - **Interface**: `BlockAdminFieldProvider`
 - **Registry**: `BlockAdminFieldProviderRegistry`

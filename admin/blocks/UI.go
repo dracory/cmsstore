@@ -3,9 +3,16 @@ package admin
 import (
 	"log/slog"
 	"net/http"
+	"sync"
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
+	htmlblock "github.com/dracory/cmsstore/blocks/html"
+	menublock "github.com/dracory/cmsstore/blocks/menu"
+)
+
+var (
+	blockTypesRegistered sync.Once
 )
 
 func UI(config shared.UiConfig) UiInterface {
@@ -20,15 +27,26 @@ func UI(config shared.UiConfig) UiInterface {
 	}
 }
 
-// initBlockAdminProviders initializes and registers all built-in block admin providers
+// initBlockAdminProviders initializes and registers all built-in block types.
+//
+// Built-in block types are now registered globally using the unified BlockType system.
+// This ensures frontend rendering and admin UI are always in sync.
+//
+// The local registry is kept for backward compatibility with any custom blocks
+// that still use the old separate registration system.
 func initBlockAdminProviders(store cmsstore.StoreInterface, logger *slog.Logger) *BlockAdminFieldProviderRegistry {
 	registry := NewBlockAdminFieldProviderRegistry()
 
-	// Register built-in HTML provider
-	registry.Register(cmsstore.BLOCK_TYPE_HTML, NewHTMLAdminProvider())
+	// Register built-in block types globally (new unified system) - only once
+	// These are defined in blocks/html and blocks/menu
+	// Using sync.Once prevents race conditions and duplicate registrations
+	blockTypesRegistered.Do(func() {
+		cmsstore.RegisterBlockType(htmlblock.NewHTMLBlockType())
+		cmsstore.RegisterBlockType(menublock.NewMenuBlockType(store, logger))
+	})
 
-	// Register built-in Menu provider
-	registry.Register(cmsstore.BLOCK_TYPE_MENU, NewMenuAdminProvider(store, logger))
+	// The local registry is kept empty for backward compatibility
+	// Custom blocks using the old system can still register here
 
 	return registry
 }

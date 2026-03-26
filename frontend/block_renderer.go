@@ -99,12 +99,27 @@ func (r *BlockRendererRegistry) GetRenderer(blockType string) BlockRenderer {
 	return &NoOpRenderer{}
 }
 
-// RenderBlock renders a block using the appropriate renderer
+// RenderBlock renders a block using the appropriate renderer.
+//
+// Lookup priority:
+//  1. Global BlockType registry (cmsstore.GetBlockType)
+//  2. Local BlockRenderer registry (this registry)
+//  3. Fallback to NoOpRenderer
 func (r *BlockRendererRegistry) RenderBlock(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
 	if block == nil {
 		return "<!-- Block is nil -->", nil
 	}
-	renderer := r.GetRenderer(block.Type())
+
+	blockType := block.Type()
+
+	// First, check global BlockType registry
+	globalBlockType := cmsstore.GetBlockType(blockType)
+	if globalBlockType != nil {
+		return globalBlockType.Render(ctx, block)
+	}
+
+	// Fall back to local renderer registry
+	renderer := r.GetRenderer(blockType)
 	return renderer.Render(ctx, block)
 }
 

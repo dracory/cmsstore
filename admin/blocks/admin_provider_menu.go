@@ -13,11 +13,15 @@ import (
 // MenuAdminProvider provides admin UI for Menu block types.
 type MenuAdminProvider struct {
 	store  cmsstore.StoreInterface
-	logger interface{ Error(msg string, args ...interface{}) }
+	logger interface {
+		Error(msg string, args ...interface{})
+	}
 }
 
 // NewMenuAdminProvider creates a new Menu block admin provider.
-func NewMenuAdminProvider(store cmsstore.StoreInterface, logger interface{ Error(msg string, args ...interface{}) }) *MenuAdminProvider {
+func NewMenuAdminProvider(store cmsstore.StoreInterface, logger interface {
+	Error(msg string, args ...interface{})
+}) *MenuAdminProvider {
 	return &MenuAdminProvider{
 		store:  store,
 		logger: logger,
@@ -25,7 +29,7 @@ func NewMenuAdminProvider(store cmsstore.StoreInterface, logger interface{ Error
 }
 
 // GetContentFields returns form fields for Menu block content editing.
-func (p *MenuAdminProvider) GetContentFields(block cmsstore.BlockInterface, r *http.Request) []form.FieldInterface {
+func (p *MenuAdminProvider) GetContentFields(block cmsstore.BlockInterface, r *http.Request) interface{} {
 	menusEnabled := p.store.MenusEnabled()
 
 	if !menusEnabled {

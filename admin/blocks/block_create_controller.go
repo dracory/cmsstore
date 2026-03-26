@@ -83,16 +83,7 @@ func (controller *blockCreateController) modal(data blockCreateControllerData) h
 				Value:    cmsstore.BLOCK_TYPE_HTML,
 				Required: true,
 				Help:     "Block type cannot be changed after creation",
-				Options: []form.FieldOption{
-					{
-						Value: "HTML Block",
-						Key:   cmsstore.BLOCK_TYPE_HTML,
-					},
-					{
-						Value: "Menu Block",
-						Key:   cmsstore.BLOCK_TYPE_MENU,
-					},
-				},
+				Options:  controller.getBlockTypeOptions(),
 			}),
 			form.NewField(form.FieldOptions{
 				Label:    "Site",
@@ -204,16 +195,28 @@ func (controller *blockCreateController) prepareDataAndValidate(r *http.Request)
 }
 
 func (controller *blockCreateController) getBlockTypeOptions() []form.FieldOption {
+	options := make([]form.FieldOption, 0)
+
+	// Get from global registry (new unified system)
+	globalTypes := cmsstore.GetAllBlockTypes()
+	for typeKey, blockType := range globalTypes {
+		options = append(options, form.FieldOption{
+			Value: blockType.TypeLabel(),
+			Key:   typeKey,
+		})
+	}
+
+	// Get from local registry (backward compatibility)
 	registry := controller.ui.BlockAdminRegistry()
 	providers := registry.GetAllProviders()
-
-	options := make([]form.FieldOption, 0, len(providers))
-
 	for blockType, provider := range providers {
-		options = append(options, form.FieldOption{
-			Value: provider.GetTypeLabel(),
-			Key:   blockType,
-		})
+		// Skip if already in global registry
+		if _, exists := globalTypes[blockType]; !exists {
+			options = append(options, form.FieldOption{
+				Value: provider.GetTypeLabel(),
+				Key:   blockType,
+			})
+		}
 	}
 
 	return options
@@ -232,9 +235,12 @@ func (controller *blockCreateController) saveBlock(r *http.Request, data blockCr
 		data.blockType = cmsstore.BLOCK_TYPE_HTML
 	}
 
-	// Validate block type against registry
+	// Validate block type against registries
+	globalBlockType := cmsstore.GetBlockType(data.blockType)
 	registry := controller.ui.BlockAdminRegistry()
-	if registry.GetProvider(data.blockType) == nil {
+	localProvider := registry.GetProvider(data.blockType)
+
+	if globalBlockType == nil && localProvider == nil {
 		return data, "invalid block type: " + data.blockType
 	}
 

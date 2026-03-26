@@ -1,6 +1,7 @@
-package admin
+package html
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/dracory/cmsstore"
@@ -9,16 +10,41 @@ import (
 	"github.com/dracory/req"
 )
 
-// HTMLAdminProvider provides admin UI for HTML block types.
-type HTMLAdminProvider struct{}
+// HTMLBlockType provides both frontend rendering and admin UI for HTML blocks.
+//
+// This is a built-in block type that renders raw HTML content.
+// It includes a CodeMirror editor in the admin UI for syntax highlighting.
+type HTMLBlockType struct{}
 
-// NewHTMLAdminProvider creates a new HTML block admin provider.
-func NewHTMLAdminProvider() *HTMLAdminProvider {
-	return &HTMLAdminProvider{}
+// NewHTMLBlockType creates a new HTML block type.
+func NewHTMLBlockType() *HTMLBlockType {
+	return &HTMLBlockType{}
 }
 
-// GetContentFields returns form fields for HTML block content editing.
-func (p *HTMLAdminProvider) GetContentFields(block cmsstore.BlockInterface, r *http.Request) interface{} {
+// TypeKey returns the unique identifier for HTML blocks.
+func (t *HTMLBlockType) TypeKey() string {
+	return cmsstore.BLOCK_TYPE_HTML
+}
+
+// TypeLabel returns the display name for HTML blocks.
+func (t *HTMLBlockType) TypeLabel() string {
+	return "HTML Block"
+}
+
+// Render renders an HTML block by returning its content as-is.
+func (t *HTMLBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+	if block == nil {
+		return "<!-- Block is nil -->", nil
+	}
+	content := block.Content()
+	if content == "" {
+		return "<!-- Empty block content -->", nil
+	}
+	return content, nil
+}
+
+// GetAdminFields returns form fields for editing HTML block content.
+func (t *HTMLBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.Request) interface{} {
 	fieldsContent := []form.FieldInterface{
 		form.NewField(form.FieldOptions{
 			Label: "Content (HTML)",
@@ -28,7 +54,7 @@ func (p *HTMLAdminProvider) GetContentFields(block cmsstore.BlockInterface, r *h
 		}),
 	}
 
-	// Add CodeMirror initialization script
+	// Add CodeMirror initialization script for syntax highlighting
 	contentScript := hb.Script(`
 function codeMirrorSelector() {
 	return 'textarea[name="block_content"]';
@@ -37,7 +63,6 @@ function getCodeMirrorEditor() {
 	return document.querySelector(codeMirrorSelector());
 }
 setTimeout(function () {
-    console.log(getCodeMirrorEditor());
 	if (getCodeMirrorEditor()) {
 		var editor = CodeMirror.fromTextArea(getCodeMirrorEditor(), {
 			lineNumbers: true,
@@ -68,13 +93,8 @@ setTimeout(function () {
 	return fieldsContent
 }
 
-// GetTypeLabel returns the display label for HTML blocks.
-func (p *HTMLAdminProvider) GetTypeLabel() string {
-	return "HTML Block"
-}
-
-// SaveContentFields processes form data and updates the HTML block.
-func (p *HTMLAdminProvider) SaveContentFields(r *http.Request, block cmsstore.BlockInterface) error {
+// SaveAdminFields processes form submission and updates the HTML block.
+func (t *HTMLBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
 	content := req.GetStringTrimmed(r, "block_content")
 	block.SetContent(content)
 	return nil

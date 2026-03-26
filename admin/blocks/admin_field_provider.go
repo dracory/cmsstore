@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/dracory/cmsstore"
-	"github.com/dracory/form"
 )
 
 // BlockAdminFieldProvider defines how custom block types render their admin UI.
@@ -69,8 +68,8 @@ type BlockAdminFieldProvider interface {
 	//   - r: The HTTP request (use for context, user info, etc.)
 	//
 	// Returns:
-	//   - Array of form fields to display in the content tab
-	GetContentFields(block cmsstore.BlockInterface, r *http.Request) []form.FieldInterface
+	//   - Array of form fields to display in the content tab (should return []form.FieldInterface)
+	GetContentFields(block cmsstore.BlockInterface, r *http.Request) interface{}
 
 	// GetTypeLabel returns the human-readable display name for this block type.
 	//
@@ -164,7 +163,7 @@ func (r *BlockAdminFieldProviderRegistry) GetProvider(blockType string) BlockAdm
 func (r *BlockAdminFieldProviderRegistry) GetAllProviders() map[string]BlockAdminFieldProvider {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	// Return a copy to prevent external modification
 	copy := make(map[string]BlockAdminFieldProvider, len(r.providers))
 	for k, v := range r.providers {
@@ -180,7 +179,7 @@ func (r *BlockAdminFieldProviderRegistry) GetAllProviders() map[string]BlockAdmi
 func (r *BlockAdminFieldProviderRegistry) GetRegisteredTypes() []string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	types := make([]string, 0, len(r.providers))
 	for k := range r.providers {
 		types = append(types, k)
