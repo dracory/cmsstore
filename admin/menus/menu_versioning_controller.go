@@ -347,21 +347,9 @@ func (controller *menuVersioningController) restoreRevisionAttributes(ctx contex
 		if attr == cmsstore.COLUMN_STATUS {
 			menu.SetStatus(value)
 		}
-		
+
 		if attr == cmsstore.COLUMN_SITE_ID {
 			menu.SetSiteID(value)
-		}
-
-		if attr == cmsstore.COLUMN_CONTENT {
-			existingMenuItems, err := controller.ui.Store().MenuItemList(ctx, cmsstore.MenuItemQuery().SetMenuID(menu.ID()))
-			if err != nil {
-				return err
-			}
-			err = SaveMenuItems(ctx, controller.ui.Store(), menu.ID(), value, existingMenuItems)
-			if err != nil {
-				return err
-			}
-			menu.SetMenuItemsJSON(value)
 		}
 	}
 
@@ -376,7 +364,6 @@ func (controller *menuVersioningController) restoreRevisionAttributes(ctx contex
 
 func (controller *menuVersioningController) supportedAttributes() []string {
 	return []string{
-		cmsstore.COLUMN_CONTENT,
 		cmsstore.COLUMN_HANDLE,
 		cmsstore.COLUMN_MEMO,
 		cmsstore.COLUMN_NAME,

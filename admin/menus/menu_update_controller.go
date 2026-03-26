@@ -167,7 +167,6 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 		Child(buttonVersion).
 		Child(buttonCancel)
 
-
 	card := hb.Div().
 		Class("card").
 		Child(
@@ -472,8 +471,6 @@ func (controller menuUpdateController) saveMenu(r *http.Request, data menuUpdate
 			data.formErrorMessage = err.Error()
 			return data, ""
 		}
-
-		data.menu.SetMenuItemsJSON(data.formMenuItemsJSON)
 	}
 
 	err := controller.ui.Store().MenuUpdate(data.request.Context(), data.menu)

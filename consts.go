@@ -1,6 +1,6 @@
 package cmsstore
 
-// Block Types
+// Block Types (lowercase for consistency with other constants)
 const (
 	BLOCK_TYPE_HTML = "html"
 	BLOCK_TYPE_MENU = "menu"
