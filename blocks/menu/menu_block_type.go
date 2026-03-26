@@ -10,6 +10,7 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
+	"github.com/spf13/cast"
 )
 
 // MenuBlockType provides both frontend rendering and admin UI for menu blocks.
@@ -98,8 +99,8 @@ func (t *MenuBlockType) Render(ctx context.Context, block cmsstore.BlockInterfac
 
 	cssClass := block.Meta(cmsstore.BLOCK_META_MENU_CSS_CLASS)
 	cssID := block.Meta(cmsstore.BLOCK_META_MENU_CSS_ID)
-	startLevel := parseInt(block.Meta(cmsstore.BLOCK_META_MENU_START_LEVEL), 0)
-	maxDepth := parseInt(block.Meta(cmsstore.BLOCK_META_MENU_MAX_DEPTH), 0)
+	startLevel := cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_START_LEVEL))
+	maxDepth := cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_MAX_DEPTH))
 
 	// Use the menu renderer from frontend/blocks/menu package
 	// This delegates to the existing comprehensive menu rendering logic
@@ -232,54 +233,4 @@ func (t *MenuBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInt
 	block.SetMeta(cmsstore.BLOCK_META_MENU_MAX_DEPTH, menuMaxDepth)
 
 	return nil
-}
-
-// parseInt safely converts a string to int with a default fallback.
-func parseInt(s string, defaultVal int) int {
-	if s == "" {
-		return defaultVal
-	}
-	var result int
-	if _, err := fmt.Sscanf(s, "%d", &result); err != nil {
-		return defaultVal
-	}
-	return result
-}
-
-// renderMenuHTML provides a simplified menu rendering implementation.
-//
-// IMPORTANT: This is a simplified implementation that renders menus as flat lists.
-// It does NOT support:
-//   - Hierarchical/nested menu structures
-//   - startLevel and maxDepth filtering
-//   - Different style rendering (vertical, horizontal, dropdown, breadcrumb)
-//
-// For production use, you should:
-//  1. Import and use the comprehensive MenuRenderer from frontend/blocks/menu package
-//  2. Or implement full hierarchical rendering here
-//
-// This simplified version is provided to avoid circular dependencies between
-// the blocks package and the frontend package, while still allowing basic
-// menu block functionality.
-func renderMenuHTML(ctx context.Context, store cmsstore.StoreInterface, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID string, startLevel, maxDepth int) (string, error) {
-	// Build nav element using hb library
-	nav := hb.Nav()
-
-	// Add CSS classes
-	nav.Class(fmt.Sprintf("menu menu-style-%s", style))
-	if cssClass != "" {
-		nav.Class(cssClass)
-	}
-
-	// Add CSS ID if provided
-	if cssID != "" {
-		nav.ID(cssID)
-	}
-
-	// Add menu items
-	for _, item := range menuItems {
-		nav.AddChild(hb.A().Href(item.URL()).Text(item.Name()))
-	}
-
-	return nav.ToHTML(), nil
 }
