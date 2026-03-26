@@ -108,21 +108,23 @@ func TestRenderMenuHTMLBasic(t *testing.T) {
 	}
 
 	tests := []struct {
-		name         string
-		style        string
-		cssClass     string
-		cssID        string
-		startLevel   int
-		maxDepth     int
-		expectedHTML string
+		name          string
+		style         string
+		renderingMode string
+		cssClass      string
+		cssID         string
+		startLevel    int
+		maxDepth      int
+		expectedHTML  string
 	}{
 		{
-			name:       "Basic vertical menu",
-			style:      "vertical",
-			cssClass:   "nav",
-			cssID:      "main-nav",
-			startLevel: 0,
-			maxDepth:   0,
+			name:          "Basic vertical menu",
+			style:         "vertical",
+			renderingMode: "plain",
+			cssClass:      "nav",
+			cssID:         "main-nav",
+			startLevel:    0,
+			maxDepth:      0,
 			expectedHTML: `<nav class="menu menu-style-vertical nav" id="main-nav">` +
 				`<a href="/">Home</a>` +
 				`<a href="/about">About</a>` +
@@ -130,12 +132,13 @@ func TestRenderMenuHTMLBasic(t *testing.T) {
 				`</nav>`,
 		},
 		{
-			name:       "Horizontal menu without CSS class and ID",
-			style:      "horizontal",
-			cssClass:   "",
-			cssID:      "",
-			startLevel: 0,
-			maxDepth:   0,
+			name:          "Horizontal menu without CSS class and ID",
+			style:         "horizontal",
+			renderingMode: "plain",
+			cssClass:      "",
+			cssID:         "",
+			startLevel:    0,
+			maxDepth:      0,
 			expectedHTML: `<nav class="menu menu-style-horizontal">` +
 				`<a href="/">Home</a>` +
 				`<a href="/about">About</a>` +
@@ -143,17 +146,35 @@ func TestRenderMenuHTMLBasic(t *testing.T) {
 				`</nav>`,
 		},
 		{
-			name:       "Dropdown menu with only CSS class",
-			style:      "dropdown",
-			cssClass:   "dropdown-menu",
-			cssID:      "",
-			startLevel: 0,
-			maxDepth:   0,
+			name:          "Dropdown menu with only CSS class",
+			style:         "dropdown",
+			renderingMode: "plain",
+			cssClass:      "dropdown-menu",
+			cssID:         "",
+			startLevel:    0,
+			maxDepth:      0,
 			expectedHTML: `<nav class="menu menu-style-dropdown dropdown-menu">` +
 				`<a href="/">Home</a>` +
 				`<a href="/about">About</a>` +
 				`<a href="/contact">Contact</a>` +
 				`</nav>`,
+		},
+		{
+			name:          "Bootstrap 5 dropdown",
+			style:         "dropdown",
+			renderingMode: "bootstrap5",
+			cssClass:      "my-dropdown",
+			cssID:         "main-dropdown",
+			startLevel:    0,
+			maxDepth:      0,
+			expectedHTML: `<div class="dropdown my-dropdown" id="main-dropdown">` +
+				`<button aria-expanded="false" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" type="button">Dropdown</button>` +
+				`<div class="dropdown-menu">` +
+				`<a class="dropdown-item" href="/">Home</a>` +
+				`<a class="dropdown-item" href="/about">About</a>` +
+				`<a class="dropdown-item" href="/contact">Contact</a>` +
+				`</div>` +
+				`</div>`,
 		},
 		{
 			name:         "Empty menu items",
@@ -173,7 +194,7 @@ func TestRenderMenuHTMLBasic(t *testing.T) {
 				testMenuItems = menuItems
 			}
 
-			result, err := renderMenuHTML(ctx, store, testMenuItems, tt.style, tt.cssClass, tt.cssID, tt.startLevel, tt.maxDepth)
+			result, err := renderMenuHTML(ctx, store, testMenuItems, tt.style, tt.renderingMode, tt.cssClass, tt.cssID, tt.startLevel, tt.maxDepth)
 
 			if err != nil {
 				t.Errorf("renderMenuHTML() returned error: %v", err)
@@ -200,7 +221,7 @@ func TestRenderMenuHTMLWithSpecialCharacters(t *testing.T) {
 		&TestMenuItem{name: "Products > Services", url: "/products/services"},
 	}
 
-	result, err := renderMenuHTML(ctx, store, menuItems, "vertical", "test-class", "test-id", 0, 0)
+	result, err := renderMenuHTML(ctx, store, menuItems, "vertical", "plain", "test-class", "test-id", 0, 0)
 
 	if err != nil {
 		t.Errorf("renderMenuHTML() returned error: %v", err)

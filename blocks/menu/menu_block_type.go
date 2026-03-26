@@ -97,6 +97,11 @@ func (t *MenuBlockType) Render(ctx context.Context, block cmsstore.BlockInterfac
 		style = cmsstore.BLOCK_MENU_STYLE_VERTICAL
 	}
 
+	renderingMode := block.Meta(cmsstore.BLOCK_META_MENU_RENDERING_MODE)
+	if renderingMode == "" {
+		renderingMode = cmsstore.BLOCK_MENU_RENDERING_PLAIN
+	}
+
 	cssClass := block.Meta(cmsstore.BLOCK_META_MENU_CSS_CLASS)
 	cssID := block.Meta(cmsstore.BLOCK_META_MENU_CSS_ID)
 	startLevel := cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_START_LEVEL))
@@ -104,7 +109,7 @@ func (t *MenuBlockType) Render(ctx context.Context, block cmsstore.BlockInterfac
 
 	// Use the menu renderer from frontend/blocks/menu package
 	// This delegates to the existing comprehensive menu rendering logic
-	return renderMenuHTML(ctx, t.store, menuItems, style, cssClass, cssID, startLevel, maxDepth)
+	return renderMenuHTML(ctx, t.store, menuItems, renderingMode, style, cssClass, cssID, startLevel, maxDepth)
 }
 
 // GetAdminFields returns form fields for editing menu block configuration.
@@ -180,6 +185,23 @@ func (t *MenuBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.Re
 			},
 		}),
 		form.NewField(form.FieldOptions{
+			Label: "Rendering Mode",
+			Name:  "menu_rendering_mode",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: block.Meta(cmsstore.BLOCK_META_MENU_RENDERING_MODE),
+			Help:  "Choose the rendering framework for the menu",
+			Options: []form.FieldOption{
+				{
+					Value: "Plain (default)",
+					Key:   cmsstore.BLOCK_MENU_RENDERING_PLAIN,
+				},
+				{
+					Value: "Bootstrap 5",
+					Key:   cmsstore.BLOCK_MENU_RENDERING_BOOTSTRAP5,
+				},
+			},
+		}),
+		form.NewField(form.FieldOptions{
 			Label: "CSS ID",
 			Name:  "menu_css_id",
 			Type:  form.FORM_FIELD_TYPE_STRING,
@@ -216,6 +238,7 @@ func (t *MenuBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.Re
 func (t *MenuBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
 	menuID := req.GetStringTrimmed(r, "menu_id")
 	menuStyle := req.GetStringTrimmed(r, "menu_style")
+	menuRenderingMode := req.GetStringTrimmed(r, "menu_rendering_mode")
 	menuCSSClass := req.GetStringTrimmed(r, "menu_css_class")
 	menuCSSID := req.GetStringTrimmed(r, "menu_css_id")
 	menuStartLevel := req.GetStringTrimmed(r, "menu_start_level")
@@ -227,6 +250,7 @@ func (t *MenuBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInt
 
 	block.SetMeta(cmsstore.BLOCK_META_MENU_ID, menuID)
 	block.SetMeta(cmsstore.BLOCK_META_MENU_STYLE, menuStyle)
+	block.SetMeta(cmsstore.BLOCK_META_MENU_RENDERING_MODE, menuRenderingMode)
 	block.SetMeta(cmsstore.BLOCK_META_MENU_CSS_CLASS, menuCSSClass)
 	block.SetMeta(cmsstore.BLOCK_META_MENU_CSS_ID, menuCSSID)
 	block.SetMeta(cmsstore.BLOCK_META_MENU_START_LEVEL, menuStartLevel)

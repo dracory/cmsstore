@@ -2,18 +2,20 @@ package cmsstore
 
 // Block Types (lowercase for consistency with other constants)
 const (
-	BLOCK_TYPE_HTML = "html"
-	BLOCK_TYPE_MENU = "menu"
+	BLOCK_TYPE_HTML   = "html"
+	BLOCK_TYPE_MENU   = "menu"
+	BLOCK_TYPE_NAVBAR = "navbar"
 )
 
 // Block Meta Keys for Menu Type
 const (
-	BLOCK_META_MENU_ID          = "menu_id"
-	BLOCK_META_MENU_CSS_CLASS   = "menu_css_class"
-	BLOCK_META_MENU_CSS_ID      = "menu_css_id"
-	BLOCK_META_MENU_STYLE       = "menu_style"
-	BLOCK_META_MENU_START_LEVEL = "menu_start_level"
-	BLOCK_META_MENU_MAX_DEPTH   = "menu_max_depth"
+	BLOCK_META_MENU_ID             = "menu_id"
+	BLOCK_META_MENU_CSS_CLASS      = "menu_css_class"
+	BLOCK_META_MENU_CSS_ID         = "menu_css_id"
+	BLOCK_META_MENU_STYLE          = "menu_style"
+	BLOCK_META_MENU_RENDERING_MODE = "menu_rendering_mode"
+	BLOCK_META_MENU_START_LEVEL    = "menu_start_level"
+	BLOCK_META_MENU_MAX_DEPTH      = "menu_max_depth"
 )
 
 // Block Menu Styles
@@ -22,6 +24,37 @@ const (
 	BLOCK_MENU_STYLE_VERTICAL   = "vertical"
 	BLOCK_MENU_STYLE_DROPDOWN   = "dropdown"
 	BLOCK_MENU_STYLE_BREADCRUMB = "breadcrumb"
+)
+
+// Block Menu Rendering Modes
+const (
+	BLOCK_MENU_RENDERING_PLAIN      = "plain"
+	BLOCK_MENU_RENDERING_BOOTSTRAP5 = "bootstrap5"
+)
+
+// Block Meta Keys for Navbar Type
+const (
+	BLOCK_META_NAVBAR_STYLE          = "navbar_style"
+	BLOCK_META_NAVBAR_RENDERING_MODE = "navbar_rendering_mode"
+	BLOCK_META_NAVBAR_CSS_CLASS      = "navbar_css_class"
+	BLOCK_META_NAVBAR_CSS_ID         = "navbar_css_id"
+	BLOCK_META_NAVBAR_BRAND_TEXT     = "navbar_brand_text"
+	BLOCK_META_NAVBAR_BRAND_URL      = "navbar_brand_url"
+	BLOCK_META_NAVBAR_FIXED          = "navbar_fixed"
+	BLOCK_META_NAVBAR_DARK           = "navbar_dark"
+)
+
+// Block Navbar Styles
+const (
+	BLOCK_NAVBAR_STYLE_DEFAULT  = "default"
+	BLOCK_NAVBAR_STYLE_CENTERED = "centered"
+	BLOCK_NAVBAR_STYLE_BOTTOM   = "bottom"
+)
+
+// Block Navbar Rendering Modes
+const (
+	BLOCK_NAVBAR_RENDERING_PLAIN      = "plain"
+	BLOCK_NAVBAR_RENDERING_BOOTSTRAP5 = "bootstrap5"
 )
 
 // Block Statuses
