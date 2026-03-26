@@ -203,6 +203,22 @@ func (controller *blockCreateController) prepareDataAndValidate(r *http.Request)
 	return controller.saveBlock(r, data)
 }
 
+func (controller *blockCreateController) getBlockTypeOptions() []form.FieldOption {
+	registry := controller.ui.BlockAdminRegistry()
+	providers := registry.GetAllProviders()
+
+	options := make([]form.FieldOption, 0, len(providers))
+
+	for blockType, provider := range providers {
+		options = append(options, form.FieldOption{
+			Value: provider.GetTypeLabel(),
+			Key:   blockType,
+		})
+	}
+
+	return options
+}
+
 func (controller *blockCreateController) saveBlock(r *http.Request, data blockCreateControllerData) (d blockCreateControllerData, errorMessage string) {
 	if data.siteID == "" {
 		return data, "site id is required"
@@ -216,8 +232,10 @@ func (controller *blockCreateController) saveBlock(r *http.Request, data blockCr
 		data.blockType = cmsstore.BLOCK_TYPE_HTML
 	}
 
-	if data.blockType != cmsstore.BLOCK_TYPE_HTML && data.blockType != cmsstore.BLOCK_TYPE_MENU {
-		return data, "invalid block type"
+	// Validate block type against registry
+	registry := controller.ui.BlockAdminRegistry()
+	if registry.GetProvider(data.blockType) == nil {
+		return data, "invalid block type: " + data.blockType
 	}
 
 	block := cmsstore.NewBlock()

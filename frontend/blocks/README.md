@@ -18,7 +18,134 @@ blocks/
     └── assets/              # Block-specific assets
 ```
 
-## Adding New Block Types
+## Adding Custom Block Types (External Packages)
+
+**Projects that import this package can register their own custom block types** without modifying the cmsstore package. This is the recommended approach for extending functionality.
+
+### Quick Example
+
+```go
+package main
+
+import (
+    "context"
+    "github.com/dracory/cmsstore"
+)
+
+// 1. Define your custom renderer
+type GalleryRenderer struct {
+    store cmsstore.StoreInterface
+}
+
+func (r *GalleryRenderer) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+    // Your custom rendering logic
+    images := parseImages(block.Content())
+    layout := block.Meta("layout")
+    return renderGalleryHTML(images, layout), nil
+}
+
+// 2. Register it after creating the frontend
+func main() {
+    store := cmsstore.NewStore(...)
+    frontend := cmsstore.NewFrontend(store, ...)
+    
+    // Register your custom block type
+    frontend.BlockRegistry().Register("gallery", &GalleryRenderer{store: store})
+    
+    // Now blocks with Type() == "gallery" will use your renderer
+}
+```
+
+### Complete Example with Multiple Custom Block Types
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "github.com/dracory/cmsstore"
+)
+
+// Video block renderer
+type VideoRenderer struct{}
+
+func (r *VideoRenderer) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+    videoURL := block.Meta("video_url")
+    autoplay := block.Meta("autoplay") == "true"
+    
+    html := fmt.Sprintf(`
+        <video src="%s" controls %s>
+            Your browser does not support the video tag.
+        </video>
+    `, videoURL, map[bool]string{true: "autoplay", false: ""}[autoplay])
+    
+    return html, nil
+}
+
+// Carousel block renderer
+type CarouselRenderer struct {
+    store cmsstore.StoreInterface
+}
+
+func (r *CarouselRenderer) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+    items := parseCarouselItems(block.Content())
+    interval := block.Meta("interval")
+    
+    return buildCarouselHTML(items, interval), nil
+}
+
+func main() {
+    store := cmsstore.NewStore(...)
+    frontend := cmsstore.NewFrontend(store, ...)
+    
+    // Register multiple custom block types
+    frontend.BlockRegistry().Register("video", &VideoRenderer{})
+    frontend.BlockRegistry().Register("carousel", &CarouselRenderer{store: store})
+    
+    // Start your application
+    http.HandleFunc("/", frontend.Handler)
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+### Best Practices for Custom Renderers
+
+1. **Implement the BlockRenderer interface**
+   ```go
+   type BlockRenderer interface {
+       Render(ctx context.Context, block cmsstore.BlockInterface) (string, error)
+   }
+   ```
+
+2. **Use block metadata for configuration**
+   ```go
+   layout := block.Meta("layout")
+   cssClass := block.Meta("css_class")
+   ```
+
+3. **Handle errors gracefully**
+   ```go
+   if block.Content() == "" {
+       return "<!-- Empty block -->", nil
+   }
+   ```
+
+4. **Access store if needed**
+   ```go
+   type CustomRenderer struct {
+       store cmsstore.StoreInterface
+   }
+   ```
+
+5. **Return HTML comments for debugging**
+   ```go
+   return "<!-- Custom block rendered successfully -->", nil
+   ```
+
+## Adding Built-in Block Types (Internal)
+
+If you're contributing to the cmsstore package itself:
 
 1. Create a new folder: `blocks/[block-type]/`
 2. Create `renderer.go` with your block renderer implementation

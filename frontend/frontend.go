@@ -56,6 +56,25 @@ func (f *frontend) Logger() *slog.Logger {
 	return f.logger
 }
 
+// BlockRegistry returns the block renderer registry, allowing external packages
+// to register custom block types.
+//
+// Example usage:
+//
+//	frontend := cmsstore.NewFrontend(...)
+//	frontend.BlockRegistry().Register("custom_gallery", myGalleryRenderer)
+//
+// Custom renderers must implement the BlockRenderer interface:
+//
+//	type BlockRenderer interface {
+//	    Render(ctx context.Context, block cmsstore.BlockInterface) (string, error)
+//	}
+//
+// See frontend/blocks/README.md for detailed examples and best practices.
+func (f *frontend) BlockRegistry() *BlockRendererRegistry {
+	return f.blockRenderers
+}
+
 var _ FrontendInterface = (*frontend)(nil)
 
 type contextKey string
