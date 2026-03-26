@@ -416,14 +416,54 @@ func (controller blockUpdateController) fieldsSettings(data blockUpdateControlle
 		}
 	}
 
-	fieldType := form.NewField(form.FieldOptions{
-		Label:    "Block Type",
-		Name:     "block_type",
-		Type:     form.FORM_FIELD_TYPE_STRING,
-		Value:    typeDisplay,
-		Readonly: true,
-		Help:     "Block type cannot be changed after creation. This determines how the block is rendered.",
-	})
+	// Determine if type field should be editable (only for draft blocks)
+	isTypeEditable := data.block.Status() == cmsstore.BLOCK_STATUS_DRAFT
+
+	var fieldType form.FieldInterface
+	if isTypeEditable {
+		// Create editable type field for draft blocks
+		fieldType = form.NewField(form.FieldOptions{
+			Label: "Block Type",
+			Name:  "block_type",
+			Type:  form.FORM_FIELD_TYPE_SELECT,
+			Value: blockType,
+			Help:  "Block type determines how the block is rendered. Can only be changed while in draft status.",
+			OptionsF: func() []form.FieldOption {
+				options := []form.FieldOption{}
+
+				// Add block types from global registry
+				globalTypes := cmsstore.GetAllBlockTypes()
+				for typeKey, blockType := range globalTypes {
+					options = append(options, form.FieldOption{
+						Value: blockType.TypeLabel(),
+						Key:   typeKey,
+					})
+				}
+
+				// If no global types, fall back to basic types
+				if len(options) == 0 {
+					options = []form.FieldOption{
+						{Value: "HTML", Key: cmsstore.BLOCK_TYPE_HTML},
+						{Value: "Menu", Key: cmsstore.BLOCK_TYPE_MENU},
+						{Value: "Navbar", Key: cmsstore.BLOCK_TYPE_NAVBAR},
+						{Value: "Breadcrumbs", Key: cmsstore.BLOCK_TYPE_BREADCRUMBS},
+					}
+				}
+
+				return options
+			},
+		})
+	} else {
+		// Create readonly type field for published blocks
+		fieldType = form.NewField(form.FieldOptions{
+			Label:    "Block Type",
+			Name:     "block_type",
+			Type:     form.FORM_FIELD_TYPE_STRING,
+			Value:    typeDisplay,
+			Readonly: true,
+			Help:     "Block type cannot be changed after publication. This determines how the block is rendered.",
+		})
+	}
 
 	fieldBlockName := form.NewField(form.FieldOptions{
 		Label: "Block Name (Internal)",
@@ -478,11 +518,37 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 	data.formSiteID = req.GetStringTrimmed(r, "block_site_id")
 	data.formStatus = req.GetStringTrimmed(r, "block_status")
 	data.formTitle = req.GetStringTrimmed(r, "block_title")
+	data.formType = req.GetStringTrimmed(r, "block_type")
 
 	if data.view == VIEW_SETTINGS {
 		if data.formStatus == "" {
 			data.formErrorMessage = "Status is required"
 			return data, ""
+		}
+
+		// Validate block type change constraints
+		if data.formType != "" && data.formType != data.block.Type() {
+			// Only allow type changes for draft blocks
+			if data.block.Status() != cmsstore.BLOCK_STATUS_DRAFT {
+				data.formErrorMessage = "Block type can only be changed while the block is in draft status"
+				return data, ""
+			}
+
+			// Validate that the new type exists in the registry
+			globalBlockType := cmsstore.GetBlockType(data.formType)
+			if globalBlockType == nil {
+				// Check if it's a basic fallback type
+				validBasicTypes := map[string]bool{
+					cmsstore.BLOCK_TYPE_HTML:        true,
+					cmsstore.BLOCK_TYPE_MENU:        true,
+					cmsstore.BLOCK_TYPE_NAVBAR:      true,
+					cmsstore.BLOCK_TYPE_BREADCRUMBS: true,
+				}
+				if !validBasicTypes[data.formType] {
+					data.formErrorMessage = "Invalid block type: " + data.formType
+					return data, ""
+				}
+			}
 		}
 	}
 
@@ -491,6 +557,14 @@ func (controller blockUpdateController) saveBlock(r *http.Request, data blockUpd
 		data.block.SetName(data.formName)
 		data.block.SetSiteID(data.formSiteID)
 		data.block.SetStatus(data.formStatus)
+
+		// Apply block type change if validated
+		if data.formType != "" && data.formType != data.block.Type() {
+			// Clear content and metadata when changing type to prevent conflicts
+			data.block.SetContent("")
+			data.block.SetMetas(map[string]string{})
+			data.block.SetType(data.formType)
+		}
 	}
 
 	if data.view == VIEW_CONTENT {
@@ -584,6 +658,7 @@ func (controller blockUpdateController) prepareDataAndValidate(r *http.Request) 
 	data.formMemo = data.block.Memo()
 	data.formSiteID = data.block.SiteID()
 	data.formStatus = data.block.Status()
+	data.formType = data.block.Type()
 
 	if r.Method != http.MethodPost {
 		return data, ""
@@ -610,4 +685,5 @@ type blockUpdateControllerData struct {
 	formSiteID         string
 	formStatus         string
 	formTitle          string
+	formType           string
 }

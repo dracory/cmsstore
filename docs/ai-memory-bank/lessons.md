@@ -3,6 +3,32 @@
 ## Overview
 Analysis of test coverage for CMS Store MCP (Model Context Protocol) tools conducted on 2026-03-06.
 
+## [2026-03-26] Block Type Change Implementation for Draft Blocks
+- **Issue**: Block types were immutable after creation, preventing users from experimenting with different block types during content creation
+- **Solution**: Implemented conditional type field editing that allows block type changes only for blocks in draft status
+- **Key Changes**:
+  - Modified `admin/blocks/block_update_controller.go` to make block type field conditionally editable
+  - Added validation logic to ensure only draft blocks can change type
+  - Implemented content/metadata cleanup when type changes to prevent conflicts
+  - Updated form field generation to show select dropdown for draft blocks, readonly field for published blocks
+- **Validation Rules**:
+  - Only blocks with `status = "draft"` can change type
+  - New block type must exist in global registry or be a valid basic type (html, menu, navbar, breadcrumbs)
+  - Content and metadata are automatically cleared when type changes to prevent incompatibility
+- **UI Changes**:
+  - Draft blocks: editable select dropdown with help text "Can only be changed while in draft status"
+  - Published blocks: readonly text field with help text "Block type cannot be changed after publication"
+- **Files Modified**: `admin/blocks/block_update_controller.go`
+- **Files Created**: `admin/blocks/block_update_controller_type_change_test.go`
+- **Test Coverage**: Comprehensive test suite covering all scenarios:
+  - Draft blocks can change type successfully
+  - Published blocks cannot change type (validation error)
+  - UI shows appropriate field types (select vs readonly)
+  - Invalid block types are rejected
+  - Content/metadata cleanup on type change
+- **Impact**: Users can now experiment with different block types during content creation while maintaining data integrity for published content
+- **Application**: Use block type changes freely in draft mode, but understand that publishing locks the type to prevent breaking changes
+
 ## [2026-03-26] Block Renderer Architecture Fixes & Refactoring
 - **Issue**: Multiple critical bugs in refactored block renderer system + architectural inconsistency
 - **Root Cause**: Missing nil checks, improper error handling, thread safety issues, menu rendering logic still in main frontend
