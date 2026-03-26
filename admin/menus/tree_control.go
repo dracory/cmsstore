@@ -109,6 +109,7 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 		url := req.GetStringTrimmed(r, "treectl_url")
 		target := req.GetStringTrimmed(r, "treectl_target")
 		name := req.GetStringTrimmed(r, "treectl_name")
+		status := req.GetStringTrimmed(r, "treectl_status")
 		node := tree.Find(nodeID)
 
 		if node == nil {
@@ -119,6 +120,7 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 		node.URL = url
 		node.Target = target
 		node.Name = name
+		node.Status = status
 
 		tree.Update(*node)
 	}
@@ -260,6 +262,13 @@ func (t *treeControl) renderNode(tree Tree, node Node, level int) hb.TagInterfac
 	padding := lo.Ternary(isRoot, 0, 20)
 	backgroundOpacity := `0.0` + (cast.ToString(1 + level*2))
 
+	statusBadge := hb.Span().
+		Class("badge ms-2").
+		ClassIf(node.Status == cmsstore.MENU_ITEM_STATUS_ACTIVE, "bg-success").
+		ClassIf(node.Status == cmsstore.MENU_ITEM_STATUS_DRAFT, "bg-warning").
+		ClassIf(node.Status == cmsstore.MENU_ITEM_STATUS_INACTIVE, "bg-secondary").
+		Text(lo.If(node.Status == "", "draft").Else(node.Status))
+
 	nodeView := hb.Div().
 		Class("tree-node").
 		ClassIf(isRoot, "tree-node-root").
@@ -271,6 +280,7 @@ func (t *treeControl) renderNode(tree Tree, node Node, level int) hb.TagInterfac
 			Class("tree-node-name").
 			Style(`font-size: 20px;`).
 			Text(node.Name)).
+		Child(statusBadge).
 		Child(buttonDelete).
 		Child(buttonMoveUp).
 		Child(buttonMoveDown).
@@ -295,6 +305,10 @@ func (t *treeControl) modalNodeUpdate(node Node) hb.TagInterface {
 	pageID := node.PageID
 	url := node.URL
 	target := node.Target
+	status := node.Status
+	if status == "" {
+		status = cmsstore.MENU_ITEM_STATUS_DRAFT
+	}
 
 	form := form.NewForm(form.FormOptions{
 		ID: "FormMenuUpdate",
@@ -305,6 +319,28 @@ func (t *treeControl) modalNodeUpdate(node Node) hb.TagInterface {
 				Type:     form.FORM_FIELD_TYPE_STRING,
 				Value:    name,
 				Required: true,
+			}),
+			form.NewField(form.FieldOptions{
+				Label:    "Status",
+				Name:     "treectl_status",
+				Type:     form.FORM_FIELD_TYPE_SELECT,
+				Value:    status,
+				Required: true,
+				Help:     "The status of this menu item. Only active items will be displayed on the website.",
+				Options: []form.FieldOption{
+					{
+						Value: "Draft",
+						Key:   cmsstore.MENU_ITEM_STATUS_DRAFT,
+					},
+					{
+						Value: "Active",
+						Key:   cmsstore.MENU_ITEM_STATUS_ACTIVE,
+					},
+					{
+						Value: "Inactive",
+						Key:   cmsstore.MENU_ITEM_STATUS_INACTIVE,
+					},
+				},
 			}),
 			form.NewField(form.FieldOptions{
 				Label:    "Page",

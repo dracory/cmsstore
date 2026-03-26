@@ -19,6 +19,7 @@ type Node struct {
 	PageID   string
 	URL      string
 	Target   string
+	Status   string
 }
 
 type Tree struct {
@@ -476,10 +477,15 @@ func nodeToMap(node Node) map[string]any {
 		"page_id":   node.PageID,
 		"url":       node.URL,
 		"target":    node.Target,
+		"status":    node.Status,
 	}
 }
 
 func nodeFromMap(nodeMap map[string]interface{}) Node {
+	status := cast.ToString(nodeMap["status"])
+	if status == "" {
+		status = cmsstore.MENU_ITEM_STATUS_DRAFT
+	}
 	return Node{
 		ID:       nodeMap["id"].(string),
 		Name:     nodeMap["name"].(string),
@@ -488,6 +494,7 @@ func nodeFromMap(nodeMap map[string]interface{}) Node {
 		PageID:   nodeMap["page_id"].(string),
 		URL:      nodeMap["url"].(string),
 		Target:   nodeMap["target"].(string),
+		Status:   status,
 	}
 }
 
@@ -580,6 +587,7 @@ func menuItemToNodeWithParentAndSequence(menuItem cmsstore.MenuItemInterface, pa
 		PageID:   menuItem.PageID(),
 		URL:      menuItem.URL(),
 		Target:   menuItem.Target(),
+		Status:   menuItem.Status(),
 	}
 }
 
@@ -592,6 +600,7 @@ func menuItemToNode(menuItem cmsstore.MenuItemInterface) Node {
 		PageID:   menuItem.PageID(),
 		URL:      menuItem.URL(),
 		Target:   menuItem.Target(),
+		Status:   menuItem.Status(),
 	}
 }
 
@@ -629,6 +638,7 @@ func SaveMenuItems(ctx context.Context, store cmsstore.StoreInterface, menuID st
 			menuItem.SetPageID(node.PageID)
 			menuItem.SetURL(node.URL)
 			menuItem.SetTarget(node.Target)
+			menuItem.SetStatus(node.Status)
 
 			err = store.MenuItemCreate(ctx, menuItem)
 
@@ -659,6 +669,10 @@ func SaveMenuItems(ctx context.Context, store cmsstore.StoreInterface, menuID st
 
 		if menuItem.Target() != node.Target {
 			menuItem.SetTarget(node.Target)
+		}
+
+		if menuItem.Status() != node.Status {
+			menuItem.SetStatus(node.Status)
 		}
 
 		err = store.MenuItemUpdate(ctx, menuItem)
