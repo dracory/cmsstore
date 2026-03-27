@@ -10,18 +10,18 @@ import (
 )
 
 // renderNavbarHTML renders a navbar with different styles and rendering modes
-func renderNavbarHTML(ctx context.Context, store cmsstore.StoreInterface, menuItems []cmsstore.MenuItemInterface, style, renderingMode, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
+func renderNavbarHTML(ctx context.Context, store cmsstore.StoreInterface, blockID string, menuItems []cmsstore.MenuItemInterface, style, renderingMode, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
 	// Handle Bootstrap 5 rendering
 	if renderingMode == cmsstore.BLOCK_NAVBAR_RENDERING_BOOTSTRAP5 {
-		return renderBootstrap5Navbar(ctx, store, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
+		return renderBootstrap5Navbar(ctx, store, blockID, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
 	}
 
 	// Handle plain rendering
-	return renderPlainNavbar(ctx, store, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
+	return renderPlainNavbar(ctx, store, blockID, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
 }
 
 // renderBootstrap5Navbar renders a Bootstrap 5 navbar
-func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
+func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, blockID string, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
 	nav := hb.Nav()
 
 	// Base Bootstrap navbar classes
@@ -65,13 +65,14 @@ func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, 
 		nav.AddChild(brand)
 	}
 
-	// Create navbar toggler for mobile
+	// Create navbar toggler for mobile with unique target
+	contentID := "navbarContent-" + blockID
 	toggler := hb.Button()
 	toggler.Class("navbar-toggler")
 	toggler.Attr("type", "button")
 	toggler.Attr("data-bs-toggle", "collapse")
-	toggler.Attr("data-bs-target", "#navbarContent")
-	toggler.Attr("aria-controls", "navbarContent")
+	toggler.Attr("data-bs-target", "#"+contentID)
+	toggler.Attr("aria-controls", contentID)
 	toggler.Attr("aria-expanded", "false")
 	toggler.Attr("aria-label", "Toggle navigation")
 
@@ -81,11 +82,11 @@ func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, 
 	toggler.AddChild(span1)
 	nav.AddChild(toggler)
 
-	// Create collapsible content
+	// Create collapsible content with unique ID
 	collapse := hb.Div()
 	collapse.Class("collapse")
 	collapse.Class("navbar-collapse")
-	collapse.ID("navbarContent")
+	collapse.ID(contentID)
 
 	// Create navbar menu
 	navbarMenu := hb.Ul()
@@ -130,7 +131,7 @@ func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, 
 }
 
 // renderPlainNavbar renders a plain navbar without Bootstrap classes
-func renderPlainNavbar(ctx context.Context, store cmsstore.StoreInterface, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
+func renderPlainNavbar(ctx context.Context, store cmsstore.StoreInterface, blockID string, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
 	nav := hb.Nav()
 
 	// Base classes

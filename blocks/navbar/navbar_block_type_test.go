@@ -3,6 +3,7 @@ package navbar
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/dracory/cmsstore"
@@ -453,5 +454,5 @@ func TestNavbarBlockType_SaveAdminFields(t *testing.T) {
 
 // Helper function to check if a string contains a substring
 func contains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0
+	return strings.Contains(s, substr)
 }

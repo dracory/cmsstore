@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/blocks/navbar"
 	"github.com/dracory/cmsstore/frontend/blocks/html"
 	"github.com/dracory/cmsstore/frontend/blocks/menu"
 )
@@ -132,7 +133,7 @@ func (r *NoOpRenderer) Render(ctx context.Context, block cmsstore.BlockInterface
 }
 
 // initBlockRenderers initializes and registers all block renderers
-func initBlockRenderers(f *frontend) *BlockRendererRegistry {
+func initBlockRenderers(f *frontend, store cmsstore.StoreInterface) *BlockRendererRegistry {
 	registry := NewBlockRendererRegistry()
 
 	// Register HTML renderer (default)
@@ -140,6 +141,9 @@ func initBlockRenderers(f *frontend) *BlockRendererRegistry {
 
 	// Register Menu renderer
 	registry.Register(cmsstore.BLOCK_TYPE_MENU, menu.NewBlockRenderer(f))
+
+	// Register Navbar block type globally so it's available for frontend rendering
+	cmsstore.RegisterBlockType(navbar.NewNavbarBlockType(store))
 
 	return registry
 }

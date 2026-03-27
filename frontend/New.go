@@ -29,7 +29,7 @@ func New(config Config) FrontendInterface {
 		cacheEnabled:        config.CacheEnabled,
 		cacheExpireSeconds:  config.CacheExpireSeconds,
 	}
-	f.blockRenderers = initBlockRenderers(&f)
+	f.blockRenderers = initBlockRenderers(&f, config.Store)
 
 	if config.CacheEnabled {
 		cache := initCache()

@@ -3,6 +3,7 @@ package navbar
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/dracory/cmsstore"
@@ -77,8 +78,8 @@ func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterf
 	fixed := block.Meta(cmsstore.BLOCK_META_NAVBAR_FIXED) == "true"
 	dark := block.Meta(cmsstore.BLOCK_META_NAVBAR_DARK) == "true"
 
-	// Use the navbar renderer
-	return renderNavbarHTML(ctx, t.store, menuItems, style, renderingMode, cssClass, cssID, brandText, brandURL, fixed, dark)
+	// Use the navbar renderer with unique ID based on block ID
+	return renderNavbarHTML(ctx, t.store, block.ID(), menuItems, style, renderingMode, cssClass, cssID, brandText, brandURL, fixed, dark)
 }
 
 // GetAdminFields returns form fields for editing navbar block configuration.
@@ -89,7 +90,7 @@ func (t *NavbarBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.
 		SetSortOrder("asc"))
 
 	if err != nil {
-		// Log error but continue with empty menu list
+		log.Printf("Error loading menu list for navbar admin fields: %v", err)
 	}
 
 	menuOptions := []form.FieldOption{
