@@ -88,7 +88,7 @@ func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, 
 	collapse.Class("navbar-collapse")
 	collapse.ID(contentID)
 
-	// Create navbar menu
+	// Create navbar menu with hierarchical support
 	navbarMenu := hb.Ul()
 	navbarMenu.Class("navbar-nav")
 	if style == cmsstore.BLOCK_NAVBAR_STYLE_CENTERED {
@@ -97,30 +97,23 @@ func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, 
 		navbarMenu.Class("ms-auto")
 	}
 
-	// Add menu items (flat list for now)
+	// Build menu item lookup map for parent-child relationships
+	menuItemMap := make(map[string]cmsstore.MenuItemInterface)
 	for _, item := range menuItems {
-		url := resolveMenuItemURL(ctx, store, item)
+		menuItemMap[item.ID()] = item
+	}
 
-		navItem := hb.Li()
-		navItem.Class("nav-item")
-
-		if url != "" {
-			navLink := hb.A()
-			navLink.Class("nav-link")
-			navLink.Href(url)
-			navLink.Text(item.Name())
-
-			// Add target attribute if set
-			if item.Target() != "" {
-				navLink.Attr("target", item.Target())
-			}
-
-			navItem.AddChild(navLink)
-		} else {
-			// Render as plain text without link
-			navItem.Text(item.Name())
+	// Find top-level items (no parent or empty parent ID)
+	var topLevelItems []cmsstore.MenuItemInterface
+	for _, item := range menuItems {
+		if item.ParentID() == "" {
+			topLevelItems = append(topLevelItems, item)
 		}
+	}
 
+	// Render top-level items with dropdown support
+	for _, item := range topLevelItems {
+		navItem := renderNavItemWithDropdown(ctx, store, item, menuItemMap, 0)
 		navbarMenu.AddChild(navItem)
 	}
 
@@ -128,6 +121,97 @@ func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, 
 	nav.AddChild(collapse)
 
 	return nav.ToHTML(), nil
+}
+
+// renderNavItemWithDropdown renders a nav item with dropdown support for children
+func renderNavItemWithDropdown(ctx context.Context, store cmsstore.StoreInterface, item cmsstore.MenuItemInterface, menuItemMap map[string]cmsstore.MenuItemInterface, depth int) *hb.Tag {
+	url := resolveMenuItemURL(ctx, store, item)
+
+	// Find children of this item
+	var children []cmsstore.MenuItemInterface
+	for _, mi := range menuItemMap {
+		if mi.ParentID() == item.ID() {
+			children = append(children, mi)
+		}
+	}
+
+	hasChildren := len(children) > 0
+
+	if hasChildren {
+		// Render as dropdown
+		navItem := hb.Li()
+		navItem.Class("nav-item")
+		navItem.Class("dropdown")
+
+		// Dropdown toggle link
+		dropdownToggle := hb.A()
+		dropdownToggle.Class("nav-link")
+		dropdownToggle.Class("dropdown-toggle")
+		dropdownToggle.Href("#")
+		dropdownToggle.Attr("role", "button")
+		dropdownToggle.Attr("data-bs-toggle", "dropdown")
+		dropdownToggle.Attr("aria-expanded", "false")
+		dropdownToggle.Text(item.Name())
+
+		// Add target attribute if set
+		if item.Target() != "" {
+			dropdownToggle.Attr("target", item.Target())
+		}
+
+		navItem.AddChild(dropdownToggle)
+
+		// Dropdown menu
+		dropdownMenu := hb.Ul()
+		dropdownMenu.Class("dropdown-menu")
+
+		// Add child items to dropdown
+		for _, child := range children {
+			childURL := resolveMenuItemURL(ctx, store, child)
+			dropdownItem := hb.Li()
+
+			childLink := hb.A()
+			childLink.Class("dropdown-item")
+			childLink.Text(child.Name())
+
+			if childURL != "" {
+				childLink.Href(childURL)
+				if child.Target() != "" {
+					childLink.Attr("target", child.Target())
+				}
+			} else {
+				childLink.Href("#")
+			}
+
+			dropdownItem.AddChild(childLink)
+			dropdownMenu.AddChild(dropdownItem)
+		}
+
+		navItem.AddChild(dropdownMenu)
+		return navItem
+	}
+
+	// Render as simple nav item (no children)
+	navItem := hb.Li()
+	navItem.Class("nav-item")
+
+	if url != "" {
+		navLink := hb.A()
+		navLink.Class("nav-link")
+		navLink.Href(url)
+		navLink.Text(item.Name())
+
+		// Add target attribute if set
+		if item.Target() != "" {
+			navLink.Attr("target", item.Target())
+		}
+
+		navItem.AddChild(navLink)
+	} else {
+		// Render as plain text without link
+		navItem.Text(item.Name())
+	}
+
+	return navItem
 }
 
 // renderPlainNavbar renders a plain navbar without Bootstrap classes
