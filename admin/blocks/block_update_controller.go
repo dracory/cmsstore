@@ -403,19 +403,6 @@ func (controller blockUpdateController) fieldsSettings(data blockUpdateControlle
 		blockType = cmsstore.BLOCK_TYPE_HTML
 	}
 
-	// Get type label from global registry first, then local provider
-	typeDisplay := "Unknown"
-	globalBlockType := cmsstore.GetBlockType(blockType)
-	if globalBlockType != nil {
-		typeDisplay = globalBlockType.TypeLabel()
-	} else {
-		registry := controller.ui.BlockAdminRegistry()
-		provider := registry.GetProvider(blockType)
-		if provider != nil {
-			typeDisplay = provider.GetTypeLabel()
-		}
-	}
-
 	// Determine if type field should be editable (only for draft blocks)
 	isTypeEditable := data.block.Status() == cmsstore.BLOCK_STATUS_DRAFT
 
@@ -459,7 +446,7 @@ func (controller blockUpdateController) fieldsSettings(data blockUpdateControlle
 			Label:    "Block Type",
 			Name:     "block_type",
 			Type:     form.FORM_FIELD_TYPE_STRING,
-			Value:    typeDisplay,
+			Value:    blockType, // Use actual block type value, not display label
 			Readonly: true,
 			Help:     "Block type cannot be changed after publication. This determines how the block is rendered.",
 		})

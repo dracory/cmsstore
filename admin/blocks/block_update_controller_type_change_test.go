@@ -334,6 +334,86 @@ func TestPublishedBlockTypeFieldIsReadonly(t *testing.T) {
 	}
 }
 
+func TestPublishedBlockCanSaveWithoutTypeChange(t *testing.T) {
+	// Initialize test store
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("InitStore should succeed, got error: %v", err)
+	}
+
+	handler := initBlockHandler(store)
+
+	// Create a site first
+	site, err := testutils.SeedSite(store, "Test Site")
+	if err != nil {
+		t.Fatalf("SeedSite should succeed, got error: %v", err)
+	}
+
+	// Create a published block
+	publishedBlock := cmsstore.NewBlock()
+	publishedBlock.SetName("Test Published Block")
+	publishedBlock.SetType(cmsstore.BLOCK_TYPE_MENU)
+	publishedBlock.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
+	publishedBlock.SetSiteID(site.ID())
+	publishedBlock.SetContent("<p>Published content</p>")
+
+	err = store.BlockCreate(context.Background(), publishedBlock)
+	if err != nil {
+		t.Fatalf("BlockCreate should succeed, got error: %v", err)
+	}
+
+	// Try to save the published block WITHOUT changing the type
+	// This should work and not trigger the type change error
+	postValues := url.Values{
+		"block_id":     {publishedBlock.ID()},
+		"view":         {"settings"},
+		"block_name":   {"Updated Published Block Name"},
+		"block_type":   {cmsstore.BLOCK_TYPE_MENU}, // Same type as current
+		"block_status": {cmsstore.BLOCK_STATUS_ACTIVE},
+		"block_memo":   {"Updated memo"},
+	}
+
+	body, response, err := test.CallStringEndpoint(http.MethodPost, handler, test.NewRequestOptions{
+		PostValues: postValues,
+	})
+
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got: %d", http.StatusOK, response.StatusCode)
+	}
+
+	// Should NOT contain the type change error
+	if strings.Contains(body, "Block type can only be changed while the block is in draft status") {
+		t.Errorf("Expected no type change error when type is unchanged, but found error in response")
+	}
+
+	// Should contain success message
+	if !strings.Contains(body, "block updated successfully") {
+		t.Errorf("Expected success message, but not found in response")
+	}
+
+	// Verify the block was updated (name and memo changed, type unchanged)
+	updatedBlock, err := store.BlockFindByID(context.Background(), publishedBlock.ID())
+	if err != nil {
+		t.Errorf("Expected to find updated block, got error: %v", err)
+	}
+
+	if updatedBlock.Name() != "Updated Published Block Name" {
+		t.Errorf("Expected block name to be updated, got %s", updatedBlock.Name())
+	}
+
+	if updatedBlock.Memo() != "Updated memo" {
+		t.Errorf("Expected block memo to be updated, got %s", updatedBlock.Memo())
+	}
+
+	if updatedBlock.Type() != cmsstore.BLOCK_TYPE_MENU {
+		t.Errorf("Expected block type to remain %s, got %s", cmsstore.BLOCK_TYPE_MENU, updatedBlock.Type())
+	}
+}
+
 func TestInvalidBlockTypeRejected(t *testing.T) {
 	// Initialize test store
 	store, err := testutils.InitStore(":memory:")

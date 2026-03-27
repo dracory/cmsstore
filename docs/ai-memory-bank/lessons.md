@@ -3,6 +3,16 @@
 ## Overview
 Analysis of test coverage for CMS Store MCP (Model Context Protocol) tools conducted on 2026-03-06.
 
+## [2026-03-27] Block Type Field Value Mismatch Bug Fix
+- **Issue**: Published blocks were triggering "Block type can only be changed while the block is in draft status" error even when no type change was being made
+- **Root Cause**: For published blocks, the readonly type field was using `typeDisplay` (human-readable label like "Navbar") as its value instead of the actual `blockType` (internal key like "navbar"). When the form was submitted, `data.formType` contained "Navbar" while `data.block.Type()` returned "navbar", causing the validation to incorrectly detect a type change.
+- **Solution**: Changed the readonly field to use `blockType` directly instead of `typeDisplay`, ensuring the form value matches the stored block type value.
+- **Key Change**: In `admin/blocks/block_update_controller.go` line 462, changed `Value: typeDisplay` to `Value: blockType` for readonly type fields.
+- **Test Added**: Created `TestPublishedBlockCanSaveWithoutTypeChange` to verify published blocks can be saved without triggering type change error when no actual change is made.
+- **Files Modified**: `admin/blocks/block_update_controller.go`, `admin/blocks/block_update_controller_type_change_test.go`
+- **Impact**: Users can now save published blocks without encountering false type change validation errors
+- **Application**: Always ensure form field values match the actual stored data values, especially for readonly fields that use display transformations
+
 ## [2026-03-26] Block Type Change Implementation for Draft Blocks
 - **Issue**: Block types were immutable after creation, preventing users from experimenting with different block types during content creation
 - **Solution**: Implemented conditional type field editing that allows block type changes only for blocks in draft status
