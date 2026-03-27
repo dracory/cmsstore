@@ -53,11 +53,11 @@ func NewBlockFromExistingData(data map[string]string) *block {
 // == METHODS ===============================================================
 
 func (o *block) IsActive() bool {
-	return o.Status() == PAGE_STATUS_ACTIVE
+	return o.Status() == BLOCK_STATUS_ACTIVE
 }
 
 func (o *block) IsInactive() bool {
-	return o.Status() == PAGE_STATUS_INACTIVE
+	return o.Status() == BLOCK_STATUS_INACTIVE
 }
 
 func (o *block) IsSoftDeleted() bool {

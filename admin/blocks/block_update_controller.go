@@ -13,6 +13,7 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
+	"github.com/samber/lo"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -134,10 +135,13 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
-		ClassIf(data.block.Status() == cmsstore.TEMPLATE_STATUS_ACTIVE, "bg-success").
-		ClassIf(data.block.Status() == cmsstore.TEMPLATE_STATUS_INACTIVE, "bg-secondary").
-		ClassIf(data.block.Status() == cmsstore.TEMPLATE_STATUS_DRAFT, "bg-warning").
-		Text(data.block.Status())
+		ClassIf(data.block.Status() == cmsstore.BLOCK_STATUS_ACTIVE, "bg-success").
+		ClassIf(data.block.Status() == cmsstore.BLOCK_STATUS_INACTIVE, "bg-secondary").
+		ClassIf(data.block.Status() == cmsstore.BLOCK_STATUS_DRAFT, "bg-warning").
+		Text(lo.If(data.block.Status() == cmsstore.BLOCK_STATUS_ACTIVE, "Published").
+			ElseIf(data.block.Status() == cmsstore.BLOCK_STATUS_INACTIVE, "Unpublished").
+			ElseIf(data.block.Status() == cmsstore.BLOCK_STATUS_DRAFT, "Draft").
+			Else(data.block.Status()))
 
 	pageTitle := hb.Heading1().
 		Text("CMS. Edit Block:").

@@ -107,16 +107,16 @@ func (controller *blockManagerController) onModalRecordFilterShow(data blockMana
 						Key:   "",
 					},
 					{
-						Value: "Active",
-						Key:   cmsstore.SITE_STATUS_ACTIVE,
+						Value: "Published",
+						Key:   cmsstore.BLOCK_STATUS_ACTIVE,
 					},
 					{
-						Value: "Inactive",
-						Key:   cmsstore.SITE_STATUS_INACTIVE,
+						Value: "Unpublished",
+						Key:   cmsstore.BLOCK_STATUS_INACTIVE,
 					},
 					{
 						Value: "Draft",
-						Key:   cmsstore.SITE_STATUS_DRAFT,
+						Key:   cmsstore.BLOCK_STATUS_DRAFT,
 					},
 				},
 			}),
@@ -331,7 +331,10 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 					StyleIf(block.IsActive(), `color:green;`).
 					StyleIf(block.IsSoftDeleted(), `color:silver;`).
 					StyleIf(block.IsInactive(), `color:red;`).
-					HTML(block.Status())
+					HTML(lo.If(block.Status() == cmsstore.BLOCK_STATUS_ACTIVE, "Published").
+						ElseIf(block.Status() == cmsstore.BLOCK_STATUS_INACTIVE, "Unpublished").
+						ElseIf(block.Status() == cmsstore.BLOCK_STATUS_DRAFT, "Draft").
+						Else(block.Status()))
 
 				buttonEdit := hb.Hyperlink().
 					Class("btn btn-primary me-2").
