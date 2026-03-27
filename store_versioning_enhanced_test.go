@@ -74,12 +74,12 @@ func TestVersioningNoChangeNoVersion(t *testing.T) {
 
 	store, err := NewStore(NewStoreOptions{
 		DB:                  db,
-		BlockTableName:      "block_table",
-		PageTableName:       "page_table",
-		SiteTableName:       "site_table",
-		TemplateTableName:   "template_table",
+		BlockTableName:      "block_table_no_change",
+		PageTableName:       "page_table_no_change",
+		SiteTableName:       "site_table_no_change",
+		TemplateTableName:   "template_table_no_change",
 		VersioningEnabled:   true,
-		VersioningTableName: "version_table",
+		VersioningTableName: "version_table_no_change",
 		AutomigrateEnabled:  true,
 	})
 	require.NoError(t, err)

@@ -16,11 +16,26 @@ func initDB(filepath string) *sql.DB {
 		}
 	}
 
-	dsn := filepath + "?parseTime=true"
-	db, err := sql.Open("sqlite", dsn)
+	// For in-memory databases, use cache=shared to allow concurrent access
+	// from multiple goroutines using the same connection pool
+	dsn := filepath
+	if filepath == ":memory:" {
+		dsn = "file::memory:?cache=shared"
+	}
+	dsn += "?parseTime=true"
+	if filepath == ":memory:" {
+		dsn = "file::memory:?cache=shared&parseTime=true"
+	}
 
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		panic(err)
+	}
+
+	// For in-memory databases, set connection pool to 1 to ensure
+	// all goroutines share the same database instance
+	if filepath == ":memory:" {
+		db.SetMaxOpenConns(1)
 	}
 
 	return db

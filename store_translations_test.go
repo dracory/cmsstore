@@ -328,12 +328,12 @@ func TestStoreTranslationCount(t *testing.T) {
 
 	store, err := NewStore(NewStoreOptions{
 		DB:                   db,
-		BlockTableName:       "block_table",
-		PageTableName:        "page_table",
-		SiteTableName:        "site_table",
-		TemplateTableName:    "template_table",
+		BlockTableName:       "block_table_trans_count",
+		PageTableName:        "page_table_trans_count",
+		SiteTableName:        "site_table_trans_count",
+		TemplateTableName:    "template_table_trans_count",
 		TranslationsEnabled:  true,
-		TranslationTableName: "translation_table",
+		TranslationTableName: "translation_table_trans_count",
 		AutomigrateEnabled:   true,
 	})
 	require.NoError(t, err)

@@ -25,7 +25,7 @@ func TestConcurrentBlockCreate(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Create site first
+	// Create site first (this also verifies tables exist after migration)
 	site := NewSite().SetName("Test Site")
 	err = store.SiteCreate(ctx, site)
 	require.NoError(t, err)
@@ -350,10 +350,10 @@ func TestConcurrentCountOperations(t *testing.T) {
 
 	store, err := NewStore(NewStoreOptions{
 		DB:                 db,
-		BlockTableName:     "block_table",
-		PageTableName:      "page_table",
-		SiteTableName:      "site_table",
-		TemplateTableName:  "template_table",
+		BlockTableName:     "block_table_count_ops",
+		PageTableName:      "page_table_count_ops",
+		SiteTableName:      "site_table_count_ops",
+		TemplateTableName:  "template_table_count_ops",
 		AutomigrateEnabled: true,
 	})
 	require.NoError(t, err)
