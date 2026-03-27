@@ -705,6 +705,173 @@ func TestNavbarBlockType_SaveAdminFields_CustomCSS(t *testing.T) {
 	}
 }
 
+// TestNavbarBlockType_BrandImage tests brand image functionality
+func TestNavbarBlockType_BrandImage(t *testing.T) {
+	ctx := context.Background()
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	navbarBlock := NewNavbarBlockType(store)
+
+	// Test brand image only
+	block := &TestNavbarBlock{
+		meta: map[string]string{
+			cmsstore.BLOCK_META_MENU_ID:                   "test-menu",
+			cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE:     "bootstrap5",
+			cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_URL:    "https://example.com/logo.png",
+			cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_WIDTH:  "40",
+			cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_HEIGHT: "30",
+			cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_ALT:    "Test Logo",
+		},
+	}
+
+	result, err := navbarBlock.Render(ctx, block)
+	if err != nil {
+		t.Errorf("Render returned error: %v", err)
+		return
+	}
+
+	// Debug: print actual result
+	t.Logf("Actual HTML output: %s", result)
+
+	// Check that image is rendered
+	if !contains(result, `<img alt="Test Logo" height="30" src="https://example.com/logo.png" width="40" />`) {
+		t.Error("Expected result to contain brand image")
+	}
+
+	if !contains(result, `width="40"`) {
+		t.Error("Expected result to contain image width")
+	}
+
+	if !contains(result, `height="30"`) {
+		t.Error("Expected result to contain image height")
+	}
+
+	if !contains(result, `alt="Test Logo"`) {
+		t.Error("Expected result to contain image alt text")
+	}
+
+	// Test brand image and text together
+	block.meta[cmsstore.BLOCK_META_NAVBAR_BRAND_TEXT] = "My Brand"
+	result, err = navbarBlock.Render(ctx, block)
+	if err != nil {
+		t.Errorf("Render returned error: %v", err)
+		return
+	}
+
+	// Debug: print actual result for image + text
+	t.Logf("Image + text HTML output: %s", result)
+
+	if !contains(result, `<img alt="Test Logo" height="30" src="https://example.com/logo.png" width="40" />`) {
+		t.Error("Expected result to contain brand image")
+	}
+
+	if !contains(result, "My Brand") {
+		t.Error("Expected result to contain brand text")
+	}
+
+	if !contains(result, `d-inline-block align-text-top`) {
+		t.Error("Expected result to contain Bootstrap 5 image alignment classes")
+	}
+
+	// Test default dimensions
+	delete(block.meta, cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_WIDTH)
+	delete(block.meta, cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_HEIGHT)
+	result, err = navbarBlock.Render(ctx, block)
+	if err != nil {
+		t.Errorf("Render returned error: %v", err)
+		return
+	}
+
+	if !contains(result, `width="30"`) {
+		t.Error("Expected default width of 30")
+	}
+
+	if !contains(result, `height="24"`) {
+		t.Error("Expected default height of 24")
+	}
+
+	// Test default alt text
+	delete(block.meta, cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_ALT)
+	result, err = navbarBlock.Render(ctx, block)
+	if err != nil {
+		t.Errorf("Render returned error: %v", err)
+		return
+	}
+
+	if !contains(result, `alt="Logo"`) {
+		t.Error("Expected default alt text of 'Logo'")
+	}
+
+	// Test plain rendering mode with brand image
+	block.meta[cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE] = "plain"
+	result, err = navbarBlock.Render(ctx, block)
+	if err != nil {
+		t.Errorf("Render returned error: %v", err)
+		return
+	}
+
+	// Debug: print actual result for plain rendering
+	t.Logf("Plain rendering HTML output: %s", result)
+
+	if !contains(result, `<img alt="Test Logo" height="30" src="https://example.com/logo.png" width="40" />`) {
+		t.Error("Expected plain result to contain brand image")
+	}
+}
+
+// TestNavbarBlockType_SaveAdminFields_BrandImage tests saving brand image fields
+func TestNavbarBlockType_SaveAdminFields_BrandImage(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	navbarBlock := NewNavbarBlockType(store)
+
+	// Create a mock block
+	block := &TestNavbarBlock{
+		meta: map[string]string{},
+	}
+
+	// Create a real http.Request with form data including brand image fields
+	req, _ := http.NewRequest("POST", "/test", nil)
+	req.Form = map[string][]string{
+		"menu_id":                   {"test-menu"},
+		"navbar_style":              {"default"},
+		"navbar_rendering_mode":     {"bootstrap5"},
+		"navbar_brand_image_url":    {"https://example.com/logo.png"},
+		"navbar_brand_image_width":  {"50"},
+		"navbar_brand_image_height": {"40"},
+		"navbar_brand_image_alt":    {"My Company Logo"},
+	}
+
+	// Test saving admin fields with brand image
+	err = navbarBlock.SaveAdminFields(req, block)
+	if err != nil {
+		t.Errorf("Expected no error saving admin fields, got: %v", err)
+		return
+	}
+
+	// Verify that brand image meta data was saved
+	if block.meta[cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_URL] != "https://example.com/logo.png" {
+		t.Errorf("Expected brand image URL to be 'https://example.com/logo.png', got '%s'", block.meta[cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_URL])
+	}
+
+	if block.meta[cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_WIDTH] != "50" {
+		t.Errorf("Expected brand image width to be '50', got '%s'", block.meta[cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_WIDTH])
+	}
+
+	if block.meta[cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_HEIGHT] != "40" {
+		t.Errorf("Expected brand image height to be '40', got '%s'", block.meta[cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_HEIGHT])
+	}
+
+	if block.meta[cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_ALT] != "My Company Logo" {
+		t.Errorf("Expected brand image alt to be 'My Company Logo', got '%s'", block.meta[cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_ALT])
+	}
+}
+
 // Helper function to check if a string contains a substring
 func contains(s, substr string) bool {
 	return strings.Contains(s, substr)

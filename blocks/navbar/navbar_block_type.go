@@ -76,11 +76,17 @@ func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterf
 		brandURL = "/"
 	}
 
+	// Brand image properties
+	brandImageURL := block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_URL)
+	brandImageWidth := block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_WIDTH)
+	brandImageHeight := block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_HEIGHT)
+	brandImageAlt := block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_ALT)
+
 	fixed := block.Meta(cmsstore.BLOCK_META_NAVBAR_FIXED) == "true"
 	dark := block.Meta(cmsstore.BLOCK_META_NAVBAR_DARK) == "true"
 
 	// Use the navbar renderer with unique ID based on block ID
-	return renderNavbarHTML(ctx, t.store, block.ID(), menuItems, style, renderingMode, cssClass, cssID, brandText, brandURL, fixed, dark, customCSS)
+	return renderNavbarHTML(ctx, t.store, block.ID(), menuItems, style, renderingMode, cssClass, cssID, brandText, brandURL, brandImageURL, brandImageWidth, brandImageHeight, brandImageAlt, fixed, dark, customCSS)
 }
 
 // GetAdminFields returns form fields for editing navbar block configuration.
@@ -171,6 +177,34 @@ func (t *NavbarBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.
 			Help:  "URL for the brand link (default: /)",
 		}),
 		form.NewField(form.FieldOptions{
+			Label: "Brand Image URL",
+			Name:  "navbar_brand_image_url",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_URL),
+			Help:  "URL for the brand logo/image (optional - if set, will be used instead of or alongside text)",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Brand Image Width",
+			Name:  "navbar_brand_image_width",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_WIDTH),
+			Help:  "Width for brand image (e.g., '30', '50px', 'auto'). Default: 30",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Brand Image Height",
+			Name:  "navbar_brand_image_height",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_HEIGHT),
+			Help:  "Height for brand image (e.g., '24', '40px', 'auto'). Default: 24",
+		}),
+		form.NewField(form.FieldOptions{
+			Label: "Brand Image Alt Text",
+			Name:  "navbar_brand_image_alt",
+			Type:  form.FORM_FIELD_TYPE_STRING,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_ALT),
+			Help:  "Alt text for brand image for accessibility. Default: 'Logo'",
+		}),
+		form.NewField(form.FieldOptions{
 			Label: "CSS ID",
 			Name:  "navbar_css_id",
 			Type:  form.FORM_FIELD_TYPE_STRING,
@@ -239,6 +273,10 @@ func (t *NavbarBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockI
 	renderingMode := r.FormValue("navbar_rendering_mode")
 	brandText := r.FormValue("navbar_brand_text")
 	brandURL := r.FormValue("navbar_brand_url")
+	brandImageURL := r.FormValue("navbar_brand_image_url")
+	brandImageWidth := r.FormValue("navbar_brand_image_width")
+	brandImageHeight := r.FormValue("navbar_brand_image_height")
+	brandImageAlt := r.FormValue("navbar_brand_image_alt")
 	fixed := r.FormValue("navbar_fixed")
 	dark := r.FormValue("navbar_dark")
 	cssClass := r.FormValue("navbar_css_class")
@@ -250,6 +288,10 @@ func (t *NavbarBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockI
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE, renderingMode)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_BRAND_TEXT, brandText)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_BRAND_URL, brandURL)
+	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_URL, brandImageURL)
+	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_WIDTH, brandImageWidth)
+	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_HEIGHT, brandImageHeight)
+	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_BRAND_IMAGE_ALT, brandImageAlt)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_FIXED, fixed)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_DARK, dark)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_CSS_CLASS, cssClass)

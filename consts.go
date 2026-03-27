@@ -35,15 +35,19 @@ const (
 
 // Block Meta Keys for Navbar Type
 const (
-	BLOCK_META_NAVBAR_STYLE          = "navbar_style"
-	BLOCK_META_NAVBAR_RENDERING_MODE = "navbar_rendering_mode"
-	BLOCK_META_NAVBAR_CSS_CLASS      = "navbar_css_class"
-	BLOCK_META_NAVBAR_CSS_ID         = "navbar_css_id"
-	BLOCK_META_NAVBAR_BRAND_TEXT     = "navbar_brand_text"
-	BLOCK_META_NAVBAR_BRAND_URL      = "navbar_brand_url"
-	BLOCK_META_NAVBAR_FIXED          = "navbar_fixed"
-	BLOCK_META_NAVBAR_DARK           = "navbar_dark"
-	BLOCK_META_NAVBAR_CUSTOM_CSS     = "navbar_custom_css"
+	BLOCK_META_NAVBAR_STYLE              = "navbar_style"
+	BLOCK_META_NAVBAR_RENDERING_MODE     = "navbar_rendering_mode"
+	BLOCK_META_NAVBAR_CSS_CLASS          = "navbar_css_class"
+	BLOCK_META_NAVBAR_CSS_ID             = "navbar_css_id"
+	BLOCK_META_NAVBAR_BRAND_TEXT         = "navbar_brand_text"
+	BLOCK_META_NAVBAR_BRAND_URL          = "navbar_brand_url"
+	BLOCK_META_NAVBAR_BRAND_IMAGE_URL    = "navbar_brand_image_url"
+	BLOCK_META_NAVBAR_BRAND_IMAGE_WIDTH  = "navbar_brand_image_width"
+	BLOCK_META_NAVBAR_BRAND_IMAGE_HEIGHT = "navbar_brand_image_height"
+	BLOCK_META_NAVBAR_BRAND_IMAGE_ALT    = "navbar_brand_image_alt"
+	BLOCK_META_NAVBAR_FIXED              = "navbar_fixed"
+	BLOCK_META_NAVBAR_DARK               = "navbar_dark"
+	BLOCK_META_NAVBAR_CUSTOM_CSS         = "navbar_custom_css"
 )
 
 // Block Navbar Styles
