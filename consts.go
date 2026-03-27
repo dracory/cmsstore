@@ -43,6 +43,7 @@ const (
 	BLOCK_META_NAVBAR_BRAND_URL      = "navbar_brand_url"
 	BLOCK_META_NAVBAR_FIXED          = "navbar_fixed"
 	BLOCK_META_NAVBAR_DARK           = "navbar_dark"
+	BLOCK_META_NAVBAR_CUSTOM_CSS     = "navbar_custom_css"
 )
 
 // Block Navbar Styles

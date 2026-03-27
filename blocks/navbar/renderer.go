@@ -10,18 +10,20 @@ import (
 )
 
 // renderNavbarHTML renders a navbar with different styles and rendering modes
-func renderNavbarHTML(ctx context.Context, store cmsstore.StoreInterface, blockID string, menuItems []cmsstore.MenuItemInterface, style, renderingMode, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
+func renderNavbarHTML(ctx context.Context, store cmsstore.StoreInterface, blockID string, menuItems []cmsstore.MenuItemInterface, style, renderingMode, cssClass, cssID, brandText, brandURL string, fixed, dark bool, customCSS string) (string, error) {
 	// Handle Bootstrap 5 rendering
 	if renderingMode == cmsstore.BLOCK_NAVBAR_RENDERING_BOOTSTRAP5 {
-		return renderBootstrap5Navbar(ctx, store, blockID, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
+		return renderBootstrap5Navbar(ctx, store, blockID, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark, customCSS)
 	}
 
 	// Handle plain rendering
-	return renderPlainNavbar(ctx, store, blockID, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark)
+	return renderPlainNavbar(ctx, store, blockID, menuItems, style, cssClass, cssID, brandText, brandURL, fixed, dark, customCSS)
 }
 
 // renderBootstrap5Navbar renders a Bootstrap 5 navbar
-func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, blockID string, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
+func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, blockID string, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool, customCSS string) (string, error) {
+	styleTag := hb.Style(customCSS)
+
 	nav := hb.Nav()
 
 	// Base Bootstrap navbar classes
@@ -120,7 +122,7 @@ func renderBootstrap5Navbar(ctx context.Context, store cmsstore.StoreInterface, 
 	collapse.AddChild(navbarMenu)
 	nav.AddChild(collapse)
 
-	return nav.ToHTML(), nil
+	return hb.Wrap().ChildIf(customCSS != "", styleTag).Child(nav).ToHTML(), nil
 }
 
 // renderNavItemWithDropdown renders a nav item with dropdown support for children
@@ -215,7 +217,9 @@ func renderNavItemWithDropdown(ctx context.Context, store cmsstore.StoreInterfac
 }
 
 // renderPlainNavbar renders a plain navbar without Bootstrap classes
-func renderPlainNavbar(ctx context.Context, store cmsstore.StoreInterface, blockID string, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool) (string, error) {
+func renderPlainNavbar(ctx context.Context, store cmsstore.StoreInterface, blockID string, menuItems []cmsstore.MenuItemInterface, style, cssClass, cssID, brandText, brandURL string, fixed, dark bool, customCSS string) (string, error) {
+	styleTag := hb.Style(customCSS)
+
 	nav := hb.Nav()
 
 	// Base classes
@@ -292,8 +296,7 @@ func renderPlainNavbar(ctx context.Context, store cmsstore.StoreInterface, block
 	}
 
 	nav.AddChild(menu)
-
-	return nav.ToHTML(), nil
+	return hb.Wrap().ChildIf(customCSS != "", styleTag).Child(nav).ToHTML(), nil
 }
 
 // resolveMenuItemURL resolves the URL for a menu item

@@ -593,6 +593,118 @@ func renderNavItemHTMLForTest(ctx context.Context, store cmsstore.StoreInterface
 	return `<li class="nav-item"><a class="nav-link" href="` + item.URL() + `" target="_self">` + item.Name() + `</a></li>`
 }
 
+// TestNavbarBlockType_CustomCSS tests custom CSS functionality
+func TestNavbarBlockType_CustomCSS(t *testing.T) {
+	ctx := context.Background()
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	navbarBlock := NewNavbarBlockType(store)
+
+	// Test custom CSS with Bootstrap 5
+	customCSS := ".navbar { background-color: #ff0000 !important; } .navbar-brand { color: #ffffff !important; }"
+
+	block := &TestNavbarBlock{
+		meta: map[string]string{
+			cmsstore.BLOCK_META_MENU_ID:               "test-menu",
+			cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE: "bootstrap5",
+			cmsstore.BLOCK_META_NAVBAR_CUSTOM_CSS:     customCSS,
+		},
+	}
+
+	// Test rendering with custom CSS
+	result, err := navbarBlock.Render(ctx, block)
+	if err != nil {
+		t.Errorf("Render returned error: %v", err)
+		return
+	}
+
+	// Check that custom CSS is included in style tags
+	if !contains(result, "<style>") {
+		t.Error("Expected result to contain <style> tag")
+	}
+
+	if !contains(result, "</style>") {
+		t.Error("Expected result to contain </style> tag")
+	}
+
+	if !contains(result, customCSS) {
+		t.Error("Expected result to contain custom CSS content")
+	}
+
+	// Test custom CSS with plain rendering
+	block.meta[cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE] = "plain"
+	result, err = navbarBlock.Render(ctx, block)
+	if err != nil {
+		t.Errorf("Render returned error: %v", err)
+		return
+	}
+
+	// Check that custom CSS is included in style tags for plain rendering too
+	if !contains(result, "<style>") {
+		t.Error("Expected plain result to contain <style> tag")
+	}
+
+	if !contains(result, "</style>") {
+		t.Error("Expected plain result to contain </style> tag")
+	}
+
+	if !contains(result, customCSS) {
+		t.Error("Expected plain result to contain custom CSS content")
+	}
+
+	// Test without custom CSS (should not include style tags)
+	delete(block.meta, cmsstore.BLOCK_META_NAVBAR_CUSTOM_CSS)
+	result, err = navbarBlock.Render(ctx, block)
+	if err != nil {
+		t.Errorf("Render returned error: %v", err)
+		return
+	}
+
+	if contains(result, "<style>") {
+		t.Error("Expected result to NOT contain <style> tag when no custom CSS is provided")
+	}
+}
+
+// TestNavbarBlockType_SaveAdminFields_CustomCSS tests saving custom CSS field
+func TestNavbarBlockType_SaveAdminFields_CustomCSS(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	navbarBlock := NewNavbarBlockType(store)
+
+	// Create a mock block
+	block := &TestNavbarBlock{
+		meta: map[string]string{},
+	}
+
+	// Create a real http.Request with form data including custom CSS
+	req, _ := http.NewRequest("POST", "/test", nil)
+	req.Form = map[string][]string{
+		"menu_id":               {"test-menu"},
+		"navbar_style":          {"default"},
+		"navbar_rendering_mode": {"bootstrap5"},
+		"navbar_custom_css":     {".navbar { background: blue; }"},
+	}
+
+	// Test saving admin fields with custom CSS
+	err = navbarBlock.SaveAdminFields(req, block)
+	if err != nil {
+		t.Errorf("Expected no error saving admin fields, got: %v", err)
+		return
+	}
+
+	// Verify that custom CSS meta data was saved
+	expectedCSS := ".navbar { background: blue; }"
+	if block.meta[cmsstore.BLOCK_META_NAVBAR_CUSTOM_CSS] != expectedCSS {
+		t.Errorf("Expected custom CSS to be '%s', got '%s'", expectedCSS, block.meta[cmsstore.BLOCK_META_NAVBAR_CUSTOM_CSS])
+	}
+}
+
 // Helper function to check if a string contains a substring
 func contains(s, substr string) bool {
 	return strings.Contains(s, substr)

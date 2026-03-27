@@ -68,6 +68,7 @@ func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterf
 
 	cssClass := block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_CLASS)
 	cssID := block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_ID)
+	customCSS := block.Meta(cmsstore.BLOCK_META_NAVBAR_CUSTOM_CSS)
 
 	brandText := block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_TEXT)
 	brandURL := block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_URL)
@@ -79,7 +80,7 @@ func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterf
 	dark := block.Meta(cmsstore.BLOCK_META_NAVBAR_DARK) == "true"
 
 	// Use the navbar renderer with unique ID based on block ID
-	return renderNavbarHTML(ctx, t.store, block.ID(), menuItems, style, renderingMode, cssClass, cssID, brandText, brandURL, fixed, dark)
+	return renderNavbarHTML(ctx, t.store, block.ID(), menuItems, style, renderingMode, cssClass, cssID, brandText, brandURL, fixed, dark, customCSS)
 }
 
 // GetAdminFields returns form fields for editing navbar block configuration.
@@ -217,6 +218,13 @@ func (t *NavbarBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.
 				},
 			},
 		}),
+		form.NewField(form.FieldOptions{
+			Label: "Custom CSS",
+			Name:  "navbar_custom_css",
+			Type:  form.FORM_FIELD_TYPE_TEXTAREA,
+			Value: block.Meta(cmsstore.BLOCK_META_NAVBAR_CUSTOM_CSS),
+			Help:  "Custom CSS styles to be applied to this navbar (will be wrapped in &lt;style&gt;...&lt;/style&gt; tags)",
+		}),
 	}
 
 	return fieldsContent
@@ -235,6 +243,7 @@ func (t *NavbarBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockI
 	dark := r.FormValue("navbar_dark")
 	cssClass := r.FormValue("navbar_css_class")
 	cssID := r.FormValue("navbar_css_id")
+	customCSS := r.FormValue("navbar_custom_css")
 
 	block.SetMeta(cmsstore.BLOCK_META_MENU_ID, menuID)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_STYLE, style)
@@ -245,6 +254,7 @@ func (t *NavbarBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockI
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_DARK, dark)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_CSS_CLASS, cssClass)
 	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_CSS_ID, cssID)
+	block.SetMeta(cmsstore.BLOCK_META_NAVBAR_CUSTOM_CSS, customCSS)
 
 	return nil
 }

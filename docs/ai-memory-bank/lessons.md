@@ -3,6 +3,25 @@
 ## Overview
 Analysis of test coverage for CMS Store MCP (Model Context Protocol) tools conducted on 2026-03-06.
 
+## [2026-03-27] Navbar Custom CSS Feature
+- **Feature**: Added custom CSS support to navbar blocks allowing users to add custom styles
+- **Implementation**: 
+  - Added `BLOCK_META_NAVBAR_CUSTOM_CSS` constant for storing custom CSS in block metadata
+  - Added textarea field in admin interface for custom CSS input
+  - Modified renderer to wrap custom CSS in `<style>` tags above navbar HTML
+  - Works for both Bootstrap 5 and plain rendering modes
+- **Key Changes**:
+  - `consts.go`: Added `BLOCK_META_NAVBAR_CUSTOM_CSS` constant
+  - `navbar_block_type.go`: Added custom CSS field to admin form and save functionality
+  - `renderer.go`: Updated both `renderBootstrap5Navbar` and `renderPlainNavbar` to include style tags
+- **Test Coverage**: Added comprehensive tests:
+  - `TestNavbarBlockType_CustomCSS`: Tests rendering with custom CSS for both Bootstrap and plain modes
+  - `TestNavbarBlockType_SaveAdminFields_CustomCSS`: Tests saving custom CSS from admin form
+- **Usage**: Users can now add custom CSS in the navbar admin interface, which will be rendered as `<style>{custom_css}</style>` above the navbar HTML
+- **Files Modified**: `consts.go`, `blocks/navbar/navbar_block_type.go`, `blocks/navbar/renderer.go`, `blocks/navbar/navbar_block_type_test.go`
+- **Impact**: Enhanced navbar customization capabilities without requiring external CSS files
+- **Application**: Use custom CSS field to apply navbar-specific styles that override default framework styling
+
 ## [2026-03-27] Block Type Field Value Mismatch Bug Fix
 - **Issue**: Published blocks were triggering "Block type can only be changed while the block is in draft status" error even when no type change was being made
 - **Root Cause**: For published blocks, the readonly type field was using `typeDisplay` (human-readable label like "Navbar") as its value instead of the actual `blockType` (internal key like "navbar"). When the form was submitted, `data.formType` contained "Navbar" while `data.block.Type()` returned "navbar", causing the validation to incorrectly detect a type change.
