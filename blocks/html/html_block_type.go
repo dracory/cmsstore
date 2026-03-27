@@ -32,7 +32,8 @@ func (t *HTMLBlockType) TypeLabel() string {
 }
 
 // Render renders an HTML block by returning its content as-is.
-func (t *HTMLBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+// Supports optional 'wrap' attribute to wrap content in an HTML element.
+func (t *HTMLBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, opts ...cmsstore.RenderOption) (string, error) {
 	if block == nil {
 		return "<!-- Block is nil -->", nil
 	}
@@ -40,6 +41,18 @@ func (t *HTMLBlockType) Render(ctx context.Context, block cmsstore.BlockInterfac
 	if content == "" {
 		return "<!-- Empty block content -->", nil
 	}
+
+	// Parse render options
+	options := &cmsstore.RenderOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	// Apply wrapper if specified
+	if wrapper := options.Attributes["wrap"]; wrapper != "" {
+		return "<" + wrapper + ">" + content + "</" + wrapper + ">", nil
+	}
+
 	return content, nil
 }
 

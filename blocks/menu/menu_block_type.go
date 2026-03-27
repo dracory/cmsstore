@@ -44,7 +44,8 @@ func (t *MenuBlockType) TypeLabel() string {
 }
 
 // Render renders a menu block by loading menu items and generating HTML.
-func (t *MenuBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+// Supports runtime attributes: depth, style, class, id for dynamic configuration.
+func (t *MenuBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, opts ...cmsstore.RenderOption) (string, error) {
 	if block == nil {
 		t.logger.Error("renderMenuBlock: Block is nil")
 		return "<!-- Block is nil -->", nil
@@ -92,20 +93,53 @@ func (t *MenuBlockType) Render(ctx context.Context, block cmsstore.BlockInterfac
 		t.logger.Error("renderMenuBlock: No active menu items found", "menuID", menuID, "menuName", menu.Name())
 	}
 
-	style := block.Meta(cmsstore.BLOCK_META_MENU_STYLE)
+	// Parse render options
+	options := &cmsstore.RenderOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	// Get style: runtime attribute > block meta > default
+	style := options.Attributes["style"]
+	if style == "" {
+		style = block.Meta(cmsstore.BLOCK_META_MENU_STYLE)
+	}
 	if style == "" {
 		style = cmsstore.BLOCK_MENU_STYLE_VERTICAL
 	}
 
-	renderingMode := block.Meta(cmsstore.BLOCK_META_MENU_RENDERING_MODE)
+	// Get rendering mode: runtime attribute > block meta > default
+	renderingMode := options.Attributes["mode"]
+	if renderingMode == "" {
+		renderingMode = block.Meta(cmsstore.BLOCK_META_MENU_RENDERING_MODE)
+	}
 	if renderingMode == "" {
 		renderingMode = cmsstore.BLOCK_MENU_RENDERING_PLAIN
 	}
 
-	cssClass := block.Meta(cmsstore.BLOCK_META_MENU_CSS_CLASS)
-	cssID := block.Meta(cmsstore.BLOCK_META_MENU_CSS_ID)
-	startLevel := cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_START_LEVEL))
-	maxDepth := cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_MAX_DEPTH))
+	// Get CSS class: runtime attribute > block meta
+	cssClass := options.Attributes["class"]
+	if cssClass == "" {
+		cssClass = block.Meta(cmsstore.BLOCK_META_MENU_CSS_CLASS)
+	}
+
+	// Get CSS ID: runtime attribute > block meta
+	cssID := options.Attributes["id"]
+	if cssID == "" {
+		cssID = block.Meta(cmsstore.BLOCK_META_MENU_CSS_ID)
+	}
+
+	// Get start level: runtime attribute > block meta > 0
+	startLevel := cast.ToInt(options.Attributes["start-level"])
+	if startLevel == 0 {
+		startLevel = cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_START_LEVEL))
+	}
+
+	// Get max depth: runtime attribute > block meta > 0 (unlimited)
+	maxDepth := cast.ToInt(options.Attributes["depth"])
+	if maxDepth == 0 {
+		maxDepth = cast.ToInt(block.Meta(cmsstore.BLOCK_META_MENU_MAX_DEPTH))
+	}
 
 	// Use the menu renderer from frontend/blocks/menu package
 	// This delegates to the existing comprehensive menu rendering logic

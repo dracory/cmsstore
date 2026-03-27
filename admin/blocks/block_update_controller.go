@@ -200,15 +200,25 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Child(hb.HR().Class("mt-4")).
 		Child(hb.Div().
 			Class("text-info mb-2").
-			Text("To use this block in your website use the following shortcode:").
+			Text("To use this block in your website use one of the following syntaxes:").
 			Child(hb.BR())).
 		Child(hb.PRE().
 			Child(hb.Code().
-				Text(`<!-- START: Block: ` + data.block.Name() + ` -->`).
+				Text(`<!-- Legacy Syntax -->`).
 				Text("\n").
 				Text(`[[BLOCK_` + data.blockID + `]]`).
+				Text("\n\n").
+				Text(`<!-- New Attribute Syntax (Primary) -->`).
 				Text("\n").
-				Text(`<!-- END: Block: ` + data.block.Name() + ` -->`)))
+				Text(`<block id="` + data.blockID + `" />`).
+				Text("\n\n").
+				Text(`<!-- With Runtime Attributes -->`).
+				Text("\n").
+				Text(`<block id="` + data.blockID + `" depth="2" style="horizontal" />`).
+				Text("\n\n").
+				Text(`<!-- Alternative Syntax (for HTML attributes) -->`).
+				Text("\n").
+				Text(`[[block id='` + data.blockID + `']]`)))
 }
 
 func (controller blockUpdateController) form(data blockUpdateControllerData) hb.TagInterface {

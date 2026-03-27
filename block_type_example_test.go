@@ -30,7 +30,7 @@ func (t *GalleryBlockType) TypeLabel() string {
 }
 
 // Render implements frontend rendering logic.
-func (t *GalleryBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+func (t *GalleryBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, opts ...cmsstore.RenderOption) (string, error) {
 	// Parse gallery data from block content
 	var images []GalleryImage
 	if err := json.Unmarshal([]byte(block.Content()), &images); err != nil {
@@ -194,7 +194,7 @@ func (t *VueTreeBlockType) TypeLabel() string {
 	return "Interactive Tree (Vue.js)"
 }
 
-func (t *VueTreeBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+func (t *VueTreeBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, opts ...cmsstore.RenderOption) (string, error) {
 	treeData := block.Content()
 	blockID := block.ID()
 	cssClass := block.Meta("css_class")

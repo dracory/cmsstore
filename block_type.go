@@ -79,14 +79,20 @@ type BlockType interface {
 	// Render renders the block for frontend display.
 	// This is called when the block appears on a page.
 	//
+	// Options can include runtime attributes via WithAttributes(attrs).
+	// Example:
+	//   blockType.Render(ctx, block) // Without attributes
+	//   blockType.Render(ctx, block, WithAttributes(map[string]string{"depth": "2"})) // With attributes
+	//
 	// Parameters:
 	//   - ctx: Request context
 	//   - block: The block to render
+	//   - opts: Optional render options (variadic)
 	//
 	// Returns:
 	//   - HTML string to display on the page
 	//   - Error if rendering fails
-	Render(ctx context.Context, block BlockInterface) (string, error)
+	Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error)
 
 	// GetAdminFields returns form fields for the admin content editing tab.
 	//
@@ -254,4 +260,55 @@ func GetSystemBlockTypes() map[string]BlockType {
 // GetCustomBlockTypes returns all custom (user-defined) block types.
 func GetCustomBlockTypes() map[string]BlockType {
 	return globalBlockTypeRegistry.GetByOrigin(BLOCK_ORIGIN_CUSTOM)
+}
+
+// RenderOption configures block rendering behavior.
+type RenderOption func(*RenderOptions)
+
+// RenderOptions holds rendering configuration.
+type RenderOptions struct {
+	// Attributes contains runtime attributes passed via block reference syntax.
+	// Example: <block id="menu" depth="2" /> results in {"depth": "2"}
+	Attributes map[string]string
+}
+
+// WithAttributes passes runtime attributes to the block renderer.
+// Used when blocks are referenced with attribute syntax:
+//
+//	<block id="menu_main" depth="2" style="sidebar" />
+//	[[block id='menu_main' depth='2' style='sidebar']]
+func WithAttributes(attrs map[string]string) RenderOption {
+	return func(opts *RenderOptions) {
+		opts.Attributes = attrs
+	}
+}
+
+// BlockAttributeDefinition describes a single runtime attribute.
+type BlockAttributeDefinition struct {
+	// Name is the attribute name (e.g., "depth", "style")
+	Name string
+
+	// Type is the attribute type: "string", "int", "bool", "enum", "float"
+	Type string
+
+	// Required indicates whether the attribute is required
+	Required bool
+
+	// Default is the default value if not provided
+	Default interface{}
+
+	// Description is a human-readable description
+	Description string
+
+	// EnumValues lists valid values for enum type
+	EnumValues []string
+
+	// Validation is a validation rule: "range:1,10", "regex:^[a-z]+$", etc.
+	Validation string
+
+	// MinValue is the minimum value (for int/float types)
+	MinValue *float64
+
+	// MaxValue is the maximum value (for int/float types)
+	MaxValue *float64
 }

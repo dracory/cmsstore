@@ -32,20 +32,44 @@ func (t *BreadcrumbsBlockType) TypeLabel() string {
 }
 
 // Render renders the breadcrumbs block for frontend display
-func (t *BreadcrumbsBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
-	style := block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_STYLE)
+// Supports runtime attributes for dynamic configuration
+func (t *BreadcrumbsBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, opts ...cmsstore.RenderOption) (string, error) {
+	// Parse render options
+	options := &cmsstore.RenderOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	style := options.Attributes["style"]
+	if style == "" {
+		style = block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_STYLE)
+	}
 	if style == "" {
 		style = cmsstore.BLOCK_BREADCRUMBS_STYLE_DEFAULT
 	}
 
-	renderingMode := block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_RENDERING_MODE)
+	renderingMode := options.Attributes["mode"]
+	if renderingMode == "" {
+		renderingMode = block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_RENDERING_MODE)
+	}
 	if renderingMode == "" {
 		renderingMode = cmsstore.BLOCK_BREADCRUMBS_RENDERING_BOOTSTRAP5
 	}
 
-	cssClass := block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_CSS_CLASS)
-	cssID := block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_CSS_ID)
-	separator := block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR)
+	cssClass := options.Attributes["class"]
+	if cssClass == "" {
+		cssClass = block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_CSS_CLASS)
+	}
+
+	cssID := options.Attributes["id"]
+	if cssID == "" {
+		cssID = block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_CSS_ID)
+	}
+
+	separator := options.Attributes["separator"]
+	if separator == "" {
+		separator = block.Meta(cmsstore.BLOCK_META_BREADCRUMBS_SEPARATOR)
+	}
 	if separator == "" {
 		separator = "/"
 	}

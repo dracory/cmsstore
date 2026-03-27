@@ -571,6 +571,13 @@ func (frontend *frontend) renderContentToHtml(
 		return "", err
 	}
 
+	// Apply new block attribute syntax: <block id="..." attr="value" />
+	content, err = frontend.applyBlockAttributeSyntax(r, content)
+
+	if err != nil {
+		return "", err
+	}
+
 	content, err = frontend.contentRenderPageURLs(r.Context(), content)
 
 	if err != nil {

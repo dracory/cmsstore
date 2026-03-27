@@ -33,7 +33,8 @@ func (t *NavbarBlockType) TypeLabel() string {
 }
 
 // Render renders the navbar block for frontend display
-func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+// Supports runtime attributes for dynamic configuration
+func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, opts ...cmsstore.RenderOption) (string, error) {
 	menuID := block.Meta(cmsstore.BLOCK_META_MENU_ID)
 	if menuID == "" {
 		return "", fmt.Errorf("no menu ID specified for navbar block")
@@ -55,19 +56,39 @@ func (t *NavbarBlockType) Render(ctx context.Context, block cmsstore.BlockInterf
 		return "", fmt.Errorf("failed to get menu items: %w", err)
 	}
 
-	// Get rendering configuration
-	style := block.Meta(cmsstore.BLOCK_META_NAVBAR_STYLE)
+	// Parse render options
+	options := &cmsstore.RenderOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	// Get rendering configuration with runtime attribute support
+	style := options.Attributes["style"]
+	if style == "" {
+		style = block.Meta(cmsstore.BLOCK_META_NAVBAR_STYLE)
+	}
 	if style == "" {
 		style = cmsstore.BLOCK_NAVBAR_STYLE_DEFAULT
 	}
 
-	renderingMode := block.Meta(cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE)
+	renderingMode := options.Attributes["mode"]
+	if renderingMode == "" {
+		renderingMode = block.Meta(cmsstore.BLOCK_META_NAVBAR_RENDERING_MODE)
+	}
 	if renderingMode == "" {
 		renderingMode = cmsstore.BLOCK_NAVBAR_RENDERING_BOOTSTRAP5
 	}
 
-	cssClass := block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_CLASS)
-	cssID := block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_ID)
+	cssClass := options.Attributes["class"]
+	if cssClass == "" {
+		cssClass = block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_CLASS)
+	}
+
+	cssID := options.Attributes["id"]
+	if cssID == "" {
+		cssID = block.Meta(cmsstore.BLOCK_META_NAVBAR_CSS_ID)
+	}
+
 	customCSS := block.Meta(cmsstore.BLOCK_META_NAVBAR_CUSTOM_CSS)
 
 	brandText := block.Meta(cmsstore.BLOCK_META_NAVBAR_BRAND_TEXT)

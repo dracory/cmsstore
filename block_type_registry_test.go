@@ -11,7 +11,7 @@ type testSystemBlock struct{}
 
 func (t *testSystemBlock) TypeKey() string   { return "test_system" }
 func (t *testSystemBlock) TypeLabel() string { return "Test System Block" }
-func (t *testSystemBlock) Render(ctx context.Context, block BlockInterface) (string, error) {
+func (t *testSystemBlock) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
 	return "", nil
 }
 func (t *testSystemBlock) GetAdminFields(block BlockInterface, r *http.Request) interface{} {
@@ -25,7 +25,7 @@ type testCustomBlock struct{}
 
 func (t *testCustomBlock) TypeKey() string   { return "test_custom" }
 func (t *testCustomBlock) TypeLabel() string { return "Test Custom Block" }
-func (t *testCustomBlock) Render(ctx context.Context, block BlockInterface) (string, error) {
+func (t *testCustomBlock) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
 	return "", nil
 }
 func (t *testCustomBlock) GetAdminFields(block BlockInterface, r *http.Request) interface{} {

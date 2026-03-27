@@ -70,7 +70,8 @@ func (a *BlockTypeAdapter) TypeLabel() string {
 }
 
 // Render delegates to the wrapped renderer.
-func (a *BlockTypeAdapter) Render(ctx context.Context, block BlockInterface) (string, error) {
+// Attributes are ignored for legacy adapters.
+func (a *BlockTypeAdapter) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
 	if a.renderer == nil {
 		return "<!-- No renderer configured -->", nil
 	}
