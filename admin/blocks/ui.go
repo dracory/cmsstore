@@ -43,10 +43,10 @@ func initBlockAdminProviders(store cmsstore.StoreInterface, logger *slog.Logger)
 	// These are defined in blocks/html, blocks/menu, blocks/navbar, and blocks/breadcrumbs
 	// Using sync.Once prevents race conditions and duplicate registrations
 	blockTypesRegistered.Do(func() {
-		cmsstore.RegisterBlockType(htmlblock.NewHTMLBlockType())
-		cmsstore.RegisterBlockType(menublock.NewMenuBlockType(store, logger))
-		cmsstore.RegisterBlockType(navbarblock.NewNavbarBlockType(store))
-		cmsstore.RegisterBlockType(breadcrumbsblock.NewBreadcrumbsBlockType(store))
+		cmsstore.RegisterSystemBlockType(htmlblock.NewHTMLBlockType())
+		cmsstore.RegisterSystemBlockType(menublock.NewMenuBlockType(store, logger))
+		cmsstore.RegisterSystemBlockType(navbarblock.NewNavbarBlockType(store))
+		cmsstore.RegisterSystemBlockType(breadcrumbsblock.NewBreadcrumbsBlockType(store))
 	})
 
 	// The local registry is kept empty for backward compatibility

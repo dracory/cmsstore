@@ -143,7 +143,7 @@ func initBlockRenderers(f *frontend, store cmsstore.StoreInterface) *BlockRender
 	registry.Register(cmsstore.BLOCK_TYPE_MENU, menu.NewBlockRenderer(f))
 
 	// Register Navbar block type globally so it's available for frontend rendering
-	cmsstore.RegisterBlockType(navbar.NewNavbarBlockType(store))
+	cmsstore.RegisterSystemBlockType(navbar.NewNavbarBlockType(store))
 
 	return registry
 }

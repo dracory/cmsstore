@@ -363,19 +363,16 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 
 				// Create type badge
 				blockType := block.Type()
+				blockTypeDef := cmsstore.GetBlockType(blockType)
+				typeLabel := lo.IfF(blockTypeDef != nil, func() string { return blockTypeDef.TypeLabel() }).Else(blockType)
+				typeOrigin := cmsstore.GetBlockTypeOrigin(blockType)
 				typeBadge := hb.Span().
 					Class("badge").
 					Style("font-size: 11px;").
-					ClassIf(blockType == cmsstore.BLOCK_TYPE_HTML, "bg-primary").
-					ClassIf(blockType == cmsstore.BLOCK_TYPE_MENU, "bg-success").
-					ClassIf(blockType == cmsstore.BLOCK_TYPE_NAVBAR, "bg-info").
-					ClassIf(blockType == cmsstore.BLOCK_TYPE_BREADCRUMBS, "bg-warning").
+					ClassIf(typeOrigin == cmsstore.BLOCK_ORIGIN_SYSTEM, "bg-success").
+					ClassIf(typeOrigin == cmsstore.BLOCK_ORIGIN_CUSTOM, "bg-info").
 					ClassIf(blockType == "", "bg-secondary").
-					HTML(lo.If(blockType == cmsstore.BLOCK_TYPE_HTML, "HTML").
-						ElseIf(blockType == cmsstore.BLOCK_TYPE_MENU, "Menu").
-						ElseIf(blockType == cmsstore.BLOCK_TYPE_NAVBAR, "Navbar").
-						ElseIf(blockType == cmsstore.BLOCK_TYPE_BREADCRUMBS, "Breadcrumbs").
-						Else("Unknown"))
+					HTML(typeLabel)
 
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
@@ -427,14 +424,14 @@ func (controller *blockManagerController) sortableColumnLabel(data blockManagerC
 	}
 
 	link := shared.URLR(data.request, shared.PathBlocksBlockManager, map[string]string{
-		"page":        "0",
-		"by":          columnName,
-		"sort":        direction,
-		"date_from":   data.formCreatedFrom,
-		"date_to":     data.formCreatedTo,
-		"status":      data.formStatus,
-		"block_id":    data.formBlockID,
-		"type":        data.formType,
+		"page":      "0",
+		"by":        columnName,
+		"sort":      direction,
+		"date_from": data.formCreatedFrom,
+		"date_to":   data.formCreatedTo,
+		"status":    data.formStatus,
+		"block_id":  data.formBlockID,
+		"type":      data.formType,
 	})
 	return hb.Hyperlink().
 		HTML(tableLabel).

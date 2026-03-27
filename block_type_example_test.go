@@ -159,19 +159,19 @@ func (e *ValidationError) Error() string {
 	return e.Message
 }
 
-// ExampleRegisterBlockType demonstrates how to register a custom block type.
+// ExampleRegisterCustomBlockType shows how to register a custom block type.
 //
 // This single registration makes the block type available in both:
 //   - Frontend rendering (when blocks are displayed on pages)
 //   - Admin UI (block type dropdown, edit forms, save logic)
-func ExampleRegisterBlockType() {
+func ExampleRegisterCustomBlockType() {
 	// Create your block type instance
 	galleryType := &GalleryBlockType{
 		store: nil, // Pass your store instance here
 	}
 
 	// Register it globally - that's it!
-	cmsstore.RegisterBlockType(galleryType)
+	cmsstore.RegisterCustomBlockType(galleryType)
 
 	// Now the "gallery" block type is fully functional:
 	// - Appears in admin UI block type dropdown as "Gallery Block"

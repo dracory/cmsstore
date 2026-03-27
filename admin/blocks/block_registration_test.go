@@ -19,8 +19,8 @@ func TestBlockRegistration(t *testing.T) {
 	}
 
 	// Manually register the blocks (simulating what admin UI does)
-	cmsstore.RegisterBlockType(navbar.NewNavbarBlockType(store))
-	cmsstore.RegisterBlockType(breadcrumbs.NewBreadcrumbsBlockType(store))
+	cmsstore.RegisterSystemBlockType(navbar.NewNavbarBlockType(store))
+	cmsstore.RegisterSystemBlockType(breadcrumbs.NewBreadcrumbsBlockType(store))
 
 	// Check if blocks are registered in the global registry
 	navbarBlock := cmsstore.GetBlockType(cmsstore.BLOCK_TYPE_NAVBAR)

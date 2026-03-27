@@ -57,6 +57,14 @@ import (
 //
 // This single registration automatically makes the block type available in both
 // frontend rendering and admin UI.
+const (
+	// BLOCK_ORIGIN_SYSTEM for built-in block types
+	BLOCK_ORIGIN_SYSTEM = "system"
+
+	// BLOCK_ORIGIN_CUSTOM for user-defined block types
+	BLOCK_ORIGIN_CUSTOM = "custom"
+)
+
 type BlockType interface {
 	// TypeKey returns the unique identifier for this block type.
 	// This is stored in the database and used for lookups.
@@ -114,30 +122,35 @@ type BlockType interface {
 //
 // The registry is thread-safe and can be accessed concurrently.
 type BlockTypeRegistry struct {
-	types map[string]BlockType
-	mu    sync.RWMutex
+	types   map[string]BlockType
+	origins map[string]string // typeKey -> origin (system/custom)
+	mu      sync.RWMutex
 }
 
 var globalBlockTypeRegistry = &BlockTypeRegistry{
-	types: make(map[string]BlockType),
+	types:   make(map[string]BlockType),
+	origins: make(map[string]string),
 }
 
-// RegisterBlockType registers a block type globally.
+// RegisterSystemBlockType registers a system (built-in) block type.
 //
-// This is the recommended way to add custom block types. A single registration
-// makes the block type available in both frontend rendering and admin UI.
+// This is used internally by the CMS for built-in types like HTML, Menu, Navbar.
+// For user-defined custom block types, use RegisterCustomBlockType instead.
+func RegisterSystemBlockType(blockType BlockType) {
+	globalBlockTypeRegistry.RegisterWithOrigin(blockType, BLOCK_ORIGIN_SYSTEM)
+}
+
+// RegisterCustomBlockType registers a user-defined (custom) block type.
 //
-// Example:
-//
-//	cmsstore.RegisterBlockType(&GalleryBlockType{store: store})
-//
-// The block type will automatically be available:
-//   - In the admin UI block type dropdown
-//   - For frontend rendering when blocks of this type are displayed
-//
-// This method is thread-safe.
-func RegisterBlockType(blockType BlockType) {
-	globalBlockTypeRegistry.Register(blockType)
+// Use this for your own custom block types. The CMS will treat these as
+// user-defined and display them with a different badge color (cyan).
+func RegisterCustomBlockType(blockType BlockType) {
+	globalBlockTypeRegistry.RegisterWithOrigin(blockType, BLOCK_ORIGIN_CUSTOM)
+}
+
+// GetBlockTypeOrigin returns the origin for a block type (system/custom).
+func GetBlockTypeOrigin(typeKey string) string {
+	return globalBlockTypeRegistry.GetOrigin(typeKey)
 }
 
 // GetBlockType retrieves a registered block type by its key.
@@ -164,6 +177,14 @@ func (r *BlockTypeRegistry) Register(blockType BlockType) {
 	r.types[blockType.TypeKey()] = blockType
 }
 
+// RegisterWithOrigin registers a block type with a specified origin.
+func (r *BlockTypeRegistry) RegisterWithOrigin(blockType BlockType, origin string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.types[blockType.TypeKey()] = blockType
+	r.origins[blockType.TypeKey()] = origin
+}
+
 // Get retrieves a block type by its key.
 func (r *BlockTypeRegistry) Get(typeKey string) BlockType {
 	r.mu.RLock()
@@ -184,6 +205,17 @@ func (r *BlockTypeRegistry) GetAll() map[string]BlockType {
 	return copy
 }
 
+// GetOrigin returns the origin for a block type (system/custom).
+// Returns BLOCK_ORIGIN_CUSTOM as default if not explicitly set.
+func (r *BlockTypeRegistry) GetOrigin(typeKey string) string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if origin, ok := r.origins[typeKey]; ok {
+		return origin
+	}
+	return BLOCK_ORIGIN_CUSTOM
+}
+
 // GetKeys returns all registered block type keys.
 func (r *BlockTypeRegistry) GetKeys() []string {
 	r.mu.RLock()
@@ -194,4 +226,32 @@ func (r *BlockTypeRegistry) GetKeys() []string {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+// GetByOrigin returns all block types with the specified origin.
+//
+// Use BLOCK_ORIGIN_SYSTEM for built-in types, BLOCK_ORIGIN_CUSTOM for user-defined.
+func (r *BlockTypeRegistry) GetByOrigin(origin string) map[string]BlockType {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	result := make(map[string]BlockType)
+	for typeKey, typeOrigin := range r.origins {
+		if typeOrigin == origin {
+			if bt, ok := r.types[typeKey]; ok {
+				result[typeKey] = bt
+			}
+		}
+	}
+	return result
+}
+
+// GetSystemBlockTypes returns all system (built-in) block types.
+func GetSystemBlockTypes() map[string]BlockType {
+	return globalBlockTypeRegistry.GetByOrigin(BLOCK_ORIGIN_SYSTEM)
+}
+
+// GetCustomBlockTypes returns all custom (user-defined) block types.
+func GetCustomBlockTypes() map[string]BlockType {
+	return globalBlockTypeRegistry.GetByOrigin(BLOCK_ORIGIN_CUSTOM)
 }
