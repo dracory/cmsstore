@@ -8,15 +8,15 @@ require (
 	github.com/dracory/blockeditor v0.24.0
 	github.com/dracory/bs v0.16.0
 	github.com/dracory/cdn v1.10.0
-	github.com/dracory/database v0.6.0
+	github.com/dracory/database v0.7.0
 	github.com/dracory/dataobject v1.6.0
 	github.com/dracory/env v1.0.0
 	github.com/dracory/form v0.21.0
 	github.com/dracory/hb v1.88.0
 	github.com/dracory/req v0.1.0
-	github.com/dracory/sb v0.20.0
+	github.com/dracory/sb v0.23.0
 	github.com/dracory/str v0.17.0
-	github.com/dracory/test v0.6.0
+	github.com/dracory/test v0.10.0
 	github.com/dracory/ui v0.17.0
 	github.com/dracory/uid v1.9.0
 	github.com/dracory/versionstore v0.6.0
@@ -36,6 +36,7 @@ require (
 	github.com/dracory/websrv v0.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/mocktools/go-smtp-mock v1.10.0 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
