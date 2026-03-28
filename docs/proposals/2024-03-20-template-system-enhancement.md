@@ -1,44 +1,92 @@
 # [Draft] Enhanced Template System
 
+## Status
+**[Draft]** - Basic template system implemented, advanced features pending
+
 ## Summary
-- **Problem**: Current template system lacks advanced features needed for complex layouts and dynamic content
-- **Solution**: Enhance template system with inheritance, composition, dynamic sections, and better caching
+- **Problem**: Current template system provides basic content wrapping but lacks advanced features for complex layouts
+- **Solution**: Enhance template system with inheritance, composition, dynamic sections, and template functions
 
-## Background
+## Current Implementation (As-Is)
 
-The CMS template system currently provides basic functionality:
-- Simple template rendering
-- Basic variable substitution
-- Limited layout reuse
-- No template inheritance
-- Basic caching
-- Limited dynamic content support
+The CMS Store currently has a simple template system:
 
-## Detailed Design
+**Template Entity:**
+```go
+// template_implementation.go
+type TemplateInterface interface {
+    ID() string
+    Name() string
+    Content() string
+    Handle() string
+    Status() string
+    // ... other fields
+}
+```
 
-### 1. Template Inheritance
+**Files:**
+- `template_implementation.go` - Template entity with dataobject pattern
+- `template_query.go` - Database queries for templates
+- `frontend/frontend.go` - Template rendering in `pageOrTemplateContent()`
+
+**Current Features:**
+- Template entity with CRUD operations
+- Page-to-template assignment via `page.TemplateID()`
+- Template content serves as wrapper for page content
+- Simple placeholder replacement (`[[PageTitle]]`, `[[PageContent]]`, etc.)
+- Template status (active/inactive)
+- Versioning support
+
+**Current Template Usage Flow:**
+```go
+// 1. Page requests render
+// 2. If page has TemplateID, load template content
+// 3. Template content becomes the base
+// 4. Page content available via [[PageContent]] placeholder
+// 5. Other placeholders: [[PageTitle]], [[PageMetaDescription]], etc.
+
+// Example template content:
+// <html>
+//   <head><title>[[PageTitle]]</title></head>
+//   <body>[[PageContent]]</body>
+// </html>
+```
+
+**Current Limitations:**
+- No template inheritance (no extends/block system)
+- No dynamic sections or section overriding
+- No template composition/components
+- No template functions (date, truncate, markdown, etc.)
+- No rich template context (only basic placeholders)
+- No asset management or fingerprinting
+- No conditional logic in templates
+- No template caching beyond basic TTL
+
+## Proposed Enhanced Design (To-Be)
+
+### 1. Template Inheritance (Django/Jinja-style)
 
 ```go
 type Template struct {
     ID          string
     Name        string
     Content     string
-    Parent      *Template
+    Parent      *Template        // Parent template for inheritance
     Sections    map[string]*Section
-    Variables   map[string]interface{}
-    LastModified time.Time
 }
 
 type Section struct {
-    Name      string
-    Content   string
-    Override  bool
-    Append    bool
-    Prepend   bool
+    Name     string
+    Content  string
+    Override bool
+    Append   bool
+    Prepend  bool
 }
+```
 
-// Example template definition
-const baseTemplate = `
+**Template Syntax:**
+```html
+<!-- base.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -52,55 +100,17 @@ const baseTemplate = `
     {% block footer %}{% endblock %}
 </body>
 </html>
-`
 
-const pageTemplate = `
+<!-- page.html extends base -->
 {% extends "base.html" %}
-
 {% block title %}Home Page{% endblock %}
-
 {% block content %}
     <h1>Welcome</h1>
-    <div class="content">
-        {{ .PageContent }}
-    </div>
+    <div class="content">{{ .PageContent }}</div>
 {% endblock %}
-`
 ```
 
-### 2. Dynamic Sections
-
-```go
-type DynamicSection interface {
-    Render(ctx *Context) (string, error)
-    CacheKey() string
-    CacheDuration() time.Duration
-}
-
-type MenuSection struct {
-    MenuID string
-    Cache  CacheInterface
-}
-
-func (s *MenuSection) Render(ctx *Context) (string, error) {
-    cacheKey := s.CacheKey()
-    if cached, ok := s.Cache.Get(cacheKey); ok {
-        return cached.(string), nil
-    }
-
-    menu, err := ctx.Store.GetMenu(s.MenuID)
-    if err != nil {
-        return "", err
-    }
-
-    html := renderMenu(menu)
-    s.Cache.Set(cacheKey, html, s.CacheDuration())
-    
-    return html, nil
-}
-```
-
-### 3. Template Composition
+### 2. Template Composition
 
 ```go
 type TemplateComponent struct {
@@ -109,9 +119,10 @@ type TemplateComponent struct {
     Data     interface{}
     Cache    bool
 }
+```
 
-// Example component usage
-const headerComponent = `
+**Component Usage:**
+```html
 <header>
     {% component "menu" data=site.MainMenu %}
     {% component "search" %}
@@ -119,78 +130,22 @@ const headerComponent = `
         {% component "user-profile" data=user %}
     {% endif %}
 </header>
-`
-
-// Component registration
-func (t *TemplateEngine) RegisterComponent(name string, component *TemplateComponent) {
-    t.components[name] = component
-}
-
-// Component rendering
-func (t *TemplateEngine) RenderComponent(name string, data interface{}) (string, error) {
-    component, ok := t.components[name]
-    if !ok {
-        return "", fmt.Errorf("component not found: %s", name)
-    }
-
-    if component.Cache {
-        cacheKey := fmt.Sprintf("component:%s:%v", name, data)
-        if cached, ok := t.cache.Get(cacheKey); ok {
-            return cached.(string), nil
-        }
-    }
-
-    result, err := t.renderTemplate(component.Template, data)
-    if err != nil {
-        return "", err
-    }
-
-    if component.Cache {
-        t.cache.Set(cacheKey, result, defaultCacheDuration)
-    }
-
-    return result, nil
-}
 ```
 
-### 4. Template Functions
+### 3. Template Functions
 
 ```go
 type TemplateFuncMap map[string]interface{}
 
-// Register built-in functions
-func (t *TemplateEngine) registerBuiltinFuncs() {
-    t.funcMap = TemplateFuncMap{
-        "date": func(format string, date time.Time) string {
-            return date.Format(format)
-        },
-        "truncate": func(s string, length int) string {
-            if len(s) <= length {
-                return s
-            }
-            return s[:length] + "..."
-        },
-        "markdown": func(content string) template.HTML {
-            html := markdown.ToHTML([]byte(content), nil, nil)
-            return template.HTML(html)
-        },
-        "asset": func(path string) string {
-            return t.assetManager.GetURL(path)
-        },
-    }
-}
-
-// Custom function registration
-func (t *TemplateEngine) RegisterFunc(name string, fn interface{}) error {
-    if _, exists := t.funcMap[name]; exists {
-        return fmt.Errorf("function already registered: %s", name)
-    }
-    t.funcMap[name] = fn
-    return nil
-}
+// Built-in functions:
+// - date(format, time) - Format dates
+// - truncate(string, length) - Truncate text
+// - markdown(content) - Convert markdown to HTML
+// - asset(path) - Get asset URL with fingerprinting
+// - url(pageID) - Generate page URL
 ```
 
-### 5. Template Context
+### 4. Rich Template Context
 
 ```go
 type TemplateContext struct {
@@ -203,114 +158,77 @@ type TemplateContext struct {
     Cache      CacheInterface
     Logger     *slog.Logger
 }
-
-func NewTemplateContext(site *Site, page *Page) *TemplateContext {
-    return &TemplateContext{
-        Site:       site,
-        Page:       page,
-        Data:       make(map[string]interface{}),
-        Components: make(map[string]*TemplateComponent),
-        Logger:     slog.Default(),
-    }
-}
 ```
 
-### 6. Asset Management
+### 5. Asset Management
 
 ```go
 type AssetManager struct {
     baseURL     string
     filesystem  fs.FS
     cache       CacheInterface
-    fingerprint bool
+    fingerprint bool  // Add content hash to filenames
 }
 
-func (am *AssetManager) GetURL(path string) string {
-    if !am.fingerprint {
-        return filepath.Join(am.baseURL, path)
-    }
-
-    hash, err := am.getFileHash(path)
-    if err != nil {
-        return filepath.Join(am.baseURL, path)
-    }
-
-    ext := filepath.Ext(path)
-    base := strings.TrimSuffix(path, ext)
-    return filepath.Join(am.baseURL, fmt.Sprintf("%s.%s%s", base, hash, ext))
-}
-
-func (am *AssetManager) getFileHash(path string) (string, error) {
-    cacheKey := fmt.Sprintf("asset:hash:%s", path)
-    if hash, ok := am.cache.Get(cacheKey); ok {
-        return hash.(string), nil
-    }
-
-    content, err := fs.ReadFile(am.filesystem, path)
-    if err != nil {
-        return "", err
-    }
-
-    hash := fmt.Sprintf("%x", md5.Sum(content))[:8]
-    am.cache.Set(cacheKey, hash, 24*time.Hour)
-
-    return hash, nil
-}
+// Usage in template:
+// <link rel="stylesheet" href="{{ asset('css/main.css') }}">
+// → /css/main.a3f7b2c.css
 ```
 
-## Alternatives Considered
+## Implementation Status
 
-1. **Pure Go Templates**
-   - Pros: Native Go support, good performance
-   - Cons: Limited features, no inheritance
-   - Rejected: Need more advanced templating features
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Template entity (CRUD) | Implemented | `template_implementation.go` |
+| Page-template assignment | Implemented | `page.TemplateID()` |
+| Basic placeholder replacement | Implemented | `[[PageTitle]]`, `[[PageContent]]` |
+| Template status | Implemented | Active/Inactive |
+| Template versioning | Implemented | Via versioning system |
+| Template inheritance | Not implemented | No extends/block syntax |
+| Dynamic sections | Not implemented | No section override |
+| Template components | Not implemented | No component system |
+| Template functions | Not implemented | No date/truncate/etc |
+| Rich context | Not implemented | Only basic placeholders |
+| Asset management | Not implemented | No fingerprinting |
+| Conditional logic | Not implemented | No if/else in templates |
 
-2. **Third-party Template Engine**
-   - Pros: Feature-rich, maintained externally
-   - Cons: Additional dependency, learning curve
-   - Rejected: Need tight CMS integration
+## Migration Strategy
 
-3. **Custom DSL**
-   - Pros: Complete control, domain-specific features
-   - Cons: Complex implementation, maintenance burden
-   - Rejected: Template syntax is sufficient
+### Option 1: New Template Engine
+Create separate `TemplateEngine` with enhanced features, keep existing for backward compatibility.
 
-## Implementation Plan
+### Option 2: Extend Existing
+Add features incrementally without breaking existing templates.
 
-1. Phase 1: Core Features (2 weeks)
-   - Implement template inheritance
-   - Add dynamic sections
-   - Create component system
+**Example Migration Path:**
+1. Phase 1: Add template functions (backward compatible)
+2. Phase 2: Add component system (new opt-in syntax)
+3. Phase 3: Add inheritance (new opt-in syntax)
+4. Phase 4: Deprecate simple placeholders over time
 
-2. Phase 2: Functions & Context (2 weeks)
-   - Add template functions
-   - Enhance context system
-   - Implement asset management
+## Files to Modify (If Implementing)
 
-3. Phase 3: Caching & Performance (1 week)
-   - Optimize template parsing
-   - Implement caching strategy
-   - Add performance metrics
-
-4. Phase 4: Migration & Documentation (2 weeks)
-   - Update existing templates
-   - Create documentation
-   - Add examples
+1. New: `template_engine.go` - Template parsing and rendering
+2. New: `template_funcs.go` - Built-in template functions
+3. New: `template_inheritance.go` - Block/extends system
+4. New: `template_components.go` - Component system
+5. New: `asset_manager.go` - Asset fingerprinting
+6. `frontend/frontend.go` - Integrate new engine alongside existing
 
 ## Risks and Mitigations
 
 1. **Performance**
    - Risk: Template parsing overhead
-   - Mitigation: Aggressive caching, precompilation
+   - Mitigation: Pre-compile templates, aggressive caching
 
 2. **Complexity**
    - Risk: Template system becomes too complex
-   - Mitigation: Good documentation, helper functions
+   - Mitigation: Start simple, add features incrementally
 
 3. **Migration**
    - Risk: Breaking existing templates
-   - Mitigation: Backward compatibility layer
+   - Mitigation: Backward compatibility layer, gradual rollout
 
 4. **Security**
    - Risk: Template injection vulnerabilities
-   - Mitigation: Context escaping, security review 
+   - Mitigation: Context escaping, security review
