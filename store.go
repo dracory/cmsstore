@@ -37,6 +37,10 @@ type storeImplementation struct {
 	//versioningTableName string
 	versioningStore versionstore.StoreInterface
 
+	// Custom Entities
+	customEntitiesEnabled bool
+	customEntityStore     *CustomEntityStore
+
 	// Shortcodes
 	shortcodes  []ShortcodeInterface
 	middlewares []MiddlewareInterface
@@ -197,6 +201,16 @@ func (store *storeImplementation) TranslationsEnabled() bool {
 // VersioningEnabled checks if versioning is enabled.
 func (store *storeImplementation) VersioningEnabled() bool {
 	return store.versioningEnabled
+}
+
+// CustomEntitiesEnabled checks if custom entities are enabled.
+func (store *storeImplementation) CustomEntitiesEnabled() bool {
+	return store.customEntitiesEnabled
+}
+
+// CustomEntityStore returns the custom entity store.
+func (store *storeImplementation) CustomEntityStore() *CustomEntityStore {
+	return store.customEntityStore
 }
 
 // Shortcodes returns the list of shortcodes.

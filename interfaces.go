@@ -454,6 +454,10 @@ type StoreInterface interface {
 	AddMiddleware(middleware MiddlewareInterface)
 	AddMiddlewares(middlewares []MiddlewareInterface)
 	SetMiddlewares(middlewares []MiddlewareInterface)
+
+	// Custom Entities
+	CustomEntitiesEnabled() bool
+	CustomEntityStore() *CustomEntityStore
 }
 
 type TemplateInterface interface {

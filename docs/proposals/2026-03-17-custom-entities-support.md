@@ -1,7 +1,7 @@
-# [Draft] Implement Custom Entities Support
+# Implement Custom Entities Support
 
 ## Status
-**[Draft]** - Planned, never implemented, but **ready to implement** using existing libraries
+**[IMPLEMENTED]** - Core functionality complete, integrated with `dracory/entitystore`
 
 ## Summary
 - **Problem**: The CMS only supports predefined entity types (pages, blocks, menus, templates, translations) with no way to extend for custom business logic
@@ -503,7 +503,122 @@ This approach delivered:
 
 **Next Actions:**
 1. ✅ Implement relationships/taxonomy in entitystore (COMPLETE)
-2. Create `custom_entity_store.go` wrapper in cmsstore
-3. Add admin controllers using `dracory/crud`
-4. Register custom entity types in CMS
-5. Add relationship/taxonomy UI components
+2. ✅ Create `custom_entity_store.go` wrapper in cmsstore (COMPLETE)
+3. ⚠️ Add admin controllers using `dracory/crud` (PENDING)
+4. ✅ Register custom entity types in CMS (COMPLETE)
+5. ⚠️ Add relationship/taxonomy UI components (PENDING)
+
+## Implementation Summary
+
+### Files Created
+
+**Core Implementation:**
+- `custom_entity_definition.go` - Entity type and attribute definition structures
+- `custom_entity_store.go` - Wrapper around entitystore with CMS-specific functionality
+- `docs/CUSTOM_ENTITIES.md` - Comprehensive documentation and usage guide
+
+**Files Modified:**
+- `store.go` - Added custom entity fields to storeImplementation
+- `store_new.go` - Added custom entity initialization and options
+- `interfaces.go` - Added CustomEntitiesEnabled() and CustomEntityStore() methods
+- `go.mod` - Added github.com/dracory/entitystore dependency
+
+### Implementation Details
+
+**Phase 1: Storage Integration** ✅ COMPLETE
+- Created `CustomEntityStore` wrapper around `entitystore.StoreInterface`
+- Implemented attribute value conversion (string, int, float, bool)
+- Added validation for required attributes
+- Integrated relationship and taxonomy support
+
+**Phase 2: CMS Integration** ✅ COMPLETE
+- Added `CustomEntitiesEnabled` flag to store options
+- Implemented `CustomEntityStoreOptions` for configuration
+- Added `CustomEntityDefinitions` for registering entity types at initialization
+- Exposed custom entity store via `CustomEntityStore()` method
+
+**Phase 3: Admin Integration** ⚠️ PENDING
+- Admin controllers using `dracory/crud` not yet implemented
+- UI components for relationships/taxonomies not yet implemented
+- Can be added in future iteration without breaking changes
+
+### Usage Example
+
+```go
+store, err := cmsstore.NewStore(cmsstore.NewStoreOptions{
+    DB:                    db,
+    BlockTableName:        "cms_block",
+    PageTableName:         "cms_page",
+    SiteTableName:         "cms_site",
+    TemplateTableName:     "cms_template",
+    AutomigrateEnabled:    true,
+    CustomEntitiesEnabled: true,
+    CustomEntityStoreOptions: cmsstore.CustomEntityStoreOptions{
+        RelationshipsEnabled: true,
+        TaxonomiesEnabled:    true,
+    },
+    CustomEntityDefinitions: []cmsstore.CustomEntityDefinition{
+        {
+            Type:      "product",
+            TypeLabel: "Product",
+            Group:     "Shop",
+            Attributes: []cmsstore.CustomAttributeDefinition{
+                {Name: "title", Type: "string", Label: "Title", Required: true},
+                {Name: "price", Type: "float", Label: "Price", Required: true},
+            },
+            AllowRelationships: true,
+            AllowTaxonomies:    true,
+        },
+    },
+})
+
+// Create custom entity
+customStore := store.CustomEntityStore()
+productID, err := customStore.Create(ctx, "product", map[string]interface{}{
+    "title": "Laptop",
+    "price": 999.99,
+}, nil, nil)
+```
+
+### Benefits Achieved
+
+1. **Zero Schema Maintenance** - No migrations needed for new entity types
+2. **Type Safety** - Strongly-typed attribute setters prevent errors
+3. **Reusability** - Built on proven entitystore library
+4. **Optional Features** - Relationships and taxonomies can be enabled as needed
+5. **Backward Compatible** - Disabled by default, no impact on existing code
+6. **Time Savings** - 5-6 weeks saved vs building from scratch
+
+### Database Tables Created
+
+When `CustomEntitiesEnabled: true`:
+- `cms_custom_entity` - Core entity records
+- `cms_custom_attribute` - EAV attribute storage
+- `cms_custom_entity_trash` - Soft-deleted entities
+- `cms_custom_attribute_trash` - Soft-deleted attributes
+
+When `RelationshipsEnabled: true`:
+- `cms_custom_relationship` - Entity relationships
+- `cms_custom_relationship_trash` - Soft-deleted relationships
+
+When `TaxonomiesEnabled: true`:
+- `cms_custom_taxonomy` - Taxonomy definitions
+- `cms_custom_taxonomy_term` - Taxonomy terms
+- `cms_custom_entity_taxonomy` - Entity-term assignments
+- (Plus corresponding trash tables)
+
+### Testing Status
+
+- ✅ Core implementation complete
+- ⚠️ Comprehensive test suite pending
+- ✅ Integration with entitystore verified
+- ✅ Documentation complete
+
+### Future Enhancements
+
+1. Admin UI controllers using `dracory/crud`
+2. Relationship/taxonomy management UI
+3. Custom validation rules engine
+4. Full-text search integration
+5. Import/export utilities
+6. GraphQL API support

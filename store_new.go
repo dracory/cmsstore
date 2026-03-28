@@ -74,6 +74,15 @@ type NewStoreOptions struct {
 
 	// Middlewares is a list of middlewares to be registered
 	Middlewares []MiddlewareInterface
+
+	// CustomEntitiesEnabled enables custom entity support
+	CustomEntitiesEnabled bool
+
+	// CustomEntityStoreOptions holds configuration for custom entity store
+	CustomEntityStoreOptions CustomEntityStoreOptions
+
+	// CustomEntityDefinitions is a list of custom entity type definitions to register
+	CustomEntityDefinitions []CustomEntityDefinition
 }
 
 // NewStore creates a new CMS store based on the provided options.
@@ -130,6 +139,12 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		return nil, err
 	}
 
+	// Initialize custom entity store if custom entities are enabled
+	customEntityStore, err := initializeCustomEntityStore(opts)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create a new store instance with the provided options
 	store := &storeImplementation{
 		automigrateEnabled: opts.AutomigrateEnabled,
@@ -153,6 +168,9 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 
 		versioningEnabled: opts.VersioningEnabled,
 		versioningStore:   versionStore,
+
+		customEntitiesEnabled: opts.CustomEntitiesEnabled,
+		customEntityStore:     customEntityStore,
 
 		shortcodes:  opts.Shortcodes,
 		middlewares: opts.Middlewares,
@@ -200,4 +218,29 @@ func initializeVersioningStore(opts NewStoreOptions) (versionstore.StoreInterfac
 	}
 
 	return versionStore, nil
+}
+
+// initializeCustomEntityStore initializes a custom entity store if custom entities are enabled.
+func initializeCustomEntityStore(opts NewStoreOptions) (*CustomEntityStore, error) {
+	if !opts.CustomEntitiesEnabled {
+		return nil, nil
+	}
+
+	// Set defaults for custom entity store options
+	customOpts := opts.CustomEntityStoreOptions
+	customOpts.AutomigrateEnabled = opts.AutomigrateEnabled
+
+	customStore, err := NewCustomEntityStore(opts.DB, customOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Register custom entity type definitions
+	for _, def := range opts.CustomEntityDefinitions {
+		if err := customStore.RegisterEntityType(def); err != nil {
+			return nil, err
+		}
+	}
+
+	return customStore, nil
 }

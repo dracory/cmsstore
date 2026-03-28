@@ -26,12 +26,13 @@ require (
 	github.com/samber/lo v1.53.0
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
-	modernc.org/sqlite v1.47.0
+	modernc.org/sqlite v1.48.0
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dracory/crypto v0.3.0 // indirect
+	github.com/dracory/entitystore v1.5.0 // indirect
 	github.com/dracory/envenc v1.2.0 // indirect
 	github.com/dracory/websrv v0.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
