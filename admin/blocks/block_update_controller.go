@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/dracory/api"
 	"github.com/dracory/bs"
@@ -199,26 +200,24 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 		Child(card).
 		Child(hb.HR().Class("mt-4")).
 		Child(hb.Div().
-			Class("text-info mb-2").
-			Text("To use this block in your website use one of the following syntaxes:").
-			Child(hb.BR())).
-		Child(hb.PRE().
-			Child(hb.Code().
-				Text(`<!-- Legacy Syntax -->`).
-				Text("\n").
-				Text(`[[BLOCK_` + data.blockID + `]]`).
-				Text("\n\n").
-				Text(`<!-- New Attribute Syntax (Primary) -->`).
-				Text("\n").
-				Text(`<block id="` + data.blockID + `" />`).
-				Text("\n\n").
-				Text(`<!-- With Runtime Attributes -->`).
-				Text("\n").
-				Text(`<block id="` + data.blockID + `" depth="2" style="horizontal" />`).
-				Text("\n\n").
-				Text(`<!-- Alternative Syntax (for HTML attributes) -->`).
-				Text("\n").
-				Text(`[[block id='` + data.blockID + `']]`)))
+			Class("text-info mb-3").
+			Text("To use this block in your website, click to copy one of the following syntaxes:")).
+		Child(controller.codeSnippet(
+			"Legacy Syntax",
+			`<!-- START: Block: `+data.block.Name()+` -->`+"\n"+
+				`[[BLOCK_`+data.blockID+`]]`+"\n"+
+				`<!-- END: Block: `+data.block.Name()+` -->`)).
+		Child(controller.codeSnippet(
+			"New Attribute Syntax (Recommended)",
+			`<!-- START: Block with attributes: `+data.block.Name()+` -->`+"\n"+
+				`<block id="`+data.blockID+`" />`+"\n"+
+				`<!-- END: Block with attributes: `+data.block.Name()+` -->`)).
+		Child(controller.codeSnippet(
+			"With Runtime Attributes",
+			`<block id="`+data.blockID+`" depth="2" style="horizontal" />`)).
+		Child(controller.codeSnippet(
+			"Alternative Syntax (for HTML attributes)",
+			`[[block id='`+data.blockID+`']]`))
 }
 
 func (controller blockUpdateController) form(data blockUpdateControllerData) hb.TagInterface {
@@ -692,4 +691,42 @@ type blockUpdateControllerData struct {
 	formStatus         string
 	formTitle          string
 	formType           string
+}
+
+// codeSnippet creates a code snippet card with copy-to-clipboard functionality
+func (controller blockUpdateController) codeSnippet(title, code string) hb.TagInterface {
+	snippetID := "snippet-" + strings.ReplaceAll(strings.ToLower(title), " ", "-")
+
+	return hb.Div().
+		Class("card mb-3").
+		Child(hb.Div().
+			Class("card-header d-flex justify-content-between align-items-center").
+			Child(hb.Span().Text(title)).
+			Child(hb.Button().
+				Class("btn btn-sm btn-outline-primary").
+				Child(hb.I().Class("bi bi-clipboard")).
+				HTML(" Copy").
+				Attr("onclick", `
+					const code = document.getElementById('`+snippetID+`').textContent;
+					navigator.clipboard.writeText(code).then(() => {
+						const btn = event.target.closest('button');
+						const originalHTML = btn.innerHTML;
+						btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+						btn.classList.remove('btn-outline-primary');
+						btn.classList.add('btn-success');
+						setTimeout(() => {
+							btn.innerHTML = originalHTML;
+							btn.classList.remove('btn-success');
+							btn.classList.add('btn-outline-primary');
+						}, 2000);
+					});
+				`))).
+		Child(hb.Div().
+			Class("card-body p-0").
+			Child(hb.PRE().
+				Class("mb-0").
+				Style("background-color: #f8f9fa; padding: 1rem; border-radius: 0;").
+				Child(hb.Code().
+					ID(snippetID).
+					Text(code))))
 }
