@@ -1,25 +1,69 @@
 # [Draft] Standardized Error Handling
 
+## Status
+**[Draft]** - Basic error handling implemented, enhanced system pending
+
 ## Summary
-- **Problem**: Error handling across the CMS is inconsistent, making it difficult to debug issues and provide good user feedback
+- **Problem**: Error handling could be more consistent with better context and user feedback
 - **Solution**: Implement a standardized error handling system with proper error types, logging, and user feedback
 
-## Background
+## Current Implementation (As-Is)
 
-Current error handling has several issues:
-- Inconsistent error types and messages
-- Mixed logging levels
-- Unclear error recovery paths
-- Limited context in error messages
-- No standardized way to present errors to users
-- Difficult to track error patterns
+The CMS Store currently uses standard Go error handling patterns:
 
-## Detailed Design
+**Current Error Handling:**
+```go
+// Standard Go errors with slog logging
+func (frontend *frontend) PageRenderHtmlBySiteAndAlias(...) string {
+    page, err := frontend.pageFindBySiteAndAlias(r.Context(), siteID, alias)
+    
+    if err != nil {
+        frontend.logger.Error("PageRenderHtmlBySiteAndAlias: Error finding page", 
+            "alias", alias, "error", err)
+        return hb.NewDiv().Text("Error loading page").ToHTML()
+    }
+    
+    if page == nil {
+        frontend.logger.Warn("PageRenderHtmlBySiteAndAlias: Page not found", 
+            "alias", alias)
+        return hb.NewDiv().Text("Page with alias '").Text(alias).Text("' not found").ToHTML()
+    }
+    // ...
+}
+```
 
-### 1. Error Types Hierarchy
+**Files:**
+- Various implementation files use standard `error` returns
+- `frontend/frontend.go` - Uses `slog.Logger` for structured logging
+- `consts.go` - Basic error message constants:
+  ```go
+  const (
+      ERROR_EMPTY_ARRAY     = "array cannot be empty"
+      ERROR_EMPTY_STRING    = "string cannot be empty"
+      ERROR_NEGATIVE_NUMBER = "number cannot be negative"
+  )
+  ```
+
+**Current Features:**
+- Standard Go `error` interface usage
+- Structured logging with `slog.Logger` (Error, Warn, Info levels)
+- Context-rich log messages (keys: alias, error, templateID, etc.)
+- Graceful degradation (returns HTML error messages to users)
+- Error propagation up the call stack
+
+**Current Limitations:**
+- No structured error types (just `error` interface)
+- No error codes for programmatic handling
+- No validation error specifics (field, rule, value)
+- No centralized error handling middleware
+- No user-friendly error message mapping
+- No error metrics/monitoring
+
+## Proposed Enhanced Design (To-Be)
+
+### 1. Structured Error Types
 
 ```go
-// Base error type
 type CMSError struct {
     Code    string
     Message string
@@ -27,7 +71,6 @@ type CMSError struct {
     Cause   error
 }
 
-// Specific error types
 type ValidationError struct {
     CMSError
     Field   string
@@ -40,18 +83,6 @@ type NotFoundError struct {
     ResourceType string
     Identifier   string
 }
-
-type PermissionError struct {
-    CMSError
-    RequiredPermission string
-    UserPermissions   []string
-}
-
-type ProcessingError struct {
-    CMSError
-    Stage    string
-    Context  map[string]interface{}
-}
 ```
 
 ### 2. Error Codes System
@@ -59,55 +90,18 @@ type ProcessingError struct {
 ```go
 const (
     // Validation errors (1xxx)
-    ErrValidation           = "CMS-1000"
-    ErrInvalidInput        = "CMS-1001"
-    ErrMissingRequired     = "CMS-1002"
+    ErrValidation       = "CMS-1000"
+    ErrInvalidInput     = "CMS-1001"
+    ErrMissingRequired  = "CMS-1002"
     
     // Not found errors (2xxx)
-    ErrNotFound            = "CMS-2000"
-    ErrPageNotFound        = "CMS-2001"
-    ErrTemplateNotFound    = "CMS-2002"
-    ErrBlockNotFound       = "CMS-2003"
-    
-    // Permission errors (3xxx)
-    ErrPermissionDenied    = "CMS-3000"
-    ErrUnauthorized        = "CMS-3001"
-    
-    // Processing errors (4xxx)
-    ErrProcessing          = "CMS-4000"
-    ErrTemplateProcessing  = "CMS-4001"
-    ErrBlockProcessing     = "CMS-4002"
-    ErrCacheError          = "CMS-4003"
+    ErrNotFound         = "CMS-2000"
+    ErrPageNotFound     = "CMS-2001"
+    ErrTemplateNotFound = "CMS-2002"
 )
 ```
 
-### 3. Error Creation Helpers
-
-```go
-// Error factory functions
-func NewValidationError(field string, value interface{}, rule string) error {
-    return &ValidationError{
-        CMSError: CMSError{
-            Code:    ErrValidation,
-            Message: fmt.Sprintf("Validation failed for %s", field),
-        },
-        Field: field,
-        Value: value,
-        Rule:  rule,
-    }
-}
-
-// Error wrapping with context
-func WrapError(err error, code string, message string) error {
-    return &CMSError{
-        Code:    code,
-        Message: message,
-        Cause:   err,
-    }
-}
-```
-
-### 4. Standardized Error Handling
+### 3. Centralized Error Handler
 
 ```go
 func handleError(err error, w http.ResponseWriter, r *http.Request) {
@@ -124,64 +118,21 @@ func handleError(err error, w http.ResponseWriter, r *http.Request) {
             },
         }
         w.WriteHeader(http.StatusBadRequest)
-        
     case *NotFoundError:
         response = ErrorResponse{
             Code:    e.Code,
             Message: e.Message,
-            Details: map[string]interface{}{
-                "resourceType": e.ResourceType,
-                "identifier":   e.Identifier,
-            },
         }
         w.WriteHeader(http.StatusNotFound)
-        
-    // ... other error types
     }
     
     json.NewEncoder(w).Encode(response)
 }
 ```
 
-### 5. Logging Strategy
+### 4. User-Friendly Error Messages
 
 ```go
-type ErrorLogger struct {
-    logger *slog.Logger
-}
-
-func (l *ErrorLogger) LogError(err error, r *http.Request) {
-    // Extract error details
-    code := "UNKNOWN"
-    msg := err.Error()
-    details := map[string]interface{}{}
-    
-    if cmsErr, ok := err.(*CMSError); ok {
-        code = cmsErr.Code
-        details = cmsErr.Details
-    }
-    
-    // Log with context
-    l.logger.Error("Error occurred",
-        slog.String("code", code),
-        slog.String("message", msg),
-        slog.String("url", r.URL.String()),
-        slog.String("method", r.Method),
-        slog.Any("details", details),
-    )
-}
-```
-
-### 6. User Feedback System
-
-```go
-type UserErrorMessage struct {
-    Title       string
-    Message     string
-    Suggestion  string
-    Action      string
-}
-
 var errorMessages = map[string]UserErrorMessage{
     ErrPageNotFound: {
         Title:      "Page Not Found",
@@ -189,63 +140,66 @@ var errorMessages = map[string]UserErrorMessage{
         Suggestion: "Check the URL or navigate to another page.",
         Action:     "Return to homepage",
     },
-    // ... other messages
 }
 ```
 
-## Alternatives Considered
+## Implementation Status
 
-1. **Simple Error Strings**
-   - Pros: Simple implementation
-   - Cons: Limited context, harder to handle systematically
-   - Rejected: Need structured error handling
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Standard Go errors | Implemented | `error` interface throughout |
+| Structured logging | Implemented | `slog.Logger` with structured fields |
+| Error context in logs | Implemented | Key-value pairs in log calls |
+| Graceful degradation | Implemented | HTML error messages returned |
+| Structured error types | Not implemented | No CMSError, ValidationError types |
+| Error codes | Not implemented | No CMS-XXXX format codes |
+| Error middleware | Not implemented | No centralized handler |
+| User message mapping | Not implemented | No errorMessages map |
+| Error metrics | Not implemented | No Prometheus error counters |
 
-2. **Third-party Error Package**
-   - Pros: Ready-made solution
-   - Cons: Additional dependency, less control
-   - Rejected: Need custom implementation for CMS-specific needs
+## Migration Strategy
 
-3. **HTTP-only Error Handling**
-   - Pros: Simpler model
-   - Cons: Not suitable for all error types
-   - Rejected: Need broader error handling
+### Phase 1: Error Types (Backward Compatible)
+Create new error types that wrap existing errors:
 
-## Implementation Plan
+```go
+func NewValidationError(field string, err error) error {
+    return &ValidationError{
+        CMSError: CMSError{
+            Code:    ErrValidation,
+            Message: fmt.Sprintf("Validation failed for %s", field),
+            Cause:   err,
+        },
+        Field: field,
+    }
+}
+```
 
-1. Phase 1: Core Error Types (1 week)
-   - Implement error hierarchy
-   - Add error codes
-   - Create helper functions
+### Phase 2: Gradual Adoption
+Update functions incrementally to return structured errors where beneficial.
 
-2. Phase 2: Error Handling (1 week)
-   - Implement error handlers
-   - Add logging system
-   - Create user feedback system
+## Files to Modify (If Implementing)
 
-3. Phase 3: Integration (2 weeks)
-   - Update existing code
-   - Add error documentation
-   - Create examples
-
-4. Phase 4: Testing (1 week)
-   - Unit tests
-   - Integration tests
-   - Error handling scenarios
+1. New: `errors.go` - Error type definitions and constants
+2. New: `error_handler.go` - Centralized error handling middleware
+3. `frontend/frontend.go` - Update to use structured errors where appropriate
+4. `admin/` - Add user-friendly error message display
+5. New: `error_metrics.go` - Prometheus error counters
 
 ## Risks and Mitigations
 
 1. **Migration Complexity**
    - Risk: Difficult to update all error handling
-   - Mitigation: Gradual migration, tooling support
+   - Mitigation: Gradual adoption, backward compatible wrappers
 
-2. **Performance Impact**
-   - Risk: Additional overhead from structured errors
-   - Mitigation: Benchmark critical paths, optimize
+2. **Over-Engineering**
+   - Risk: Too complex error hierarchy
+   - Mitigation: Start simple, add types as needed
 
-3. **Error Proliferation**
-   - Risk: Too many error types
-   - Mitigation: Regular review, consolidation
+3. **Performance**
+   - Risk: Structured errors add overhead
+   - Mitigation: Benchmark, keep error creation lightweight
 
 4. **User Experience**
    - Risk: Technical errors confuse users
-   - Mitigation: Clear user messages, actionable feedback 
+   - Mitigation: Clear mapping to user-friendly messages

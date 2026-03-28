@@ -1,12 +1,16 @@
 # [Draft] Enhanced Caching Strategy
 
+## Status
+**[Draft]** - Basic TTL caching implemented, enhanced features pending
+
 ## Summary
 - **Problem**: Current caching implementation is basic TTL-based caching that doesn't optimize for all use cases
 - **Solution**: Implement a multi-level caching strategy with intelligent invalidation
 
-## Background
+## Current Implementation (As-Is)
 
 The CMS Store currently uses a simple TTL-based cache:
+
 ```go
 type frontend struct {
     cacheEnabled       bool
@@ -15,14 +19,36 @@ type frontend struct {
 }
 ```
 
-While functional, this approach has limitations:
-- No differentiation between content types
-- Potential for stale content
-- No partial cache invalidation
-- Memory usage not optimized
-- No distributed caching support
+**Files:**
+- `frontend/new.go` - Cache configuration and initialization
+- `frontend/frontend_cache.go` - Cache operations (`CacheHas`, `CacheGet`, `CacheSet`)
+- `frontend/init.go` - Cache initialization
 
-## Detailed Design
+**Current Features:**
+- Basic TTL-based caching with `ttlcache` library
+- Cache warming for active sites (`warmUpCache()`)
+- Per-key expiration control (error states = 10s, normal = cacheExpireSeconds)
+- Cache enable/disable toggle
+
+**Current Cache Keys:**
+- `block_content_{id}` - Block rendered content
+- `page_site:{siteID}:alias:{alias}` - Page lookups
+- `page_alias_map_site:{siteID}` - Site page alias maps
+- `sites_active` - Active sites list
+- `find_site_and_endpoint_*` - Site endpoint resolution
+- `page_url_{id}` - Page URL resolution
+
+## Limitations (Why Enhanced Strategy Needed)
+
+Current approach has limitations:
+- No differentiation between content types (all use same TTL)
+- No partial cache invalidation (must wait for TTL or clear all)
+- No dependency tracking (changing a block doesn't invalidate pages using it)
+- No distributed caching support (single-node only)
+- No memory usage limits or eviction policies
+- No cache metrics or monitoring
+
+## Proposed Enhanced Design (To-Be)
 
 ### 1. Multi-Level Cache Architecture
 
@@ -56,18 +82,7 @@ flowchart TD
    }
    ```
 
-### 3. Cache Keys and Namespacing
-
-```go
-const (
-    CacheKeyBlock     = "block:%s"
-    CacheKeyPage      = "page:%s"
-    CacheKeyTemplate  = "template:%s"
-    CacheKeyRendered  = "rendered:%s:%s" // site:path
-)
-```
-
-### 4. Intelligent Invalidation
+### 3. Intelligent Invalidation
 
 1. **Dependency Tracking**
    ```go
@@ -84,78 +99,46 @@ const (
    - When a template changes: Invalidate template cache + all pages using it
    - When a translation changes: Invalidate affected language versions
 
-### 5. Cache Warming
+### 4. Cache Warming
 
-1. **Startup Warming**
-   ```go
-   func (c *Cache) WarmFrequentlyAccessed() {
-       // Warm most accessed pages
-       // Warm global blocks
-       // Warm active templates
-   }
-   ```
+```go
+func (c *Cache) WarmFrequentlyAccessed() {
+    // Warm most accessed pages
+    // Warm global blocks
+    // Warm active templates
+}
+```
 
-2. **Background Refresh**
-   ```go
-   func (c *Cache) StartBackgroundRefresh(interval time.Duration) {
-       // Periodically refresh cache before expiration
-   }
-   ```
+### 5. Memory Management
 
-### 6. Memory Management
+```go
+type CacheConfig struct {
+    MaxMemoryMB      int
+    MaxItemsPerType  int
+    EvictionPolicy   string // LRU, LFU, etc.
+}
+```
 
-1. **Size Limits**
-   ```go
-   type CacheConfig struct {
-       MaxMemoryMB      int
-       MaxItemsPerType  int
-       EvictionPolicy   string // LRU, LFU, etc.
-   }
-   ```
+## Implementation Status
 
-2. **Item Prioritization**
-   - Frequently accessed items kept in memory
-   - Larger items in distributed cache
-   - Dynamic TTL based on access patterns
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Basic TTL caching | Implemented | `ttlcache` library |
+| Cache warming | Partial | Only active sites warmed |
+| Multi-level cache | Not implemented | L1/L2 architecture |
+| Redis distributed | Not implemented | Requires Redis dependency |
+| Dependency tracking | Not implemented | Invalidation is manual |
+| Memory limits | Not implemented | No eviction policy |
+| Cache metrics | Not implemented | No monitoring |
 
-## Alternatives Considered
+## Files to Modify (If Implementing)
 
-1. **Single Redis Cache**
-   - Pros: Simpler implementation
-   - Cons: Higher latency for frequent access
-   - Rejected: Need fast local cache for performance
-
-2. **File-based Cache**
-   - Pros: No memory pressure
-   - Cons: I/O overhead, harder to manage
-   - Rejected: Performance requirements
-
-3. **Pure Memory Cache**
-   - Pros: Fastest possible
-   - Cons: No distribution, memory pressure
-   - Rejected: Need distributed support
-
-## Implementation Plan
-
-1. Phase 1: Cache Infrastructure (2 weeks)
-   - Implement cache interfaces
-   - Set up Redis integration
-   - Add basic multi-level caching
-
-2. Phase 2: Intelligent Invalidation (2 weeks)
-   - Implement dependency tracking
-   - Add invalidation rules
-   - Test cache consistency
-
-3. Phase 3: Optimization (2 weeks)
-   - Add cache warming
-   - Implement memory management
-   - Performance testing
-
-4. Phase 4: Monitoring (1 week)
-   - Add cache metrics
-   - Create monitoring dashboard
-   - Document operations
+1. `frontend/frontend_cache.go` - Extend with new cache operations
+2. `frontend/new.go` - Add cache configuration options
+3. `admin/shared/caches.go` - Admin cache management UI already exists
+4. New: `frontend/cache_multilevel.go` - Multi-level cache implementation
+5. New: `frontend/cache_redis.go` - Redis adapter
+6. New: `frontend/cache_dependencies.go` - Dependency tracking
 
 ## Risks and Mitigations
 
@@ -173,4 +156,4 @@ const (
 
 4. **Performance Impact**
    - Risk: Cache overhead exceeds benefits
-   - Mitigation: Benchmark-driven development, feature flags 
+   - Mitigation: Benchmark-driven development, feature flags

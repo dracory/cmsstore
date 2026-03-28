@@ -1,20 +1,74 @@
 # [Draft] Enhanced Middleware System
 
+## Status
+**[Draft]** - Basic middleware implemented, enhanced features pending
+
 ## Summary
 - **Problem**: Current middleware implementation lacks flexibility and observability needed for complex request processing
 - **Solution**: Enhance middleware system with dynamic configuration, better chaining, monitoring, and recovery capabilities
 
-## Background
+## Current Implementation (As-Is)
 
-The CMS uses middleware for request processing, but the current implementation has limitations:
-- Static middleware configuration
-- Limited error recovery
-- No middleware-specific metrics
-- Basic middleware chaining
-- No conditional middleware execution
-- Limited context sharing
+The CMS Store currently uses a standard Go middleware pattern:
 
-## Detailed Design
+```go
+// middleware.go
+type MiddlewareInterface interface {
+    Identifier() string  // Unique ID (e.g., "auth_before")
+    Name() string      // Human-friendly label
+    Description() string
+    Type() string      // "before", "after", "replace"
+    Handler() func(next http.Handler) http.Handler
+}
+```
+
+**Files:**
+- `middleware.go` - Core interface and implementation
+- `frontend/frontend_middleware.go` - Middleware application logic
+- `frontend/frontend.go` - Integration in `PageRenderHtmlBySiteAndAlias()`
+
+**Current Features:**
+- ✅ Standard Go http.Handler middleware pattern
+- ✅ Identifier-based middleware selection
+- ✅ "before" and "after" middleware types
+- ✅ Page-level middleware assignment (MiddlewaresBefore/MiddlewaresAfter)
+- ✅ Store-level middleware registration
+- ✅ Response capture and modification via httptest.ResponseRecorder
+
+**Current Usage:**
+```go
+// Creating middleware
+mw := cmsstore.Middleware().
+    SetIdentifier("auth_check").
+    SetName("Authentication Check").
+    SetType(cmsstore.MIDDLEWARE_TYPE_BEFORE).
+    SetHandler(func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            // Check auth...
+            next.ServeHTTP(w, r)
+        })
+    })
+
+// Register with store
+store.SetMiddlewares([]cmsstore.MiddlewareInterface{mw})
+
+// Assign to page
+page.SetMiddlewaresBefore([]string{"auth_check"})
+```
+
+## Limitations (Why Enhancement Needed)
+
+Current approach has limitations:
+- ❌ No middleware metrics/monitoring
+- ❌ No priority/ordering system (manual ordering only)
+- ❌ No conditional execution based on request context
+- ❌ No panic recovery middleware
+- ❌ No per-middleware configuration
+- ❌ No rich context sharing (Site, Page, User objects)
+- ❌ No Prometheus metrics integration
+- ❌ Middleware chain management is manual
+
+## Proposed Enhanced Design (To-Be)
 
 ### 1. Enhanced Middleware Interface
 
@@ -32,8 +86,6 @@ type Middleware interface {
     Description() string
     Version() string
 }
-
-type MiddlewareFunc func(ctx *Context) error
 
 type Context struct {
     Request        *http.Request
@@ -65,47 +117,11 @@ func (mc *MiddlewareChain) Use(m Middleware) {
     })
 }
 
-func (mc *MiddlewareChain) Remove(name string) {
-    for i, m := range mc.middlewares {
-        if m.Name() == name {
-            mc.middlewares = append(mc.middlewares[:i], mc.middlewares[i+1:]...)
-            return
-        }
-    }
-}
-
-func (mc *MiddlewareChain) Process(ctx *Context) error {
-    if len(mc.middlewares) == 0 {
-        return nil
-    }
-    
-    return mc.processMiddleware(ctx, 0)
-}
-
-func (mc *MiddlewareChain) processMiddleware(ctx *Context, index int) error {
-    if index >= len(mc.middlewares) {
-        return nil
-    }
-    
-    m := mc.middlewares[index]
-    
-    // Create next function
-    next := func(ctx *Context) error {
-        return mc.processMiddleware(ctx, index+1)
-    }
-    
-    // Process with metrics
-    start := time.Now()
-    err := m.Process(ctx, next)
-    duration := time.Since(start)
-    
-    mc.metrics.RecordMiddleware(m.Name(), duration, err)
-    
-    return err
-}
+func (mc *MiddlewareChain) Remove(name string) { ... }
+func (mc *MiddlewareChain) Process(ctx *Context) error { ... }
 ```
 
-### 3. Middleware Metrics
+### 3. Middleware Metrics (Prometheus)
 
 ```go
 type MiddlewareMetrics struct {
@@ -114,218 +130,81 @@ type MiddlewareMetrics struct {
     errors       *prometheus.CounterVec
     activeCount  *prometheus.GaugeVec
 }
-
-func NewMiddlewareMetrics() *MiddlewareMetrics {
-    return &MiddlewareMetrics{
-        executions: prometheus.NewCounterVec(
-            prometheus.CounterOpts{
-                Name: "cms_middleware_executions_total",
-                Help: "Total number of middleware executions",
-            },
-            []string{"middleware"},
-        ),
-        duration: prometheus.NewHistogramVec(
-            prometheus.HistogramOpts{
-                Name: "cms_middleware_duration_seconds",
-                Help: "Duration of middleware execution",
-            },
-            []string{"middleware"},
-        ),
-        errors: prometheus.NewCounterVec(
-            prometheus.CounterOpts{
-                Name: "cms_middleware_errors_total",
-                Help: "Total number of middleware errors",
-            },
-            []string{"middleware", "error_type"},
-        ),
-        activeCount: prometheus.NewGaugeVec(
-            prometheus.GaugeOpts{
-                Name: "cms_middleware_active_requests",
-                Help: "Number of active requests in middleware",
-            },
-            []string{"middleware"},
-        ),
-    }
-}
 ```
 
-### 4. Conditional Middleware
+### 4. Conditional & Recovery Middleware
 
 ```go
-type ConditionFunc func(*Context) bool
-
+// Conditional execution
 type ConditionalMiddleware struct {
     middleware Middleware
-    condition  ConditionFunc
+    condition  func(*Context) bool
 }
 
-func (cm *ConditionalMiddleware) Process(ctx *Context, next MiddlewareFunc) error {
-    if cm.condition(ctx) {
-        return cm.middleware.Process(ctx, next)
-    }
-    return next(ctx)
-}
-
-// Example usage
-chain.Use(&ConditionalMiddleware{
-    middleware: NewAuthMiddleware(),
-    condition: func(ctx *Context) bool {
-        return !strings.HasPrefix(ctx.Request.URL.Path, "/public/")
-    },
-})
-```
-
-### 5. Recovery Middleware
-
-```go
+// Panic recovery
 type RecoveryMiddleware struct {
     logger *slog.Logger
 }
-
-func (m *RecoveryMiddleware) Process(ctx *Context, next MiddlewareFunc) error {
-    defer func() {
-        if r := recover(); r != nil {
-            stack := debug.Stack()
-            m.logger.Error("Middleware panic recovered",
-                "error", r,
-                "stack", string(stack),
-                "url", ctx.Request.URL.String(),
-            )
-            
-            if ctx.Response.Header().Get("Content-Type") == "" {
-                ctx.Response.Header().Set("Content-Type", "text/html")
-            }
-            ctx.Response.WriteHeader(http.StatusInternalServerError)
-            
-            // Render error page
-            errorPage := NewErrorPage(http.StatusInternalServerError)
-            errorPage.Render(ctx.Response)
-        }
-    }()
-    
-    return next(ctx)
-}
 ```
 
-### 6. Example Implementation
+## Implementation Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Basic middleware interface | ✅ Implemented | `middleware.go` |
+| Standard Go handler pattern | ✅ Implemented | `func(next http.Handler) http.Handler` |
+| Before/After types | ✅ Implemented | `MIDDLEWARE_TYPE_BEFORE`, `MIDDLEWARE_TYPE_AFTER` |
+| Page middleware assignment | ✅ Implemented | `MiddlewaresBefore()`, `MiddlewaresAfter()` |
+| Middleware metrics | ❌ Not implemented | No Prometheus integration |
+| Priority system | ❌ Not implemented | Manual ordering only |
+| Conditional middleware | ❌ Not implemented | No condition functions |
+| Recovery middleware | ❌ Not implemented | No panic recovery |
+| Rich context | ❌ Not implemented | Standard http.Request only |
+| Configuration | ❌ Not implemented | No Configure() method |
+
+## Migration Path
+
+### Option 1: Extend Existing Interface
+Add optional methods to current interface with adapter pattern.
+
+### Option 2: New Enhanced Interface
+Create separate `EnhancedMiddlewareInterface` while keeping existing one.
 
 ```go
-// Cache middleware example
-type CacheMiddleware struct {
-    cache  CacheInterface
-    config CacheConfig
-}
-
-type CacheConfig struct {
-    Enabled     bool
-    Duration    time.Duration
-    KeyPrefix   string
-    IgnorePaths []string
-}
-
-func (m *CacheMiddleware) Process(ctx *Context, next MiddlewareFunc) error {
-    if !m.config.Enabled {
-        return next(ctx)
-    }
+type EnhancedMiddlewareInterface interface {
+    MiddlewareInterface  // Embed existing
     
-    // Check if path should be cached
-    for _, path := range m.config.IgnorePaths {
-        if strings.HasPrefix(ctx.Request.URL.Path, path) {
-            return next(ctx)
-        }
-    }
-    
-    // Generate cache key
-    key := fmt.Sprintf("%s:%s:%s",
-        m.config.KeyPrefix,
-        ctx.Site.ID,
-        ctx.Request.URL.Path,
-    )
-    
-    // Check cache
-    if cached, ok := m.cache.Get(key); ok {
-        ctx.Response.Write(cached.([]byte))
-        return nil
-    }
-    
-    // Create response recorder
-    recorder := httptest.NewRecorder()
-    ctx.Response = recorder
-    
-    // Process request
-    if err := next(ctx); err != nil {
-        return err
-    }
-    
-    // Cache response
-    response := recorder.Result()
-    body, _ := io.ReadAll(response.Body)
-    m.cache.Set(key, body, m.config.Duration)
-    
-    // Write to original response
-    for k, v := range response.Header {
-        ctx.Response.Header()[k] = v
-    }
-    ctx.Response.WriteHeader(response.StatusCode)
-    ctx.Response.Write(body)
-    
-    return nil
+    // New methods
+    Version() string
+    Priority() int
+    Configure(config map[string]interface{}) error
+    Process(ctx *MiddlewareContext) error
 }
 ```
 
-## Alternatives Considered
+## Files to Modify (If Implementing)
 
-1. **Function-based Middleware**
-   - Pros: Simpler implementation
-   - Cons: Limited functionality, no configuration
-   - Rejected: Need more features and flexibility
-
-2. **Event-based System**
-   - Pros: More decoupled
-   - Cons: Complex flow control, harder to debug
-   - Rejected: Direct middleware chain is more predictable
-
-3. **Aspect-oriented Approach**
-   - Pros: Clean separation of concerns
-   - Cons: Complex implementation, runtime overhead
-   - Rejected: Traditional middleware pattern is sufficient
-
-## Implementation Plan
-
-1. Phase 1: Core Enhancement (2 weeks)
-   - Implement new interfaces
-   - Add middleware chain management
-   - Create basic metrics
-
-2. Phase 2: Features (2 weeks)
-   - Add conditional middleware
-   - Implement recovery system
-   - Create configuration system
-
-3. Phase 3: Monitoring (1 week)
-   - Add detailed metrics
-   - Create dashboards
-   - Add logging
-
-4. Phase 4: Migration (2 weeks)
-   - Update existing middleware
-   - Add tests
-   - Update documentation
+1. `middleware.go` - Extend interface or create enhanced version
+2. `frontend/frontend_middleware.go` - Add chain management and metrics
+3. New: `middleware_chain.go` - Chain builder with priority sorting
+4. New: `middleware_metrics.go` - Prometheus metrics integration
+5. New: `middleware_recovery.go` - Panic recovery middleware
+6. New: `middleware_conditional.go` - Conditional execution wrapper
 
 ## Risks and Mitigations
 
 1. **Performance Impact**
-   - Risk: Overhead from metrics and chaining
-   - Mitigation: Benchmark-driven optimization
+   - Risk: Overhead from metrics and context wrapping
+   - Mitigation: Make enhanced features opt-in
 
-2. **Complexity**
-   - Risk: System becomes hard to understand
-   - Mitigation: Clear documentation, examples
-
-3. **Migration**
+2. **Backward Compatibility**
    - Risk: Breaking existing middleware
-   - Mitigation: Compatibility layer, gradual rollout
+   - Mitigation: Keep existing interface, add new as extension
+
+3. **Complexity**
+   - Risk: System becomes hard to understand
+   - Mitigation: Clear migration guide, examples
 
 4. **Resource Usage**
-   - Risk: Memory leaks from context
-   - Mitigation: Context cleanup, monitoring 
+   - Risk: Memory from rich context objects
+   - Mitigation: Lazy loading, object pooling

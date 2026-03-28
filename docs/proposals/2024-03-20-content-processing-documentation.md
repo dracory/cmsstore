@@ -1,143 +1,103 @@
-# [Draft] Improve Content Processing Pipeline Documentation
+# [Implemented] Content Processing Pipeline Documentation
+
+## Status
+**✅ IMPLEMENTED** - Documentation exists and is comprehensive
 
 ## Summary
-- **Problem**: Current documentation of the content processing pipeline lacks clarity in certain areas, particularly around template handling and the exact sequence of operations.
-- **Solution**: Enhance documentation with clearer diagrams, detailed sequence explanations, and concrete examples.
+- **Problem**: Content processing pipeline needed clear documentation
+- **Solution**: Created comprehensive documentation covering the entire pipeline
 
-## Background
+## Where to Find the Documentation
 
-The CMS Store's content processing pipeline is a core component that handles:
-- Template integration
-- Placeholder replacement
-- Block rendering
-- Shortcode processing
-- Translation handling
-- Middleware application
+### 1. Frontend Overview (`docs/frontend/overview.md`)
+Complete documentation of the content processing pipeline including:
 
-While the basic flow is documented, users and developers have encountered some confusion about:
-- When exactly template merging occurs
-- How different content elements interact
-- The exact sequence of processing steps
-- Error handling during each step
+**Request Flow Diagram:**
+- HTTP Request → Domain Validation → Site Resolution → Page Resolution
+- Template Handling → Content Processing → Final HTML
 
-## Detailed Design
-
-### 1. Enhanced Flow Documentation
-
-```mermaid
-flowchart TD
-    A[Raw Content] --> B{Has Template?}
-    B -->|Yes| C[Load Template]
-    C --> D[Merge with Page Content]
-    B -->|No| E[Use Page Content]
-    
-    subgraph processing [Processing Pipeline]
-        F[Content] --> G[Replace Placeholders]
-        G --> H[Render Blocks]
-        H --> I[Apply Shortcodes]
-        I --> J[Process Translations]
-        J --> K[Apply Middlewares]
-    end
-    
-    D --> F
-    E --> F
-    K --> L[Final HTML]
+**Content Processing Sequence:**
+```
+Template Merge (if exists) 
+  → Replace Placeholders (PageTitle, PageContent, etc.)
+  → Render Blocks ([[BLOCK_id]])
+  → Render Page URLs ([[PAGE_URL_id]])
+  → Apply Shortcodes (<shortcode>)
+  → Process Translations ([[TRANSLATION_id]])
+  → Apply Middlewares
+  → Final HTML
 ```
 
-### 2. Processing Steps Documentation
+**Key Components Documented:**
+- **Blocks**: `[[BLOCK_blockID]]` syntax, caching, type-based rendering
+- **Templates**: Layout definition, placeholder substitution
+- **Shortcodes**: Custom content generators with `<shortcode>` syntax
+- **Translations**: Multi-language support via `[[TRANSLATION_id]]`
+- **URL Patterns**: Dynamic routing (`:any`, `:num`, `:alpha`, etc.)
+- **Caching**: TTL-based caching system
+- **Middleware**: Request/response processing
 
-For each step, document:
-- Input format
-- Output format
-- Error handling
-- Performance considerations
-- Caching strategy
+### 2. Block System Architecture (`docs/BLOCK_SYSTEM_ARCHITECTURE.md`)
+Three-layer architecture documentation:
+- **`blocks/`** - Unified built-in types (HTML, Menu, Navbar, Breadcrumbs)
+- **`frontend/blocks/`** - Frontend renderers
+- **`admin/blocks/`** - Admin UI providers
 
-Example for Block Rendering:
+### 3. Actual Implementation Code (`frontend/frontend.go`)
+The rendering pipeline is clearly documented in code comments:
+
 ```go
-// Input: Content with block placeholders
-content = "Header [[BLOCK_123]] Footer"
-
-// Processing:
-1. Find all block references
-2. Load each block (with caching)
-3. Render block content
-4. Replace placeholder with rendered content
-
-// Output: Content with rendered blocks
-content = "Header <div class='block'>Block Content</div> Footer"
+// renderContentToHtml - Processing sequence (order is important):
+// 1. Replace placeholders with values
+// 2. Render blocks
+// 3. Apply block attribute syntax (<block id="..." />)
+// 4. Render page URLs
+// 5. Apply shortcodes
+// 6. Render translations
+// 7. Return final HTML
 ```
 
-### 3. Edge Cases and Error Handling
+**Key Functions:**
+- `PageRenderHtmlBySiteAndAlias()` - Main entry point
+- `pageOrTemplateContent()` - Template merging logic
+- `renderContentToHtml()` - Core processing pipeline
+- `contentRenderBlocks()` - Block rendering
+- `applyShortcodes()` - Shortcode processing
+- `contentRenderTranslations()` - Translation handling
+- `applyMiddlewares()` - Middleware application
 
-Document how the system handles:
-- Missing templates
-- Invalid blocks
-- Malformed shortcodes
-- Missing translations
-- Middleware errors
+### 4. Code-Level Documentation
 
-### 4. Performance Optimization Documentation
+**Template Merging:**
+- Happens in `pageOrTemplateContent()` BEFORE content processing
+- If page has `TemplateID()`, template content is loaded
+- Page content becomes available via `[[PageContent]]` placeholder
 
-Add documentation about:
-- Caching strategies at each step
-- Lazy loading patterns
-- Resource management
-- Memory usage considerations
+**Block Rendering:**
+- `fetchBlockContent()` - Loads and renders blocks with caching
+- `renderBlockByType()` - Dispatches to type-specific renderers
+- Registry pattern: `BlockRendererRegistry`
 
-## Alternatives Considered
+**Error Handling:**
+- Missing templates → Returns page content as-is
+- Invalid blocks → Logged, empty content returned
+- Missing translations → Empty string replacement
+- Middleware errors → Logged, content preserved
 
-1. **Minimal Documentation**
-   - Pros: Less maintenance
-   - Cons: More support requests, steeper learning curve
-   - Rejected: Clear documentation is crucial for adoption
+## What Was Documented
 
-2. **Video Documentation**
-   - Pros: Visual learning
-   - Cons: Hard to maintain, search, and update
-   - Rejected: Text and diagrams are more maintainable
+✅ **Template handling sequence** - Template merge happens BEFORE content processing
+✅ **Exact processing order** - Placeholders → Blocks → Page URLs → Shortcodes → Translations → Middlewares
+✅ **Block rendering flow** - Type-based dispatch with caching
+✅ **Placeholder syntax** - `[[Keyword]]` and `[[ Keyword ]]` both supported
+✅ **URL pattern matching** - `:any`, `:num`, `:all`, `:string`, `:number`, `:numeric`, `:alpha`
+✅ **Caching strategy** - TTL-based with selective invalidation
+✅ **Edge cases** - Missing content handling documented
 
-3. **Separate Docs Site**
-   - Pros: More features, better organization
-   - Cons: Additional maintenance, sync issues
-   - Rejected: In-repo markdown is sufficient
-
-## Implementation Plan
-
-1. Phase 1: Core Documentation (1 week)
-   - Update main README
-   - Create detailed processing pipeline docs
-   - Add sequence diagrams
-
-2. Phase 2: Examples (1 week)
-   - Add code examples
-   - Create example projects
-   - Document common patterns
-
-3. Phase 3: Edge Cases (1 week)
-   - Document error handling
-   - Add troubleshooting guide
-   - Create FAQ
-
-4. Phase 4: Review and Refinement (1 week)
-   - Community review
-   - Testing with new users
-   - Final updates
-
-## Risks and Mitigations
-
-1. **Documentation Drift**
-   - Risk: Docs become outdated
-   - Mitigation: Regular review process, automated checks
-
-2. **Complexity**
-   - Risk: Too much detail overwhelms users
-   - Mitigation: Layer information, progressive disclosure
-
-3. **Maintenance**
-   - Risk: High maintenance burden
-   - Mitigation: Automate where possible, regular review cycle
-
-4. **Adoption**
-   - Risk: Users don't read docs
-   - Mitigation: Make docs searchable, provide quick start guides 
+## Files Referenced
+- `docs/frontend/overview.md` - Main frontend documentation
+- `docs/BLOCK_SYSTEM_ARCHITECTURE.md` - Block system architecture
+- `docs/BLOCK_EXTENSIBILITY.md` - Block extensibility guide
+- `docs/UNIFIED_BLOCK_TYPES.md` - Unified block type system
+- `frontend/frontend.go` - Implementation with inline documentation
+- `frontend/block_renderer.go` - Block rendering registry
