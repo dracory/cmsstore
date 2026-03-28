@@ -37,7 +37,7 @@ func (c *EntityEditController) Handler(w http.ResponseWriter, r *http.Request) s
 	return c.showForm(r, entityID, nil, "")
 }
 
-func (c *EntityEditController) showForm(r *http.Request, entityID string, formData map[string]string, errorMessage string) string {
+func (c *EntityEditController) showForm(_ *http.Request, entityID string, formData map[string]string, errorMessage string) string {
 	ctx := context.Background()
 	customStore := c.ui.Store().CustomEntityStore()
 
@@ -64,7 +64,7 @@ func (c *EntityEditController) showForm(r *http.Request, entityID string, formDa
 	fields := []form.FieldInterface{}
 	for _, attr := range c.definition.Attributes {
 		fieldType := c.getFieldType(attr.Type)
-		
+
 		field := form.NewField(form.FieldOptions{
 			Label:    attr.Label,
 			Name:     attr.Name,
@@ -125,7 +125,7 @@ func (c *EntityEditController) modalBody(formObj *form.Form, submitUrl, errorMes
 	return body
 }
 
-func (c *EntityEditController) modalFooter(modalID string) hb.TagInterface {
+func (c *EntityEditController) modalFooter(_ string) hb.TagInterface {
 	return hb.Div().Class("modal-footer").
 		Child(hb.Button().
 			Type("button").
@@ -139,7 +139,7 @@ func (c *EntityEditController) modalFooter(modalID string) hb.TagInterface {
 			HTML("Update " + c.definition.TypeLabel))
 }
 
-func (c *EntityEditController) handleSubmit(w http.ResponseWriter, r *http.Request, entityID string) string {
+func (c *EntityEditController) handleSubmit(_ http.ResponseWriter, r *http.Request, entityID string) string {
 	ctx := context.Background()
 
 	if err := r.ParseForm(); err != nil {
@@ -160,11 +160,11 @@ func (c *EntityEditController) handleSubmit(w http.ResponseWriter, r *http.Reque
 	// Build attributes map from form data
 	attrs := make(map[string]interface{})
 	formData := make(map[string]string)
-	
+
 	for _, attr := range c.definition.Attributes {
 		value := r.FormValue(attr.Name)
 		formData[attr.Name] = value
-		
+
 		if value != "" {
 			// Convert value based on type
 			switch attr.Type {

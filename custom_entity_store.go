@@ -302,17 +302,8 @@ func (s *CustomEntityStore) setAttributeValue(ctx context.Context, entityID stri
 	}
 }
 
-// getAttributeValue retrieves an attribute value from entitystore.
-func (s *CustomEntityStore) getAttributeValue(ctx context.Context, entityID string, key string) (string, error) {
-	attr, err := s.inner.AttributeFind(ctx, entityID, key)
-	if err != nil {
-		return "", err
-	}
-	if attr == nil {
-		return "", nil
-	}
-	return attr.AttributeValue(), nil
-}
+// Note: Helper method for retrieving attribute values removed as it's not currently used.
+// If needed, use: customStore.Inner().AttributeFind(ctx, entityID, key)
 
 // validateRelationshipType validates that a relationship type is allowed for the entity.
 func (s *CustomEntityStore) validateRelationshipType(def CustomEntityDefinition, relType string) error {

@@ -35,7 +35,7 @@ func (c *EntityDeleteController) Handler(w http.ResponseWriter, r *http.Request)
 	return c.showConfirmation(r, entityID)
 }
 
-func (c *EntityDeleteController) showConfirmation(r *http.Request, entityID string) string {
+func (c *EntityDeleteController) showConfirmation(_ *http.Request, entityID string) string {
 	ctx := context.Background()
 	customStore := c.ui.Store().CustomEntityStore()
 
@@ -93,7 +93,7 @@ func (c *EntityDeleteController) modalBody(displayName, deleteUrl string) hb.Tag
 		Child(hb.Span().HTML("This action cannot be undone.")))
 
 	body.Child(hb.Paragraph().HTML("Are you sure you want to delete this " + c.definition.TypeLabel + "?"))
-	
+
 	body.Child(hb.Div().Class("mb-3").
 		Child(hb.Strong().HTML("Name: ")).
 		Child(hb.Span().HTML(displayName)))
@@ -106,7 +106,7 @@ func (c *EntityDeleteController) modalBody(displayName, deleteUrl string) hb.Tag
 	return body
 }
 
-func (c *EntityDeleteController) modalFooter(modalID, deleteUrl string) hb.TagInterface {
+func (c *EntityDeleteController) modalFooter(_, _ string) hb.TagInterface {
 	return hb.Div().Class("modal-footer").
 		Child(hb.Button().
 			Type("button").
@@ -121,7 +121,7 @@ func (c *EntityDeleteController) modalFooter(modalID, deleteUrl string) hb.TagIn
 			Child(hb.Span().HTML("Delete")))
 }
 
-func (c *EntityDeleteController) handleDelete(w http.ResponseWriter, r *http.Request, entityID string) string {
+func (c *EntityDeleteController) handleDelete(_ http.ResponseWriter, _ *http.Request, entityID string) string {
 	ctx := context.Background()
 	customStore := c.ui.Store().CustomEntityStore()
 

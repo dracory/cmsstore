@@ -84,11 +84,23 @@ func ExampleAdminSetup() {
 	productEditCtrl := NewEntityEditController(ui, productDef)
 	productDeleteCtrl := NewEntityDeleteController(ui, productDef)
 
-	// 6. Register routes
-	http.HandleFunc("/admin/custom-entity/product", productListCtrl.Handler)
-	http.HandleFunc("/admin/custom-entity/product/create", productCreateCtrl.Handler)
-	http.HandleFunc("/admin/custom-entity/product/edit", productEditCtrl.Handler)
-	http.HandleFunc("/admin/custom-entity/product/delete", productDeleteCtrl.Handler)
+	// 6. Register routes (wrap handlers to write HTML response)
+	http.HandleFunc("/admin/custom-entity/product", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(productListCtrl.Handler(w, r)))
+	})
+	http.HandleFunc("/admin/custom-entity/product/create", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(productCreateCtrl.Handler(w, r)))
+	})
+	http.HandleFunc("/admin/custom-entity/product/edit", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(productEditCtrl.Handler(w, r)))
+	})
+	http.HandleFunc("/admin/custom-entity/product/delete", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(productDeleteCtrl.Handler(w, r)))
+	})
 
 	// 7. Start server
 	http.ListenAndServe(":8080", nil)
@@ -114,91 +126,15 @@ func (ui *ExampleUI) Logger() any {
 }
 
 // createAdminLayout creates a basic admin layout
+// Note: This is a simplified example. In production, use your actual layout implementation.
 func createAdminLayout() hb.TagInterface {
-	return hb.HTML().
-		Children([]hb.TagInterface{
-			hb.Head().Children([]hb.TagInterface{
-				hb.Meta().Charset("utf-8"),
-				hb.Meta().Name("viewport").Content("width=device-width, initial-scale=1"),
-				hb.Title().HTML("CMS Admin"),
-				// Bootstrap CSS
-				hb.Link().Rel("stylesheet").
-					Href("https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"),
-				// Bootstrap Icons
-				hb.Link().Rel("stylesheet").
-					Href("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"),
-				// HTMX
-				hb.Script("").Src("https://unpkg.com/htmx.org@1.9.10"),
-			}),
-			hb.Body().Children([]hb.TagInterface{
-				// Navigation
-				createNavigation(),
-				// Main content area (will be filled by controllers)
-				hb.Div().ID("main-content"),
-				// Bootstrap JS
-				hb.Script("").
-					Src("https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"),
-			}),
-		})
+	// Return a simple container div that will wrap the content
+	// In a real implementation, this would include full HTML structure with head, body, etc.
+	return hb.Div().Class("admin-layout")
 }
 
-// createNavigation creates the admin navigation menu
-func createNavigation() hb.TagInterface {
-	nav := hb.Nav().Class("navbar navbar-expand-lg navbar-dark bg-dark")
-	container := hb.Div().Class("container-fluid")
-
-	// Brand
-	container.Child(hb.Hyperlink().Class("navbar-brand").Href("/admin").HTML("CMS Admin"))
-
-	// Toggle button for mobile
-	container.Child(hb.Button().
-		Class("navbar-toggler").
-		Type("button").
-		Data("bs-toggle", "collapse").
-		Data("bs-target", "#navbarNav").
-		Child(hb.Span().Class("navbar-toggler-icon")))
-
-	// Nav items
-	collapse := hb.Div().Class("collapse navbar-collapse").ID("navbarNav")
-	ul := hb.UL().Class("navbar-nav")
-
-	// Dashboard
-	ul.Child(hb.LI().Class("nav-item").
-		Child(hb.Hyperlink().Class("nav-link").Href("/admin").
-			Child(hb.I().Class("bi bi-house me-2")).
-			Child(hb.Span().HTML("Dashboard"))))
-
-	// Pages
-	ul.Child(hb.LI().Class("nav-item").
-		Child(hb.Hyperlink().Class("nav-link").Href("/admin/pages").
-			Child(hb.I().Class("bi bi-file-text me-2")).
-			Child(hb.Span().HTML("Pages"))))
-
-	// Custom Entities Dropdown
-	dropdown := hb.LI().Class("nav-item dropdown")
-	dropdown.Child(hb.Hyperlink().
-		Class("nav-link dropdown-toggle").
-		Href("#").
-		ID("customEntitiesDropdown").
-		Attr("role", "button").
-		Data("bs-toggle", "dropdown").
-		Child(hb.I().Class("bi bi-grid me-2")).
-		Child(hb.Span().HTML("Custom Entities")))
-
-	dropdownMenu := hb.UL().Class("dropdown-menu").Attr("aria-labelledby", "customEntitiesDropdown")
-	dropdownMenu.Child(hb.LI().Child(hb.Hyperlink().Class("dropdown-item").
-		Href("/admin/custom-entity/product").
-		Child(hb.I().Class("bi bi-box me-2")).
-		Child(hb.Span().HTML("Products"))))
-	dropdown.Child(dropdownMenu)
-	ul.Child(dropdown)
-
-	collapse.Child(ul)
-	container.Child(collapse)
-	nav.Child(container)
-
-	return nav
-}
+// Note: Navigation creation removed from example as it's not used.
+// In production, integrate custom entity links into your existing admin navigation.
 
 // ExampleMultipleEntityTypes shows how to set up multiple custom entity types
 func ExampleMultipleEntityTypes() {
@@ -259,10 +195,23 @@ func ExampleMultipleEntityTypes() {
 		editCtrl := NewEntityEditController(ui, def)
 		deleteCtrl := NewEntityDeleteController(ui, def)
 
-		http.HandleFunc("/admin/custom-entity/"+entityType, listCtrl.Handler)
-		http.HandleFunc("/admin/custom-entity/"+entityType+"/create", createCtrl.Handler)
-		http.HandleFunc("/admin/custom-entity/"+entityType+"/edit", editCtrl.Handler)
-		http.HandleFunc("/admin/custom-entity/"+entityType+"/delete", deleteCtrl.Handler)
+		// Wrap handlers to write HTML response
+		http.HandleFunc("/admin/custom-entity/"+entityType, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(listCtrl.Handler(w, r)))
+		})
+		http.HandleFunc("/admin/custom-entity/"+entityType+"/create", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(createCtrl.Handler(w, r)))
+		})
+		http.HandleFunc("/admin/custom-entity/"+entityType+"/edit", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(editCtrl.Handler(w, r)))
+		})
+		http.HandleFunc("/admin/custom-entity/"+entityType+"/delete", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(deleteCtrl.Handler(w, r)))
+		})
 	}
 
 	http.ListenAndServe(":8080", nil)

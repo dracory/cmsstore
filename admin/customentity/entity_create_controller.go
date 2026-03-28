@@ -32,7 +32,7 @@ func (c *EntityCreateController) Handler(w http.ResponseWriter, r *http.Request)
 	return c.showForm(r, nil, "")
 }
 
-func (c *EntityCreateController) showForm(r *http.Request, data map[string]string, errorMessage string) string {
+func (c *EntityCreateController) showForm(_ *http.Request, data map[string]string, errorMessage string) string {
 	if data == nil {
 		data = make(map[string]string)
 	}
@@ -104,7 +104,7 @@ func (c *EntityCreateController) modalBody(formObj *form.Form, submitUrl, errorM
 	return body
 }
 
-func (c *EntityCreateController) modalFooter(modalID string) hb.TagInterface {
+func (c *EntityCreateController) modalFooter(_ string) hb.TagInterface {
 	return hb.Div().Class("modal-footer").
 		Child(hb.Button().
 			Type("button").
@@ -118,7 +118,7 @@ func (c *EntityCreateController) modalFooter(modalID string) hb.TagInterface {
 			HTML("Create " + c.definition.TypeLabel))
 }
 
-func (c *EntityCreateController) handleSubmit(w http.ResponseWriter, r *http.Request) string {
+func (c *EntityCreateController) handleSubmit(_ http.ResponseWriter, r *http.Request) string {
 	ctx := context.Background()
 
 	if err := r.ParseForm(); err != nil {
