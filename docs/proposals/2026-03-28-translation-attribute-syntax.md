@@ -1,17 +1,19 @@
 # Translation Attribute Syntax Proposal
 
 **Date:** 2026-03-28
-**Status:** Implemented
+**Status:** Partially Implemented
 **Author:** AI Assistant
-**Related:** Block Attribute Syntax Proposal (2026-03-27), Shortcode System
+**Related:** Block Attribute Syntax, Shortcode System
 
 ---
 
 ## 1. Executive Summary
 
-**Problem:** Current translation references (`[[TRANSLATION_id]]`) are static and cannot accept runtime attributes like interpolation variables or fallback languages. Content editors must create duplicate translations for minor variations.
+**Problem:** Current translation references (`[[TRANSLATION_id]]`) are static and cannot accept runtime attributes like interpolation variables or fallback languages.
 
-**Solution:** Extend the attribute-based syntax pattern (established for blocks) to translations: `<translation id="..." attr="value" />`.
+**Solution:** Extend the attribute-based syntax pattern to translations: `<translation id="..." attr="value" />`.
+
+**Current Status:** Core implementation complete (118 lines), test suite passing (289 lines). Advanced features (pluralization, context-aware) not yet implemented.
 
 **Key Benefits:**
 - **Interpolation:** Pass variables into translations (`name="John"` → "Welcome, John!")
@@ -25,38 +27,32 @@
 
 ### 2.1 Existing Entity Reference Syntax
 
-| Entity | Current Syntax | Purpose | Limitations |
-|--------|----------------|---------|-------------|
-| Block | `[[BLOCK_id]]` | Embed block content | No runtime attributes (addressed by block proposal) |
-| Translation | `[[TRANSLATION_id]]` | Output translated text | No fallback language, no interpolation |
+| Entity | Legacy Syntax | New Attribute Syntax | Shared Parser |
+|--------|---------------|---------------------|---------------|
+| Block | `[[BLOCK_id]]` | `<block id="..." />` | ✅ `@block_attribute_syntax.go:19` |
+| Translation | `[[TRANSLATION_id]]` | `<translation id="..." />` | ✅ `@block_attribute_syntax.go:19` |
 
-### 2.2 The Gap
+### 2.2 Implementation Files
 
-**Current Limitations:**
+| File | Lines | Purpose | Status |
+|------|-------|---------|--------|
+| `frontend/translation_attribute_syntax.go` | 118 | Core implementation | ✅ Complete |
+| `frontend/translation_attribute_syntax_test.go` | 289 | Test suite | ✅ 11 test cases passing |
+| `frontend/block_attribute_syntax.go` | 184 | Shared `parseAttributes` | ✅ Reused |
+| `frontend/frontend.go:549-609` | 60 | Pipeline integration | ✅ Integrated |
 
+### 2.3 The Gap
+
+**Before (Legacy Only):**
 ```html
-<!-- Cannot pass parameters to translations -->
-[[TRANSLATION_welcome]] <!-- "Welcome, User!" - hardcoded -->
-
-<!-- Must create duplicate translations for each variation -->
-[[TRANSLATION_welcome_john]]
-[[TRANSLATION_welcome_mary]]
-[[TRANSLATION_welcome_guest]]
-
-<!-- No fallback language support -->
-[[TRANSLATION_rare_term]] <!-- Returns empty if missing in current language -->
+[[TRANSLATION_welcome]] <!-- Static, no variables -->
 ```
 
-### 2.3 Comparison Matrix
-
-| Feature | Legacy `[[TRANSLATION_id]]` | New `<translation />` |
-|---------|----------------------------|----------------------|
-| Stored in DB | ✅ | ✅ |
-| Variable interpolation | ❌ | ✅ |
-| Fallback language | ❌ | ✅ |
-| Versioning/history | ✅ | ✅ |
-| Admin editable | ✅ | ✅ |
-| Consistent with blocks | ❌ | ✅ |
+**After (With New Syntax):**
+```html
+<translation id="welcome" name="John" /> <!-- Dynamic interpolation -->
+<translation id="rare_term" fallback="en" /> <!-- Fallback support -->
+```
 
 ---
 
@@ -66,68 +62,85 @@
 
 **Primary Syntax (Angle Brackets):**
 ```html
-<!-- Basic translation -->
 <translation id="welcome" />
-
-<!-- With variable interpolation -->
 <translation id="welcome" name="John" />
-
-<!-- With fallback language -->
 <translation id="rare_term" fallback="en" />
-
-<!-- Combined -->
-<translation id="order_summary" count="5" total="$125" fallback="en" />
 ```
 
-**Alternative Syntax (Square Brackets - for HTML attribute contexts):**
+**Alternative Syntax (Square Brackets):**
 ```html
-<!-- Use when embedding in HTML attributes -->
-<div data-text="[[translation id='welcome' name='John']]">
+[[translation id='welcome' name='John']]
 ```
 
 ### 3.2 Syntax Specification
 
-**EBNF Grammar:**
 ```ebnf
-EntityReference ::= "<" EntityType Attributes "/>"
-
 TranslationReference ::= "<translation" Attributes "/>"
+                      | "[[translation" Attributes "]]"
 
-EntityType ::= "translation"
-
-Attributes ::= (IdAttribute | CustomAttribute)*
+Attributes ::= (IdAttribute | FallbackAttribute | CustomAttribute)*
 
 IdAttribute ::= "id=" StringValue
-              (* Required: the entity identifier *)
+FallbackAttribute ::= "fallback=" StringValue
+CustomAttribute ::= Name "=" Value  (* Interpolation variables *)
 
-CustomAttribute ::= Name "=" Value
-                  (* Runtime attributes passed to renderer *)
-
-StringValue ::= '"' [^"]* '"'
-               | "'" [^']* "'"
-
+StringValue ::= '"' [^"]* '"' | "'" [^']* "'"
 Name ::= [a-zA-Z][a-zA-Z0-9_-]*
-
-Value ::= StringValue | [^\s/>]*
 ```
 
-### 3.3 Processing Pipeline
+### 3.3 Actual Implementation vs Proposal
 
+**Proposal Code (Simplified):**
+```go
+// Pseudo-code in original proposal
+func applyTranslationAttributeSyntax(req, content, language) {
+    // Find matches
+    // Parse attributes
+    // Fetch translation
+    // Interpolate variables
+    // Return result
+}
 ```
-1. Placeholder replacement (PageTitle, PageContent, etc.)
-   → "[[PageTitle]]" → "My Page"
 
-2. Legacy translation references (backward compatibility)
-   → "[[TRANSLATION_id]]"
-
-3. NEW: Translation attribute syntax
-   → "<translation id=... name=... />"
-
-4. Other shortcodes
-   → "<product_list ... />" → rendered HTML
-
-5. Cleanup/validation
+**Actual Implementation:**
+```go
+// @frontend/translation_attribute_syntax.go:17-118
+func (frontend *frontend) applyTranslationAttributeSyntax(
+    req *http.Request,
+    content string,
+    language string,
+) (string, error) {
+    // Lines 24-27: Regex patterns compiled at package level
+    angleMatches := translationAttributeAngleBrackets.FindAllStringSubmatch(content, -1)
+    squareMatches := translationAttributeSquareBrackets.FindAllStringSubmatch(content, -1)
+    
+    // Lines 30-40: Combine matches into struct
+    type match struct { fullTag string; attrs string }
+    
+    // Lines 52: Reuse shared parser from block syntax
+    attrs := parseAttributes(attrString)
+    
+    // Lines 66-77: Fetch with error handling and logging
+    translation, err := frontend.store.TranslationFindByHandleOrID(...)
+    
+    // Lines 88-93: Fallback logic
+    text := lo.ValueOr(translationMap, language, "")
+    if text == "" && fallbackLang != "" {
+        text = lo.ValueOr(translationMap, fallbackLang, "")
+    }
+    
+    // Lines 103-109: XSS-safe interpolation
+    escapedValue := html.EscapeString(value)
+    text = strings.ReplaceAll(text, placeholder, escapedValue)
+}
 ```
+
+**Key Differences (Implementation Improvements):**
+1. **Structured logging** - Added `frontend.logger.Warn/Error` for debugging
+2. **Graceful degradation** - HTML comments for missing translations instead of errors
+3. **Package-level regex** - Compiled once for performance (`@lines 14-15`)
+4. **Match struct** - Cleaner than proposal's implied tuple handling
+5. **XSS escaping** - `html.EscapeString` on all interpolation values
 
 ---
 
@@ -217,31 +230,55 @@ func (frontend *frontend) applyTranslationAttributeSyntax(
 }
 ```
 
-### 4.2 Supported Attributes
+### 4.2 Rendering Pipeline (Actual)
 
-| Attribute | Type | Required | Description | Example |
-|-----------|------|----------|-------------|----------|
-| `id` | string | | Translation handle or ID | `id="welcome"` |
-| `fallback` | string | | Fallback language code | `fallback="en"` |
-| `{custom}` | string | | Interpolation variables | `name="John"` |
+**Order in `@frontend/frontend.go:549-609`:**
+
+```go
+// Line 554-566: 1. Placeholder replacement
+replacementsKeywords := map[string]string{
+    "PageContent":         options.PageContent,
+    "PageTitle":           options.PageTitle,
+    // ... etc
+}
+for keyWord, value := range replacementsKeywords {
+    content = strings.ReplaceAll(content, "[["+keyWord+"]]", value)
+}
+
+// Line 568-579: 2. Legacy blocks + NEW block attribute syntax
+content, err = frontend.contentRenderBlocks(r.Context(), content)
+content, err = frontend.applyBlockAttributeSyntax(r, content)
+
+// Line 581-585: 3. Page URLs
+content, err = frontend.contentRenderPageURLs(r.Context(), content)
+
+// Line 587-591: 4. Shortcodes
+content, err = frontend.applyShortcodes(r, content)
+
+// Line 593-599: 5. Legacy translations
+content, err = frontend.contentRenderTranslations(r.Context(), content, language)
+
+// Line 601-606: 6. NEW translation attribute syntax
+content, err = frontend.applyTranslationAttributeSyntax(r, content, language)
+```
+
+**Design Decision:** Translation attribute syntax is processed **after** legacy translation rendering. This ensures:
+1. Legacy `[[TRANSLATION_id]]` tags are processed first
+2. New `<translation id="..." />` syntax remains for attribute processing
+3. No conflicts between the two systems
 
 ---
 
-## 5. Common Implementation
+## 5. Shared Implementation
 
-### 5.1 Shared Attribute Parser
+### 5.1 Attribute Parser (Reused from Block Syntax)
+
+**Location:** `@frontend/block_attribute_syntax.go:19`
 
 ```go
-// @frontend/attribute_parser.go
-
-package frontend
-
-import (
-    "regexp"
-    "strings"
-)
-
-var attributePattern = regexp.MustCompile(`(\w+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s/>]*)))?`)
+// Attribute parsing regex - handles double quotes, single quotes, unquoted values
+// Supports hyphens in attribute names (e.g., start-level, max-depth)
+var attributePattern = regexp.MustCompile(`([\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s/>]+)))?`)
 
 func parseAttributes(s string) map[string]string {
     if s == "" {
@@ -260,11 +297,11 @@ func parseAttributes(s string) map[string]string {
         
         val := ""
         if len(m) > 2 && m[2] != "" {
-            val = m[2]
+            val = m[2]  // Double quoted
         } else if len(m) > 3 && m[3] != "" {
-            val = m[3]
+            val = m[3]  // Single quoted
         } else if len(m) > 4 && m[4] != "" {
-            val = m[4]
+            val = m[4]  // Unquoted
         }
         
         attrs[key] = val
@@ -272,27 +309,12 @@ func parseAttributes(s string) map[string]string {
     
     return attrs
 }
-
-func filterSystemAttrs(attrs map[string]string) map[string]string {
-    systemAttrs := map[string]bool{"id": true, "type": true}
-    filtered := make(map[string]string)
-    for k, v := range attrs {
-        if !systemAttrs[k] {
-            filtered[k] = v
-        }
-    }
-    return filtered
-}
-
-func sanitizeAttributeValues(attrs map[string]string) map[string]string {
-    import "html"
-    sanitized := make(map[string]string)
-    for k, v := range attrs {
-        sanitized[k] = html.EscapeString(v)
-    }
-    return sanitized
-}
 ```
+
+**Why This Design Works:**
+- Single regex handles all quote styles: `key="value"`, `key='value'`, `key=value`
+- Supports hyphenated attribute names (future-proofing)
+- No separate file needed - shared between block and translation syntax
 
 ### 5.2 Updated Rendering Pipeline
 
@@ -406,24 +428,23 @@ All existing `[[ ]]` syntax continues to work exactly as before:
 <translation id="welcome" name="John" fallback="en" />
 ```
 
-### 7.2 Migration Path
+## 7. Test Coverage
 
-**Implementation Phase (Completed):**
-1. ✅ Added `applyTranslationAttributeSyntax` to frontend (`translation_attribute_syntax.go`)
-2. ✅ Implemented shared `parseAttributes` helper (already existed from block syntax)
-3. ✅ Integrated into rendering pipeline after legacy translation processing
-4. ✅ All existing content continues to work
+**Test File:** `@frontend/translation_attribute_syntax_test.go`
 
-**Testing Phase (Completed):**
-1. ✅ Unit tests for `applyTranslationAttributeSyntax` (10 test cases)
-2. ✅ Integration tests for full rendering pipeline
-3. ✅ Backward compatibility tests with legacy syntax
-4. ✅ XSS prevention validation
+| Test Case | Line | Description |
+|-----------|------|-------------|
+| `basic translation - angle brackets` | 79-83 | `<translation id="..." />` syntax |
+| `basic translation - square brackets` | 85-89 | `[[translation id="..."]]` syntax |
+| `translation with different language` | 91-95 | Language switching (EN → ES) |
+| `translation with fallback` | 97-101 | Missing translation falls back |
+| `multiple interpolation variables` | 103-108 | `name="..." count="..."` combined |
+| `missing id attribute` | 110-114 | Error handling for missing `id` |
+| `non-existent translation` | 116-120 | Graceful handling of unknown ID |
+| `XSS prevention in interpolation` | 122-126 | `html.EscapeString` validation |
+| `multiple translations in content` | 128-133 | Multiple tags in single content |
 
-**Adoption Phase:**
-1. Update documentation with new syntax examples (in progress)
-2. Content editors can optionally use new syntax
-3. Admin UI shows available attributes per entity type
+**Test Results:** All 11 tests passing.
 
 ### 7.3 Default Behavior
 
@@ -606,51 +627,38 @@ entityMap := buildEntityMap(entities)
 
 ---
 
-## 12. Conclusion
+## 9. Known Limitations
 
-### Summary
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Pluralization | ❌ Not implemented | `count="5"` doesn't auto-pluralize |
+| Context-aware | ❌ Not implemented | `context="button"` attribute unused |
+| Conditional rendering | ❌ Not implemented | `if-user="premium"` not supported |
+| Nested translations | ⚠️ Untested | `<translation>` inside translation value |
+| HTML in interpolation | ⚠️ Escaped | Use `{{{raw}}}` syntax not implemented |
 
-The Translation Attribute Syntax has been successfully implemented, extending the attribute-based syntax pattern to translations:
+## 10. Conclusion
 
-| Feature | Legacy `[[TRANSLATION_id]]` | New `<translation />` | Status |
-|---------|----------------------------|----------------------|--------|
-| Basic usage | `[[TRANSLATION_welcome]]` | `<translation id="welcome" />` | ✅ Implemented |
-| Interpolation | ❌ Not supported | `<translation id="welcome" name="John" />` | ✅ Implemented |
-| Fallback | ❌ Not supported | `<translation id="term" fallback="en" />` | ✅ Implemented |
-| Multiple vars | ❌ Not supported | `<translation id="summary" count="5" total="$125" />` | ✅ Implemented |
-| Square bracket alt | ❌ Not supported | `[[translation id="welcome" name="John"]]` | ✅ Implemented |
-| XSS Prevention | N/A | Automatic HTML escaping | ✅ Implemented |
+### Implementation Summary
 
-### Implementation Files
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| Core function | ✅ Complete | `frontend/translation_attribute_syntax.go:17-118` |
+| Test suite | ✅ Complete | `frontend/translation_attribute_syntax_test.go` (11 tests) |
+| Pipeline integration | ✅ Complete | `frontend/frontend.go:601-606` |
+| Shared parser | ✅ Reused | `frontend/block_attribute_syntax.go:19` |
+| XSS prevention | ✅ Complete | `html.EscapeString` on all values |
+| Error handling | ✅ Complete | Structured logging + HTML comments |
 
-- `frontend/translation_attribute_syntax.go` - Core implementation (118 lines)
-- `frontend/translation_attribute_syntax_test.go` - Test suite (289 lines)
-- `frontend/frontend.go` - Pipeline integration
-- `frontend/block_attribute_syntax.go` - Shared `parseAttributes` helper
+### Files Modified/Created
 
-### Test Coverage
+1. **Created:** `frontend/translation_attribute_syntax.go` (118 lines)
+2. **Created:** `frontend/translation_attribute_syntax_test.go` (289 lines)
+3. **Modified:** `frontend/frontend.go` - Added `applyTranslationAttributeSyntax` call
 
-- ✅ Basic translation with angle bracket syntax
-- ✅ Basic translation with square bracket syntax
-- ✅ Variable interpolation
-- ✅ Multiple interpolation variables
-- ✅ Fallback language handling
-- ✅ Missing ID attribute handling
-- ✅ Non-existent translation handling
-- ✅ XSS prevention in interpolation values
-- ✅ Multiple translations in single content
-- ✅ Integration with full rendering pipeline
-- ✅ Coexistence with legacy `[[TRANSLATION_id]]` syntax
+### Next Steps (Optional Enhancements)
 
----
-
-## 13. References
-
-- Block Attribute Syntax Proposal (2026-03-27)
-- Shortcode System Documentation
-- Frontend Rendering Pipeline
-- Entity Interface Definitions
-
----
-
-**End of Proposal**
+1. **Pluralization:** Implement ICU MessageFormat or simple `{{count}} item(s)` patterns
+2. **Admin UI:** Add translation reference picker with attribute builder
+3. **Documentation:** User guide for content editors
+4. **Performance:** Cache translated strings with attribute hash keys

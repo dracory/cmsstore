@@ -28,6 +28,7 @@ type frontend struct {
 	cacheExpireSeconds  int
 	cache               *ttlcache.Cache[string, any]
 	blockRenderers      *BlockRendererRegistry
+	pageNotFoundHandler func(w http.ResponseWriter, r *http.Request, alias string) (handled bool, result string)
 }
 
 // Implement menu.FrontendStore interface
@@ -437,6 +438,13 @@ func (frontend *frontend) PageRenderHtmlBySiteAndAlias(w http.ResponseWriter, r 
 
 	if page == nil {
 		frontend.logger.Warn("PageRenderHtmlBySiteAndAlias: Page not found", "alias", alias)
+		// Try custom not found handler if configured
+		if frontend.pageNotFoundHandler != nil {
+			handled, result := frontend.pageNotFoundHandler(w, r, alias)
+			if handled {
+				return result
+			}
+		}
 		return hb.NewDiv().Text("Page with alias '").Text(alias).Text("' not found").ToHTML()
 	}
 
