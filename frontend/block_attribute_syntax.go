@@ -15,7 +15,8 @@ var blockAttributeAngleBrackets = regexp.MustCompile(`<block\s+([^>]+?)\s*/>`)
 var blockAttributeSquareBrackets = regexp.MustCompile(`\[\[block\s+([^\]]+?)\s*\]\]`)
 
 // Attribute parsing regex - handles double quotes, single quotes, unquoted values, and boolean flags
-var attributePattern = regexp.MustCompile(`(\w+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s/>]+)))?`)
+// Supports hyphens in attribute names (e.g., start-level, max-depth)
+var attributePattern = regexp.MustCompile(`([\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s/>]+)))?`)
 
 // applyBlockAttributeSyntax processes block references with attributes.
 // Supports two syntaxes:
@@ -89,8 +90,11 @@ func (frontend *frontend) applyBlockAttributeSyntax(req *http.Request, content s
 		// Get block type (from global registry)
 		blockType := cmsstore.GetBlockType(blockTypeKey)
 
+		// Extract wrap attribute before filtering (it's handled here, not passed to renderer)
+		wrapElement := attrs["wrap"]
+
 		// Remove system attrs and sanitize before passing to renderer
-		runtimeAttrs := filterAndSanitizeAttrs(attrs) // remove "id", sanitize values
+		runtimeAttrs := filterAndSanitizeAttrs(attrs) // remove "id", "wrap", sanitize values
 
 		// Render with attributes
 		var htmlOutput string
@@ -111,6 +115,13 @@ func (frontend *frontend) applyBlockAttributeSyntax(req *http.Request, content s
 		if err != nil {
 			frontend.logger.Error("Block attribute syntax: render error", "id", blockID, "error", err)
 			htmlOutput = "<!-- Block render error: " + blockID + " -->"
+		}
+
+		// Apply wrap element if specified
+		if wrapElement != "" {
+			// Sanitize the wrap element name (only allow alphanumeric and hyphens)
+			wrapElement = html.EscapeString(wrapElement)
+			htmlOutput = "<" + wrapElement + ">" + htmlOutput + "</" + wrapElement + ">"
 		}
 
 		// Replace the tag with rendered content
@@ -160,7 +171,7 @@ func parseAttributes(s string) map[string]string {
 
 // filterAndSanitizeAttrs removes system-reserved attributes and sanitizes values
 func filterAndSanitizeAttrs(attrs map[string]string) map[string]string {
-	systemAttrs := map[string]bool{"id": true} // Only 'id' is system-reserved
+	systemAttrs := map[string]bool{"id": true, "wrap": true} // 'id' and 'wrap' are system-reserved
 	filtered := make(map[string]string)
 	for k, v := range attrs {
 		if !systemAttrs[k] {

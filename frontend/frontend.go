@@ -598,6 +598,13 @@ func (frontend *frontend) renderContentToHtml(
 		return "", err
 	}
 
+	// Apply new translation attribute syntax: <translation id="..." attr="value" />
+	content, err = frontend.applyTranslationAttributeSyntax(r, content, language)
+
+	if err != nil {
+		return "", err
+	}
+
 	return content, nil
 }
 
