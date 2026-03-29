@@ -34,10 +34,8 @@ github.com/dracory/database v0.7.0 h1:7pZbNKOhaMOwQ9WDU4AKgqvqmmKU/x5lNGliLH4aH0
 github.com/dracory/database v0.7.0/go.mod h1:SySNVnsfJSo2OQOMKrnVM4D98F5h9w2xoBVKjKLUl2E=
 github.com/dracory/dataobject v1.6.0 h1:k9kVYthGqK3giZvG/HMF9wGjwY9sRLv8XJ543nsUTiE=
 github.com/dracory/dataobject v1.6.0/go.mod h1:eo0pRMmHAEpWKQo29F6TTs43Cpp7J5QRj9wiJ0eQrJ0=
-github.com/dracory/entitystore v1.5.0 h1:zm3OQuZz9aZ+EH4yn7K+Q7RIMcxE65I0ZE8DczViQ2o=
-github.com/dracory/entitystore v1.5.0/go.mod h1:p6jUaG2nU97myxvXrGV00drhnclgHneNV2uHOdJmtYA=
-github.com/dracory/entitystore v1.6.0 h1:zLhS0xM5kiR9I4Mitehqtcnb8AgWx+6O6PlVFH1Hq1s=
-github.com/dracory/entitystore v1.6.0/go.mod h1:p6jUaG2nU97myxvXrGV00drhnclgHneNV2uHOdJmtYA=
+github.com/dracory/entitystore v1.7.0 h1:39222AiIJKf8eIraQZfWlthHyNaqt3+2OYqKLIhJCGg=
+github.com/dracory/entitystore v1.7.0/go.mod h1:p6jUaG2nU97myxvXrGV00drhnclgHneNV2uHOdJmtYA=
 github.com/dracory/env v1.0.0 h1:/Lw9MoXA9+5YDWKVmMF9l9f47OMjcLHe1olAAvfQpfk=
 github.com/dracory/env v1.0.0/go.mod h1:aIvC0IB0yu9dP++i9ATs6fP5yG/U0VxSgYuT57dJGHg=
 github.com/dracory/envenc v1.2.0 h1:46cQI80k+6zNAu8Hdj6iLEOKweUgUd8Fg8niQZyh/w4=
