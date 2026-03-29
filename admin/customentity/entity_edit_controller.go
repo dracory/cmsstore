@@ -53,7 +53,7 @@ func (c *EntityEditController) showForm(_ *http.Request, entityID string, formDa
 		for _, attr := range c.definition.Attributes {
 			attrValue, _ := customStore.Inner().AttributeFind(ctx, entityID, attr.Name)
 			if attrValue != nil {
-				formData[attr.Name] = attrValue.AttributeValue()
+				formData[attr.Name] = attrValue.GetValue()
 			}
 		}
 	}

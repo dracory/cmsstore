@@ -80,13 +80,13 @@ func TestCustomEntityIntegration(t *testing.T) {
 		entity, err := customStore.FindByID(ctx, productID)
 		assert.NoError(t, err)
 		assert.NotNil(t, entity)
-		assert.Equal(t, "product", entity.EntityType())
+		assert.Equal(t, "product", entity.GetType())
 
 		// Verify attributes
 		titleAttr, err := customStore.Inner().AttributeFind(ctx, entity.ID(), "title")
 		assert.NoError(t, err)
 		assert.NotNil(t, titleAttr)
-		assert.Equal(t, "Test Laptop", titleAttr.AttributeValue())
+		assert.Equal(t, "Test Laptop", titleAttr.GetValue())
 
 		priceAttr, err := customStore.Inner().AttributeFind(ctx, entity.ID(), "price")
 		assert.NoError(t, err)
@@ -144,7 +144,7 @@ func TestCustomEntityIntegration(t *testing.T) {
 
 		// Verify update
 		titleAttr, _ := customStore.Inner().AttributeFind(ctx, productID, "title")
-		assert.Equal(t, "Updated Title", titleAttr.AttributeValue())
+		assert.Equal(t, "Updated Title", titleAttr.GetValue())
 
 		priceAttr, _ := customStore.Inner().AttributeFind(ctx, productID, "price")
 		priceValue, _ := priceAttr.GetFloat()
@@ -264,6 +264,6 @@ func TestCustomEntityWithRelationships(t *testing.T) {
 	rels, err := customStore.GetRelationships(ctx, bookID)
 	assert.NoError(t, err)
 	assert.Len(t, rels, 1)
-	assert.Equal(t, authorID, rels[0].RelatedEntityID())
-	assert.Equal(t, "belongs_to", rels[0].RelationshipType())
+	assert.Equal(t, authorID, rels[0].GetRelatedEntityID())
+	assert.Equal(t, "belongs_to", rels[0].GetRelationshipType())
 }

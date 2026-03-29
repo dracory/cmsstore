@@ -50,8 +50,8 @@ func (c *EntityDeleteController) showConfirmation(_ *http.Request, entityID stri
 	if len(c.definition.Attributes) > 0 {
 		firstAttr := c.definition.Attributes[0]
 		attrValue, _ := customStore.Inner().AttributeFind(ctx, entityID, firstAttr.Name)
-		if attrValue != nil && attrValue.AttributeValue() != "" {
-			displayName = attrValue.AttributeValue()
+		if attrValue != nil && attrValue.GetValue() != "" {
+			displayName = attrValue.GetValue()
 		}
 	}
 

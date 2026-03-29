@@ -74,11 +74,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Created taxonomy: %s (ID: %s)\n\n", categoryTaxonomy.Name(), categoryTaxonomy.ID())
+	fmt.Printf("Created taxonomy: %s (ID: %s)\n\n", categoryTaxonomy.GetName(), categoryTaxonomy.ID())
 
 	// Example 2: Create taxonomy terms (categories)
 	fmt.Println("=== Creating Category Terms ===")
-	
+
 	electronicsCategory, err := innerStore.TaxonomyTermCreateByOptions(ctx, entitystore.TaxonomyTermOptions{
 		TaxonomyID: categoryTaxonomy.ID(),
 		Name:       "Electronics",
@@ -88,7 +88,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Created category: %s (ID: %s)\n", electronicsCategory.Name(), electronicsCategory.ID())
+	fmt.Printf("Created category: %s (ID: %s)\n", electronicsCategory.GetName(), electronicsCategory.ID())
 
 	clothingCategory, err := innerStore.TaxonomyTermCreateByOptions(ctx, entitystore.TaxonomyTermOptions{
 		TaxonomyID: categoryTaxonomy.ID(),
@@ -99,7 +99,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Created category: %s (ID: %s)\n", clothingCategory.Name(), clothingCategory.ID())
+	fmt.Printf("Created category: %s (ID: %s)\n", clothingCategory.GetName(), clothingCategory.ID())
 
 	booksCategory, err := innerStore.TaxonomyTermCreateByOptions(ctx, entitystore.TaxonomyTermOptions{
 		TaxonomyID: categoryTaxonomy.ID(),
@@ -110,7 +110,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Created category: %s (ID: %s)\n\n", booksCategory.Name(), booksCategory.ID())
+	fmt.Printf("Created category: %s (ID: %s)\n\n", booksCategory.GetName(), booksCategory.ID())
 
 	// Example 3: Create a tags taxonomy
 	fmt.Println("=== Creating Tags Taxonomy ===")
@@ -122,11 +122,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Created taxonomy: %s (ID: %s)\n\n", tagsTaxonomy.Name(), tagsTaxonomy.ID())
+	fmt.Printf("Created taxonomy: %s (ID: %s)\n\n", tagsTaxonomy.GetName(), tagsTaxonomy.ID())
 
 	// Example 4: Create tag terms
 	fmt.Println("=== Creating Tag Terms ===")
-	
+
 	newTag, err := innerStore.TaxonomyTermCreateByOptions(ctx, entitystore.TaxonomyTermOptions{
 		TaxonomyID: tagsTaxonomy.ID(),
 		Name:       "New",
@@ -135,7 +135,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Created tag: %s (ID: %s)\n", newTag.Name(), newTag.ID())
+	fmt.Printf("Created tag: %s (ID: %s)\n", newTag.GetName(), newTag.ID())
 
 	saleTag, err := innerStore.TaxonomyTermCreateByOptions(ctx, entitystore.TaxonomyTermOptions{
 		TaxonomyID: tagsTaxonomy.ID(),
@@ -145,7 +145,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Created tag: %s (ID: %s)\n", saleTag.Name(), saleTag.ID())
+	fmt.Printf("Created tag: %s (ID: %s)\n", saleTag.GetName(), saleTag.ID())
 
 	featuredTag, err := innerStore.TaxonomyTermCreateByOptions(ctx, entitystore.TaxonomyTermOptions{
 		TaxonomyID: tagsTaxonomy.ID(),
@@ -155,7 +155,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Created tag: %s (ID: %s)\n\n", featuredTag.Name(), featuredTag.ID())
+	fmt.Printf("Created tag: %s (ID: %s)\n\n", featuredTag.GetName(), featuredTag.ID())
 
 	// Example 5: Create products with taxonomy assignments
 	fmt.Println("=== Creating Products with Taxonomy Assignments ===")
@@ -207,9 +207,9 @@ func main() {
 
 	fmt.Printf("Laptop has %d taxonomy assignment(s):\n", len(laptopTaxonomies))
 	for _, assignment := range laptopTaxonomies {
-		term, _ := innerStore.TaxonomyTermFind(ctx, assignment.TermID())
+		term, _ := innerStore.TaxonomyTermFind(ctx, assignment.GetTermID())
 		if term != nil {
-			fmt.Printf("- Term: %s (Taxonomy ID: %s)\n", term.Name(), assignment.TaxonomyID())
+			fmt.Printf("- Term: %s (Taxonomy ID: %s)\n", term.GetName(), assignment.GetTaxonomyID())
 		}
 	}
 	fmt.Println()
@@ -226,9 +226,9 @@ func main() {
 
 	fmt.Printf("Found %d product(s) in Electronics:\n", len(electronicsProducts))
 	for i, assignment := range electronicsProducts {
-		product, _ := customStore.FindByID(ctx, assignment.EntityID())
+		product, _ := customStore.FindByID(ctx, assignment.GetEntityID())
 		if product != nil {
-			fmt.Printf("%d. Product ID: %s (Type: %s)\n", i+1, product.ID(), product.EntityType())
+			fmt.Printf("%d. Product ID: %s (Type: %s)\n", i+1, product.ID(), product.GetType())
 		}
 	}
 	fmt.Println()
@@ -245,7 +245,7 @@ func main() {
 
 	fmt.Printf("Found %d product(s) tagged as 'New':\n", len(newProducts))
 	for i, assignment := range newProducts {
-		product, _ := customStore.FindByID(ctx, assignment.EntityID())
+		product, _ := customStore.FindByID(ctx, assignment.GetEntityID())
 		if product != nil {
 			fmt.Printf("%d. Product ID: %s\n", i+1, product.ID())
 		}
@@ -263,7 +263,7 @@ func main() {
 
 	fmt.Printf("Product Categories taxonomy has %d term(s):\n", len(allCategories))
 	for i, term := range allCategories {
-		fmt.Printf("%d. %s (slug: %s, order: %d)\n", i+1, term.Name(), term.Slug(), term.SortOrder())
+		fmt.Printf("%d. %s (slug: %s, order: %d)\n", i+1, term.GetName(), term.GetSlug(), term.GetSortOrder())
 	}
 	fmt.Println()
 

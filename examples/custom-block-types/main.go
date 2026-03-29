@@ -99,7 +99,7 @@ func main() {
 	customStore := store.CustomEntityStore()
 
 	fmt.Println("=== Custom Block Types Example ===")
-	fmt.Println("Demonstrating how to extend CMS with custom block types\n")
+	fmt.Println("Demonstrating how to extend CMS with custom block types")
 
 	// Example 1: Create a Hero Block
 	fmt.Println("=== Creating Hero Block ===")
@@ -242,9 +242,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Block Type: %s\n", hero.EntityType())
+	fmt.Printf("Block Type: %s\n", hero.GetType())
 	fmt.Printf("Block ID: %s\n", hero.ID())
-	fmt.Printf("Created: %s\n", hero.CreatedAt())
+	fmt.Printf("Created: %s\n", hero.GetCreatedAt())
 
 	// Summary
 	fmt.Println("\n=== Summary ===")

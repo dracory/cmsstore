@@ -135,9 +135,9 @@ func main() {
 
 	fmt.Printf("Post 1 has %d relationship(s)\n", len(post1Relationships))
 	for _, rel := range post1Relationships {
-		fmt.Printf("- Relationship Type: %s\n", rel.RelationshipType())
-		fmt.Printf("  Related Entity ID: %s\n", rel.RelatedEntityID())
-		fmt.Printf("  Metadata: %s\n", rel.Metadata())
+		fmt.Printf("- Relationship Type: %s\n", rel.GetRelationshipType())
+		fmt.Printf("  Related Entity ID: %s\n", rel.GetRelatedEntityID())
+		fmt.Printf("  Metadata: %s\n", rel.GetMetadata())
 	}
 	fmt.Println()
 
@@ -156,11 +156,11 @@ func main() {
 	fmt.Printf("Author has %d post(s):\n", len(authorRelationships))
 	for i, rel := range authorRelationships {
 		// Get the post entity
-		post, err := customStore.FindByID(ctx, rel.EntityID())
+		post, err := customStore.FindByID(ctx, rel.GetEntityID())
 		if err != nil {
 			continue
 		}
-		fmt.Printf("%d. Post ID: %s (Type: %s)\n", i+1, post.ID(), post.EntityType())
+		fmt.Printf("%d. Post ID: %s (Type: %s)\n", i+1, post.ID(), post.GetType())
 	}
 	fmt.Println()
 
@@ -231,12 +231,12 @@ func main() {
 
 	fmt.Printf("Post 1 has %d comment(s):\n", len(postComments))
 	for i, rel := range postComments {
-		comment, err := customStore.FindByID(ctx, rel.EntityID())
+		comment, err := customStore.FindByID(ctx, rel.GetEntityID())
 		if err != nil {
 			continue
 		}
 		// Only show comments (not the author relationship)
-		if comment.EntityType() == "comment" {
+		if comment.GetType() == "comment" {
 			fmt.Printf("%d. Comment ID: %s\n", i+1, comment.ID())
 		}
 	}

@@ -136,7 +136,7 @@ func (s *CustomEntityStore) Create(
 
 	// Create entity via entitystore
 	entity := entitystore.NewEntity()
-	entity.SetEntityType(entityType)
+	entity.SetType(entityType)
 
 	if err := s.inner.EntityCreate(ctx, entity); err != nil {
 		return "", fmt.Errorf("failed to create entity: %w", err)
@@ -188,11 +188,11 @@ func (s *CustomEntityStore) Create(
 			}
 
 			// Validate taxonomy is allowed for this entity type
-			if !s.isTaxonomyAllowed(def, term.TaxonomyID()) {
-				return "", fmt.Errorf("taxonomy '%s' is not allowed for entity type '%s'", term.TaxonomyID(), entityType)
+			if !s.isTaxonomyAllowed(def, term.GetTaxonomyID()) {
+				return "", fmt.Errorf("taxonomy '%s' is not allowed for entity type '%s'", term.GetTaxonomyID(), entityType)
 			}
 
-			if err := s.inner.EntityTaxonomyAssign(ctx, entity.ID(), term.TaxonomyID(), termID); err != nil {
+			if err := s.inner.EntityTaxonomyAssign(ctx, entity.ID(), term.GetTaxonomyID(), termID); err != nil {
 				return "", fmt.Errorf("failed to assign taxonomy term: %w", err)
 			}
 		}
@@ -214,9 +214,9 @@ func (s *CustomEntityStore) List(ctx context.Context, options entitystore.Entity
 // Update updates a custom entity's attributes.
 func (s *CustomEntityStore) Update(ctx context.Context, entity entitystore.EntityInterface, attrs map[string]interface{}) error {
 	// Validate entity type is registered
-	def, ok := s.definitions[entity.EntityType()]
+	def, ok := s.definitions[entity.GetType()]
 	if !ok {
-		return fmt.Errorf("entity type '%s' is not registered", entity.EntityType())
+		return fmt.Errorf("entity type '%s' is not registered", entity.GetType())
 	}
 
 	// Validate attributes

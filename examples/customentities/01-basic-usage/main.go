@@ -82,8 +82,8 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Product ID: %s\n", product.ID())
-	fmt.Printf("Type: %s\n", product.EntityType())
-	fmt.Printf("Created: %s\n\n", product.CreatedAt())
+	fmt.Printf("Type: %s\n", product.GetType())
+	fmt.Printf("Created: %s\n\n", product.GetCreatedAt())
 
 	// Example 3: Update the product
 	fmt.Println("=== Updating Product ===")
@@ -94,7 +94,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Product updated successfully\n")
+	fmt.Println("Product updated successfully")
 
 	// Example 4: Create more products
 	fmt.Println("=== Creating More Products ===")
@@ -145,7 +145,7 @@ func main() {
 		fmt.Printf("%d. Product ID: %s (Type: %s)\n",
 			i+1,
 			p.ID(),
-			p.EntityType(),
+			p.GetType(),
 		)
 	}
 	fmt.Println()

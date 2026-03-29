@@ -155,7 +155,7 @@ func (c *EntityListController) buildTable(ctx context.Context, customStore *cmss
 		}
 
 		// Created
-		row.Child(hb.TD().HTML(entity.CreatedAtCarbon().Format("Y-m-d H:i")))
+		row.Child(hb.TD().HTML(entity.GetCreatedAtCarbon().Format("Y-m-d H:i")))
 
 		// Actions
 		row.Child(c.buildActions(entity.ID()))
@@ -172,7 +172,7 @@ func (c *EntityListController) getAttributeValue(ctx context.Context, customStor
 	if err != nil || attr == nil {
 		return ""
 	}
-	return attr.AttributeValue()
+	return attr.GetValue()
 }
 
 func (c *EntityListController) buildActions(entityID string) hb.TagInterface {
