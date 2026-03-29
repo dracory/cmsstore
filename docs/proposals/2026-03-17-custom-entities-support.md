@@ -504,9 +504,10 @@ This approach delivered:
 **Next Actions:**
 1. ✅ Implement relationships/taxonomy in entitystore (COMPLETE)
 2. ✅ Create `custom_entity_store.go` wrapper in cmsstore (COMPLETE)
-3. ⚠️ Add admin controllers using `dracory/crud` (PENDING)
+3. ✅ Create comprehensive examples demonstrating usage (COMPLETE)
 4. ✅ Register custom entity types in CMS (COMPLETE)
-5. ⚠️ Add relationship/taxonomy UI components (PENDING)
+5. ⚠️ Add admin controllers using `dracory/crud` (PENDING)
+6. ⚠️ Add relationship/taxonomy UI components (PENDING)
 
 ## Implementation Summary
 
@@ -607,9 +608,48 @@ When `TaxonomiesEnabled: true`:
 - `cms_custom_entity_taxonomy` - Entity-term assignments
 - (Plus corresponding trash tables)
 
+### Examples Created
+
+Comprehensive examples demonstrating custom entities usage:
+
+**Location:** `examples/customentities/`
+
+1. **01_basic_usage.go** - Basic CRUD operations
+   - Entity creation and retrieval
+   - Attribute management
+   - Listing and counting
+   - Soft delete functionality
+
+2. **02_relationships.go** - Entity relationships
+   - Creating linked entities (Author → Post → Comment)
+   - Querying relationships
+   - Relationship metadata
+   - Multi-level hierarchies
+
+3. **03_taxonomy.go** - Categorization and tagging
+   - Creating taxonomies and terms
+   - Assigning multiple taxonomies
+   - Filtering by category/tag
+   - Hierarchical organization
+
+4. **README.md** - Complete documentation
+   - Quick start guide
+   - API reference
+   - Best practices
+   - Troubleshooting
+
+**Run examples:**
+```bash
+cd examples/customentities
+go run 01_basic_usage.go
+go run 02_relationships.go
+go run 03_taxonomy.go
+```
+
 ### Testing Status
 
 - ✅ Core implementation complete
+- ✅ Examples demonstrating all features complete
 - ⚠️ Comprehensive test suite pending
 - ✅ Integration with entitystore verified
 - ✅ Documentation complete
