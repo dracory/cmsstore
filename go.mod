@@ -12,22 +12,22 @@ require (
 	github.com/dracory/dataobject v1.6.0
 	github.com/dracory/entitystore v1.7.0
 	github.com/dracory/env v1.0.0
-	github.com/dracory/form v0.21.0
+	github.com/dracory/form v0.23.0
 	github.com/dracory/hb v1.88.0
 	github.com/dracory/req v0.1.0
 	github.com/dracory/sb v0.23.0
-	github.com/dracory/str v0.17.0
+	github.com/dracory/str v0.18.0
 	github.com/dracory/test v0.10.0
 	github.com/dracory/ui v0.17.0
 	github.com/dracory/uid v1.9.0
 	github.com/dracory/versionstore v0.6.0
 	github.com/dromara/carbon/v2 v2.6.16
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/lib/pq v1.12.0
+	github.com/lib/pq v1.12.3
 	github.com/samber/lo v1.53.0
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
-	modernc.org/sqlite v1.48.0
+	modernc.org/sqlite v1.48.1
 )
 
 require (
@@ -37,10 +37,13 @@ require (
 	github.com/dracory/websrv v0.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mocktools/go-smtp-mock v1.10.0 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	golang.org/x/mod v0.34.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
