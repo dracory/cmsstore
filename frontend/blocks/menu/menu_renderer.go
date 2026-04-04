@@ -49,7 +49,38 @@ func (r *MenuRenderer) RenderMenuHTML(ctx context.Context, menuItems []cmsstore.
 	}
 }
 
-// menuTreeNode represents a node in the menu tree
+// getCurrentPath retrieves the current request path from context
+func getCurrentPath(ctx context.Context) string {
+	if req := cmsstore.RequestFromContext(ctx); req != nil {
+		return req.URL.Path
+	}
+	return ""
+}
+
+// isActiveItem checks if the menu item URL matches the current path
+func isActiveItem(itemURL, currentPath string) bool {
+	if itemURL == "" || currentPath == "" {
+		return false
+	}
+	// Normalize paths for comparison
+	itemURL = strings.TrimSuffix(itemURL, "/")
+	currentPath = strings.TrimSuffix(currentPath, "/")
+	return itemURL == currentPath
+}
+
+// hasActiveChild checks if any child in the tree is active
+func hasActiveChild(node *menuTreeNode, currentPath string) bool {
+	if isActiveItem(node.Item.URL(), currentPath) {
+		return true
+	}
+	for _, child := range node.Children {
+		if hasActiveChild(child, currentPath) {
+			return true
+		}
+	}
+	return false
+}
+
 type menuTreeNode struct {
 	Item     cmsstore.MenuItemInterface
 	Children []*menuTreeNode
@@ -185,15 +216,30 @@ func (r *MenuRenderer) renderMenuBreadcrumb(ctx context.Context, tree []*menuTre
 
 // renderMenuItemHTML renders a single menu item with its children
 func (r *MenuRenderer) renderMenuItemHTML(ctx context.Context, node *menuTreeNode, renderChildren bool) string {
-	url := r.resolveMenuItemURL(ctx, node.Item)
+	currentPath := getCurrentPath(ctx)
+	itemURL := r.resolveMenuItemURL(ctx, node.Item)
 	target := node.Item.Target()
 
-	html := `<li>`
+	// Determine if this item is active
+	isActive := isActiveItem(itemURL, currentPath)
+	hasActiveDescendant := hasActiveChild(node, currentPath)
 
-	if url != "" {
-		html += `<a href="` + url + `"`
+	html := `<li`
+	if isActive {
+		html += ` class="active"`
+	} else if hasActiveDescendant && !renderChildren {
+		// For horizontal/dropdown menus, highlight parent if child is active
+		html += ` class="active-parent"`
+	}
+	html += `>`
+
+	if itemURL != "" {
+		html += `<a href="` + itemURL + `"`
 		if target != "" {
 			html += ` target="` + target + `"`
+		}
+		if isActive {
+			html += ` class="active"`
 		}
 		html += `>` + node.Item.Name() + `</a>`
 	} else {
