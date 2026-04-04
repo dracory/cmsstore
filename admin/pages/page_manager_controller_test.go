@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -27,29 +26,47 @@ func initPageManagerHandler(store cmsstore.StoreInterface) func(w http.ResponseW
 
 func Test_PageManagerController_Index(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initPageManagerHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Page Manager")
-	assert.Contains(t, body, "New Page")
-	assert.Contains(t, body, "table table-striped")
-	assert.Contains(t, body, "Filters")
+	if !strings.Contains(body, "Page Manager") {
+		t.Errorf("Expected body to contain 'Page Manager'")
+	}
+	if !strings.Contains(body, "New Page") {
+		t.Errorf("Expected body to contain 'New Page'")
+	}
+	if !strings.Contains(body, "table table-striped") {
+		t.Errorf("Expected body to contain table class")
+	}
+	if !strings.Contains(body, "Filters") {
+		t.Errorf("Expected body to contain 'Filters'")
+	}
 }
 
 func Test_PageManagerController_WithPages(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initPageManagerHandler(store)
 
 	// Seed a site using the same pattern as site manager tests
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	// Create a page directly without using SeedPage to have more control
 	page := cmsstore.NewPage()
@@ -58,21 +75,35 @@ func Test_PageManagerController_WithPages(t *testing.T) {
 	page.SetAlias("test-page-1")
 	page.SetStatus(cmsstore.PAGE_STATUS_ACTIVE)
 	err = store.PageCreate(context.Background(), page)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create page: %v", err)
+	}
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
 	// Should contain the page content
-	assert.Contains(t, body, "Page Manager")
-	assert.Contains(t, body, "Test Page 1")
-	assert.Contains(t, body, "Test Site")
+	if !strings.Contains(body, "Page Manager") {
+		t.Errorf("Expected body to contain 'Page Manager'")
+	}
+	if !strings.Contains(body, "Test Page 1") {
+		t.Errorf("Expected body to contain 'Test Page 1'")
+	}
+	if !strings.Contains(body, "Test Site") {
+		t.Errorf("Expected body to contain 'Test Site'")
+	}
 }
 
 func Test_PageManagerController_FilterModal(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initPageManagerHandler(store)
 
@@ -81,26 +112,46 @@ func Test_PageManagerController_FilterModal(t *testing.T) {
 			"action": {ActionModalPageFilterShow},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Filters")
-	assert.Contains(t, body, "name=\"filter_status\"")
-	assert.Contains(t, body, "name=\"filter_name\"")
-	assert.Contains(t, body, "name=\"filter_site_id\"")
-	assert.Contains(t, body, "name=\"filter_created_from\"")
-	assert.Contains(t, body, "name=\"filter_created_to\"")
+	if !strings.Contains(body, "Filters") {
+		t.Errorf("Expected body to contain 'Filters'")
+	}
+	if !strings.Contains(body, "name=\"filter_status\"") {
+		t.Errorf("Expected body to contain filter_status input")
+	}
+	if !strings.Contains(body, "name=\"filter_name\"") {
+		t.Errorf("Expected body to contain filter_name input")
+	}
+	if !strings.Contains(body, "name=\"filter_site_id\"") {
+		t.Errorf("Expected body to contain filter_site_id input")
+	}
+	if !strings.Contains(body, "name=\"filter_created_from\"") {
+		t.Errorf("Expected body to contain filter_created_from input")
+	}
+	if !strings.Contains(body, "name=\"filter_created_to\"") {
+		t.Errorf("Expected body to contain filter_created_to input")
+	}
 }
 
 func Test_PageManagerController_Sorting(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initPageManagerHandler(store)
 
 	// Seed a site using the same pattern as site manager tests
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	// Create a page directly
 	page := cmsstore.NewPage()
@@ -109,7 +160,9 @@ func Test_PageManagerController_Sorting(t *testing.T) {
 	page.SetAlias("test-page-1")
 	page.SetStatus(cmsstore.PAGE_STATUS_ACTIVE)
 	err = store.PageCreate(context.Background(), page)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create page: %v", err)
+	}
 
 	testCases := []struct {
 		name      string
@@ -151,24 +204,36 @@ func Test_PageManagerController_Sorting(t *testing.T) {
 					"sort": {tc.sortOrder},
 				},
 			})
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusOK, response.StatusCode)
+			if err != nil {
+				t.Fatalf("Failed to call endpoint: %v", err)
+			}
+			if response.StatusCode != http.StatusOK {
+				t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+			}
 
-			assert.Contains(t, body, "Page Manager")
-			assert.Contains(t, body, "table table-striped")
+			if !strings.Contains(body, "Page Manager") {
+				t.Errorf("Expected body to contain 'Page Manager'")
+			}
+			if !strings.Contains(body, "table table-striped") {
+				t.Errorf("Expected body to contain table class")
+			}
 		})
 	}
 }
 
 func Test_PageManagerController_Filtering(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initPageManagerHandler(store)
 
 	// Seed a site using the same pattern as site manager tests
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	// Create a page directly
 	page1 := cmsstore.NewPage()
@@ -177,7 +242,9 @@ func Test_PageManagerController_Filtering(t *testing.T) {
 	page1.SetAlias("test-page-1")
 	page1.SetStatus(cmsstore.PAGE_STATUS_ACTIVE)
 	err = store.PageCreate(context.Background(), page1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create page1: %v", err)
+	}
 
 	// Create a second page directly with alias
 	page2 := cmsstore.NewPage()
@@ -186,7 +253,9 @@ func Test_PageManagerController_Filtering(t *testing.T) {
 	page2.SetAlias("test-page-2")
 	page2.SetStatus(cmsstore.PAGE_STATUS_ACTIVE)
 	err = store.PageCreate(context.Background(), page2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create page2: %v", err)
+	}
 
 	testCases := []struct {
 		name       string
@@ -212,12 +281,20 @@ func Test_PageManagerController_Filtering(t *testing.T) {
 					"filter_name": {tc.filterName},
 				},
 			})
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusOK, response.StatusCode)
+			if err != nil {
+				t.Fatalf("Failed to call endpoint: %v", err)
+			}
+			if response.StatusCode != http.StatusOK {
+				t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+			}
 
-			assert.Contains(t, body, "Page Manager")
+			if !strings.Contains(body, "Page Manager") {
+				t.Errorf("Expected body to contain 'Page Manager'")
+			}
 			if tc.name == "Filter by page name" {
-				assert.Contains(t, body, tc.expected)
+				if !strings.Contains(body, tc.expected) {
+					t.Errorf("Expected body to contain '%s'", tc.expected)
+				}
 			}
 		})
 	}
@@ -225,13 +302,17 @@ func Test_PageManagerController_Filtering(t *testing.T) {
 
 func Test_PageManagerController_Pagination(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initPageManagerHandler(store)
 
 	// Seed a site using the same pattern as site manager tests
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	// Seed multiple pages for pagination
 	for i := 0; i < 25; i++ {
@@ -241,7 +322,9 @@ func Test_PageManagerController_Pagination(t *testing.T) {
 		page.SetAlias("test-page-" + string(rune(i+65)))
 		page.SetStatus(cmsstore.PAGE_STATUS_ACTIVE)
 		err := store.PageCreate(context.Background(), page)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to create page %d: %v", i, err)
+		}
 	}
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
@@ -250,38 +333,62 @@ func Test_PageManagerController_Pagination(t *testing.T) {
 			"per_page": {"10"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Page Manager")
-	assert.Contains(t, body, "pagination")
+	if !strings.Contains(body, "Page Manager") {
+		t.Errorf("Expected body to contain 'Page Manager'")
+	}
+	if !strings.Contains(body, "pagination") {
+		t.Errorf("Expected body to contain 'pagination'")
+	}
 }
 
 func Test_PageManagerController_EmptyState(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initPageManagerHandler(store)
 
 	// Test with no pages
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Page Manager")
-	assert.Contains(t, body, "table table-striped")
-	assert.Contains(t, body, "Showing pages")
+	if !strings.Contains(body, "Page Manager") {
+		t.Errorf("Expected body to contain 'Page Manager'")
+	}
+	if !strings.Contains(body, "table table-striped") {
+		t.Errorf("Expected body to contain table class")
+	}
+	if !strings.Contains(body, "Showing pages") {
+		t.Errorf("Expected body to contain 'Showing pages'")
+	}
 }
 
 func Test_PageManagerController_TableActions(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initPageManagerHandler(store)
 
 	// Seed a site using the same pattern as site manager tests
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	// Create a page directly
 	page := cmsstore.NewPage()
@@ -290,16 +397,32 @@ func Test_PageManagerController_TableActions(t *testing.T) {
 	page.SetAlias("test-page-1")
 	page.SetStatus(cmsstore.PAGE_STATUS_ACTIVE)
 	err = store.PageCreate(context.Background(), page)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create page: %v", err)
+	}
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
 	// Check for action buttons
-	assert.Contains(t, body, "btn btn-primary") // Edit button
-	assert.Contains(t, body, "btn btn-danger")  // Delete button
-	assert.Contains(t, body, "page-update")     // Update path
-	assert.Contains(t, body, "page-delete")     // Delete path
-	assert.Contains(t, body, page.ID())
+	if !strings.Contains(body, "btn btn-primary") {
+		t.Errorf("Expected body to contain edit button")
+	}
+	if !strings.Contains(body, "btn btn-danger") {
+		t.Errorf("Expected body to contain delete button")
+	}
+	if !strings.Contains(body, "page-update") {
+		t.Errorf("Expected body to contain update path")
+	}
+	if !strings.Contains(body, "page-delete") {
+		t.Errorf("Expected body to contain delete path")
+	}
+	if !strings.Contains(body, page.ID()) {
+		t.Errorf("Expected body to contain page ID")
+	}
 }

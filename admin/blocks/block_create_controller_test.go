@@ -29,27 +29,45 @@ func initBlockCreateHandler(store cmsstore.StoreInterface) func(w http.ResponseW
 
 func Test_BlockCreateController_Index(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initBlockCreateHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "New Block")
-	assert.Contains(t, body, "block_name")
-	assert.Contains(t, body, "block_type")
-	assert.Contains(t, body, "site_id")
+	if !strings.Contains(body, "New Block") {
+		t.Errorf("Expected body to contain 'New Block'")
+	}
+	if !strings.Contains(body, "block_name") {
+		t.Errorf("Expected body to contain block_name")
+	}
+	if !strings.Contains(body, "block_type") {
+		t.Errorf("Expected body to contain block_type")
+	}
+	if !strings.Contains(body, "site_id") {
+		t.Errorf("Expected body to contain site_id")
+	}
 }
 
 func Test_BlockCreateController_Create(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	handler := initBlockCreateHandler(store)
 
@@ -61,11 +79,20 @@ func Test_BlockCreateController_Create(t *testing.T) {
 			"block_content": {"<p>Test content</p>"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "block created successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "block created successfully") {
+		t.Errorf("Expected body to contain 'block created successfully'")
+	}
 }
 
 func Test_BlockCreateController_Create_ValidationError_MissingName(t *testing.T) {
