@@ -5,11 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/dracory/cmsstore/testutils"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -17,7 +16,9 @@ func newAdminForTest(t *testing.T, options AdminOptions) *admin {
 	t.Helper()
 
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	if options.Store == nil {
 		options.Store = store
@@ -27,7 +28,9 @@ func newAdminForTest(t *testing.T, options AdminOptions) *admin {
 	}
 
 	a, err := New(options)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create admin: %v", err)
+	}
 	return a
 }
 
@@ -38,8 +41,12 @@ func TestAdminHandle_HomePath(t *testing.T) {
 	w := httptest.NewRecorder()
 	a.Handle(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Dashboard")
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "Dashboard") {
+		t.Errorf("Expected body to contain 'Dashboard'")
+	}
 }
 
 func TestAdminHandle_InvalidPathDefaultsToHome(t *testing.T) {
@@ -49,8 +56,12 @@ func TestAdminHandle_InvalidPathDefaultsToHome(t *testing.T) {
 	w := httptest.NewRecorder()
 	a.Handle(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Dashboard")
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "Dashboard") {
+		t.Errorf("Expected body to contain 'Dashboard'")
+	}
 }
 
 func TestAdminHandle_PageManagerPath(t *testing.T) {
@@ -60,8 +71,12 @@ func TestAdminHandle_PageManagerPath(t *testing.T) {
 	w := httptest.NewRecorder()
 	a.Handle(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Pages")
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "Pages") {
+		t.Errorf("Expected body to contain 'Pages'")
+	}
 }
 
 func TestAdminHandle_MediaLinkRenderedWhenConfigured(t *testing.T) {
@@ -73,10 +88,18 @@ func TestAdminHandle_MediaLinkRenderedWhenConfigured(t *testing.T) {
 	w := httptest.NewRecorder()
 	a.Handle(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "href=\"/admin/media\"")
-	assert.Contains(t, w.Body.String(), "target=\"_blank\"")
-	assert.Contains(t, w.Body.String(), ">Media</a>")
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "href=\"/admin/media\"") {
+		t.Errorf("Expected body to contain media link")
+	}
+	if !strings.Contains(w.Body.String(), "target=\"_blank\"") {
+		t.Errorf("Expected body to contain target blank")
+	}
+	if !strings.Contains(w.Body.String(), ">Media</a>") {
+		t.Errorf("Expected body to contain Media link")
+	}
 }
 
 func TestAdminHandle_MediaLinkNotRenderedWhenNotConfigured(t *testing.T) {
@@ -86,8 +109,12 @@ func TestAdminHandle_MediaLinkNotRenderedWhenNotConfigured(t *testing.T) {
 	w := httptest.NewRecorder()
 	a.Handle(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.NotContains(t, w.Body.String(), ">Media</a>")
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+	if strings.Contains(w.Body.String(), ">Media</a>") {
+		t.Errorf("Expected body to NOT contain Media link")
+	}
 }
 
 func TestAdminHandle_CMSContainerPaddingRendered(t *testing.T) {
@@ -102,7 +129,13 @@ func TestAdminHandle_CMSContainerPaddingRendered(t *testing.T) {
 	w := httptest.NewRecorder()
 	a.Handle(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "class=\"cms\"")
-	assert.Contains(t, w.Body.String(), "padding: 9px 8px 7px 6px;")
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "class=\"cms\"") {
+		t.Errorf("Expected body to contain cms class")
+	}
+	if !strings.Contains(w.Body.String(), "padding: 9px 8px 7px 6px;") {
+		t.Errorf("Expected body to contain padding style")
+	}
 }

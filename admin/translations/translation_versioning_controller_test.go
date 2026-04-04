@@ -13,8 +13,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -30,21 +28,34 @@ func initTranslationVersioningHandler(store cmsstore.StoreInterface) func(w http
 
 func Test_TranslationVersioningController_TranslationIdIsRequired(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTranslationVersioningHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "translation id is required")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "translation id is required") {
+		t.Errorf("Expected body to contain error message")
+	}
 }
 
 func Test_TranslationVersioningController_TranslationIdIsInvalid(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTranslationVersioningHandler(store)
 
@@ -53,20 +64,33 @@ func Test_TranslationVersioningController_TranslationIdIsInvalid(t *testing.T) {
 			"translation_id": {"invalid-id"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "translation not found")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "translation not found") {
+		t.Errorf("Expected body to contain error message")
+	}
 }
 
 func Test_TranslationVersioningController_ListRevisions(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and translation
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	translation := cmsstore.NewTranslation()
 	translation.SetName("Test Translation")
@@ -74,7 +98,9 @@ func Test_TranslationVersioningController_ListRevisions(t *testing.T) {
 	translation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation.SetContent(map[string]string{"en": "Original content"})
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	// Create some versioning entries
 	versioning1 := cmsstore.NewVersioning()
@@ -83,7 +109,9 @@ func Test_TranslationVersioningController_ListRevisions(t *testing.T) {
 	content1, _ := json.Marshal(map[string]string{"en": "Version 1 content"})
 	versioning1.SetContent(string(content1))
 	err = store.VersioningCreate(context.Background(), versioning1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	versioning2 := cmsstore.NewVersioning()
 	versioning2.SetEntityID(translation.ID())
@@ -91,7 +119,9 @@ func Test_TranslationVersioningController_ListRevisions(t *testing.T) {
 	content2, _ := json.Marshal(map[string]string{"en": "Version 2 content"})
 	versioning2.SetContent(string(content2))
 	err = store.VersioningCreate(context.Background(), versioning2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTranslationVersioningHandler(store)
 
@@ -100,20 +130,32 @@ func Test_TranslationVersioningController_ListRevisions(t *testing.T) {
 			"translation_id": {translation.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Translation Revisions")
-	assert.Contains(t, body, "Preview")
+	if !strings.Contains(body, "Translation Revisions") {
+		t.Errorf("Expected body to contain 'Translation Revisions'")
+	}
+	if !strings.Contains(body, "Preview") {
+		t.Errorf("Expected body to contain 'Preview'")
+	}
 }
 
 func Test_TranslationVersioningController_PreviewRevision(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and translation
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	translation := cmsstore.NewTranslation()
 	translation.SetName("Test Translation")
@@ -121,7 +163,9 @@ func Test_TranslationVersioningController_PreviewRevision(t *testing.T) {
 	translation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation.SetContent(map[string]string{"en": "Current content"})
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	// Create a versioning entry
 	versioning := cmsstore.NewVersioning()
@@ -130,7 +174,9 @@ func Test_TranslationVersioningController_PreviewRevision(t *testing.T) {
 	content, _ := json.Marshal(map[string]string{"en": "Historical content"})
 	versioning.SetContent(string(content))
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTranslationVersioningHandler(store)
 
@@ -140,20 +186,32 @@ func Test_TranslationVersioningController_PreviewRevision(t *testing.T) {
 			"versioning_id":  {versioning.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Translation Revision")
-	assert.Contains(t, body, "Close")
+	if !strings.Contains(body, "Translation Revision") {
+		t.Errorf("Expected body to contain 'Translation Revision'")
+	}
+	if !strings.Contains(body, "Close") {
+		t.Errorf("Expected body to contain 'Close'")
+	}
 }
 
 func Test_TranslationVersioningController_RestoreAttributes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and translation
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	translation := cmsstore.NewTranslation()
 	translation.SetName("Test Translation")
@@ -161,7 +219,9 @@ func Test_TranslationVersioningController_RestoreAttributes(t *testing.T) {
 	translation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation.SetContent(map[string]string{"en": "Current content"})
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	// Create a versioning entry with different content
 	versioning := cmsstore.NewVersioning()
@@ -174,7 +234,9 @@ func Test_TranslationVersioningController_RestoreAttributes(t *testing.T) {
 	})
 	versioning.SetContent(string(content))
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTranslationVersioningHandler(store)
 
@@ -185,26 +247,43 @@ func Test_TranslationVersioningController_RestoreAttributes(t *testing.T) {
 			"revision_attributes": {cmsstore.COLUMN_CONTENT},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "revision attributes restored successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "revision attributes restored successfully") {
+		t.Errorf("Expected body to contain success message")
+	}
 
 	// Verify translation content was restored
 	restoredTranslation, err := store.TranslationFindByID(context.Background(), translation.ID())
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to find translation: %v", err)
+	}
 	restoredContent, _ := restoredTranslation.Content()
-	assert.Equal(t, "Restored content", restoredContent["en"])
+	if restoredContent["en"] != "Restored content" {
+		t.Errorf("Expected restored content 'Restored content', got '%s'", restoredContent["en"])
+	}
 }
 
 func Test_TranslationVersioningController_RestoreNoAttributes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and translation
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	translation := cmsstore.NewTranslation()
 	translation.SetName("Test Translation")
@@ -212,7 +291,9 @@ func Test_TranslationVersioningController_RestoreNoAttributes(t *testing.T) {
 	translation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation.SetContent(map[string]string{"en": "Current content"})
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	// Create a versioning entry
 	versioning := cmsstore.NewVersioning()
@@ -221,7 +302,9 @@ func Test_TranslationVersioningController_RestoreNoAttributes(t *testing.T) {
 	content, _ := json.Marshal(map[string]string{"en": "Restored content"})
 	versioning.SetContent(string(content))
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTranslationVersioningHandler(store)
 
@@ -231,20 +314,33 @@ func Test_TranslationVersioningController_RestoreNoAttributes(t *testing.T) {
 			"versioning_id":  {versioning.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "no revision attributes were selected")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "no revision attributes were selected") {
+		t.Errorf("Expected body to contain error message")
+	}
 }
 
 func Test_TranslationVersioningController_RestoreMultipleAttributes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and translation
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	translation := cmsstore.NewTranslation()
 	translation.SetName("Original Translation")
@@ -252,7 +348,9 @@ func Test_TranslationVersioningController_RestoreMultipleAttributes(t *testing.T
 	translation.SetStatus(cmsstore.TRANSLATION_STATUS_DRAFT)
 	translation.SetContent(map[string]string{"en": "Original content"})
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	// Create a versioning entry with different values
 	versioning := cmsstore.NewVersioning()
@@ -264,7 +362,9 @@ func Test_TranslationVersioningController_RestoreMultipleAttributes(t *testing.T
 	})
 	versioning.SetContent(string(content))
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTranslationVersioningHandler(store)
 
@@ -275,20 +375,33 @@ func Test_TranslationVersioningController_RestoreMultipleAttributes(t *testing.T
 			"revision_attributes": {cmsstore.COLUMN_NAME, cmsstore.COLUMN_STATUS},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "revision attributes restored successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "revision attributes restored successfully") {
+		t.Errorf("Expected body to contain success message")
+	}
 }
 
 func Test_TranslationVersioningController_VersioningNotFound(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and translation
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	translation := cmsstore.NewTranslation()
 	translation.SetName("Test Translation")
@@ -296,7 +409,9 @@ func Test_TranslationVersioningController_VersioningNotFound(t *testing.T) {
 	translation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation.SetContent(map[string]string{"en": "Current content"})
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	handler := initTranslationVersioningHandler(store)
 
@@ -306,20 +421,30 @@ func Test_TranslationVersioningController_VersioningNotFound(t *testing.T) {
 			"versioning_id":  {"non-existent-versioning-id"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
 	// The versioning controller should show existing revisions even with invalid versioning_id
-	assert.Contains(t, strings.ToLower(body), "translation revisions")
+	if !strings.Contains(strings.ToLower(body), "translation revisions") {
+		t.Errorf("Expected body to contain 'translation revisions'")
+	}
 }
 
 func Test_TranslationVersioningController_EmptyRevisions(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and translation (no versioning entries)
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	translation := cmsstore.NewTranslation()
 	translation.SetName("Test Translation")
@@ -327,7 +452,9 @@ func Test_TranslationVersioningController_EmptyRevisions(t *testing.T) {
 	translation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation.SetContent(map[string]string{"en": "Current content"})
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	handler := initTranslationVersioningHandler(store)
 
@@ -336,9 +463,17 @@ func Test_TranslationVersioningController_EmptyRevisions(t *testing.T) {
 			"translation_id": {translation.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Translation Revisions")
-	assert.Contains(t, body, "Version")
+	if !strings.Contains(body, "Translation Revisions") {
+		t.Errorf("Expected body to contain 'Translation Revisions'")
+	}
+	if !strings.Contains(body, "Version") {
+		t.Errorf("Expected body to contain 'Version'")
+	}
 }

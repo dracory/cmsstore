@@ -24,7 +24,9 @@ func TestBlockGet(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a block
 	block := cmsstore.NewBlock()
@@ -33,7 +35,9 @@ func TestBlockGet(t *testing.T) {
 	block.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
 	block.SetSiteID(site.ID())
 	err = store.BlockCreate(context.Background(), block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	tests := []struct {
 		name        string
@@ -84,65 +88,123 @@ func TestBlockGet(t *testing.T) {
 			}
 
 			getBody, err := json.Marshal(getPayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to marshal payload: %v", err)
+			}
 
 			getResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(getBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 			defer getResp.Body.Close()
 
 			getRespBytes, err := io.ReadAll(getResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to read response: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(getRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal response: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var blockData map[string]any
 				err = json.Unmarshal([]byte(text), &blockData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal block data: %v", err)
+				}
 
-				assert.Equal(t, tt.expectedID, blockData["id"].(string))
-				assert.Equal(t, "text", blockData["type"].(string))
-				assert.Equal(t, "Test content", blockData["content"].(string))
-				assert.Equal(t, cmsstore.BLOCK_STATUS_ACTIVE, blockData["status"].(string))
-				assert.Equal(t, cmsstore.ShortenID(site.ID()), blockData["site_id"].(string))
-				assert.Equal(t, "", blockData["page_id"].(string))
+				if blockData["id"].(string) != tt.expectedID {
+					t.Errorf("Expected id '%s', got '%s'", tt.expectedID, blockData["id"].(string))
+				}
+				if blockData["type"].(string) != "text" {
+					t.Errorf("Expected type 'text', got '%s'", blockData["type"].(string))
+				}
+				if blockData["content"].(string) != "Test content" {
+					t.Errorf("Expected content 'Test content', got '%s'", blockData["content"].(string))
+				}
+				if blockData["status"].(string) != cmsstore.BLOCK_STATUS_ACTIVE {
+					t.Errorf("Expected status '%s', got '%s'", cmsstore.BLOCK_STATUS_ACTIVE, blockData["status"].(string))
+				}
+				if blockData["site_id"].(string) != cmsstore.ShortenID(site.ID()) {
+					t.Errorf("Expected site_id '%s', got '%s'", cmsstore.ShortenID(site.ID()), blockData["site_id"].(string))
+				}
+				if blockData["page_id"].(string) != "" {
+					t.Errorf("Expected empty page_id, got '%s'", blockData["page_id"].(string))
+				}
 				// New fields assertions
-				assert.Equal(t, "", blockData["name"].(string))
-				assert.Equal(t, "", blockData["handle"].(string))
-				assert.Equal(t, "", blockData["template_id"].(string))
-				assert.Equal(t, "", blockData["parent_id"].(string))
-				assert.Equal(t, "0", blockData["sequence"].(string))
-				assert.Equal(t, "", blockData["editor"].(string))
-				assert.Equal(t, "", blockData["memo"].(string))
-				assert.NotEmpty(t, blockData["created_at"].(string))
-				assert.NotEmpty(t, blockData["updated_at"].(string))
-				assert.Equal(t, "9999-12-31 23:59:59", blockData["soft_deleted_at"].(string))
-				assert.NotNil(t, blockData["metas"])
+				if blockData["name"].(string) != "" {
+					t.Errorf("Expected empty name, got '%s'", blockData["name"].(string))
+				}
+				if blockData["handle"].(string) != "" {
+					t.Errorf("Expected empty handle, got '%s'", blockData["handle"].(string))
+				}
+				if blockData["template_id"].(string) != "" {
+					t.Errorf("Expected empty template_id, got '%s'", blockData["template_id"].(string))
+				}
+				if blockData["parent_id"].(string) != "" {
+					t.Errorf("Expected empty parent_id, got '%s'", blockData["parent_id"].(string))
+				}
+				if blockData["sequence"].(string) != "0" {
+					t.Errorf("Expected sequence '0', got '%s'", blockData["sequence"].(string))
+				}
+				if blockData["editor"].(string) != "" {
+					t.Errorf("Expected empty editor, got '%s'", blockData["editor"].(string))
+				}
+				if blockData["memo"].(string) != "" {
+					t.Errorf("Expected empty memo, got '%s'", blockData["memo"].(string))
+				}
+				if blockData["created_at"].(string) == "" {
+					t.Errorf("Expected non-empty created_at")
+				}
+				if blockData["updated_at"].(string) == "" {
+					t.Errorf("Expected non-empty updated_at")
+				}
+				if blockData["soft_deleted_at"].(string) != "9999-12-31 23:59:59" {
+					t.Errorf("Expected soft_deleted_at '9999-12-31 23:59:59', got '%s'", blockData["soft_deleted_at"].(string))
+				}
+				if blockData["metas"] == nil {
+					t.Errorf("Expected non-nil metas")
+				}
 			}
 		})
 	}
@@ -157,7 +219,9 @@ func TestBlockList(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create blocks with different properties
 	activeBlock := cmsstore.NewBlock()
@@ -168,7 +232,9 @@ func TestBlockList(t *testing.T) {
 	activeBlock.SetName("Active Block")
 	activeBlock.SetHandle("active-block")
 	err = store.BlockCreate(context.Background(), activeBlock)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	draftBlock := cmsstore.NewBlock()
 	draftBlock.SetType("image")
@@ -178,7 +244,9 @@ func TestBlockList(t *testing.T) {
 	draftBlock.SetName("Draft Block")
 	draftBlock.SetHandle("draft-block")
 	err = store.BlockCreate(context.Background(), draftBlock)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	// Test listing all blocks
 	t.Run("list all blocks", func(t *testing.T) {
@@ -196,42 +264,66 @@ func TestBlockList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var blockList map[string]any
 		err = json.Unmarshal([]byte(text), &blockList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal block list: %v", err)
+		}
 
 		items, ok := blockList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return both blocks
-		assert.Equal(t, 2, len(items), "Expected both blocks to be returned")
+		if len(items) != 2 {
+			t.Errorf("Expected both blocks to be returned, got %d", len(items))
+		}
 	})
 
 	// Test filtering by site_id
