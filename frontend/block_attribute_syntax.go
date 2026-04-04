@@ -98,18 +98,20 @@ func (frontend *frontend) applyBlockAttributeSyntax(req *http.Request, content s
 
 		// Render with attributes
 		var htmlOutput string
+		// Inject request into context so blocks can access it
+		ctx := cmsstore.RequestToContext(req.Context(), req)
 		if blockType != nil {
 			// Render with attributes (or without if empty)
 			// Block types validate attributes internally if needed
 			if len(runtimeAttrs) > 0 {
-				htmlOutput, err = blockType.Render(req.Context(), block, cmsstore.WithAttributes(runtimeAttrs))
+				htmlOutput, err = blockType.Render(ctx, block, cmsstore.WithAttributes(runtimeAttrs))
 			} else {
-				htmlOutput, err = blockType.Render(req.Context(), block)
+				htmlOutput, err = blockType.Render(ctx, block)
 			}
 		} else {
 			// Fallback to local renderer registry
 			renderer := frontend.blockRenderers.GetRenderer(blockTypeKey)
-			htmlOutput, err = renderer.Render(req.Context(), block)
+			htmlOutput, err = renderer.Render(ctx, block)
 		}
 
 		if err != nil {

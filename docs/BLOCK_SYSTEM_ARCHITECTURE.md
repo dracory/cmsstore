@@ -118,12 +118,59 @@ When rendering or editing blocks, the system checks in this order:
 2. **Local `BlockRenderer` registry** (`frontend.BlockRegistry()`) ← Legacy
 3. **Fallback**: `NoOpRenderer` (HTML comment)
 
+During frontend rendering, the `*http.Request` is automatically injected into the context. Blocks can access it via `cmsstore.RequestFromContext(ctx)` to read query parameters, headers, and other request data. See [Request Context in Blocks](#request-context-in-blocks) for details.
+
 ### Admin UI
 1. **Global `BlockType` registry** (`cmsstore.GetBlockType()`) ← Unified system
 2. **Local `BlockAdminFieldProvider` registry** (`adminUI.BlockAdminRegistry()`) ← Legacy
 3. **Fallback**: Basic textarea editor
 
-## Migration Path
+## Request Context in Blocks
+
+All block types (both built-in and custom) can access the HTTP request from the context during frontend rendering. This enables blocks to read query parameters, headers, cookies, and other request-specific data.
+
+### Usage Example
+
+```go
+func (b *myBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+    // Get the request from context
+    req := cmsstore.RequestFromContext(ctx)
+    if req == nil {
+        // Request not available (e.g., admin preview, CLI rendering)
+        return "<!-- No request available -->", nil
+    }
+    
+    // Access query parameters
+    searchQuery := req.URL.Query().Get("q")
+    pageNum := req.URL.Query().Get("page")
+    
+    // Access headers
+    userAgent := req.Header.Get("User-Agent")
+    
+    // Access cookies
+    cookie, err := req.Cookie("session_id")
+    
+    // Render with request data
+    return fmt.Sprintf("Search: %s (Page: %s)", searchQuery, pageNum), nil
+}
+```
+
+### Important Notes
+
+- **Always check for nil**: `RequestFromContext()` returns `nil` when the request is not available (admin preview, CLI rendering, background jobs)
+- **Automatic injection**: The frontend automatically injects the request before calling `Render()`
+- **Read-only**: Blocks should treat the request as read-only; modifications won't affect the actual HTTP response
+- **Thread safety**: The request object is not cloned; blocks should not store references to it for async operations
+
+### Use Cases
+
+- **Search blocks**: Read `?q=` query parameter to display search results
+- **Filtering blocks**: Read filter parameters from URL
+- **Pagination**: Read `?page=` parameter
+- **Geolocation**: Use IP from request
+- **A/B Testing**: Read cookies or headers
+
+---
 
 ### Current State (Built-in Types)
 - ✅ HTML and Menu blocks now use unified `BlockType` in `blocks/` folder

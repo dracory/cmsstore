@@ -275,10 +275,29 @@ Both registries are thread-safe. You can register providers at any time after in
 - **Frontend**: Falls back to `NoOpRenderer` (returns HTML comment)
 - **Admin**: Falls back to HTML provider (basic textarea)
 
-## Testing Custom Blocks
+### 6. Accessing Request Data in Blocks
+
+All block types can access the HTTP request from the context during frontend rendering:
 
 ```go
-func TestCustomBlockRenderer(t *testing.T) {
+func (b *myBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+    req := cmsstore.RequestFromContext(ctx)
+    if req != nil {
+        searchQuery := req.URL.Query().Get("q")
+        // ... use request data
+    }
+    // ... render block
+}
+```
+
+**Important**: Always check if `RequestFromContext()` returns `nil` - the request may not be available in admin preview or CLI contexts.
+
+For complete details, see [Request Context in Blocks](./BLOCK_SYSTEM_ARCHITECTURE.md#request-context-in-blocks).
+
+## Testing Blocks
+
+```go
+func TestBlockRenderer(t *testing.T) {
     renderer := &GalleryRenderer{}
     block := cmsstore.NewBlock()
     block.SetContent(`[{"url":"image1.jpg"},{"url":"image2.jpg"}]`)

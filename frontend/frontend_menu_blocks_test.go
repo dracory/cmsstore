@@ -3,6 +3,7 @@ package frontend
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"testing"
 
 	"github.com/dracory/cmsstore"
@@ -233,4 +234,114 @@ func containsHelper(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+// TestRequestContextPassedToBlocks verifies that the http request is passed
+// in the context when rendering blocks
+func TestRequestContextPassedToBlocks(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+
+	// Create a site
+	site := cmsstore.NewSite()
+	site.SetName("Test Site")
+	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
+	err = store.SiteCreate(ctx, site)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a custom block type that checks for request in context
+	var requestReceived *http.Request
+	testBlockType := &testBlockTypeWithRequestCheck{
+		onRender: func(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+			requestReceived = cmsstore.RequestFromContext(ctx)
+			return "test content", nil
+		},
+	}
+	cmsstore.RegisterCustomBlockType(testBlockType)
+
+	// Create a block using the custom type
+	block := cmsstore.NewBlock()
+	block.SetName("Test Block")
+	block.SetType("test_request_check")
+	block.SetSiteID(site.ID())
+	block.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
+	err = store.BlockCreate(ctx, block)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create frontend
+	logger := slog.New(slog.NewTextHandler(nil, nil))
+	fe := New(Config{
+		Store:  store,
+		Logger: logger,
+	})
+
+	// Create a request with query parameters
+	req, err := http.NewRequest("GET", "/test?q=searchterm", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Render a page that contains the block
+	f := fe.(*frontend)
+	content := "[[BLOCK_" + block.ID() + "]]"
+	html, err := f.renderContentToHtml(req, content, TemplateRenderHtmlByIDOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify the block received the request
+	if requestReceived == nil {
+		t.Fatal("Expected block to receive http_request in context, but got nil")
+	}
+
+	// Verify the query parameter was preserved
+	if requestReceived.URL.Query().Get("q") != "searchterm" {
+		t.Errorf("Expected query parameter 'q' to be 'searchterm', got: %s", requestReceived.URL.Query().Get("q"))
+	}
+
+	// Verify the content was rendered
+	if html != "test content" {
+		t.Errorf("Expected rendered content to be 'test content', got: %s", html)
+	}
+}
+
+// testBlockTypeWithRequestCheck is a test block type that captures the request from context
+type testBlockTypeWithRequestCheck struct {
+	onRender func(ctx context.Context, block cmsstore.BlockInterface) (string, error)
+}
+
+func (t *testBlockTypeWithRequestCheck) TypeKey() string {
+	return "test_request_check"
+}
+
+func (t *testBlockTypeWithRequestCheck) TypeLabel() string {
+	return "Test Request Check Block"
+}
+
+func (t *testBlockTypeWithRequestCheck) Render(ctx context.Context, block cmsstore.BlockInterface, options ...cmsstore.RenderOption) (string, error) {
+	return t.onRender(ctx, block)
+}
+
+func (t *testBlockTypeWithRequestCheck) GetAdminFields(block cmsstore.BlockInterface, r *http.Request) interface{} {
+	return nil
+}
+
+func (t *testBlockTypeWithRequestCheck) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
+	return nil
+}
+
+func (t *testBlockTypeWithRequestCheck) Validate(block cmsstore.BlockInterface) error {
+	return nil
+}
+
+func (t *testBlockTypeWithRequestCheck) GetPreview(block cmsstore.BlockInterface) string {
+	return "Test Request Check"
 }

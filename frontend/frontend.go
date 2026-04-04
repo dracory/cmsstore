@@ -573,7 +573,9 @@ func (frontend *frontend) renderContentToHtml(
 		content = strings.ReplaceAll(content, "[[ "+keyWord+" ]]", value)
 	}
 
-	content, err = frontend.contentRenderBlocks(r.Context(), content)
+	// Add request to context so blocks can access it (e.g., for query parameters)
+	ctx := cmsstore.RequestToContext(r.Context(), r)
+	content, err = frontend.contentRenderBlocks(ctx, content)
 
 	if err != nil {
 		return "", err
