@@ -13,8 +13,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -28,21 +26,33 @@ func initSiteCreateHandler(store cmsstore.StoreInterface) func(w http.ResponseWr
 
 func Test_SiteCreateController_Index(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initSiteCreateHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "New Site")
-	assert.Contains(t, body, "name=\"site_name\"")
+	if !strings.Contains(body, "New Site") {
+		t.Errorf("Expected body to contain 'New Site'")
+	}
+	if !strings.Contains(body, "name=\"site_name\"") {
+		t.Errorf("Expected body to contain site_name input")
+	}
 }
 
 func Test_SiteCreateController_Create(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initSiteCreateHandler(store)
 
@@ -52,14 +62,27 @@ func Test_SiteCreateController_Create(t *testing.T) {
 			"site_status": {cmsstore.SITE_STATUS_ACTIVE},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "site created successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "site created successfully") {
+		t.Errorf("Expected body to contain success message")
+	}
 
 	// Verify in DB
 	sites, _ := store.SiteList(context.Background(), cmsstore.SiteQuery().SetNameLike("Test New Site"))
-	assert.Len(t, sites, 1)
-	assert.Equal(t, "Test New Site", sites[0].Name())
+	if len(sites) != 1 {
+		t.Errorf("Expected 1 site, got %d", len(sites))
+	}
+	if sites[0].Name() != "Test New Site" {
+		t.Errorf("Expected site name 'Test New Site', got '%s'", sites[0].Name())
+	}
 }

@@ -13,8 +13,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -28,7 +26,9 @@ func initSiteDeleteHandler(store cmsstore.StoreInterface) func(w http.ResponseWr
 
 func Test_SiteDeleteController_Index(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initSiteDeleteHandler(store)
 
@@ -39,17 +39,27 @@ func Test_SiteDeleteController_Index(t *testing.T) {
 			"site_id": {site.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Delete Site")
+	if !strings.Contains(body, "Delete Site") {
+		t.Errorf("Expected body to contain 'Delete Site'")
+	}
 	// The modal might only show ID, check based on output from previous turn
-	assert.Contains(t, body, site.ID())
+	if !strings.Contains(body, site.ID()) {
+		t.Errorf("Expected body to contain site ID")
+	}
 }
 
 func Test_SiteDeleteController_Delete(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initSiteDeleteHandler(store)
 
@@ -60,16 +70,31 @@ func Test_SiteDeleteController_Delete(t *testing.T) {
 			"site_id": {site.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "site deleted successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "site deleted successfully") {
+		t.Errorf("Expected body to contain success message")
+	}
 
 	// Verify in DB (soft deleted)
 	// Use SiteList with SoftDeletedIncluded(true) because SiteFindByID filters them out
 	list, err := store.SiteList(context.Background(), cmsstore.SiteQuery().SetID(site.ID()).SetSoftDeletedIncluded(true))
-	require.NoError(t, err)
-	require.Len(t, list, 1)
-	assert.True(t, list[0].IsSoftDeleted())
+	if err != nil {
+		t.Fatalf("Failed to list sites: %v", err)
+	}
+	if len(list) != 1 {
+		t.Fatalf("Expected 1 site, got %d", len(list))
+	}
+	if !list[0].IsSoftDeleted() {
+		t.Errorf("Expected site to be soft deleted")
+	}
 }

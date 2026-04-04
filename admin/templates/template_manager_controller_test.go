@@ -6,14 +6,13 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -29,26 +28,42 @@ func initTemplateManagerHandler(store cmsstore.StoreInterface) func(w http.Respo
 
 func Test_TemplateManagerController_Index(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Template Manager")
-	assert.Contains(t, body, "New Template")
-	assert.Contains(t, body, "<tbody></tbody>")
+	if !strings.Contains(body, "Template Manager") {
+		t.Errorf("Expected body to contain 'Template Manager'")
+	}
+	if !strings.Contains(body, "New Template") {
+		t.Errorf("Expected body to contain 'New Template'")
+	}
+	if !strings.Contains(body, "<tbody></tbody>") {
+		t.Errorf("Expected body to contain empty tbody")
+	}
 }
 
 func Test_TemplateManagerController_WithTemplates(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and templates
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template1 := cmsstore.NewTemplate()
 	template1.SetName("Header Template")
@@ -56,7 +71,9 @@ func Test_TemplateManagerController_WithTemplates(t *testing.T) {
 	template1.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template1.SetContent("<header>Header content</header>")
 	err = store.TemplateCreate(context.Background(), template1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	template2 := cmsstore.NewTemplate()
 	template2.SetName("Footer Template")
@@ -64,24 +81,42 @@ func Test_TemplateManagerController_WithTemplates(t *testing.T) {
 	template2.SetStatus(cmsstore.TEMPLATE_STATUS_DRAFT)
 	template2.SetContent("<footer>Footer content</footer>")
 	err = store.TemplateCreate(context.Background(), template2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Template Manager")
-	assert.Contains(t, body, "Header Template")
-	assert.Contains(t, body, "Footer Template")
-	assert.Contains(t, body, "template-update")
-	assert.Contains(t, body, "template-delete")
+	if !strings.Contains(body, "Template Manager") {
+		t.Errorf("Expected body to contain 'Template Manager'")
+	}
+	if !strings.Contains(body, "Header Template") {
+		t.Errorf("Expected body to contain 'Header Template'")
+	}
+	if !strings.Contains(body, "Footer Template") {
+		t.Errorf("Expected body to contain 'Footer Template'")
+	}
+	if !strings.Contains(body, "template-update") {
+		t.Errorf("Expected body to contain 'template-update'")
+	}
+	if !strings.Contains(body, "template-delete") {
+		t.Errorf("Expected body to contain 'template-delete'")
+	}
 }
 
 func Test_TemplateManagerController_FilterModal(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
@@ -90,21 +125,35 @@ func Test_TemplateManagerController_FilterModal(t *testing.T) {
 			"action": {"modal_template_filter_show"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Filters")
-	assert.Contains(t, body, "name")
-	assert.Contains(t, body, "status")
+	if !strings.Contains(body, "Filters") {
+		t.Errorf("Expected body to contain 'Filters'")
+	}
+	if !strings.Contains(body, "name") {
+		t.Errorf("Expected body to contain name filter")
+	}
+	if !strings.Contains(body, "status") {
+		t.Errorf("Expected body to contain status filter")
+	}
 }
 
 func Test_TemplateManagerController_Sorting(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and templates
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template1 := cmsstore.NewTemplate()
 	template1.SetName("A Template")
@@ -112,7 +161,9 @@ func Test_TemplateManagerController_Sorting(t *testing.T) {
 	template1.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template1.SetContent("<div>A content</div>")
 	err = store.TemplateCreate(context.Background(), template1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	template2 := cmsstore.NewTemplate()
 	template2.SetName("Z Template")
@@ -120,7 +171,9 @@ func Test_TemplateManagerController_Sorting(t *testing.T) {
 	template2.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template2.SetContent("<div>Z content</div>")
 	err = store.TemplateCreate(context.Background(), template2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
@@ -131,10 +184,18 @@ func Test_TemplateManagerController_Sorting(t *testing.T) {
 			"sort_order": {"asc"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, body, "A Template")
-	assert.Contains(t, body, "Z Template")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(body, "A Template") {
+		t.Errorf("Expected body to contain 'A Template'")
+	}
+	if !strings.Contains(body, "Z Template") {
+		t.Errorf("Expected body to contain 'Z Template'")
+	}
 
 	// Test sort by name DESC
 	body, response, err = test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
@@ -143,19 +204,31 @@ func Test_TemplateManagerController_Sorting(t *testing.T) {
 			"sort_order": {"desc"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, body, "Z Template")
-	assert.Contains(t, body, "A Template")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(body, "Z Template") {
+		t.Errorf("Expected body to contain 'Z Template'")
+	}
+	if !strings.Contains(body, "A Template") {
+		t.Errorf("Expected body to contain 'A Template'")
+	}
 }
 
 func Test_TemplateManagerController_Filtering(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and templates
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template1 := cmsstore.NewTemplate()
 	template1.SetName("Header Template")
@@ -163,7 +236,9 @@ func Test_TemplateManagerController_Filtering(t *testing.T) {
 	template1.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template1.SetContent("<header>Header content</header>")
 	err = store.TemplateCreate(context.Background(), template1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	template2 := cmsstore.NewTemplate()
 	template2.SetName("Footer Template")
@@ -171,7 +246,9 @@ func Test_TemplateManagerController_Filtering(t *testing.T) {
 	template2.SetStatus(cmsstore.TEMPLATE_STATUS_DRAFT)
 	template2.SetContent("<footer>Footer content</footer>")
 	err = store.TemplateCreate(context.Background(), template2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
@@ -181,11 +258,17 @@ func Test_TemplateManagerController_Filtering(t *testing.T) {
 			"name": {"Header"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 	// Note: The filtering functionality might be implemented client-side
 	// For now, just verify the page loads correctly
-	assert.Contains(t, body, "Template Manager")
+	if !strings.Contains(body, "Template Manager") {
+		t.Errorf("Expected body to contain 'Template Manager'")
+	}
 
 	// Test filter by status
 	body, response, err = test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
@@ -193,20 +276,30 @@ func Test_TemplateManagerController_Filtering(t *testing.T) {
 			"status": {cmsstore.TEMPLATE_STATUS_ACTIVE},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 	// Note: The filtering functionality might be implemented client-side
 	// For now, just verify the page loads correctly
-	assert.Contains(t, body, "Template Manager")
+	if !strings.Contains(body, "Template Manager") {
+		t.Errorf("Expected body to contain 'Template Manager'")
+	}
 }
 
 func Test_TemplateManagerController_Pagination(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	// Create many templates to test pagination
 	for i := 1; i <= 25; i++ {
@@ -216,7 +309,9 @@ func Test_TemplateManagerController_Pagination(t *testing.T) {
 		template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 		template.SetContent(fmt.Sprintf("<div>Template %d content</div>", i))
 		err = store.TemplateCreate(context.Background(), template)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to create template: %v", err)
+		}
 	}
 
 	handler := initTemplateManagerHandler(store)
@@ -228,10 +323,18 @@ func Test_TemplateManagerController_Pagination(t *testing.T) {
 			"page":     {"1"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, body, "Template 1")
-	assert.Contains(t, body, "pagination")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(body, "Template 1") {
+		t.Errorf("Expected body to contain 'Template 1'")
+	}
+	if !strings.Contains(body, "pagination") {
+		t.Errorf("Expected body to contain 'pagination'")
+	}
 
 	// Test second page
 	body, response, err = test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
@@ -240,35 +343,57 @@ func Test_TemplateManagerController_Pagination(t *testing.T) {
 			"page":     {"2"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 	// Note: Pagination might work differently than expected
 	// Let's just verify the page loads correctly and shows pagination controls
-	assert.Contains(t, body, "pagination")
+	if !strings.Contains(body, "pagination") {
+		t.Errorf("Expected body to contain 'pagination'")
+	}
 }
 
 func Test_TemplateManagerController_EmptyState(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Template Manager")
-	assert.Contains(t, body, "New Template")
-	assert.Contains(t, body, "<tbody></tbody>")
+	if !strings.Contains(body, "Template Manager") {
+		t.Errorf("Expected body to contain 'Template Manager'")
+	}
+	if !strings.Contains(body, "New Template") {
+		t.Errorf("Expected body to contain 'New Template'")
+	}
+	if !strings.Contains(body, "<tbody></tbody>") {
+		t.Errorf("Expected body to contain empty tbody")
+	}
 }
 
 func Test_TemplateManagerController_TableActions(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Test Template")
@@ -276,33 +401,49 @@ func Test_TemplateManagerController_TableActions(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<div>Test content</div>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "template-update")
-	assert.Contains(t, body, "template-delete")
+	if !strings.Contains(body, "template-update") {
+		t.Errorf("Expected body to contain 'template-update'")
+	}
+	if !strings.Contains(body, "template-delete") {
+		t.Errorf("Expected body to contain 'template-delete'")
+	}
 	// Note: template-versioning might not be displayed in all cases
 	// Let's just verify the essential actions are present
 }
 
 func Test_TemplateManagerController_MultipleSites(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed multiple sites
 	site1, err := testutils.SeedSite(store, "Site 1")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	site2 := cmsstore.NewSite()
 	site2.SetName("Site 2")
 	site2.SetDomainNames([]string{"site2.example.com"})
 	err = store.SiteCreate(context.Background(), site2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create templates for different sites
 	template1 := cmsstore.NewTemplate()
@@ -311,7 +452,9 @@ func Test_TemplateManagerController_MultipleSites(t *testing.T) {
 	template1.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template1.SetContent("<div>Site 1 content</div>")
 	err = store.TemplateCreate(context.Background(), template1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	template2 := cmsstore.NewTemplate()
 	template2.SetName("Site 2 Template")
@@ -319,25 +462,39 @@ func Test_TemplateManagerController_MultipleSites(t *testing.T) {
 	template2.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template2.SetContent("<div>Site 2 content</div>")
 	err = store.TemplateCreate(context.Background(), template2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Site 1 Template")
-	assert.Contains(t, body, "Site 2 Template")
+	if !strings.Contains(body, "Site 1 Template") {
+		t.Errorf("Expected body to contain 'Site 1 Template'")
+	}
+	if !strings.Contains(body, "Site 2 Template") {
+		t.Errorf("Expected body to contain 'Site 2 Template'")
+	}
 }
 
 func Test_TemplateManagerController_Search(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and templates
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template1 := cmsstore.NewTemplate()
 	template1.SetName("Searchable Template")
@@ -345,7 +502,9 @@ func Test_TemplateManagerController_Search(t *testing.T) {
 	template1.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template1.SetContent("<div>Searchable content</div>")
 	err = store.TemplateCreate(context.Background(), template1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	template2 := cmsstore.NewTemplate()
 	template2.SetName("Other Template")
@@ -353,7 +512,9 @@ func Test_TemplateManagerController_Search(t *testing.T) {
 	template2.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template2.SetContent("<div>Other content</div>")
 	err = store.TemplateCreate(context.Background(), template2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
@@ -364,19 +525,29 @@ func Test_TemplateManagerController_Search(t *testing.T) {
 			"name": {"Searchable"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, body, "Searchable Template")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(body, "Searchable Template") {
+		t.Errorf("Expected body to contain 'Searchable Template'")
+	}
 	// Note: The search functionality might be implemented client-side or require additional parameters
 }
 
 func Test_TemplateManagerController_DifferentStatuses(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	handler := initTemplateManagerHandler(store)
 
@@ -387,7 +558,9 @@ func Test_TemplateManagerController_DifferentStatuses(t *testing.T) {
 	activeTemplate.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	activeTemplate.SetContent("<div>Active content</div>")
 	err = store.TemplateCreate(context.Background(), activeTemplate)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Test draft template
 	draftTemplate := cmsstore.NewTemplate()
@@ -396,7 +569,9 @@ func Test_TemplateManagerController_DifferentStatuses(t *testing.T) {
 	draftTemplate.SetStatus(cmsstore.TEMPLATE_STATUS_DRAFT)
 	draftTemplate.SetContent("<div>Draft content</div>")
 	err = store.TemplateCreate(context.Background(), draftTemplate)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Test inactive template
 	inactiveTemplate := cmsstore.NewTemplate()
@@ -405,7 +580,9 @@ func Test_TemplateManagerController_DifferentStatuses(t *testing.T) {
 	inactiveTemplate.SetStatus(cmsstore.TEMPLATE_STATUS_INACTIVE)
 	inactiveTemplate.SetContent("<div>Inactive content</div>")
 	err = store.TemplateCreate(context.Background(), inactiveTemplate)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Just verify that templates with different statuses are displayed
 	// The filtering might be implemented client-side or require additional parameters
@@ -414,9 +591,15 @@ func Test_TemplateManagerController_DifferentStatuses(t *testing.T) {
 			"status": {cmsstore.TEMPLATE_STATUS_ACTIVE},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 	// Note: The filtering functionality might be implemented client-side
 	// For now, just verify the page loads correctly and shows templates
-	assert.Contains(t, body, "Template Manager")
+	if !strings.Contains(body, "Template Manager") {
+		t.Errorf("Expected body to contain 'Template Manager'")
+	}
 }

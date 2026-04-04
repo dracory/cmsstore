@@ -12,8 +12,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -29,11 +27,15 @@ func initTemplateDeleteHandler(store cmsstore.StoreInterface) func(w http.Respon
 
 func Test_TemplateDeleteController_Index(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Test Template")
@@ -41,7 +43,9 @@ func Test_TemplateDeleteController_Index(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<html><body>Test content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateDeleteHandler(store)
 
@@ -50,21 +54,35 @@ func Test_TemplateDeleteController_Index(t *testing.T) {
 			"template_id": {template.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Delete Template")
-	assert.Contains(t, body, "Are you sure you want to delete this template?")
-	assert.Contains(t, body, template.ID())
+	if !strings.Contains(body, "Delete Template") {
+		t.Errorf("Expected body to contain 'Delete Template'")
+	}
+	if !strings.Contains(body, "Are you sure you want to delete this template?") {
+		t.Errorf("Expected body to contain confirmation message")
+	}
+	if !strings.Contains(body, template.ID()) {
+		t.Errorf("Expected body to contain template ID")
+	}
 }
 
 func Test_TemplateDeleteController_Delete(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Test Template")
@@ -72,7 +90,9 @@ func Test_TemplateDeleteController_Delete(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<html><body>Test content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateDeleteHandler(store)
 
@@ -81,37 +101,58 @@ func Test_TemplateDeleteController_Delete(t *testing.T) {
 			"template_id": {template.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "template deleted successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "template deleted successfully") {
+		t.Errorf("Expected body to contain success message")
+	}
 
 	// Verify template is deleted (soft delete)
 	deletedTemplate, err := store.TemplateFindByID(context.Background(), template.ID())
 	if err == nil && deletedTemplate != nil {
-		assert.Equal(t, cmsstore.TEMPLATE_STATUS_INACTIVE, deletedTemplate.Status())
+		if deletedTemplate.Status() != cmsstore.TEMPLATE_STATUS_INACTIVE {
+			t.Errorf("Expected template status to be INACTIVE, got %s", deletedTemplate.Status())
+		}
 	}
 }
 
 func Test_TemplateDeleteController_Delete_ValidationError_MissingTemplateID(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTemplateDeleteHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodPost, handler, test.NewRequestOptions{
 		PostValues: map[string][]string{},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
+	if !strings.Contains(strings.ToLower(body), "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
 }
 
 func Test_TemplateDeleteController_Delete_ValidationError_EmptyTemplateID(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTemplateDeleteHandler(store)
 
@@ -120,15 +161,23 @@ func Test_TemplateDeleteController_Delete_ValidationError_EmptyTemplateID(t *tes
 			"template_id": {""},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
+	if !strings.Contains(strings.ToLower(body), "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
 }
 
 func Test_TemplateDeleteController_TemplateNotFound(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTemplateDeleteHandler(store)
 
@@ -137,20 +186,33 @@ func Test_TemplateDeleteController_TemplateNotFound(t *testing.T) {
 			"template_id": {"non-existent-id"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "template not found")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "template not found") {
+		t.Errorf("Expected body to contain error message")
+	}
 }
 
 func Test_TemplateDeleteController_Delete_DifferentTemplateTypes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	handler := initTemplateDeleteHandler(store)
 
@@ -161,16 +223,24 @@ func Test_TemplateDeleteController_Delete_DifferentTemplateTypes(t *testing.T) {
 	htmlTemplate.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	htmlTemplate.SetContent("<div>HTML template content</div>")
 	err = store.TemplateCreate(context.Background(), htmlTemplate)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	body, response, err := test.CallStringEndpoint(http.MethodPost, handler, test.NewRequestOptions{
 		PostValues: map[string][]string{
 			"template_id": {htmlTemplate.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, strings.ToLower(body), "success")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(strings.ToLower(body), "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
 
 	// Test simple template deletion
 	simpleTemplate := cmsstore.NewTemplate()
@@ -179,25 +249,37 @@ func Test_TemplateDeleteController_Delete_DifferentTemplateTypes(t *testing.T) {
 	simpleTemplate.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	simpleTemplate.SetContent("Simple template content")
 	err = store.TemplateCreate(context.Background(), simpleTemplate)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	body, response, err = test.CallStringEndpoint(http.MethodPost, handler, test.NewRequestOptions{
 		PostValues: map[string][]string{
 			"template_id": {simpleTemplate.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, strings.ToLower(body), "success")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(strings.ToLower(body), "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
 }
 
 func Test_TemplateDeleteController_Integration(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	handler := initTemplateDeleteHandler(store)
 
@@ -208,7 +290,9 @@ func Test_TemplateDeleteController_Integration(t *testing.T) {
 	template1.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template1.SetContent("<div>Template 1 content</div>")
 	err = store.TemplateCreate(context.Background(), template1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	template2 := cmsstore.NewTemplate()
 	template2.SetName("Template 2")
@@ -216,7 +300,9 @@ func Test_TemplateDeleteController_Integration(t *testing.T) {
 	template2.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template2.SetContent("<div>Template 2 content</div>")
 	err = store.TemplateCreate(context.Background(), template2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Delete first template
 	body, response, err := test.CallStringEndpoint(http.MethodPost, handler, test.NewRequestOptions{
@@ -224,29 +310,43 @@ func Test_TemplateDeleteController_Integration(t *testing.T) {
 			"template_id": {template1.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, strings.ToLower(body), "success")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(strings.ToLower(body), "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
 
 	// Verify first template is deleted but second template remains
 	deletedTemplate1, err := store.TemplateFindByID(context.Background(), template1.ID())
 	if err == nil && deletedTemplate1 != nil {
-		assert.Equal(t, cmsstore.TEMPLATE_STATUS_INACTIVE, deletedTemplate1.Status())
+		if deletedTemplate1.Status() != cmsstore.TEMPLATE_STATUS_INACTIVE {
+			t.Errorf("Expected deleted template status to be INACTIVE, got %s", deletedTemplate1.Status())
+		}
 	}
 
 	activeTemplate2, err := store.TemplateFindByID(context.Background(), template2.ID())
 	if err == nil && activeTemplate2 != nil {
-		assert.Equal(t, cmsstore.TEMPLATE_STATUS_ACTIVE, activeTemplate2.Status())
+		if activeTemplate2.Status() != cmsstore.TEMPLATE_STATUS_ACTIVE {
+			t.Errorf("Expected active template status to be ACTIVE, got %s", activeTemplate2.Status())
+		}
 	}
 }
 
 func Test_TemplateDeleteController_Delete_WithContent(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	// Create a template with content
 	template := cmsstore.NewTemplate()
@@ -255,7 +355,9 @@ func Test_TemplateDeleteController_Delete_WithContent(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<!DOCTYPE html><html><head><title>Test</title></head><body><h1>Test Template</h1></body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateDeleteHandler(store)
 
@@ -264,9 +366,18 @@ func Test_TemplateDeleteController_Delete_WithContent(t *testing.T) {
 			"template_id": {template.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "template deleted successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "template deleted successfully") {
+		t.Errorf("Expected body to contain success message")
+	}
 }

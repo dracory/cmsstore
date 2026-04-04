@@ -12,8 +12,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -29,21 +27,34 @@ func initTemplateVersioningHandler(store cmsstore.StoreInterface) func(w http.Re
 
 func Test_TemplateVersioningController_TemplateIdIsRequired(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "template id is required")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "template id is required") {
+		t.Errorf("Expected body to contain error message")
+	}
 }
 
 func Test_TemplateVersioningController_TemplateIdIsInvalid(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -52,20 +63,33 @@ func Test_TemplateVersioningController_TemplateIdIsInvalid(t *testing.T) {
 			"template_id": {"invalid-id"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "template not found")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "template not found") {
+		t.Errorf("Expected body to contain error message")
+	}
 }
 
 func Test_TemplateVersioningController_ListRevisions(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Test Template")
@@ -73,7 +97,9 @@ func Test_TemplateVersioningController_ListRevisions(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<html><body>Original content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Create some versioning entries
 	versioning1 := cmsstore.NewVersioning()
@@ -81,14 +107,18 @@ func Test_TemplateVersioningController_ListRevisions(t *testing.T) {
 	versioning1.SetEntityType(cmsstore.VERSIONING_TYPE_TEMPLATE)
 	versioning1.SetContent("<html><body>Version 1 content</body></html>")
 	err = store.VersioningCreate(context.Background(), versioning1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	versioning2 := cmsstore.NewVersioning()
 	versioning2.SetEntityID(template.ID())
 	versioning2.SetEntityType(cmsstore.VERSIONING_TYPE_TEMPLATE)
 	versioning2.SetContent("<html><body>Version 2 content</body></html>")
 	err = store.VersioningCreate(context.Background(), versioning2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -97,23 +127,37 @@ func Test_TemplateVersioningController_ListRevisions(t *testing.T) {
 			"template_id": {template.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Template Revisions")
-	assert.Contains(t, body, "Revisions")
+	if !strings.Contains(body, "Template Revisions") {
+		t.Errorf("Expected body to contain 'Template Revisions'")
+	}
+	if !strings.Contains(body, "Revisions") {
+		t.Errorf("Expected body to contain 'Revisions'")
+	}
 	// Note: The content might not be displayed directly in the table
 	// Let's just verify the revision entries exist with preview buttons
-	assert.Contains(t, body, "Preview")
+	if !strings.Contains(body, "Preview") {
+		t.Errorf("Expected body to contain 'Preview'")
+	}
 }
 
 func Test_TemplateVersioningController_PreviewRevision(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Test Template")
@@ -121,7 +165,9 @@ func Test_TemplateVersioningController_PreviewRevision(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<html><body>Current content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Create a versioning entry
 	versioning := cmsstore.NewVersioning()
@@ -129,7 +175,9 @@ func Test_TemplateVersioningController_PreviewRevision(t *testing.T) {
 	versioning.SetEntityType(cmsstore.VERSIONING_TYPE_TEMPLATE)
 	versioning.SetContent("<html><body>Historical content</body></html>")
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -139,22 +187,34 @@ func Test_TemplateVersioningController_PreviewRevision(t *testing.T) {
 			"versioning_id": {versioning.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Template Revision")
+	if !strings.Contains(body, "Template Revision") {
+		t.Errorf("Expected body to contain 'Template Revision'")
+	}
 	// Note: The preview might have parsing errors or display differently
 	// Let's just verify the modal loads correctly
-	assert.Contains(t, body, "Close")
+	if !strings.Contains(body, "Close") {
+		t.Errorf("Expected body to contain 'Close'")
+	}
 }
 
 func Test_TemplateVersioningController_RestoreAttributes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Test Template")
@@ -162,7 +222,9 @@ func Test_TemplateVersioningController_RestoreAttributes(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<html><body>Current content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Create a versioning entry with different content
 	versioning := cmsstore.NewVersioning()
@@ -170,7 +232,9 @@ func Test_TemplateVersioningController_RestoreAttributes(t *testing.T) {
 	versioning.SetEntityType(cmsstore.VERSIONING_TYPE_TEMPLATE)
 	versioning.SetContent(`{"content": "<html><body>Restored content</body></html>"}`)
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -181,25 +245,42 @@ func Test_TemplateVersioningController_RestoreAttributes(t *testing.T) {
 			"revision_attributes": {"content"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "revision attributes restored successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "revision attributes restored successfully") {
+		t.Errorf("Expected body to contain success message")
+	}
 
 	// Verify template content was restored
 	restoredTemplate, err := store.TemplateFindByID(context.Background(), template.ID())
-	require.NoError(t, err)
-	assert.Equal(t, "<html><body>Restored content</body></html>", restoredTemplate.Content())
+	if err != nil {
+		t.Fatalf("Failed to find template: %v", err)
+	}
+	if restoredTemplate.Content() != "<html><body>Restored content</body></html>" {
+		t.Errorf("Expected restored content, got '%s'", restoredTemplate.Content())
+	}
 }
 
 func Test_TemplateVersioningController_RestoreNoAttributes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Test Template")
@@ -207,7 +288,9 @@ func Test_TemplateVersioningController_RestoreNoAttributes(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<html><body>Current content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Create a versioning entry
 	versioning := cmsstore.NewVersioning()
@@ -215,7 +298,9 @@ func Test_TemplateVersioningController_RestoreNoAttributes(t *testing.T) {
 	versioning.SetEntityType(cmsstore.VERSIONING_TYPE_TEMPLATE)
 	versioning.SetContent("<html><body>Restored content</body></html>")
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -225,20 +310,33 @@ func Test_TemplateVersioningController_RestoreNoAttributes(t *testing.T) {
 			"versioning_id": {versioning.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "no revision attributes were selected")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "no revision attributes were selected") {
+		t.Errorf("Expected body to contain error message")
+	}
 }
 
 func Test_TemplateVersioningController_RestoreMultipleAttributes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Original Template")
@@ -246,7 +344,9 @@ func Test_TemplateVersioningController_RestoreMultipleAttributes(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_DRAFT)
 	template.SetContent("<html><body>Original content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Create a versioning entry with different values
 	versioning := cmsstore.NewVersioning()
@@ -254,7 +354,9 @@ func Test_TemplateVersioningController_RestoreMultipleAttributes(t *testing.T) {
 	versioning.SetEntityType(cmsstore.VERSIONING_TYPE_TEMPLATE)
 	versioning.SetContent("<html><body>Restored content</body></html>")
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -265,20 +367,33 @@ func Test_TemplateVersioningController_RestoreMultipleAttributes(t *testing.T) {
 			"revision_attributes": {"content", "status"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "revision attributes restored successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "revision attributes restored successfully") {
+		t.Errorf("Expected body to contain success message")
+	}
 }
 
 func Test_TemplateVersioningController_VersioningNotFound(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Test Template")
@@ -286,7 +401,9 @@ func Test_TemplateVersioningController_VersioningNotFound(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<html><body>Current content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -296,21 +413,31 @@ func Test_TemplateVersioningController_VersioningNotFound(t *testing.T) {
 			"versioning_id": {"non-existent-versioning-id"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
 	// Note: The versioning controller might show existing revisions even with invalid versioning_id
 	// Let's just verify the modal loads correctly
-	assert.Contains(t, strings.ToLower(body), "template revisions")
+	if !strings.Contains(strings.ToLower(body), "template revisions") {
+		t.Errorf("Expected body to contain 'template revisions'")
+	}
 }
 
 func Test_TemplateVersioningController_EmptyRevisions(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template (no versioning entries)
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Test Template")
@@ -318,7 +445,9 @@ func Test_TemplateVersioningController_EmptyRevisions(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<html><body>Current content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -327,22 +456,34 @@ func Test_TemplateVersioningController_EmptyRevisions(t *testing.T) {
 			"template_id": {template.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Template Revisions")
+	if !strings.Contains(body, "Template Revisions") {
+		t.Errorf("Expected body to contain 'Template Revisions'")
+	}
 	// Note: The versioning system might automatically create initial revisions
 	// Let's just verify the modal loads correctly
-	assert.Contains(t, body, "Version")
+	if !strings.Contains(body, "Version") {
+		t.Errorf("Expected body to contain 'Version'")
+	}
 }
 
 func Test_TemplateVersioningController_DifferentTemplateTypes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -353,7 +494,9 @@ func Test_TemplateVersioningController_DifferentTemplateTypes(t *testing.T) {
 	htmlTemplate.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	htmlTemplate.SetContent("<div>HTML content</div>")
 	err = store.TemplateCreate(context.Background(), htmlTemplate)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Create versioning for HTML template
 	versioning1 := cmsstore.NewVersioning()
@@ -361,19 +504,29 @@ func Test_TemplateVersioningController_DifferentTemplateTypes(t *testing.T) {
 	versioning1.SetEntityType(cmsstore.VERSIONING_TYPE_TEMPLATE)
 	versioning1.SetContent("<div>HTML version 1</div>")
 	err = store.VersioningCreate(context.Background(), versioning1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
 		GetValues: map[string][]string{
 			"template_id": {htmlTemplate.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, body, "Template Revisions")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(body, "Template Revisions") {
+		t.Errorf("Expected body to contain 'Template Revisions'")
+	}
 	// Note: The content might not be displayed directly in the table
 	// Let's just verify the revision entry exists
-	assert.Contains(t, body, "Preview")
+	if !strings.Contains(body, "Preview") {
+		t.Errorf("Expected body to contain 'Preview'")
+	}
 
 	// Test simple template versioning
 	simpleTemplate := cmsstore.NewTemplate()
@@ -382,7 +535,9 @@ func Test_TemplateVersioningController_DifferentTemplateTypes(t *testing.T) {
 	simpleTemplate.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	simpleTemplate.SetContent("Simple template content")
 	err = store.TemplateCreate(context.Background(), simpleTemplate)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Create versioning for simple template
 	versioning2 := cmsstore.NewVersioning()
@@ -390,26 +545,40 @@ func Test_TemplateVersioningController_DifferentTemplateTypes(t *testing.T) {
 	versioning2.SetEntityType(cmsstore.VERSIONING_TYPE_TEMPLATE)
 	versioning2.SetContent("Simple template version 1")
 	err = store.VersioningCreate(context.Background(), versioning2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	body, response, err = test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
 		GetValues: map[string][]string{
 			"template_id": {simpleTemplate.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, body, "Template Revisions")
-	assert.Contains(t, body, "Preview")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(body, "Template Revisions") {
+		t.Errorf("Expected body to contain 'Template Revisions'")
+	}
+	if !strings.Contains(body, "Preview") {
+		t.Errorf("Expected body to contain 'Preview'")
+	}
 }
 
 func Test_TemplateVersioningController_RestoreName(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and template
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	template := cmsstore.NewTemplate()
 	template.SetName("Original Template")
@@ -417,7 +586,9 @@ func Test_TemplateVersioningController_RestoreName(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetContent("<html><body>Original content</body></html>")
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Create a versioning entry with different name
 	versioning := cmsstore.NewVersioning()
@@ -425,7 +596,9 @@ func Test_TemplateVersioningController_RestoreName(t *testing.T) {
 	versioning.SetEntityType(cmsstore.VERSIONING_TYPE_TEMPLATE)
 	versioning.SetContent(`{"name": "Restored Template", "content": "<html><body>Restored content</body></html>"}`)
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initTemplateVersioningHandler(store)
 
@@ -436,14 +609,27 @@ func Test_TemplateVersioningController_RestoreName(t *testing.T) {
 			"revision_attributes": {"name"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "revision attributes restored successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "revision attributes restored successfully") {
+		t.Errorf("Expected body to contain success message")
+	}
 
 	// Verify template name was restored
 	restoredTemplate, err := store.TemplateFindByID(context.Background(), template.ID())
-	require.NoError(t, err)
-	assert.Equal(t, "Restored Template", restoredTemplate.Name())
+	if err != nil {
+		t.Fatalf("Failed to find template: %v", err)
+	}
+	if restoredTemplate.Name() != "Restored Template" {
+		t.Errorf("Expected name 'Restored Template', got '%s'", restoredTemplate.Name())
+	}
 }
