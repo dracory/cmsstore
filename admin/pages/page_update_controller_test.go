@@ -110,12 +110,6 @@ func Test_PageUpdateController_ViewContent_IsDefault(t *testing.T) {
 		t.Fatalf("Expected no error, got: %s", err)
 	}
 
-	// seededSite, err := testutils.SeedSite(store, testutils.SITE_01)
-
-	// if err != nil {
-	// 	t.Fatalf("Expected no error, got: %s", err)
-	// }
-
 	seededPage, err := testutils.SeedPage(store, testutils.SITE_01, testutils.PAGE_01)
 
 	if err != nil {
@@ -161,12 +155,6 @@ func Test_PageUpdateController_ViewSettings(t *testing.T) {
 		t.Fatalf("Expected no error, got: %s", err)
 	}
 
-	// seededSite, err := testutils.SeedSite(store, testutils.SITE_01)
-
-	// if err != nil {
-	// 	t.Fatalf("Expected no error, got: %s", err)
-	// }
-
 	seededPage, err := testutils.SeedPage(store, testutils.SITE_01, testutils.PAGE_01)
 
 	if err != nil {
@@ -211,12 +199,6 @@ func Test_PageUpdateController_ViewMiddlewares(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got: %s", err)
 	}
-
-	// seededSite, err := testutils.SeedSite(store, testutils.SITE_01)
-
-	// if err != nil {
-	// 	t.Fatalf("Expected no error, got: %s", err)
-	// }
 
 	seededPage, err := testutils.SeedPage(store, testutils.SITE_01, testutils.PAGE_01)
 
