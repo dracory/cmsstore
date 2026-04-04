@@ -13,8 +13,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -28,28 +26,44 @@ func initMenuCreateHandler(store cmsstore.StoreInterface) func(w http.ResponseWr
 
 func Test_MenuCreateController_Index(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initMenuCreateHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "New Menu")
-	assert.Contains(t, body, "name=\"menu_name\"")
-	assert.Contains(t, body, "name=\"site_id\"")
+	if !strings.Contains(body, "New Menu") {
+		t.Errorf("Expected body to contain 'New Menu'")
+	}
+	if !strings.Contains(body, "name=\"menu_name\"") {
+		t.Errorf("Expected body to contain menu_name input")
+	}
+	if !strings.Contains(body, "name=\"site_id\"") {
+		t.Errorf("Expected body to contain site_id input")
+	}
 }
 
 func Test_MenuCreateController_Create(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initMenuCreateHandler(store)
 
 	// First seed a site
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	body, response, err := test.CallStringEndpoint(http.MethodPost, handler, test.NewRequestOptions{
 		PostValues: url.Values{
@@ -57,22 +71,39 @@ func Test_MenuCreateController_Create(t *testing.T) {
 			"site_id":   {site.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "menu created successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "menu created successfully") {
+		t.Errorf("Expected body to contain 'menu created successfully'")
+	}
 
 	// Verify in DB
 	menus, _ := store.MenuList(context.Background(), cmsstore.MenuQuery().SetNameLike("Test New Menu"))
-	assert.Len(t, menus, 1)
-	assert.Equal(t, "Test New Menu", menus[0].Name())
-	assert.Equal(t, site.ID(), menus[0].SiteID())
+	if len(menus) != 1 {
+		t.Errorf("Expected 1 menu, got %d", len(menus))
+	}
+	if menus[0].Name() != "Test New Menu" {
+		t.Errorf("Expected menu name 'Test New Menu', got '%s'", menus[0].Name())
+	}
+	if menus[0].SiteID() != site.ID() {
+		t.Errorf("Expected site ID '%s', got '%s'", site.ID(), menus[0].SiteID())
+	}
 }
 
 func Test_MenuCreateController_Create_ValidationError(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initMenuCreateHandler(store)
 
@@ -107,36 +138,63 @@ func Test_MenuCreateController_Create_ValidationError(t *testing.T) {
 			body, response, err := test.CallStringEndpoint(http.MethodPost, handler, test.NewRequestOptions{
 				PostValues: tc.postValues,
 			})
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusOK, response.StatusCode)
+			if err != nil {
+				t.Fatalf("Failed to call endpoint: %v", err)
+			}
+			if response.StatusCode != http.StatusOK {
+				t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+			}
 
-			assert.Contains(t, strings.ToLower(body), "error")
-			assert.Contains(t, strings.ToLower(body), tc.errorMsg)
+			bodyLower := strings.ToLower(body)
+			if !strings.Contains(bodyLower, "error") {
+				t.Errorf("Expected body to contain 'error'")
+			}
+			if !strings.Contains(bodyLower, tc.errorMsg) {
+				t.Errorf("Expected body to contain '%s'", tc.errorMsg)
+			}
 		})
 	}
 }
 
 func Test_MenuCreateController_Create_WithSiteList(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initMenuCreateHandler(store)
 
 	// Seed multiple sites
 	site1, err := testutils.SeedSite(store, "Test Site 1")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site1: %v", err)
+	}
 
 	site2, err := testutils.SeedSite(store, "Test Site 2")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site2: %v", err)
+	}
 
 	// Test GET request to see site options
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
 	// Should contain both sites in the dropdown
-	assert.Contains(t, body, site1.Name())
-	assert.Contains(t, body, site2.Name())
-	assert.Contains(t, body, "value=\""+site1.ID()+"\"")
-	assert.Contains(t, body, "value=\""+site2.ID()+"\"")
+	if !strings.Contains(body, site1.Name()) {
+		t.Errorf("Expected body to contain site1 name '%s'", site1.Name())
+	}
+	if !strings.Contains(body, site2.Name()) {
+		t.Errorf("Expected body to contain site2 name '%s'", site2.Name())
+	}
+	if !strings.Contains(body, "value=\""+site1.ID()+"\"") {
+		t.Errorf("Expected body to contain site1 ID")
+	}
+	if !strings.Contains(body, "value=\""+site2.ID()+"\"") {
+		t.Errorf("Expected body to contain site2 ID")
+	}
 }

@@ -1,11 +1,11 @@
 package admin
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
 )
 
 func initTreeControl(treeJSON string, renderURL string, targetTextareaID string) *treeControl {
@@ -24,9 +24,14 @@ func Test_TreeControl_Render_EmptyTree(t *testing.T) {
 	req, _ := test.NewRequest("GET", "/test", test.NewRequestOptions{})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
-	assert.Contains(t, body.ToHTML(), "No menu items")
-	assert.Contains(t, body.ToHTML(), "New Menu Item")
+	if !strings.Contains(html, "No menu items") {
+		t.Errorf("Expected body to contain 'No menu items'")
+	}
+	if !strings.Contains(html, "New Menu Item") {
+		t.Errorf("Expected body to contain 'New Menu Item'")
+	}
 }
 
 func Test_TreeControl_Render_WithNodes(t *testing.T) {
@@ -40,11 +45,20 @@ func Test_TreeControl_Render_WithNodes(t *testing.T) {
 	req, _ := test.NewRequest("GET", "/test", test.NewRequestOptions{})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
-	assert.Contains(t, body.ToHTML(), "Home")
-	assert.Contains(t, body.ToHTML(), "About")
-	assert.Contains(t, body.ToHTML(), "New Menu Item")
-	assert.Contains(t, body.ToHTML(), "tree")
+	if !strings.Contains(html, "Home") {
+		t.Errorf("Expected body to contain 'Home'")
+	}
+	if !strings.Contains(html, "About") {
+		t.Errorf("Expected body to contain 'About'")
+	}
+	if !strings.Contains(html, "New Menu Item") {
+		t.Errorf("Expected body to contain 'New Menu Item'")
+	}
+	if !strings.Contains(html, "tree") {
+		t.Errorf("Expected body to contain 'tree'")
+	}
 }
 
 func Test_TreeControl_Render_NodeAdd(t *testing.T) {
@@ -62,9 +76,14 @@ func Test_TreeControl_Render_NodeAdd(t *testing.T) {
 	})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
-	assert.Contains(t, body.ToHTML(), "tree")
-	assert.NotContains(t, body.ToHTML(), "ERROR:")
+	if !strings.Contains(html, "tree") {
+		t.Errorf("Expected body to contain 'tree'")
+	}
+	if strings.Contains(html, "ERROR:") {
+		t.Errorf("Expected body to not contain 'ERROR:'")
+	}
 }
 
 func Test_TreeControl_Render_NodeDelete(t *testing.T) {
@@ -83,9 +102,14 @@ func Test_TreeControl_Render_NodeDelete(t *testing.T) {
 	})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
-	assert.Contains(t, body.ToHTML(), "tree")
-	assert.NotContains(t, body.ToHTML(), "About") // Node should be deleted
+	if !strings.Contains(html, "tree") {
+		t.Errorf("Expected body to contain 'tree'")
+	}
+	if strings.Contains(html, "About") {
+		t.Errorf("Expected body to not contain 'About' - node should be deleted")
+	}
 }
 
 func Test_TreeControl_Render_NodeUpdateModal(t *testing.T) {
@@ -103,11 +127,20 @@ func Test_TreeControl_Render_NodeUpdateModal(t *testing.T) {
 	})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
-	assert.Contains(t, body.ToHTML(), "New Menu")
-	assert.Contains(t, body.ToHTML(), "Menu Item")
-	assert.Contains(t, body.ToHTML(), "ModalNodeUpdate")
-	assert.Contains(t, body.ToHTML(), "modal-backdrop")
+	if !strings.Contains(html, "New Menu") {
+		t.Errorf("Expected body to contain 'New Menu'")
+	}
+	if !strings.Contains(html, "Menu Item") {
+		t.Errorf("Expected body to contain 'Menu Item'")
+	}
+	if !strings.Contains(html, "ModalNodeUpdate") {
+		t.Errorf("Expected body to contain 'ModalNodeUpdate'")
+	}
+	if !strings.Contains(html, "modal-backdrop") {
+		t.Errorf("Expected body to contain 'modal-backdrop'")
+	}
 }
 
 func Test_TreeControl_Render_NodeUpdate(t *testing.T) {
@@ -127,9 +160,14 @@ func Test_TreeControl_Render_NodeUpdate(t *testing.T) {
 	})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
-	assert.Contains(t, body.ToHTML(), "tree")
-	assert.NotContains(t, body.ToHTML(), "ERROR:")
+	if !strings.Contains(html, "tree") {
+		t.Errorf("Expected body to contain 'tree'")
+	}
+	if strings.Contains(html, "ERROR:") {
+		t.Errorf("Expected body to not contain 'ERROR:'")
+	}
 }
 
 func Test_TreeControl_Render_NodeUpdate_NotFound(t *testing.T) {
@@ -147,8 +185,11 @@ func Test_TreeControl_Render_NodeUpdate_NotFound(t *testing.T) {
 	})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
-	assert.Contains(t, body.ToHTML(), "ERROR: Node not found")
+	if !strings.Contains(html, "ERROR: Node not found") {
+		t.Errorf("Expected body to contain 'ERROR: Node not found'")
+	}
 }
 
 func Test_TreeControl_Render_InvalidJSON(t *testing.T) {
@@ -157,8 +198,11 @@ func Test_TreeControl_Render_InvalidJSON(t *testing.T) {
 	req, _ := test.NewRequest("GET", "/test", test.NewRequestOptions{})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
-	assert.Contains(t, body.ToHTML(), "ERROR:")
+	if !strings.Contains(html, "ERROR:") {
+		t.Errorf("Expected body to contain 'ERROR:'")
+	}
 }
 
 func Test_TreeControl_Render_IDGeneration(t *testing.T) {
@@ -172,9 +216,12 @@ func Test_TreeControl_Render_IDGeneration(t *testing.T) {
 	req, _ := test.NewRequest("GET", "/test", test.NewRequestOptions{})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
 	// Should generate an ID when none is provided
-	assert.Contains(t, body.ToHTML(), "treectl_")
+	if !strings.Contains(html, "treectl_") {
+		t.Errorf("Expected body to contain 'treectl_'")
+	}
 }
 
 func Test_TreeControl_Render_WithExistingID(t *testing.T) {
@@ -189,9 +236,12 @@ func Test_TreeControl_Render_WithExistingID(t *testing.T) {
 	req, _ := test.NewRequest("GET", "/test", test.NewRequestOptions{})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
 	// Should use the existing ID
-	assert.Contains(t, body.ToHTML(), "existing-id")
+	if !strings.Contains(html, "existing-id") {
+		t.Errorf("Expected body to contain 'existing-id'")
+	}
 }
 
 func Test_TreeControl_Render_JSONOutput(t *testing.T) {
@@ -204,10 +254,15 @@ func Test_TreeControl_Render_JSONOutput(t *testing.T) {
 	req, _ := test.NewRequest("GET", "/test", test.NewRequestOptions{})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
 	// Should include JavaScript to update the textarea
-	assert.Contains(t, body.ToHTML(), "JSON.stringify")
-	assert.Contains(t, body.ToHTML(), "menu_items")
+	if !strings.Contains(html, "JSON.stringify") {
+		t.Errorf("Expected body to contain 'JSON.stringify'")
+	}
+	if !strings.Contains(html, "menu_items") {
+		t.Errorf("Expected body to contain 'menu_items'")
+	}
 }
 
 func Test_TreeControl_Render_JSONOutput2(t *testing.T) {
@@ -220,8 +275,13 @@ func Test_TreeControl_Render_JSONOutput2(t *testing.T) {
 	req, _ := test.NewRequest("GET", "/test", test.NewRequestOptions{})
 
 	body := control.Render(req)
+	html := body.ToHTML()
 
 	// Should include JavaScript to update the textarea
-	assert.Contains(t, body.ToHTML(), "JSON.stringify")
-	assert.Contains(t, body.ToHTML(), "menu_items")
+	if !strings.Contains(html, "JSON.stringify") {
+		t.Errorf("Expected body to contain 'JSON.stringify'")
+	}
+	if !strings.Contains(html, "menu_items") {
+		t.Errorf("Expected body to contain 'menu_items'")
+	}
 }
