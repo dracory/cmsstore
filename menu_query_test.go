@@ -10,179 +10,301 @@ func TestMenuQueryDefaults(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default values
-	require.False(t, query.HasCreatedAtGte())
-	require.False(t, query.HasCreatedAtLte())
-	require.False(t, query.HasHandle())
-	require.False(t, query.HasID())
-	require.False(t, query.HasIDIn())
-	require.False(t, query.HasLimit())
-	require.False(t, query.HasNameLike())
-	require.False(t, query.HasOffset())
-	require.False(t, query.HasOrderBy())
-	require.False(t, query.HasSiteID())
-	require.False(t, query.HasSoftDeletedIncluded())
-	require.False(t, query.HasSortOrder())
-	require.False(t, query.HasStatus())
-	require.False(t, query.HasStatusIn())
-	require.False(t, query.HasColumns())
-	require.False(t, query.HasCountOnly())
-	require.False(t, query.IsCountOnly())
-	require.Empty(t, query.Columns())
+	if query.HasCreatedAtGte() {
+		t.Errorf("expected HasCreatedAtGte to be false")
+	}
+	if query.HasCreatedAtLte() {
+		t.Errorf("expected HasCreatedAtLte to be false")
+	}
+	if query.HasHandle() {
+		t.Errorf("expected HasHandle to be false")
+	}
+	if query.HasID() {
+		t.Errorf("expected HasID to be false")
+	}
+	if query.HasIDIn() {
+		t.Errorf("expected HasIDIn to be false")
+	}
+	if query.HasLimit() {
+		t.Errorf("expected HasLimit to be false")
+	}
+	if query.HasNameLike() {
+		t.Errorf("expected HasNameLike to be false")
+	}
+	if query.HasOffset() {
+		t.Errorf("expected HasOffset to be false")
+	}
+	if query.HasOrderBy() {
+		t.Errorf("expected HasOrderBy to be false")
+	}
+	if query.HasSiteID() {
+		t.Errorf("expected HasSiteID to be false")
+	}
+	if query.HasSoftDeletedIncluded() {
+		t.Errorf("expected HasSoftDeletedIncluded to be false")
+	}
+	if query.HasSortOrder() {
+		t.Errorf("expected HasSortOrder to be false")
+	}
+	if query.HasStatus() {
+		t.Errorf("expected HasStatus to be false")
+	}
+	if query.HasStatusIn() {
+		t.Errorf("expected HasStatusIn to be false")
+	}
+	if query.HasColumns() {
+		t.Errorf("expected HasColumns to be false")
+	}
+	if query.HasCountOnly() {
+		t.Errorf("expected HasCountOnly to be false")
+	}
+	if query.IsCountOnly() {
+		t.Errorf("expected IsCountOnly to be false")
+	}
+	if len(query.Columns()) != 0 {
+		t.Errorf("expected empty Columns")
+	}
 }
 
 func TestMenuQueryColumns(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default columns
-	require.False(t, query.HasColumns())
-	require.Empty(t, query.Columns())
+	if query.HasColumns() {
+		t.Errorf("expected HasColumns to be false")
+	}
+	if len(query.Columns()) != 0 {
+		t.Errorf("expected empty Columns")
+	}
 
 	// Test SetColumns
 	columns := []string{"id", "name", "status"}
 	query.SetColumns(columns)
-	require.True(t, query.HasColumns())
-	require.Equal(t, columns, query.Columns())
+	if !query.HasColumns() {
+		t.Errorf("expected HasColumns to be true")
+	}
+	if len(query.Columns()) != len(columns) {
+		t.Errorf("expected Columns length %d, got %d", len(columns), len(query.Columns()))
+	}
+	for i, col := range columns {
+		if query.Columns()[i] != col {
+			t.Errorf("expected column %d %q, got %q", i, col, query.Columns()[i])
+		}
+	}
 }
 
 func TestMenuQueryCreatedAtGte(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasCreatedAtGte())
+	if query.HasCreatedAtGte() {
+		t.Errorf("expected HasCreatedAtGte to be false")
+	}
 
 	// Test setting value
 	query.SetCreatedAtGte("2023-12-25 10:00:00")
-	require.True(t, query.HasCreatedAtGte())
-	require.Equal(t, "2023-12-25 10:00:00", query.CreatedAtGte())
+	if !query.HasCreatedAtGte() {
+		t.Errorf("expected HasCreatedAtGte to be true")
+	}
+	if query.CreatedAtGte() != "2023-12-25 10:00:00" {
+		t.Errorf("expected CreatedAtGte %q, got %q", "2023-12-25 10:00:00", query.CreatedAtGte())
+	}
 }
 
 func TestMenuQueryCreatedAtLte(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasCreatedAtLte())
+	if query.HasCreatedAtLte() {
+		t.Errorf("expected HasCreatedAtLte to be false")
+	}
 
 	// Test setting value
 	query.SetCreatedAtLte("2023-12-25 10:00:00")
-	require.True(t, query.HasCreatedAtLte())
-	require.Equal(t, "2023-12-25 10:00:00", query.CreatedAtLte())
+	if !query.HasCreatedAtLte() {
+		t.Errorf("expected HasCreatedAtLte to be true")
+	}
+	if query.CreatedAtLte() != "2023-12-25 10:00:00" {
+		t.Errorf("expected CreatedAtLte %q, got %q", "2023-12-25 10:00:00", query.CreatedAtLte())
+	}
 }
 
 func TestMenuQueryHandle(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasHandle())
+	if query.HasHandle() {
+		t.Errorf("expected HasHandle to be false")
+	}
 
 	// Test setting value
 	handle := "test-handle"
 	query.SetHandle(handle)
-	require.True(t, query.HasHandle())
-	require.Equal(t, handle, query.Handle())
+	if !query.HasHandle() {
+		t.Errorf("expected HasHandle to be true")
+	}
+	if query.Handle() != handle {
+		t.Errorf("expected Handle %q, got %q", handle, query.Handle())
+	}
 }
 
 func TestMenuQueryID(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasID())
+	if query.HasID() {
+		t.Errorf("expected HasID to be false")
+	}
 
 	// Test setting value
 	id := "test-id"
 	query.SetID(id)
-	require.True(t, query.HasID())
-	require.Equal(t, id, query.ID())
+	if !query.HasID() {
+		t.Errorf("expected HasID to be true")
+	}
+	if query.ID() != id {
+		t.Errorf("expected ID %q, got %q", id, query.ID())
+	}
 }
 
 func TestMenuQueryIDIn(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasIDIn())
+	if query.HasIDIn() {
+		t.Errorf("expected HasIDIn to be false")
+	}
 
 	// Test setting value
 	ids := []string{"id1", "id2", "id3"}
 	query.SetIDIn(ids)
-	require.True(t, query.HasIDIn())
-	require.Equal(t, ids, query.IDIn())
+	if !query.HasIDIn() {
+		t.Errorf("expected HasIDIn to be true")
+	}
+	if len(query.IDIn()) != len(ids) {
+		t.Errorf("expected IDIn length %d, got %d", len(ids), len(query.IDIn()))
+	}
+	for i, id := range ids {
+		if query.IDIn()[i] != id {
+			t.Errorf("expected IDIn[%d] %q, got %q", i, id, query.IDIn()[i])
+		}
+	}
 }
 
 func TestMenuQueryLimit(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasLimit())
+	if query.HasLimit() {
+		t.Errorf("expected HasLimit to be false")
+	}
 
 	// Test setting value
 	limit := 10
 	query.SetLimit(limit)
-	require.True(t, query.HasLimit())
-	require.Equal(t, limit, query.Limit())
+	if !query.HasLimit() {
+		t.Errorf("expected HasLimit to be true")
+	}
+	if query.Limit() != limit {
+		t.Errorf("expected Limit %d, got %d", limit, query.Limit())
+	}
 }
 
 func TestMenuQueryNameLike(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasNameLike())
+	if query.HasNameLike() {
+		t.Errorf("expected HasNameLike to be false")
+	}
 
 	// Test setting value
 	nameLike := "test-name"
 	query.SetNameLike(nameLike)
-	require.True(t, query.HasNameLike())
-	require.Equal(t, nameLike, query.NameLike())
+	if !query.HasNameLike() {
+		t.Errorf("expected HasNameLike to be true")
+	}
+	if query.NameLike() != nameLike {
+		t.Errorf("expected NameLike %q, got %q", nameLike, query.NameLike())
+	}
 }
 
 func TestMenuQueryOffset(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasOffset())
+	if query.HasOffset() {
+		t.Errorf("expected HasOffset to be false")
+	}
 
 	// Test setting value
 	offset := 5
 	query.SetOffset(offset)
-	require.True(t, query.HasOffset())
-	require.Equal(t, offset, query.Offset())
+	if !query.HasOffset() {
+		t.Errorf("expected HasOffset to be true")
+	}
+	if query.Offset() != offset {
+		t.Errorf("expected Offset %d, got %d", offset, query.Offset())
+	}
 }
 
 func TestMenuQueryOrderBy(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasOrderBy())
+	if query.HasOrderBy() {
+		t.Errorf("expected HasOrderBy to be false")
+	}
 
 	// Test setting value
 	orderBy := "name"
 	query.SetOrderBy(orderBy)
-	require.True(t, query.HasOrderBy())
-	require.Equal(t, orderBy, query.OrderBy())
+	if !query.HasOrderBy() {
+		t.Errorf("expected HasOrderBy to be true")
+	}
+	if query.OrderBy() != orderBy {
+		t.Errorf("expected OrderBy %q, got %q", orderBy, query.OrderBy())
+	}
 }
 
 func TestMenuQuerySiteID(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasSiteID())
+	if query.HasSiteID() {
+		t.Errorf("expected HasSiteID to be false")
+	}
 
 	// Test setting value
 	siteID := "site-123"
 	query.SetSiteID(siteID)
-	require.True(t, query.HasSiteID())
-	require.Equal(t, siteID, query.SiteID())
+	if !query.HasSiteID() {
+		t.Errorf("expected HasSiteID to be true")
+	}
+	if query.SiteID() != siteID {
+		t.Errorf("expected SiteID %q, got %q", siteID, query.SiteID())
+	}
 }
 
 func TestMenuQuerySoftDeletedIncluded(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasSoftDeletedIncluded())
-	require.False(t, query.SoftDeletedIncluded())
+	if query.HasSoftDeletedIncluded() {
+		t.Errorf("expected HasSoftDeletedIncluded to be false")
+	}
+	if query.SoftDeletedIncluded() {
+		t.Errorf("expected SoftDeletedIncluded to be false")
+	}
 
 	// Test setting value
 	query.SetSoftDeletedIncluded(true)
-	require.True(t, query.HasSoftDeletedIncluded())
-	require.True(t, query.SoftDeletedIncluded())
+	if !query.HasSoftDeletedIncluded() {
+		t.Errorf("expected HasSoftDeletedIncluded to be true")
+	}
+	if !query.SoftDeletedIncluded() {
+		t.Errorf("expected SoftDeletedIncluded to be true")
+	}
 }
 
 func TestMenuQuerySortOrder(t *testing.T) {

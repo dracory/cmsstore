@@ -6,84 +6,145 @@ import (
 
 	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewMenuDefaults(t *testing.T) {
 	menu := NewMenu()
 
-	require.NotEmpty(t, menu.ID())
-	require.NotEmpty(t, menu.CreatedAt())
-	require.NotEmpty(t, menu.UpdatedAt())
-	require.Equal(t, MENU_STATUS_DRAFT, menu.Status())
-	require.Equal(t, sb.MAX_DATETIME, menu.SoftDeletedAt())
-	require.False(t, menu.IsSoftDeleted())
+	if menu.ID() == "" {
+		t.Error("expected non-empty ID")
+	}
+	if menu.CreatedAt() == "" {
+		t.Error("expected non-empty CreatedAt")
+	}
+	if menu.UpdatedAt() == "" {
+		t.Error("expected non-empty UpdatedAt")
+	}
+	if menu.Status() != MENU_STATUS_DRAFT {
+		t.Errorf("expected status %q, got %q", MENU_STATUS_DRAFT, menu.Status())
+	}
+	if menu.SoftDeletedAt() != sb.MAX_DATETIME {
+		t.Errorf("expected SoftDeletedAt %q, got %q", sb.MAX_DATETIME, menu.SoftDeletedAt())
+	}
+	if menu.IsSoftDeleted() {
+		t.Error("expected IsSoftDeleted to be false")
+	}
 
 	metas, err := menu.Metas()
-	require.NoError(t, err)
-	require.Empty(t, metas)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(metas) != 0 {
+		t.Error("expected empty metas")
+	}
 
 	createdCarbon := menu.CreatedAtCarbon()
-	require.NotNil(t, createdCarbon)
-	require.Equal(t, menu.CreatedAt(), createdCarbon.ToDateTimeString(carbon.UTC))
+	if createdCarbon == nil {
+		t.Fatal("expected non-nil CreatedAtCarbon")
+	}
+	if menu.CreatedAt() != createdCarbon.ToDateTimeString(carbon.UTC) {
+		t.Error("expected CreatedAt to match CreatedAtCarbon")
+	}
 
 	updatedCarbon := menu.UpdatedAtCarbon()
-	require.NotNil(t, updatedCarbon)
-	require.Equal(t, menu.UpdatedAt(), updatedCarbon.ToDateTimeString(carbon.UTC))
+	if updatedCarbon == nil {
+		t.Fatal("expected non-nil UpdatedAtCarbon")
+	}
+	if menu.UpdatedAt() != updatedCarbon.ToDateTimeString(carbon.UTC) {
+		t.Error("expected UpdatedAt to match UpdatedAtCarbon")
+	}
 
 	softDeletedCarbon := menu.SoftDeletedAtCarbon()
-	require.NotNil(t, softDeletedCarbon)
-	require.True(t, softDeletedCarbon.Gte(carbon.Now(carbon.UTC)))
+	if softDeletedCarbon == nil {
+		t.Fatal("expected non-nil SoftDeletedAtCarbon")
+	}
+	if !softDeletedCarbon.Gte(carbon.Now(carbon.UTC)) {
+		t.Error("expected SoftDeletedAtCarbon to be in the future")
+	}
 }
 
 func TestMenuGetterMethods(t *testing.T) {
 	menu := NewMenu()
 
 	// Test default values
-	require.Equal(t, "", menu.Handle())
-	require.Equal(t, "", menu.Memo())
-	require.Equal(t, "", menu.Name())
-	require.Equal(t, "", menu.SiteID())
+	if menu.Handle() != "" {
+		t.Error("expected empty Handle")
+	}
+	if menu.Memo() != "" {
+		t.Error("expected empty Memo")
+	}
+	if menu.Name() != "" {
+		t.Error("expected empty Name")
+	}
+	if menu.SiteID() != "" {
+		t.Error("expected empty SiteID")
+	}
 }
 
 func TestMenuStatusMethods(t *testing.T) {
 	menu := NewMenu()
 
 	// Test default status (DRAFT)
-	require.False(t, menu.IsActive())
-	require.False(t, menu.IsInactive())
+	if menu.IsActive() {
+		t.Error("expected IsActive to be false for DRAFT")
+	}
+	if menu.IsInactive() {
+		t.Error("expected IsInactive to be false for DRAFT")
+	}
 
 	// Test ACTIVE status
 	menu.SetStatus(MENU_STATUS_ACTIVE)
-	require.True(t, menu.IsActive())
-	require.False(t, menu.IsInactive())
+	if !menu.IsActive() {
+		t.Error("expected IsActive to be true for ACTIVE")
+	}
+	if menu.IsInactive() {
+		t.Error("expected IsInactive to be false for ACTIVE")
+	}
 
 	// Test INACTIVE status
 	menu.SetStatus(MENU_STATUS_INACTIVE)
-	require.False(t, menu.IsActive())
-	require.True(t, menu.IsInactive())
+	if menu.IsActive() {
+		t.Error("expected IsActive to be false for INACTIVE")
+	}
+	if !menu.IsInactive() {
+		t.Error("expected IsInactive to be true for INACTIVE")
+	}
 
 	// Test other status values
 	menu.SetStatus("unknown")
-	require.False(t, menu.IsActive())
-	require.False(t, menu.IsInactive())
+	if menu.IsActive() {
+		t.Error("expected IsActive to be false for unknown")
+	}
+	if menu.IsInactive() {
+		t.Error("expected IsInactive to be false for unknown")
+	}
 }
 
 func TestMenuSoftDeleteMethods(t *testing.T) {
 	menu := NewMenu()
-	require.False(t, menu.IsSoftDeleted())
+	if menu.IsSoftDeleted() {
+		t.Error("expected IsSoftDeleted to be false by default")
+	}
 
 	// Test with future date
 	future := carbon.Now(carbon.UTC).AddHour()
 	menu.SetSoftDeletedAt(future.ToDateTimeString(carbon.UTC))
-	require.False(t, menu.IsSoftDeleted())
-	require.Equal(t, future.ToDateTimeString(carbon.UTC), menu.SoftDeletedAt())
+	if menu.IsSoftDeleted() {
+		t.Error("expected IsSoftDeleted to be false with future date")
+	}
+	if menu.SoftDeletedAt() != future.ToDateTimeString(carbon.UTC) {
+		t.Errorf("expected SoftDeletedAt %q, got %q", future.ToDateTimeString(carbon.UTC), menu.SoftDeletedAt())
+	}
 
 	// Test with past date
 	past := carbon.Now(carbon.UTC).SubHour()
 	menu.SetSoftDeletedAt(past.ToDateTimeString(carbon.UTC))
-	require.True(t, menu.IsSoftDeleted())
-	require.Equal(t, past.ToDateTimeString(carbon.UTC), menu.SoftDeletedAt())
+	if !menu.IsSoftDeleted() {
+		t.Error("expected IsSoftDeleted to be true with past date")
+	}
+	if menu.SoftDeletedAt() != past.ToDateTimeString(carbon.UTC) {
+		t.Errorf("expected SoftDeletedAt %q, got %q", past.ToDateTimeString(carbon.UTC), menu.SoftDeletedAt())
+	}
 }
 
 func TestMenuMetasMethods(t *testing.T) {
@@ -91,38 +152,72 @@ func TestMenuMetasMethods(t *testing.T) {
 
 	// Test empty metas
 	metas, err := menu.Metas()
-	require.NoError(t, err)
-	require.Empty(t, metas)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(metas) != 0 {
+		t.Error("expected empty metas")
+	}
 
 	// Test Meta lookup on empty metas
-	require.Equal(t, "", menu.Meta("nonexistent"))
+	if menu.Meta("nonexistent") != "" {
+		t.Error("expected empty Meta for nonexistent key")
+	}
 
 	// Test SetMetas
 	err = menu.SetMetas(map[string]string{"layout": "main", "theme": "dark"})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	metas, err = menu.Metas()
-	require.NoError(t, err)
-	require.Equal(t, "main", metas["layout"])
-	require.Equal(t, "dark", metas["theme"])
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if metas["layout"] != "main" {
+		t.Errorf("expected layout %q, got %q", "main", metas["layout"])
+	}
+	if metas["theme"] != "dark" {
+		t.Errorf("expected theme %q, got %q", "dark", metas["theme"])
+	}
 
 	// Test Meta lookup
-	require.Equal(t, "main", menu.Meta("layout"))
-	require.Equal(t, "dark", menu.Meta("theme"))
-	require.Equal(t, "", menu.Meta("nonexistent"))
+	if menu.Meta("layout") != "main" {
+		t.Errorf("expected layout %q", "main")
+	}
+	if menu.Meta("theme") != "dark" {
+		t.Errorf("expected theme %q", "dark")
+	}
+	if menu.Meta("nonexistent") != "" {
+		t.Error("expected empty Meta for nonexistent key")
+	}
 
 	// Test SetMeta
 	err = menu.SetMeta("newkey", "newvalue")
-	require.NoError(t, err)
-	require.Equal(t, "newvalue", menu.Meta("newkey"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if menu.Meta("newkey") != "newvalue" {
+		t.Errorf("expected newkey %q", "newvalue")
+	}
 
 	// Test UpsertMetas
 	err = menu.UpsertMetas(map[string]string{"layout": "sidebar", "color": "blue"})
-	require.NoError(t, err)
-	require.Equal(t, "sidebar", menu.Meta("layout")) // Updated
-	require.Equal(t, "dark", menu.Meta("theme"))     // Preserved
-	require.Equal(t, "newvalue", menu.Meta("newkey")) // Preserved
-	require.Equal(t, "blue", menu.Meta("color"))      // Added
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if menu.Meta("layout") != "sidebar" { // Updated
+		t.Errorf("expected updated layout %q", "sidebar")
+	}
+	if menu.Meta("theme") != "dark" { // Preserved
+		t.Errorf("expected preserved theme %q", "dark")
+	}
+	if menu.Meta("newkey") != "newvalue" { // Preserved
+		t.Errorf("expected preserved newkey %q", "newvalue")
+	}
+	if menu.Meta("color") != "blue" { // Added
+		t.Errorf("expected added color %q", "blue")
+	}
 }
 
 func TestMenuCreatedAtMethods(t *testing.T) {
@@ -130,20 +225,32 @@ func TestMenuCreatedAtMethods(t *testing.T) {
 
 	// Test default CreatedAt
 	createdAt := menu.CreatedAt()
-	require.NotEmpty(t, createdAt)
+	if createdAt == "" {
+		t.Error("expected non-empty CreatedAt")
+	}
 
 	createdAtCarbon := menu.CreatedAtCarbon()
-	require.NotNil(t, createdAtCarbon)
-	require.Equal(t, createdAt, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	if createdAtCarbon == nil {
+		t.Fatal("expected non-nil CreatedAtCarbon")
+	}
+	if createdAt != createdAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Error("expected CreatedAt to match CreatedAtCarbon")
+	}
 
 	// Test SetCreatedAt
 	testDate := "2023-12-25 10:30:00"
 	menu.SetCreatedAt(testDate)
-	require.Equal(t, testDate, menu.CreatedAt())
+	if menu.CreatedAt() != testDate {
+		t.Errorf("expected CreatedAt %q, got %q", testDate, menu.CreatedAt())
+	}
 
 	createdAtCarbon = menu.CreatedAtCarbon()
-	require.NotNil(t, createdAtCarbon)
-	require.Equal(t, testDate, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	if createdAtCarbon == nil {
+		t.Fatal("expected non-nil CreatedAtCarbon")
+	}
+	if testDate != createdAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Error("expected CreatedAtCarbon to match test date")
+	}
 }
 
 func TestMenuUpdatedAtMethods(t *testing.T) {
@@ -151,20 +258,32 @@ func TestMenuUpdatedAtMethods(t *testing.T) {
 
 	// Test default UpdatedAt
 	updatedAt := menu.UpdatedAt()
-	require.NotEmpty(t, updatedAt)
+	if updatedAt == "" {
+		t.Error("expected non-empty UpdatedAt")
+	}
 
 	updatedAtCarbon := menu.UpdatedAtCarbon()
-	require.NotNil(t, updatedAtCarbon)
-	require.Equal(t, updatedAt, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	if updatedAtCarbon == nil {
+		t.Fatal("expected non-nil UpdatedAtCarbon")
+	}
+	if updatedAt != updatedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Error("expected UpdatedAt to match UpdatedAtCarbon")
+	}
 
 	// Test SetUpdatedAt
 	testDate := "2023-12-25 15:45:00"
 	menu.SetUpdatedAt(testDate)
-	require.Equal(t, testDate, menu.UpdatedAt())
+	if menu.UpdatedAt() != testDate {
+		t.Errorf("expected UpdatedAt %q, got %q", testDate, menu.UpdatedAt())
+	}
 
 	updatedAtCarbon = menu.UpdatedAtCarbon()
-	require.NotNil(t, updatedAtCarbon)
-	require.Equal(t, testDate, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	if updatedAtCarbon == nil {
+		t.Fatal("expected non-nil UpdatedAtCarbon")
+	}
+	if testDate != updatedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Error("expected UpdatedAtCarbon to match test date")
+	}
 }
 
 func TestMenuSoftDeletedAtMethods(t *testing.T) {
@@ -172,20 +291,32 @@ func TestMenuSoftDeletedAtMethods(t *testing.T) {
 
 	// Test default SoftDeletedAt
 	softDeletedAt := menu.SoftDeletedAt()
-	require.Equal(t, sb.MAX_DATETIME, softDeletedAt)
+	if softDeletedAt != sb.MAX_DATETIME {
+		t.Errorf("expected SoftDeletedAt %q, got %q", sb.MAX_DATETIME, softDeletedAt)
+	}
 
 	softDeletedAtCarbon := menu.SoftDeletedAtCarbon()
-	require.NotNil(t, softDeletedAtCarbon)
-	require.Equal(t, softDeletedAt, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	if softDeletedAtCarbon == nil {
+		t.Fatal("expected non-nil SoftDeletedAtCarbon")
+	}
+	if softDeletedAt != softDeletedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Error("expected SoftDeletedAt to match SoftDeletedAtCarbon")
+	}
 
 	// Test SetSoftDeletedAt
 	testDate := "2023-12-25 20:00:00"
 	menu.SetSoftDeletedAt(testDate)
-	require.Equal(t, testDate, menu.SoftDeletedAt())
+	if menu.SoftDeletedAt() != testDate {
+		t.Errorf("expected SoftDeletedAt %q, got %q", testDate, menu.SoftDeletedAt())
+	}
 
 	softDeletedAtCarbon = menu.SoftDeletedAtCarbon()
-	require.NotNil(t, softDeletedAtCarbon)
-	require.Equal(t, testDate, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	if softDeletedAtCarbon == nil {
+		t.Fatal("expected non-nil SoftDeletedAtCarbon")
+	}
+	if testDate != softDeletedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Error("expected SoftDeletedAtCarbon to match test date")
+	}
 }
 
 func TestMenuIDMethods(t *testing.T) {
@@ -193,77 +324,105 @@ func TestMenuIDMethods(t *testing.T) {
 
 	// Test default ID
 	id := menu.ID()
-	require.NotEmpty(t, id)
+	if id == "" {
+		t.Error("expected non-empty ID")
+	}
 
 	// Test SetID
 	newID := "test-menu-id-123"
 	menu.SetID(newID)
-	require.Equal(t, newID, menu.ID())
+	if menu.ID() != newID {
+		t.Errorf("expected ID %q, got %q", newID, menu.ID())
+	}
 }
 
 func TestMenuHandleMethods(t *testing.T) {
 	menu := NewMenu()
 
 	// Test default handle
-	require.Equal(t, "", menu.Handle())
+	if menu.Handle() != "" {
+		t.Error("expected empty Handle")
+	}
 
 	// Test SetHandle
 	handle := "test-menu-handle"
 	menu.SetHandle(handle)
-	require.Equal(t, handle, menu.Handle())
+	if menu.Handle() != handle {
+		t.Errorf("expected Handle %q, got %q", handle, menu.Handle())
+	}
 }
 
 func TestMenuMemoMethods(t *testing.T) {
 	menu := NewMenu()
 
 	// Test default memo
-	require.Equal(t, "", menu.Memo())
+	if menu.Memo() != "" {
+		t.Error("expected empty Memo")
+	}
 
 	// Test SetMemo
 	memo := "This is a menu memo"
 	menu.SetMemo(memo)
-	require.Equal(t, memo, menu.Memo())
+	if menu.Memo() != memo {
+		t.Errorf("expected Memo %q, got %q", memo, menu.Memo())
+	}
 }
 
 func TestMenuNameMethods(t *testing.T) {
 	menu := NewMenu()
 
 	// Test default name
-	require.Equal(t, "", menu.Name())
+	if menu.Name() != "" {
+		t.Error("expected empty Name")
+	}
 
 	// Test SetName
 	name := "Test Menu Name"
 	menu.SetName(name)
-	require.Equal(t, name, menu.Name())
+	if menu.Name() != name {
+		t.Errorf("expected Name %q, got %q", name, menu.Name())
+	}
 }
 
 func TestMenuSiteIDMethods(t *testing.T) {
 	menu := NewMenu()
 
 	// Test default site ID
-	require.Equal(t, "", menu.SiteID())
+	if menu.SiteID() != "" {
+		t.Error("expected empty SiteID")
+	}
 
 	// Test SetSiteID
 	siteID := "test-site-id"
 	menu.SetSiteID(siteID)
-	require.Equal(t, siteID, menu.SiteID())
+	if menu.SiteID() != siteID {
+		t.Errorf("expected SiteID %q, got %q", siteID, menu.SiteID())
+	}
 }
 
 func TestMenuStatusSettersAndGetters(t *testing.T) {
 	menu := NewMenu()
 
 	// Test default status
-	require.Equal(t, MENU_STATUS_DRAFT, menu.Status())
+	if menu.Status() != MENU_STATUS_DRAFT {
+		t.Errorf("expected Status %q, got %q", MENU_STATUS_DRAFT, menu.Status())
+	}
 
 	// Test SetStatus
 	menu.SetStatus(MENU_STATUS_ACTIVE)
-	require.Equal(t, MENU_STATUS_ACTIVE, menu.Status())
+	if menu.Status() != MENU_STATUS_ACTIVE {
+		t.Errorf("expected Status %q, got %q", MENU_STATUS_ACTIVE, menu.Status())
+	}
 
 	menu.SetStatus(MENU_STATUS_INACTIVE)
-	require.Equal(t, MENU_STATUS_INACTIVE, menu.Status())
+	if menu.Status() != MENU_STATUS_INACTIVE {
+		t.Errorf("expected Status %q, got %q", MENU_STATUS_INACTIVE, menu.Status())
+	}
 
 	menu.SetStatus("custom-status")
-	require.Equal(t, "custom-status", menu.Status())
+	if menu.Status() != "custom-status" {
+		t.Errorf("expected Status %q, got %q", "custom-status", menu.Status())
+	}
 }
 
 func TestMenuMarshalToVersioning(t *testing.T) {
@@ -275,26 +434,48 @@ func TestMenuMarshalToVersioning(t *testing.T) {
 	menu.SetStatus(MENU_STATUS_ACTIVE)
 
 	versionedJSON, err := menu.MarshalToVersioning()
-	require.NoError(t, err)
-	require.NotEmpty(t, versionedJSON)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if versionedJSON == "" {
+		t.Error("expected non-empty versionedJSON")
+	}
 
 	// Parse the JSON to verify it contains expected fields
 	var versionedData map[string]string
 	err = json.Unmarshal([]byte(versionedJSON), &versionedData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Check that expected fields are present
-	require.Equal(t, "test-handle", versionedData[COLUMN_HANDLE])
-	require.Equal(t, "test-memo", versionedData[COLUMN_MEMO])
-	require.Equal(t, "Test Menu", versionedData[COLUMN_NAME])
-	require.Equal(t, "test-site", versionedData[COLUMN_SITE_ID])
-	require.Equal(t, MENU_STATUS_ACTIVE, versionedData[COLUMN_STATUS])
+	if versionedData[COLUMN_HANDLE] != "test-handle" {
+		t.Errorf("expected handle %q, got %q", "test-handle", versionedData[COLUMN_HANDLE])
+	}
+	if versionedData[COLUMN_MEMO] != "test-memo" {
+		t.Errorf("expected memo %q, got %q", "test-memo", versionedData[COLUMN_MEMO])
+	}
+	if versionedData[COLUMN_NAME] != "Test Menu" {
+		t.Errorf("expected name %q, got %q", "Test Menu", versionedData[COLUMN_NAME])
+	}
+	if versionedData[COLUMN_SITE_ID] != "test-site" {
+		t.Errorf("expected site_id %q, got %q", "test-site", versionedData[COLUMN_SITE_ID])
+	}
+	if versionedData[COLUMN_STATUS] != MENU_STATUS_ACTIVE {
+		t.Errorf("expected status %q, got %q", MENU_STATUS_ACTIVE, versionedData[COLUMN_STATUS])
+	}
 
 	// Check that timestamps and soft delete fields are excluded
 	_, hasCreatedAt := versionedData[COLUMN_CREATED_AT]
 	_, hasUpdatedAt := versionedData[COLUMN_UPDATED_AT]
 	_, hasSoftDeletedAt := versionedData[COLUMN_SOFT_DELETED_AT]
-	require.False(t, hasCreatedAt)
-	require.False(t, hasUpdatedAt)
-	require.False(t, hasSoftDeletedAt)
+	if hasCreatedAt {
+		t.Error("expected CreatedAt to be excluded")
+	}
+	if hasUpdatedAt {
+		t.Error("expected UpdatedAt to be excluded")
+	}
+	if hasSoftDeletedAt {
+		t.Error("expected SoftDeletedAt to be excluded")
+	}
 }

@@ -121,7 +121,7 @@ func Test_BlockDeleteController_Delete(t *testing.T) {
 	if err == nil && deletedBlock != nil {
 		// If block is found, it should be inactive
 		if deletedBlock.Status() != cmsstore.BLOCK_STATUS_INACTIVE {
-			t.Errorf("Expected status %v, got %v", cmsstore.BLOCK_STATUS_INACTIVE, deletedBlock.Status())
+			t.Errorf("Expected status %q, got %q", cmsstore.BLOCK_STATUS_INACTIVE, deletedBlock.Status())
 		}
 	} else {
 		// Block might not be findable after soft delete, which is also expected
