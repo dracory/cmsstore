@@ -1,293 +1,471 @@
 package cmsstore
 
 import (
+	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestBlockQueryDefaults(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default values
-	require.False(t, query.HasCreatedAtGte())
-	require.False(t, query.HasCreatedAtLte())
-	require.False(t, query.HasHandle())
-	require.False(t, query.HasID())
-	require.False(t, query.HasIDIn())
-	require.False(t, query.HasLimit())
-	require.False(t, query.HasNameLike())
-	require.False(t, query.HasOffset())
-	require.False(t, query.HasOrderBy())
-	require.False(t, query.HasPageID())
-	require.False(t, query.HasParentID())
-	require.False(t, query.HasSequence())
-	require.False(t, query.HasSiteID())
-	require.False(t, query.HasSoftDeleted())
-	require.False(t, query.HasSortOrder())
-	require.False(t, query.HasStatus())
-	require.False(t, query.HasStatusIn())
-	require.False(t, query.HasTemplateID())
-	require.False(t, query.HasColumns())
-	require.False(t, query.IsCountOnly())
-	require.Empty(t, query.Columns())
+	if query.HasCreatedAtGte() {
+		t.Errorf("expected HasCreatedAtGte to be false")
+	}
+	if query.HasCreatedAtLte() {
+		t.Errorf("expected HasCreatedAtLte to be false")
+	}
+	if query.HasHandle() {
+		t.Errorf("expected HasHandle to be false")
+	}
+	if query.HasID() {
+		t.Errorf("expected HasID to be false")
+	}
+	if query.HasIDIn() {
+		t.Errorf("expected HasIDIn to be false")
+	}
+	if query.HasLimit() {
+		t.Errorf("expected HasLimit to be false")
+	}
+	if query.HasNameLike() {
+		t.Errorf("expected HasNameLike to be false")
+	}
+	if query.HasOffset() {
+		t.Errorf("expected HasOffset to be false")
+	}
+	if query.HasOrderBy() {
+		t.Errorf("expected HasOrderBy to be false")
+	}
+	if query.HasPageID() {
+		t.Errorf("expected HasPageID to be false")
+	}
+	if query.HasParentID() {
+		t.Errorf("expected HasParentID to be false")
+	}
+	if query.HasSequence() {
+		t.Errorf("expected HasSequence to be false")
+	}
+	if query.HasSiteID() {
+		t.Errorf("expected HasSiteID to be false")
+	}
+	if query.HasSoftDeleted() {
+		t.Errorf("expected HasSoftDeleted to be false")
+	}
+	if query.HasSortOrder() {
+		t.Errorf("expected HasSortOrder to be false")
+	}
+	if query.HasStatus() {
+		t.Errorf("expected HasStatus to be false")
+	}
+	if query.HasStatusIn() {
+		t.Errorf("expected HasStatusIn to be false")
+	}
+	if query.HasTemplateID() {
+		t.Errorf("expected HasTemplateID to be false")
+	}
+	if query.HasColumns() {
+		t.Errorf("expected HasColumns to be false")
+	}
+	if query.IsCountOnly() {
+		t.Errorf("expected IsCountOnly to be false")
+	}
+	if len(query.Columns()) != 0 {
+		t.Errorf("expected empty Columns")
+	}
 }
 
 func TestBlockQueryColumns(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default columns
-	require.False(t, query.HasColumns())
-	require.Empty(t, query.Columns())
+	if query.HasColumns() {
+		t.Errorf("expected HasColumns to be false")
+	}
+	if len(query.Columns()) != 0 {
+		t.Errorf("expected empty Columns")
+	}
 
 	// Test SetColumns
 	columns := []string{"id", "name", "status"}
 	query.SetColumns(columns)
-	require.True(t, query.HasColumns())
-	require.Equal(t, columns, query.Columns())
+	if !query.HasColumns() {
+		t.Errorf("expected HasColumns to be true")
+	}
+	if len(query.Columns()) != len(columns) {
+		t.Errorf("expected Columns length %d, got %d", len(columns), len(query.Columns()))
+	}
+	for i, col := range columns {
+		if query.Columns()[i] != col {
+			t.Errorf("expected column %d %q, got %q", i, col, query.Columns()[i])
+		}
+	}
 }
 
 func TestBlockQueryCreatedAtGte(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasCreatedAtGte())
+	if query.HasCreatedAtGte() {
+		t.Errorf("expected HasCreatedAtGte to be false")
+	}
 
 	// Test setting value
 	query.SetCreatedAtGte("2023-12-25 10:00:00")
-	require.True(t, query.HasCreatedAtGte())
-	require.Equal(t, "2023-12-25 10:00:00", query.CreatedAtGte())
+	if !query.HasCreatedAtGte() {
+		t.Errorf("expected HasCreatedAtGte to be true")
+	}
+	if query.CreatedAtGte() != "2023-12-25 10:00:00" {
+		t.Errorf("expected CreatedAtGte %q, got %q", "2023-12-25 10:00:00", query.CreatedAtGte())
+	}
 }
 
 func TestBlockQueryCreatedAtLte(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasCreatedAtLte())
+	if query.HasCreatedAtLte() {
+		t.Errorf("expected HasCreatedAtLte to be false")
+	}
 
 	// Test setting value
 	query.SetCreatedAtLte("2023-12-25 10:00:00")
-	require.True(t, query.HasCreatedAtLte())
-	require.Equal(t, "2023-12-25 10:00:00", query.CreatedAtLte())
+	if !query.HasCreatedAtLte() {
+		t.Errorf("expected HasCreatedAtLte to be true")
+	}
+	if query.CreatedAtLte() != "2023-12-25 10:00:00" {
+		t.Errorf("expected CreatedAtLte %q, got %q", "2023-12-25 10:00:00", query.CreatedAtLte())
+	}
 }
 
 func TestBlockQueryHandle(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasHandle())
+	if query.HasHandle() {
+		t.Errorf("expected HasHandle to be false")
+	}
 
 	// Test setting value
 	handle := "test-handle"
 	query.SetHandle(handle)
-	require.True(t, query.HasHandle())
-	require.Equal(t, handle, query.Handle())
+	if !query.HasHandle() {
+		t.Errorf("expected HasHandle to be true")
+	}
+	if query.Handle() != handle {
+		t.Errorf("expected Handle %q, got %q", handle, query.Handle())
+	}
 }
 
 func TestBlockQueryID(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasID())
+	if query.HasID() {
+		t.Errorf("expected HasID to be false")
+	}
 
 	// Test setting value
 	id := "test-id"
 	query.SetID(id)
-	require.True(t, query.HasID())
-	require.Equal(t, id, query.ID())
+	if !query.HasID() {
+		t.Errorf("expected HasID to be true")
+	}
+	if query.ID() != id {
+		t.Errorf("expected ID %q, got %q", id, query.ID())
+	}
 }
 
 func TestBlockQueryIDIn(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasIDIn())
+	if query.HasIDIn() {
+		t.Errorf("expected HasIDIn to be false")
+	}
 
 	// Test setting value
 	ids := []string{"id1", "id2", "id3"}
 	query.SetIDIn(ids)
-	require.True(t, query.HasIDIn())
-	require.Equal(t, ids, query.IDIn())
+	if !query.HasIDIn() {
+		t.Errorf("expected HasIDIn to be true")
+	}
+	if len(query.IDIn()) != len(ids) {
+		t.Errorf("expected IDIn length %d, got %d", len(ids), len(query.IDIn()))
+	}
+	for i, id := range ids {
+		if query.IDIn()[i] != id {
+			t.Errorf("expected IDIn[%d] %q, got %q", i, id, query.IDIn()[i])
+		}
+	}
 }
 
 func TestBlockQueryLimit(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasLimit())
+	if query.HasLimit() {
+		t.Errorf("expected HasLimit to be false")
+	}
 
 	// Test setting value
 	limit := 10
 	query.SetLimit(limit)
-	require.True(t, query.HasLimit())
-	require.Equal(t, limit, query.Limit())
+	if !query.HasLimit() {
+		t.Errorf("expected HasLimit to be true")
+	}
+	if query.Limit() != limit {
+		t.Errorf("expected Limit %d, got %d", limit, query.Limit())
+	}
 }
 
 func TestBlockQueryNameLike(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasNameLike())
+	if query.HasNameLike() {
+		t.Errorf("expected HasNameLike to be false")
+	}
 
 	// Test setting value
 	nameLike := "test-name"
 	query.SetNameLike(nameLike)
-	require.True(t, query.HasNameLike())
-	require.Equal(t, nameLike, query.NameLike())
+	if !query.HasNameLike() {
+		t.Errorf("expected HasNameLike to be true")
+	}
+	if query.NameLike() != nameLike {
+		t.Errorf("expected NameLike %q, got %q", nameLike, query.NameLike())
+	}
 }
 
 func TestBlockQueryOffset(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasOffset())
+	if query.HasOffset() {
+		t.Errorf("expected HasOffset to be false")
+	}
 
 	// Test setting value
 	offset := 5
 	query.SetOffset(offset)
-	require.True(t, query.HasOffset())
-	require.Equal(t, offset, query.Offset())
+	if !query.HasOffset() {
+		t.Errorf("expected HasOffset to be true")
+	}
+	if query.Offset() != offset {
+		t.Errorf("expected Offset %d, got %d", offset, query.Offset())
+	}
 }
 
 func TestBlockQueryOrderBy(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasOrderBy())
+	if query.HasOrderBy() {
+		t.Errorf("expected HasOrderBy to be false")
+	}
 
 	// Test setting value
 	orderBy := "name"
 	query.SetOrderBy(orderBy)
-	require.True(t, query.HasOrderBy())
-	require.Equal(t, orderBy, query.OrderBy())
+	if !query.HasOrderBy() {
+		t.Errorf("expected HasOrderBy to be true")
+	}
+	if query.OrderBy() != orderBy {
+		t.Errorf("expected OrderBy %q, got %q", orderBy, query.OrderBy())
+	}
 }
 
 func TestBlockQueryPageID(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasPageID())
+	if query.HasPageID() {
+		t.Errorf("expected HasPageID to be false")
+	}
 
 	// Test setting value
 	pageID := "page-123"
 	query.SetPageID(pageID)
-	require.True(t, query.HasPageID())
-	require.Equal(t, pageID, query.PageID())
+	if !query.HasPageID() {
+		t.Errorf("expected HasPageID to be true")
+	}
+	if query.PageID() != pageID {
+		t.Errorf("expected PageID %q, got %q", pageID, query.PageID())
+	}
 }
 
 func TestBlockQueryParentID(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasParentID())
+	if query.HasParentID() {
+		t.Errorf("expected HasParentID to be false")
+	}
 
 	// Test setting value
 	parentID := "parent-123"
 	query.SetParentID(parentID)
-	require.True(t, query.HasParentID())
-	require.Equal(t, parentID, query.ParentID())
+	if !query.HasParentID() {
+		t.Errorf("expected HasParentID to be true")
+	}
+	if query.ParentID() != parentID {
+		t.Errorf("expected ParentID %q, got %q", parentID, query.ParentID())
+	}
 }
 
 func TestBlockQuerySequence(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasSequence())
+	if query.HasSequence() {
+		t.Errorf("expected HasSequence to be false")
+	}
 
 	// Test setting value
 	sequence := 1
 	query.SetSequence(sequence)
-	require.True(t, query.HasSequence())
-	require.Equal(t, sequence, query.Sequence())
+	if !query.HasSequence() {
+		t.Errorf("expected HasSequence to be true")
+	}
+	if query.Sequence() != sequence {
+		t.Errorf("expected Sequence %d, got %d", sequence, query.Sequence())
+	}
 }
 
 func TestBlockQuerySiteID(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasSiteID())
+	if query.HasSiteID() {
+		t.Errorf("expected HasSiteID to be false")
+	}
 
 	// Test setting value
 	siteID := "site-123"
 	query.SetSiteID(siteID)
-	require.True(t, query.HasSiteID())
-	require.Equal(t, siteID, query.SiteID())
+	if !query.HasSiteID() {
+		t.Errorf("expected HasSiteID to be true")
+	}
+	if query.SiteID() != siteID {
+		t.Errorf("expected SiteID %q, got %q", siteID, query.SiteID())
+	}
 }
 
 func TestBlockQuerySoftDeleteIncluded(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasSoftDeleted())
-	require.False(t, query.SoftDeleteIncluded())
+	if query.HasSoftDeleted() {
+		t.Errorf("expected HasSoftDeleted to be false")
+	}
+	if query.SoftDeleteIncluded() {
+		t.Errorf("expected SoftDeleteIncluded to be false")
+	}
 
 	// Test setting value
 	query.SetSoftDeleteIncluded(true)
-	require.True(t, query.HasSoftDeleted())
-	require.True(t, query.SoftDeleteIncluded())
+	if !query.HasSoftDeleted() {
+		t.Errorf("expected HasSoftDeleted to be true")
+	}
+	if !query.SoftDeleteIncluded() {
+		t.Errorf("expected SoftDeleteIncluded to be true")
+	}
 }
 
 func TestBlockQuerySortOrder(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasSortOrder())
+	if query.HasSortOrder() {
+		t.Errorf("expected HasSortOrder to be false")
+	}
 
 	// Test setting value
 	sortOrder := "asc"
 	query.SetSortOrder(sortOrder)
-	require.True(t, query.HasSortOrder())
-	require.Equal(t, sortOrder, query.SortOrder())
+	if !query.HasSortOrder() {
+		t.Errorf("expected HasSortOrder to be true")
+	}
+	if query.SortOrder() != sortOrder {
+		t.Errorf("expected SortOrder %q, got %q", sortOrder, query.SortOrder())
+	}
 }
 
 func TestBlockQueryStatus(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasStatus())
+	if query.HasStatus() {
+		t.Errorf("expected HasStatus to be false")
+	}
 
 	// Test setting value
 	status := "active"
 	query.SetStatus(status)
-	require.True(t, query.HasStatus())
-	require.Equal(t, status, query.Status())
+	if !query.HasStatus() {
+		t.Errorf("expected HasStatus to be true")
+	}
+	if query.Status() != status {
+		t.Errorf("expected Status %q, got %q", status, query.Status())
+	}
 }
 
 func TestBlockQueryStatusIn(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasStatusIn())
+	if query.HasStatusIn() {
+		t.Errorf("expected HasStatusIn to be false")
+	}
 
 	// Test setting value
 	statuses := []string{"active", "inactive"}
 	query.SetStatusIn(statuses)
-	require.True(t, query.HasStatusIn())
-	require.Equal(t, statuses, query.StatusIn())
+	if !query.HasStatusIn() {
+		t.Errorf("expected HasStatusIn to be true")
+	}
+	if len(query.StatusIn()) != len(statuses) {
+		t.Errorf("expected StatusIn length %d, got %d", len(statuses), len(query.StatusIn()))
+	}
+	for i, status := range statuses {
+		if query.StatusIn()[i] != status {
+			t.Errorf("expected StatusIn[%d] %q, got %q", i, status, query.StatusIn()[i])
+		}
+	}
 }
 
 func TestBlockQueryTemplateID(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.HasTemplateID())
+	if query.HasTemplateID() {
+		t.Errorf("expected HasTemplateID to be false")
+	}
 
 	// Test setting value
 	templateID := "template-123"
 	query.SetTemplateID(templateID)
-	require.True(t, query.HasTemplateID())
-	require.Equal(t, templateID, query.TemplateID())
+	if !query.HasTemplateID() {
+		t.Errorf("expected HasTemplateID to be true")
+	}
+	if query.TemplateID() != templateID {
+		t.Errorf("expected TemplateID %q, got %q", templateID, query.TemplateID())
+	}
 }
 
 func TestBlockQueryCountOnly(t *testing.T) {
 	query := BlockQuery()
 
 	// Test default
-	require.False(t, query.IsCountOnly())
+	if query.IsCountOnly() {
+		t.Errorf("expected IsCountOnly to be false")
+	}
 
 	// Test setting value
 	query.SetCountOnly(true)
-	require.True(t, query.IsCountOnly())
+	if !query.IsCountOnly() {
+		t.Errorf("expected IsCountOnly to be true")
+	}
 }
 
 func TestBlockQueryValidation(t *testing.T) {
@@ -295,67 +473,105 @@ func TestBlockQueryValidation(t *testing.T) {
 
 	// Test valid query
 	err := query.Validate()
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 
 	// Test invalid created_at_gte
 	query.SetCreatedAtGte("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "created_at_gte cannot be empty")
+	if err == nil {
+		t.Errorf("expected error for empty created_at_gte")
+	}
+	if !strings.Contains(err.Error(), "created_at_gte cannot be empty") {
+		t.Errorf("expected error to contain 'created_at_gte cannot be empty'")
+	}
 
 	// Test invalid created_at_lte
 	query = BlockQuery()
 	query.SetCreatedAtLte("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "created_at_lte cannot be empty")
+	if err == nil {
+		t.Errorf("expected error for empty created_at_lte")
+	}
+	if !strings.Contains(err.Error(), "created_at_lte cannot be empty") {
+		t.Errorf("expected error to contain 'created_at_lte cannot be empty'")
+	}
 
 	// Test invalid id
 	query = BlockQuery()
 	query.SetID("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "id cannot be empty")
+	if err == nil {
+		t.Errorf("expected error for empty id")
+	}
+	if !strings.Contains(err.Error(), "id cannot be empty") {
+		t.Errorf("expected error to contain 'id cannot be empty'")
+	}
 
 	// Test invalid id_in
 	query = BlockQuery()
 	query.SetIDIn([]string{})
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "id_in cannot be empty array")
+	if err == nil {
+		t.Errorf("expected error for empty id_in")
+	}
+	if !strings.Contains(err.Error(), "id_in cannot be empty array") {
+		t.Errorf("expected error to contain 'id_in cannot be empty array'")
+	}
 
 	// Test invalid limit
 	query = BlockQuery()
 	query.SetLimit(-1)
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "limit cannot be negative")
+	if err == nil {
+		t.Errorf("expected error for negative limit")
+	}
+	if !strings.Contains(err.Error(), "limit cannot be negative") {
+		t.Errorf("expected error to contain 'limit cannot be negative'")
+	}
 
 	// Test invalid handle
 	query = BlockQuery()
 	query.SetHandle("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "handle cannot be empty")
+	if err == nil {
+		t.Errorf("expected error for empty handle")
+	}
+	if !strings.Contains(err.Error(), "handle cannot be empty") {
+		t.Errorf("expected error to contain 'handle cannot be empty'")
+	}
 
 	// Test invalid name_like
 	query = BlockQuery()
 	query.SetNameLike("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "name_like cannot be empty")
+	if err == nil {
+		t.Errorf("expected error for empty name_like")
+	}
+	if !strings.Contains(err.Error(), "name_like cannot be empty") {
+		t.Errorf("expected error to contain 'name_like cannot be empty'")
+	}
 
 	// Test invalid status
 	query = BlockQuery()
 	query.SetStatus("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "status cannot be empty")
+	if err == nil {
+		t.Errorf("expected error for empty status")
+	}
+	if !strings.Contains(err.Error(), "status cannot be empty") {
+		t.Errorf("expected error to contain 'status cannot be empty'")
+	}
 
 	// Test invalid offset
 	query = BlockQuery()
 	query.SetOffset(-1)
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "offset cannot be negative")
+	if err == nil {
+		t.Errorf("expected error for negative offset")
+	}
+	if !strings.Contains(err.Error(), "offset cannot be negative") {
+		t.Errorf("expected error to contain 'offset cannot be negative'")
+	}
 }

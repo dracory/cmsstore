@@ -5,100 +5,153 @@ import (
 	"testing"
 
 	"github.com/dracory/uid"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGenerateShortIDReturnsLowercaseAndNonEmpty(t *testing.T) {
 	generated := GenerateShortID()
 
-	require.NotEmpty(t, generated)
-	require.Equal(t, strings.ToLower(generated), generated)
+	if generated == "" {
+		t.Errorf("expected non-empty generated ID")
+	}
+	if strings.ToLower(generated) != generated {
+		t.Errorf("expected lowercase, got %q", generated)
+	}
 
 	unshortened, err := uid.UnshortenCrockford(generated)
-	require.NoError(t, err)
-	require.NotEmpty(t, unshortened)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if unshortened == "" {
+		t.Errorf("expected non-empty unshortened ID")
+	}
 }
 
 func TestNormalizeIDTrimsWhitespaceAndLowercases(t *testing.T) {
 	normalized := NormalizeID("  AbC123XyZ  ")
-	require.Equal(t, "abc123xyz", normalized)
+	if normalized != "abc123xyz" {
+		t.Errorf("expected %q, got %q", "abc123xyz", normalized)
+	}
 }
 
 func TestNormalizeIDEmptyString(t *testing.T) {
-	require.Equal(t, "", NormalizeID("   "))
+	if NormalizeID("   ") != "" {
+		t.Errorf("expected empty string")
+	}
 }
 
 func TestIsShortIDReturnsTrueForNineCharIDs(t *testing.T) {
-	require.True(t, IsShortID("abc123xyz"))
+	if !IsShortID("abc123xyz") {
+		t.Errorf("expected true for 9 char ID")
+	}
 }
 
 func TestIsShortIDReturnsTrueForTwentyOneCharIDs(t *testing.T) {
-	require.True(t, IsShortID("abcdefghijklmnopqrstu"))
+	if !IsShortID("abcdefghijklmnopqrstu") {
+		t.Errorf("expected true for 21 char ID")
+	}
 }
 
 func TestIsShortIDReturnsFalseForOtherLengths(t *testing.T) {
-	require.False(t, IsShortID("abcd"))
+	if IsShortID("abcd") {
+		t.Errorf("expected false for 4 char ID")
+	}
 }
 
 func TestShortenIDReturnsNormalizedNineCharID(t *testing.T) {
 	result := ShortenID("  ABC123XYZ  ")
-	require.Equal(t, "abc123xyz", result)
+	if result != "abc123xyz" {
+		t.Errorf("expected %q, got %q", "abc123xyz", result)
+	}
 }
 
 func TestShortenIDShortensValidThirtyTwoCharID(t *testing.T) {
 	longID := uid.HumanUid()
-	require.Len(t, longID, 32)
+	if len(longID) != 32 {
+		t.Errorf("expected 32 char ID, got %d", len(longID))
+	}
 
 	short := ShortenID(longID)
-	require.Len(t, short, 21)
-	require.Equal(t, strings.ToLower(short), short)
+	if len(short) != 21 {
+		t.Errorf("expected 21 char short ID, got %d", len(short))
+	}
+	if strings.ToLower(short) != short {
+		t.Errorf("expected lowercase, got %q", short)
+	}
 }
 
 func TestShortenIDReturnsNormalizedOriginalOnInvalidThirtyTwoCharID(t *testing.T) {
 	invalidLong := "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
 
 	short := ShortenID(invalidLong)
-	require.Equal(t, strings.ToLower(invalidLong), short)
+	if short != strings.ToLower(invalidLong) {
+		t.Errorf("expected %q, got %q", strings.ToLower(invalidLong), short)
+	}
 }
 
 func TestShortenIDReturnsNormalizedValueForOtherLengths(t *testing.T) {
 	result := ShortenID("  SOME-HANDLE ")
-	require.Equal(t, "some-handle", result)
+	if result != "some-handle" {
+		t.Errorf("expected %q, got %q", "some-handle", result)
+	}
 }
 
 func TestUnshortenIDReturnsOriginalForNonShortID(t *testing.T) {
 	result := UnshortenID("  SOME-HANDLE ")
-	require.Equal(t, "some-handle", result)
+	if result != "some-handle" {
+		t.Errorf("expected %q, got %q", "some-handle", result)
+	}
 }
 
 func TestUnshortenIDUnshortensValidTwentyOneCharID(t *testing.T) {
 	longID := uid.HumanUid()
 	short, err := uid.ShortenCrockford(longID)
-	require.NoError(t, err)
-	require.Len(t, short, 21)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(short) != 21 {
+		t.Errorf("expected 21 char short ID, got %d", len(short))
+	}
 
 	unshortened := UnshortenID(strings.ToUpper(short))
-	require.Equal(t, longID, unshortened)
+	if unshortened != longID {
+		t.Errorf("expected %q, got %q", longID, unshortened)
+	}
 }
 
 func TestUnshortenIDReturnsOriginalWhenCrockfordDecodeFails(t *testing.T) {
 	invalidShort := "!!!!!!!!!"
-	require.Equal(t, invalidShort, UnshortenID(invalidShort))
+	if UnshortenID(invalidShort) != invalidShort {
+		t.Errorf("expected original when decode fails")
+	}
 }
 
 func TestUnshortenIDReturnsOriginalWhenLengthIsNotSupported(t *testing.T) {
 	generated := GenerateShortID()
-	require.False(t, IsShortID(generated))
-	require.Equal(t, generated, UnshortenID(strings.ToUpper(generated)))
+	if IsShortID(generated) {
+		t.Errorf("expected generated to NOT be short ID")
+	}
+	if UnshortenID(strings.ToUpper(generated)) != generated {
+		t.Errorf("expected original when length not supported")
+	}
 }
 
 func TestIsSQLiteReturnsTrueForSQLiteNames(t *testing.T) {
-	require.True(t, isSQLite("sqlite"))
-	require.True(t, isSQLite("sqlite3"))
-	require.True(t, isSQLite("MySQLiteDriver"))
+	if !isSQLite("sqlite") {
+		t.Errorf("expected true for sqlite")
+	}
+	if !isSQLite("sqlite3") {
+		t.Errorf("expected true for sqlite3")
+	}
+	if !isSQLite("MySQLiteDriver") {
+		t.Errorf("expected true for MySQLiteDriver")
+	}
 }
 
 func TestIsSQLiteReturnsFalseForNonSQLiteDrivers(t *testing.T) {
-	require.False(t, isSQLite("postgres"))
-	require.False(t, isSQLite("mysql"))
+	if isSQLite("postgres") {
+		t.Errorf("expected false for postgres")
+	}
+	if isSQLite("mysql") {
+		t.Errorf("expected false for mysql")
+	}
 }
