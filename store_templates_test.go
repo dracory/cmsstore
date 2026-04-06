@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
-	"github.com/stretchr/testify/require"
 )
 
 func TestStoreTemplateCreate(t *testing.T) {
@@ -381,63 +380,97 @@ func TestStoreTemplateDelete(t *testing.T) {
 
 func TestStoreTemplateErrorPaths(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test with nil DB
 	store := &storeImplementation{db: nil}
-	
+
 	_, err := store.TemplateCount(ctx, TemplateQuery())
-	require.Error(t, err)
-	
+	if err == nil {
+		t.Error("Expected error")
+	}
+
 	err = store.TemplateCreate(ctx, NewTemplate())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TemplateDelete(ctx, NewTemplate())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TemplateDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TemplateFindByHandle(ctx, "handle")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TemplateFindByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TemplateList(ctx, TemplateQuery())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TemplateSoftDelete(ctx, NewTemplate())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TemplateSoftDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TemplateUpdate(ctx, NewTemplate())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	// Test with nil entity
 	store.db = initDB(":memory:")
 	err = store.TemplateCreate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TemplateDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TemplateSoftDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TemplateUpdate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	// Test with empty ID/handle
 	_, err = store.TemplateFindByHandle(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TemplateFindByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TemplateDeleteByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 }
 
 func TestStoreTemplateUpdate(t *testing.T) {

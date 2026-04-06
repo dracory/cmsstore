@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
-	"github.com/stretchr/testify/require"
 )
 
 func TestStoreSiteCreate(t *testing.T) {
@@ -428,69 +427,107 @@ func TestStoreSiteFindByDomainName(t *testing.T) {
 
 func TestStoreSiteErrorPaths(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test with nil DB
 	store := &storeImplementation{db: nil}
-	
+
 	_, err := store.SiteCount(ctx, SiteQuery())
-	require.Error(t, err)
-	
+	if err == nil {
+		t.Error("Expected error")
+	}
+
 	err = store.SiteCreate(ctx, NewSite())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.SiteDelete(ctx, NewSite())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.SiteDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.SiteFindByDomainName(ctx, "domain")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.SiteFindByHandle(ctx, "handle")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.SiteFindByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.SiteList(ctx, SiteQuery())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.SiteSoftDelete(ctx, NewSite())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.SiteSoftDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.SiteUpdate(ctx, NewSite())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	// Test with nil entity
 	store.db = initDB(":memory:")
 	err = store.SiteCreate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.SiteDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.SiteSoftDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.SiteUpdate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	// Test with empty ID/handle/domain
 	_, err = store.SiteFindByDomainName(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.SiteFindByHandle(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.SiteFindByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.SiteDeleteByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 }
 
 func TestStoreSiteUpdate(t *testing.T) {

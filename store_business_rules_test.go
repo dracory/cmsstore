@@ -236,6 +236,9 @@ func TestMetadataValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	if found == nil {
+		t.Fatal("found MUST NOT be nil")
+	}
 
 	if found.Meta("key1") != "value1" {
 		t.Fatalf("Expected Meta('key1') 'value1', got %s", found.Meta("key1"))

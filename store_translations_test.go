@@ -2,11 +2,11 @@ package cmsstore
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -23,17 +23,23 @@ func TestStoreTranslationCreate(t *testing.T) {
 		TranslationTableName: "translation_table",
 		AutomigrateEnabled:   true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	translation := NewTranslation()
 	translation.SetSiteID("test-site")
 	translation.SetName("Test Translation")
 	err = translation.SetContent(map[string]string{"en": "Hello"})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 	err = store.TranslationCreate(ctx, translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 }
 
 func TestStoreTranslationFindByID(t *testing.T) {
@@ -49,27 +55,43 @@ func TestStoreTranslationFindByID(t *testing.T) {
 		TranslationTableName: "translation_table",
 		AutomigrateEnabled:   true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	translation := NewTranslation()
 	translation.SetSiteID("test-site")
 	translation.SetName("Test Translation")
 	ctx := context.Background()
 	err = store.TranslationCreate(ctx, translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Test find by full ID
 	found, err := store.TranslationFindByID(ctx, translation.ID())
-	require.NoError(t, err)
-	require.NotNil(t, found)
-	require.Equal(t, translation.ID(), found.ID())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found == nil {
+		t.Fatal("found MUST NOT be nil")
+	}
+	if found.ID() != translation.ID() {
+		t.Fatalf("Expected ID %s, got %s", translation.ID(), found.ID())
+	}
 
 	// Test find by shortened ID
 	shortID := ShortenID(translation.ID())
 	foundShort, err := store.TranslationFindByID(ctx, shortID)
-	require.NoError(t, err)
-	require.NotNil(t, foundShort)
-	require.Equal(t, translation.ID(), foundShort.ID())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if foundShort == nil {
+		t.Fatal("foundShort MUST NOT be nil")
+	}
+	if foundShort.ID() != translation.ID() {
+		t.Fatalf("Expected ID %s, got %s", translation.ID(), foundShort.ID())
+	}
 }
 
 func TestStoreTranslationFindByHandle(t *testing.T) {
@@ -85,7 +107,9 @@ func TestStoreTranslationFindByHandle(t *testing.T) {
 		TranslationTableName: "translation_table",
 		AutomigrateEnabled:   true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	translation := NewTranslation()
 	translation.SetSiteID("test-site")
@@ -93,12 +117,20 @@ func TestStoreTranslationFindByHandle(t *testing.T) {
 	translation.SetHandle("test-handle")
 	ctx := context.Background()
 	err = store.TranslationCreate(ctx, translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	found, err := store.TranslationFindByHandle(ctx, "test-handle")
-	require.NoError(t, err)
-	require.NotNil(t, found)
-	require.Equal(t, translation.ID(), found.ID())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found == nil {
+		t.Fatal("found MUST NOT be nil")
+	}
+	if found.ID() != translation.ID() {
+		t.Fatalf("Expected ID %s, got %s", translation.ID(), found.ID())
+	}
 }
 
 func TestStoreTranslationFindByHandleOrID(t *testing.T) {
@@ -114,7 +146,9 @@ func TestStoreTranslationFindByHandleOrID(t *testing.T) {
 		TranslationTableName: "translation_table",
 		AutomigrateEnabled:   true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	translation := NewTranslation()
 	translation.SetSiteID("test-site")
@@ -122,17 +156,27 @@ func TestStoreTranslationFindByHandleOrID(t *testing.T) {
 	translation.SetHandle("test-handle")
 	ctx := context.Background()
 	err = store.TranslationCreate(ctx, translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Find by handle
 	found, err := store.TranslationFindByHandleOrID(ctx, "test-handle", "en")
-	require.NoError(t, err)
-	require.NotNil(t, found)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found == nil {
+		t.Fatal("found MUST NOT be nil")
+	}
 
 	// Find by ID
 	found, err = store.TranslationFindByHandleOrID(ctx, translation.ID(), "en")
-	require.NoError(t, err)
-	require.NotNil(t, found)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found == nil {
+		t.Fatal("found MUST NOT be nil")
+	}
 }
 
 func TestStoreTranslationErrorPaths(t *testing.T) {
@@ -142,64 +186,102 @@ func TestStoreTranslationErrorPaths(t *testing.T) {
 	store := &storeImplementation{db: nil}
 
 	_, err := store.TranslationCount(ctx, TranslationQuery())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationCreate(ctx, NewTranslation())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationDelete(ctx, NewTranslation())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TranslationFindByHandle(ctx, "handle")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TranslationFindByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TranslationFindByHandleOrID(ctx, "handle-or-id", "en")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TranslationList(ctx, TranslationQuery())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationSoftDelete(ctx, NewTranslation())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationSoftDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationUpdate(ctx, NewTranslation())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	// Test with nil entity
 	store.db = initDB(":memory:")
 	err = store.TranslationCreate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationSoftDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationUpdate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	// Test with empty ID/handle
 	_, err = store.TranslationFindByHandle(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TranslationFindByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.TranslationFindByHandleOrID(ctx, "", "en")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.TranslationDeleteByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 }
 
 func TestStoreTranslationUpdate(t *testing.T) {
@@ -215,21 +297,32 @@ func TestStoreTranslationUpdate(t *testing.T) {
 		TranslationTableName: "translation_table",
 		AutomigrateEnabled:   true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	translation := NewTranslation()
 	translation.SetSiteID("test-site")
 	translation.SetName("Original Name")
 	ctx := context.Background()
 	err = store.TranslationCreate(ctx, translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	translation.SetName("Updated Name")
 	err = store.TranslationUpdate(ctx, translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	found, _ := store.TranslationFindByID(ctx, translation.ID())
-	require.Equal(t, "Updated Name", found.Name())
+	if found == nil {
+		t.Fatal("found MUST NOT be nil")
+	}
+	if found.Name() != "Updated Name" {
+		t.Fatalf("Expected name 'Updated Name', got %s", found.Name())
+	}
 }
 
 func TestStoreTranslationDelete(t *testing.T) {
@@ -245,19 +338,27 @@ func TestStoreTranslationDelete(t *testing.T) {
 		TranslationTableName: "translation_table",
 		AutomigrateEnabled:   true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	translation := NewTranslation()
 	translation.SetSiteID("test-site")
 	ctx := context.Background()
 	err = store.TranslationCreate(ctx, translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	err = store.TranslationDelete(ctx, translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	found, _ := store.TranslationFindByID(ctx, translation.ID())
-	require.Nil(t, found)
+	if found != nil {
+		t.Fatal("Expected found to be nil")
+	}
 }
 
 func TestStoreTranslationSoftDelete(t *testing.T) {
@@ -273,26 +374,38 @@ func TestStoreTranslationSoftDelete(t *testing.T) {
 		TranslationTableName: "translation_table",
 		AutomigrateEnabled:   true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	translation := NewTranslation()
 	translation.SetSiteID("test-site")
 	ctx := context.Background()
 	err = store.TranslationCreate(ctx, translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	err = store.TranslationSoftDeleteByID(ctx, translation.ID())
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	found, _ := store.TranslationFindByID(ctx, translation.ID())
-	require.Nil(t, found, "Should not find soft deleted translation with default query")
+	if found != nil {
+		t.Fatal("Should not find soft deleted translation with default query")
+	}
 
 	// Should find it when included
 	list, err := store.TranslationList(ctx, TranslationQuery().
 		SetID(translation.ID()).
 		SetSoftDeletedIncluded(true))
-	require.NoError(t, err)
-	require.Len(t, list, 1)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(list) != 1 {
+		t.Fatalf("Expected 1 item, got %d", len(list))
+	}
 }
 
 func TestStoreTranslationList(t *testing.T) {
@@ -308,7 +421,9 @@ func TestStoreTranslationList(t *testing.T) {
 		TranslationTableName: "translation_table",
 		AutomigrateEnabled:   true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 	for i := 0; i < 5; i++ {
@@ -319,8 +434,12 @@ func TestStoreTranslationList(t *testing.T) {
 	}
 
 	list, err := store.TranslationList(ctx, TranslationQuery().SetLimit(3))
-	require.NoError(t, err)
-	require.Len(t, list, 3)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(list) != 3 {
+		t.Fatalf("Expected 3 items, got %d", len(list))
+	}
 }
 
 func TestStoreTranslationCount(t *testing.T) {
@@ -336,7 +455,9 @@ func TestStoreTranslationCount(t *testing.T) {
 		TranslationTableName: "translation_table_trans_count",
 		AutomigrateEnabled:   true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 	for i := 0; i < 3; i++ {
@@ -346,103 +467,167 @@ func TestStoreTranslationCount(t *testing.T) {
 	}
 
 	count, err := store.TranslationCount(ctx, TranslationQuery())
-	require.NoError(t, err)
-	require.Equal(t, int64(3), count)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if count != int64(3) {
+		t.Fatalf("Expected count 3, got %d", count)
+	}
 }
 
 func TestTranslationQueryMethods(t *testing.T) {
 	q := TranslationQuery()
 
 	q.SetColumns([]string{"id", "name"})
-	require.Equal(t, []string{"id", "name"}, q.Columns())
+	if !slices.Equal(q.Columns(), []string{"id", "name"}) {
+		t.Fatalf("Expected columns [id name], got %v", q.Columns())
+	}
 
 	q.SetCountOnly(true)
-	require.True(t, q.IsCountOnly())
+	if !q.IsCountOnly() {
+		t.Error("Expected IsCountOnly to be true")
+	}
 
 	q.SetCreatedAtGte("2023-01-01")
-	require.Equal(t, "2023-01-01", q.CreatedAtGte())
+	if q.CreatedAtGte() != "2023-01-01" {
+		t.Errorf("Expected CreatedAtGte '2023-01-01', got %s", q.CreatedAtGte())
+	}
 
 	q.SetCreatedAtLte("2023-12-31")
-	require.Equal(t, "2023-12-31", q.CreatedAtLte())
+	if q.CreatedAtLte() != "2023-12-31" {
+		t.Errorf("Expected CreatedAtLte '2023-12-31', got %s", q.CreatedAtLte())
+	}
 
 	q.SetHandle("handle")
-	require.Equal(t, "handle", q.Handle())
+	if q.Handle() != "handle" {
+		t.Errorf("Expected Handle 'handle', got %s", q.Handle())
+	}
 
 	q.SetHandleOrID("handleorid")
-	require.Equal(t, "handleorid", q.HandleOrID())
+	if q.HandleOrID() != "handleorid" {
+		t.Errorf("Expected HandleOrID 'handleorid', got %s", q.HandleOrID())
+	}
 
 	q.SetID("id")
-	require.Equal(t, "id", q.ID())
+	if q.ID() != "id" {
+		t.Errorf("Expected ID 'id', got %s", q.ID())
+	}
 
 	q.SetIDIn([]string{"id1", "id2"})
-	require.Equal(t, []string{"id1", "id2"}, q.IDIn())
+	if !slices.Equal(q.IDIn(), []string{"id1", "id2"}) {
+		t.Fatalf("Expected IDIn [id1 id2], got %v", q.IDIn())
+	}
 
 	q.SetLimit(10)
-	require.Equal(t, 10, q.Limit())
+	if q.Limit() != 10 {
+		t.Errorf("Expected Limit 10, got %d", q.Limit())
+	}
 
 	q.SetNameLike("%test%")
-	require.Equal(t, "%test%", q.NameLike())
+	if q.NameLike() != "%test%" {
+		t.Errorf("Expected NameLike '%%test%%', got %s", q.NameLike())
+	}
 
 	q.SetOffset(5)
-	require.Equal(t, 5, q.Offset())
+	if q.Offset() != 5 {
+		t.Errorf("Expected Offset 5, got %d", q.Offset())
+	}
 
 	q.SetOrderBy("name")
-	require.Equal(t, "name", q.OrderBy())
+	if q.OrderBy() != "name" {
+		t.Errorf("Expected OrderBy 'name', got %s", q.OrderBy())
+	}
 
 	q.SetSiteID("siteid")
-	require.Equal(t, "siteid", q.SiteID())
+	if q.SiteID() != "siteid" {
+		t.Errorf("Expected SiteID 'siteid', got %s", q.SiteID())
+	}
 
 	q.SetSoftDeletedIncluded(true)
-	require.True(t, q.SoftDeletedIncluded())
+	if !q.SoftDeletedIncluded() {
+		t.Error("Expected SoftDeletedIncluded to be true")
+	}
 
 	q.SetSortOrder(sb.ASC)
-	require.Equal(t, sb.ASC, q.SortOrder())
+	if q.SortOrder() != sb.ASC {
+		t.Errorf("Expected SortOrder sb.ASC, got %v", q.SortOrder())
+	}
 
 	q.SetStatus(TRANSLATION_STATUS_ACTIVE)
-	require.Equal(t, TRANSLATION_STATUS_ACTIVE, q.Status())
+	if q.Status() != TRANSLATION_STATUS_ACTIVE {
+		t.Errorf("Expected Status %s, got %s", TRANSLATION_STATUS_ACTIVE, q.Status())
+	}
 
 	q.SetStatusIn([]string{TRANSLATION_STATUS_ACTIVE, TRANSLATION_STATUS_DRAFT})
-	require.Equal(t, []string{TRANSLATION_STATUS_ACTIVE, TRANSLATION_STATUS_DRAFT}, q.StatusIn())
+	if !slices.Equal(q.StatusIn(), []string{TRANSLATION_STATUS_ACTIVE, TRANSLATION_STATUS_DRAFT}) {
+		t.Fatalf("Expected StatusIn [%s %s], got %v", TRANSLATION_STATUS_ACTIVE, TRANSLATION_STATUS_DRAFT, q.StatusIn())
+	}
 
 	// Validate success
-	require.NoError(t, q.Validate())
+	if err := q.Validate(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Validate failure cases
 	errQ := TranslationQuery().SetCreatedAtGte("")
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetCreatedAtLte("")
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetHandle("")
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetHandleOrID("")
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetID("")
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetIDIn([]string{})
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetLimit(-1)
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetNameLike("")
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetOffset(-1)
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetSiteID("")
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetStatus("")
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 
 	errQ = TranslationQuery().SetStatusIn([]string{})
-	require.Error(t, errQ.Validate())
+	if errQ.Validate() == nil {
+		t.Error("Expected error")
+	}
 }
 
 func TestStoreTranslationLanguages(t *testing.T) {
@@ -459,8 +644,20 @@ func TestStoreTranslationLanguages(t *testing.T) {
 		TranslationLanguages:       langs,
 		AutomigrateEnabled:         true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
-	require.Equal(t, "en", store.TranslationLanguageDefault())
-	require.Equal(t, langs, store.TranslationLanguages())
+	if store.TranslationLanguageDefault() != "en" {
+		t.Fatalf("Expected default language 'en', got %s", store.TranslationLanguageDefault())
+	}
+	gotLangs := store.TranslationLanguages()
+	if len(gotLangs) != len(langs) {
+		t.Fatalf("Expected %d languages, got %d", len(langs), len(gotLangs))
+	}
+	for k, v := range langs {
+		if gotLangs[k] != v {
+			t.Fatalf("Expected language %s=%s, got %s", k, v, gotLangs[k])
+		}
+	}
 }

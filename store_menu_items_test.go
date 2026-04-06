@@ -170,7 +170,7 @@ func TestStoreMenuItemSoftDelete(t *testing.T) {
 	}
 
 	if len(menuItemFindWithSoftDeleted) == 0 {
-		t.Fatal("Exam MUST be soft deleted")
+		t.Fatal("MenuItem MUST be soft deleted")
 	}
 
 	if strings.Contains(menuItemFindWithSoftDeleted[0].SoftDeletedAt(), sb.MAX_DATETIME) {

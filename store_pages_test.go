@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
-	"github.com/stretchr/testify/require"
 )
 
 func TestStorePageCreate(t *testing.T) {
@@ -234,11 +233,11 @@ func TestStorePageSoftDelete(t *testing.T) {
 	}
 
 	if len(pageFindWithSoftDeleted) == 0 {
-		t.Fatal("Exam MUST be soft deleted")
+		t.Fatal("Page MUST be soft deleted")
 	}
 
 	if strings.Contains(pageFindWithSoftDeleted[0].SoftDeletedAt(), sb.MAX_DATETIME) {
-		t.Fatal("Page MUST be soft deleted", page.SoftDeletedAt())
+		t.Fatal("Page MUST be soft deleted", pageFindWithSoftDeleted[0].SoftDeletedAt())
 	}
 
 	if !pageFindWithSoftDeleted[0].IsSoftDeleted() {
@@ -381,64 +380,98 @@ func TestStorePageDelete(t *testing.T) {
 
 func TestStorePageErrorPaths(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test with nil DB
 	store := &storeImplementation{db: nil}
-	
+
 	_, err := store.PageCount(ctx, PageQuery())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 	// Some implementations might return different error messages, but should be error
-	
+
 	err = store.PageCreate(ctx, NewPage())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.PageDelete(ctx, NewPage())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.PageDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.PageFindByHandle(ctx, "handle")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.PageFindByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.PageList(ctx, PageQuery())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.PageSoftDelete(ctx, NewPage())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.PageSoftDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.PageUpdate(ctx, NewPage())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	// Test with nil entity
 	store.db = initDB(":memory:")
 	err = store.PageCreate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.PageDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.PageSoftDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.PageUpdate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	// Test with empty ID/handle
 	_, err = store.PageFindByHandle(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	_, err = store.PageFindByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 
 	err = store.PageDeleteByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error")
+	}
 }
 
 func TestStorePageUpdate(t *testing.T) {

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
-	"github.com/stretchr/testify/require"
 )
 
 func TestStoreMenuCreate(t *testing.T) {
@@ -246,11 +245,11 @@ func TestStoreMenuSoftDelete(t *testing.T) {
 	}
 
 	if len(menuFindWithSoftDeleted) == 0 {
-		t.Fatal("Exam MUST be soft deleted")
+		t.Fatal("Menu MUST be soft deleted")
 	}
 
 	if strings.Contains(menuFindWithSoftDeleted[0].SoftDeletedAt(), sb.MAX_DATETIME) {
-		t.Fatal("Menu MUST be soft deleted", menu.SoftDeletedAt())
+		t.Fatal("Menu MUST be soft deleted", menuFindWithSoftDeleted[0].SoftDeletedAt())
 	}
 
 	if !menuFindWithSoftDeleted[0].IsSoftDeleted() {
@@ -402,63 +401,97 @@ func TestStoreMenuDelete(t *testing.T) {
 
 func TestStoreMenuErrorPaths(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test with nil DB
 	store := &storeImplementation{db: nil}
-	
+
 	_, err := store.MenuCount(ctx, MenuQuery())
-	require.Error(t, err)
-	
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+
 	err = store.MenuCreate(ctx, NewMenu())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
 
 	err = store.MenuDelete(ctx, NewMenu())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
 
 	err = store.MenuDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
 
 	_, err = store.MenuFindByHandle(ctx, "handle")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
 
 	_, err = store.MenuFindByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
 
 	_, err = store.MenuList(ctx, MenuQuery())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
 
 	err = store.MenuSoftDelete(ctx, NewMenu())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
 
 	err = store.MenuSoftDeleteByID(ctx, "id")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
 
 	err = store.MenuUpdate(ctx, NewMenu())
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
 
 	// Test with nil entity
 	store.db = initDB(":memory:")
 	err = store.MenuCreate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil menu")
+	}
 
 	err = store.MenuDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil menu")
+	}
 
 	err = store.MenuSoftDelete(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil menu")
+	}
 
 	err = store.MenuUpdate(ctx, nil)
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for nil menu")
+	}
 
 	// Test with empty ID/handle
 	_, err = store.MenuFindByHandle(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for empty handle")
+	}
 
 	_, err = store.MenuFindByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for empty id")
+	}
 
 	err = store.MenuDeleteByID(ctx, "")
-	require.Error(t, err)
+	if err == nil {
+		t.Error("Expected error for empty id")
+	}
 }
 
 func TestStoreMenuUpdate(t *testing.T) {
