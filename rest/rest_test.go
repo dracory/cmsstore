@@ -14,8 +14,7 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/rest" // Import the package to be tested
-	"github.com/stretchr/testify/require"
-	_ "modernc.org/sqlite" // SQLite driver
+	_ "modernc.org/sqlite"             // SQLite driver
 )
 
 // initTestDB creates and returns a new in-memory SQLite database connection.
@@ -345,16 +344,22 @@ func TestRestAPI_PageGetListUpdateDelete(t *testing.T) {
 
 	t.Run("Get Existing Page", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, serverURL+"/api/pages/"+pageID, nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		resp, err := client.Do(req)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.StatusCode)
 		}
 		var pageResp map[string]interface{}
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&pageResp))
+		if err := json.NewDecoder(resp.Body).Decode(&pageResp); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		if pageResp["id"] != pageID || pageResp["title"] != "Initial Page" {
 			t.Errorf("Unexpected page data: %+v", pageResp)
 		}
@@ -362,15 +367,21 @@ func TestRestAPI_PageGetListUpdateDelete(t *testing.T) {
 
 	t.Run("List Pages", func(t *testing.T) {
 		listReq, err := http.NewRequest(http.MethodGet, serverURL+"/api/pages", nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		listResp, err := client.Do(listReq)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer listResp.Body.Close()
 		var listResult struct {
 			Pages []map[string]interface{} `json:"pages"`
 		}
-		require.NoError(t, json.NewDecoder(listResp.Body).Decode(&listResult))
+		if err := json.NewDecoder(listResp.Body).Decode(&listResult); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		if len(listResult.Pages) < 1 {
 			t.Errorf("Expected at least 1 page, got %d", len(listResult.Pages))
 		}
@@ -379,19 +390,27 @@ func TestRestAPI_PageGetListUpdateDelete(t *testing.T) {
 	t.Run("Update Page", func(t *testing.T) {
 		updatePl := map[string]interface{}{"title": "Updated Page", "status": "published"}
 		plBytes, err := json.Marshal(updatePl)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		req, err := http.NewRequest(http.MethodPut, serverURL+"/api/pages/"+pageID, bytes.NewBuffer(plBytes))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := client.Do(req)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.StatusCode)
 		}
 		var updatedResp map[string]interface{}
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&updatedResp))
+		if err := json.NewDecoder(resp.Body).Decode(&updatedResp); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		if updatedResp["title"] != "Updated Page" {
 			t.Error("Title not updated")
 		}
@@ -399,10 +418,14 @@ func TestRestAPI_PageGetListUpdateDelete(t *testing.T) {
 
 	t.Run("Delete Page", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodDelete, serverURL+"/api/pages/"+pageID, nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		resp, err := client.Do(req)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.StatusCode)
@@ -415,14 +438,20 @@ func TestRestAPI_PageGetListUpdateDelete(t *testing.T) {
 
 	t.Run("Get Non-Existent Page", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, serverURL+"/api/pages/nonexistent", nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		resp, err := client.Do(req)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusNotFound {
 			body, readErr := io.ReadAll(resp.Body)
-			require.NoError(t, readErr)
+			if readErr != nil {
+				t.Fatalf("unexpected error: %v", readErr)
+			}
 			t.Errorf("Expected status %d, got %d. Body: %s", http.StatusNotFound, resp.StatusCode, string(body))
 		}
 	})
@@ -430,33 +459,47 @@ func TestRestAPI_PageGetListUpdateDelete(t *testing.T) {
 	t.Run("Update Non-Existent Page", func(t *testing.T) {
 		updatePl := map[string]interface{}{"title": "No Such Page"}
 		plBytes, err := json.Marshal(updatePl)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		req, err := http.NewRequest(http.MethodPut, serverURL+"/api/pages/nonexistent", bytes.NewBuffer(plBytes))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := client.Do(req)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusNotFound {
 			body, readErr := io.ReadAll(resp.Body)
-			require.NoError(t, readErr)
+			if readErr != nil {
+				t.Fatalf("unexpected error: %v", readErr)
+			}
 			t.Errorf("Expected status %d, got %d. Body: %s", http.StatusNotFound, resp.StatusCode, string(body))
 		}
 	})
 
 	t.Run("Delete Non-Existent Page", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodDelete, serverURL+"/api/pages/nonexistent", nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		resp, err := client.Do(req)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer resp.Body.Close()
 		// Based on current store logic, deleting a non-existent page results in an error from PageSoftDeleteByID,
 		// which the handler turns into a 500.
 		if resp.StatusCode != http.StatusInternalServerError {
 			body, readErr := io.ReadAll(resp.Body)
-			require.NoError(t, readErr)
+			if readErr != nil {
+				t.Fatalf("unexpected error: %v", readErr)
+			}
 			t.Errorf("Expected status %d, got %d. Body: %s", http.StatusInternalServerError, resp.StatusCode, string(body))
 		}
 	})
@@ -504,17 +547,25 @@ func TestRestAPI_MenuCreate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			payloadBytes, err := json.Marshal(tt.payload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
 			req, err := http.NewRequest(http.MethodPost, serverURL+"/api/menus", bytes.NewBuffer(payloadBytes))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			req.Header.Set("Content-Type", "application/json")
 
 			resp, err := client.Do(req)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			defer resp.Body.Close()
 			body, readErr := io.ReadAll(resp.Body)
-			require.NoError(t, readErr)
+			if readErr != nil {
+				t.Fatalf("unexpected error: %v", readErr)
+			}
 
 			if resp.StatusCode != tt.wantStatus {
 				t.Errorf("Expected status %d, got %d. Body: %s", tt.wantStatus, resp.StatusCode, string(body))
@@ -526,11 +577,17 @@ func TestRestAPI_MenuCreate(t *testing.T) {
 			}
 			if tt.checkStore && resp.StatusCode == http.StatusOK {
 				var respJSON map[string]interface{}
-				require.NoError(t, json.Unmarshal(body, &respJSON))
+				if err := json.Unmarshal(body, &respJSON); err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 				menuID, ok := respJSON["id"].(string)
-				require.True(t, ok, "response missing id")
+				if !ok {
+					t.Fatal("response missing id")
+				}
 				m, errFind := store.MenuFindByID(context.Background(), menuID)
-				require.NoError(t, errFind)
+				if errFind != nil {
+					t.Fatalf("unexpected error: %v", errFind)
+				}
 				if m == nil || m.Name() != tt.expectedName {
 					t.Errorf("Menu not found in store or name mismatch. Expected: %s, Got: %v", tt.expectedName, m)
 				}
@@ -550,33 +607,48 @@ func TestRestAPI_MenuGetList(t *testing.T) {
 	// Create a menu
 	createPl := map[string]interface{}{"name": "Nav Menu", "site_id": "s1"}
 	plBytes, err := json.Marshal(createPl)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	createReq, err := http.NewRequest(http.MethodPost, serverURL+"/api/menus", bytes.NewBuffer(plBytes))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	createReq.Header.Set("Content-Type", "application/json")
 
 	createResp, err := client.Do(createReq)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer createResp.Body.Close()
 	var createdMenuResp map[string]interface{}
-	require.NoError(t, json.NewDecoder(createResp.Body).Decode(&createdMenuResp))
+	if err := json.NewDecoder(createResp.Body).Decode(&createdMenuResp); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	menuIDVal, ok := createdMenuResp["id"].(string)
-	require.True(t, ok, "response missing id")
+	if !ok {
+		t.Fatal("response missing id")
+	}
 	menuID := menuIDVal
-	require.NoError(t, createResp.Body.Close())
 
 	t.Run("Get Existing Menu", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, serverURL+"/api/menus/"+menuID, nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		resp, err := client.Do(req)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.StatusCode)
 		}
 		var menuResp map[string]interface{}
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&menuResp))
+		if err := json.NewDecoder(resp.Body).Decode(&menuResp); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		if menuResp["id"] != menuID || menuResp["name"] != "Nav Menu" {
 			t.Errorf("Unexpected menu data: %+v", menuResp)
 		}
@@ -584,15 +656,21 @@ func TestRestAPI_MenuGetList(t *testing.T) {
 
 	t.Run("List Menus", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, serverURL+"/api/menus", nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		resp, err := client.Do(req)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer resp.Body.Close()
 		var listResp struct {
 			Menus []map[string]interface{} `json:"menus"`
 		}
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&listResp))
+		if err := json.NewDecoder(resp.Body).Decode(&listResp); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		if len(listResp.Menus) < 1 {
 			t.Errorf("Expected at least 1 menu, got %d", len(listResp.Menus))
 		}
@@ -600,14 +678,20 @@ func TestRestAPI_MenuGetList(t *testing.T) {
 
 	t.Run("Get Non-Existent Menu", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, serverURL+"/api/menus/nonexistent", nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		resp, err := client.Do(req)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusNotFound {
 			body, readErr := io.ReadAll(resp.Body)
-			require.NoError(t, readErr)
+			if readErr != nil {
+				t.Fatalf("unexpected error: %v", readErr)
+			}
 			t.Errorf("Expected status %d, got %d. Body: %s", http.StatusNotFound, resp.StatusCode, string(body))
 		}
 	})
