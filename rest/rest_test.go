@@ -15,7 +15,7 @@ import (
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/rest" // Import the package to be tested
 	"github.com/stretchr/testify/require"
-	_ "modernc.org/sqlite"             // SQLite driver
+	_ "modernc.org/sqlite" // SQLite driver
 )
 
 // initTestDB creates and returns a new in-memory SQLite database connection.
@@ -173,14 +173,20 @@ func TestRestAPI_Routing(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req, err := http.NewRequest(tt.method, serverURL+tt.path, nil)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
 			resp, err := client.Do(req)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			defer resp.Body.Close()
 
 			body, err := io.ReadAll(resp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
 			if resp.StatusCode != tt.wantStatus {
 				t.Errorf("Expected status %d, got %d. Body: %s", tt.wantStatus, resp.StatusCode, string(body))
@@ -247,18 +253,26 @@ func TestRestAPI_PageCreate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			payloadBytes, err := json.Marshal(tt.payload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
 			req, err := http.NewRequest(http.MethodPost, serverURL+"/api/pages", bytes.NewBuffer(payloadBytes))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			req.Header.Set("Content-Type", "application/json")
 
 			resp, err := client.Do(req)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			defer resp.Body.Close()
 
 			body, err := io.ReadAll(resp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
 			if resp.StatusCode != tt.wantStatus {
 				t.Errorf("Expected status %d, got %d. Body: %s", tt.wantStatus, resp.StatusCode, string(body))
@@ -272,7 +286,9 @@ func TestRestAPI_PageCreate(t *testing.T) {
 
 			if tt.checkStore && resp.StatusCode == http.StatusOK {
 				var respJSON map[string]interface{}
-				require.NoError(t, json.Unmarshal(body, &respJSON))
+				if err := json.Unmarshal(body, &respJSON); err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 				pageID, ok := respJSON["id"].(string)
 				if !ok || pageID == "" {
 					t.Fatal("Response did not contain a valid page ID")
@@ -302,19 +318,29 @@ func TestRestAPI_PageGetListUpdateDelete(t *testing.T) {
 
 	createPayload := map[string]interface{}{"title": "Initial Page", "content": "Initial content.", "status": "draft", "site_id": "site-for-pages"}
 	payloadBytes, err := json.Marshal(createPayload)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	createReq, err := http.NewRequest(http.MethodPost, serverURL+"/api/pages", bytes.NewBuffer(payloadBytes))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	createReq.Header.Set("Content-Type", "application/json")
 	createResp, err := client.Do(createReq)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer createResp.Body.Close()
 
 	var createdPageResp map[string]interface{}
-	require.NoError(t, json.NewDecoder(createResp.Body).Decode(&createdPageResp))
+	if err := json.NewDecoder(createResp.Body).Decode(&createdPageResp); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	pageIDVal, ok := createdPageResp["id"].(string)
-	require.True(t, ok, "response missing id")
+	if !ok {
+		t.Fatal("response missing id")
+	}
 	pageID := pageIDVal
 
 	t.Run("Get Existing Page", func(t *testing.T) {

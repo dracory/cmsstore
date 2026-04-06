@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 // TestBlockCreateMalformedJSON tests handling of malformed JSON
@@ -19,11 +17,15 @@ func TestBlockCreateMalformedJSON(t *testing.T) {
 	malformedJSON := `{"name": "Test Block", "site_id": "site1"` // Missing closing brace
 
 	resp, err := http.Post(serverURL+"/api/blocks", "application/json", strings.NewReader(malformedJSON))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// Should return 400 Bad Request or similar error
-	require.NotEqual(t, http.StatusOK, resp.StatusCode)
+	if resp.StatusCode == http.StatusOK {
+		t.Errorf("Expected status to not be 200 OK, got %d", resp.StatusCode)
+	}
 }
 
 // TestBlockCreateMissingContentType tests handling of missing Content-Type header
@@ -37,19 +39,27 @@ func TestBlockCreateMissingContentType(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(blockData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	req, err := http.NewRequest("POST", serverURL+"/api/blocks", bytes.NewBuffer(jsonData))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	// Intentionally not setting Content-Type
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// Implementation may accept or reject - just verify it doesn't crash
-	require.NotEqual(t, 0, resp.StatusCode)
+	if resp.StatusCode == 0 {
+		t.Errorf("Expected non-zero status code, got %d", resp.StatusCode)
+	}
 }
 
 // TestBlockCreateInvalidJSON tests handling of valid JSON but invalid structure
@@ -61,10 +71,14 @@ func TestBlockCreateInvalidJSON(t *testing.T) {
 	invalidData := `["not", "an", "object"]`
 
 	resp, err := http.Post(serverURL+"/api/blocks", "application/json", strings.NewReader(invalidData))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
-	require.NotEqual(t, http.StatusOK, resp.StatusCode)
+	if resp.StatusCode == http.StatusOK {
+		t.Errorf("Expected status to not be 200 OK, got %d", resp.StatusCode)
+	}
 }
 
 // TestBlockGetNonExistent tests getting a non-existent block
@@ -73,17 +87,25 @@ func TestBlockGetNonExistent(t *testing.T) {
 	defer cleanup()
 
 	resp, err := http.Get(serverURL + "/api/blocks/non-existent-id")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// Should return 404 Not Found
 	var result map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	success, ok := result["success"].(bool)
-	require.True(t, ok)
-	require.False(t, success)
+	if !ok {
+		t.Errorf("Expected 'success' key to be present")
+	}
+	if success {
+		t.Errorf("Expected 'success' to be false")
+	}
 }
 
 // TestBlockUpdateNonExistent tests updating a non-existent block
@@ -96,24 +118,36 @@ func TestBlockUpdateNonExistent(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(updateData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	req, err := http.NewRequest(http.MethodPut, serverURL+"/api/blocks/non-existent-id", bytes.NewBuffer(jsonData))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	var result map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	success, ok := result["success"].(bool)
-	require.True(t, ok)
-	require.False(t, success)
+	if !ok {
+		t.Errorf("Expected 'success' key to be present")
+	}
+	if success {
+		t.Errorf("Expected 'success' to be false")
+	}
 }
 
 // TestBlockDeleteNonExistent tests deleting a non-existent block
@@ -122,19 +156,27 @@ func TestBlockDeleteNonExistent(t *testing.T) {
 	defer cleanup()
 
 	req, err := http.NewRequest(http.MethodDelete, serverURL+"/api/blocks/non-existent-id", nil)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	var result map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	_, ok := result["success"].(bool)
-	require.True(t, ok)
+	if !ok {
+		t.Errorf("Expected 'success' key to be present")
+	}
 	// Depending on implementation, deleting non-existent may succeed or fail
 }
 
@@ -144,10 +186,14 @@ func TestBlockCreateEmptyBody(t *testing.T) {
 	defer cleanup()
 
 	resp, err := http.Post(serverURL+"/api/blocks", "application/json", strings.NewReader(""))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
-	require.NotEqual(t, http.StatusOK, resp.StatusCode)
+	if resp.StatusCode == http.StatusOK {
+		t.Errorf("Expected status to not be 200 OK, got %d", resp.StatusCode)
+	}
 }
 
 // TestBlockCreateNullValues tests creating with null values
@@ -162,20 +208,30 @@ func TestBlockCreateNullValues(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(blockData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	resp, err := http.Post(serverURL+"/api/blocks", "application/json", bytes.NewBuffer(jsonData))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	var result map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Should fail validation
 	success, ok := result["success"].(bool)
-	require.True(t, ok)
-	require.False(t, success)
+	if !ok {
+		t.Errorf("Expected 'success' key to be present")
+	}
+	if success {
+		t.Errorf("Expected 'success' to be false")
+	}
 }
 
 // TestBlockListInvalidQueryParams tests list with invalid query parameters
@@ -185,25 +241,37 @@ func TestBlockListInvalidQueryParams(t *testing.T) {
 
 	// Test with invalid limit
 	resp, err := http.Get(serverURL + "/api/blocks?limit=invalid")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// Should handle gracefully (either error or use default)
-	require.NotEqual(t, 0, resp.StatusCode)
+	if resp.StatusCode == 0 {
+		t.Errorf("Expected non-zero status code, got %d", resp.StatusCode)
+	}
 
 	// Test with negative limit
 	resp, err = http.Get(serverURL + "/api/blocks?limit=-10")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
-	require.NotEqual(t, 0, resp.StatusCode)
+	if resp.StatusCode == 0 {
+		t.Errorf("Expected non-zero status code, got %d", resp.StatusCode)
+	}
 
 	// Test with invalid offset
 	resp, err = http.Get(serverURL + "/api/blocks?offset=invalid")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
-	require.NotEqual(t, 0, resp.StatusCode)
+	if resp.StatusCode == 0 {
+		t.Errorf("Expected non-zero status code, got %d", resp.StatusCode)
+	}
 }
 
 // TestBlockCreateVeryLargePayload tests handling of very large payloads
@@ -221,14 +289,20 @@ func TestBlockCreateVeryLargePayload(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(blockData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	resp, err := http.Post(serverURL+"/api/blocks", "application/json", bytes.NewBuffer(jsonData))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// Should either accept or reject with appropriate error
-	require.NotEqual(t, 0, resp.StatusCode)
+	if resp.StatusCode == 0 {
+		t.Errorf("Expected non-zero status code, got %d", resp.StatusCode)
+	}
 }
 
 // TestBlockUpdatePartialData tests partial updates
@@ -242,27 +316,43 @@ func TestBlockUpdatePartialData(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(updateData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	req, err := http.NewRequest(http.MethodPut, serverURL+"/api/blocks/"+testBlock.ID(), bytes.NewBuffer(jsonData))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, resp.StatusCode)
+	}
 
 	// Verify other fields weren't changed
 	ctx := context.Background()
 
 	found, err := store.BlockFindByID(ctx, testBlock.ID())
-	require.NoError(t, err)
-	require.NotNil(t, found)
-	require.Equal(t, "Updated Name Only", found.Name())
-	require.Equal(t, testBlock.Content(), found.Content()) // Content should be unchanged
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found == nil {
+		t.Errorf("Expected block to be found")
+	}
+	if found.Name() != "Updated Name Only" {
+		t.Errorf("Expected name to be 'Updated Name Only', got '%s'", found.Name())
+	}
+	if found.Content() != testBlock.Content() {
+		t.Errorf("Expected content to be '%s', got '%s'", testBlock.Content(), found.Content())
+	}
 }
 
 // TestBlockCreateDuplicateID tests creating with duplicate ID
@@ -278,19 +368,27 @@ func TestBlockCreateDuplicateID(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(blockData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	resp, err := http.Post(serverURL+"/api/blocks", "application/json", bytes.NewBuffer(jsonData))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	var result map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Should fail or handle duplicate gracefully
 	_, ok := result["success"].(bool)
-	require.True(t, ok)
+	if !ok {
+		t.Errorf("Expected 'success' key to be present")
+	}
 }
 
 // TestBlockCreateSpecialCharacters tests handling of special characters
@@ -314,18 +412,26 @@ func TestBlockCreateSpecialCharacters(t *testing.T) {
 		}
 
 		jsonData, err := json.Marshal(blockData)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		resp, err := http.Post(serverURL+"/api/blocks", "application/json", bytes.NewBuffer(jsonData))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		var result map[string]interface{}
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		resp.Body.Close()
 
 		// Should handle without crashing
-		require.NoError(t, err)
-		require.NotEqual(t, 0, resp.StatusCode)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resp.StatusCode == 0 {
+			t.Errorf("Expected non-zero status code, got %d", resp.StatusCode)
+		}
 	}
 }
 
@@ -336,15 +442,21 @@ func TestBlockMethodNotAllowed(t *testing.T) {
 
 	// Try PATCH on blocks endpoint (if not supported)
 	req, err := http.NewRequest("PATCH", serverURL+"/api/blocks/some-id", nil)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// Should return 405 Method Not Allowed or handle gracefully
-	require.NotEqual(t, 0, resp.StatusCode)
+	if resp.StatusCode == 0 {
+		t.Errorf("Expected non-zero status code, got %d", resp.StatusCode)
+	}
 }
 
 // TestBlockConcurrentUpdates tests concurrent updates to same block
@@ -362,8 +474,16 @@ func TestBlockConcurrentUpdates(t *testing.T) {
 				"name": "Concurrent Update",
 			}
 
-			jsonData, _ := json.Marshal(updateData)
-			req, _ := http.NewRequest(http.MethodPut, serverURL+"/api/blocks/"+testBlock.ID(), bytes.NewBuffer(jsonData))
+			jsonData, err := json.Marshal(updateData)
+			if err != nil {
+				done <- true
+				return
+			}
+			req, err := http.NewRequest(http.MethodPut, serverURL+"/api/blocks/"+testBlock.ID(), bytes.NewBuffer(jsonData))
+			if err != nil {
+				done <- true
+				return
+			}
 			req.Header.Set("Content-Type", "application/json")
 
 			client := &http.Client{}
@@ -396,9 +516,13 @@ func TestBlockConcurrentUpdates(t *testing.T) {
 
 	// Verify the API doesn't crash - should still be able to query the block
 	resp, err := http.Get(serverURL + "/api/blocks/" + testBlock.ID())
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	defer resp.Body.Close()
 
 	// API should respond (even if with an error, it shouldn't crash)
-	require.NotEqual(t, 0, resp.StatusCode, "API should respond to requests after concurrent updates")
+	if resp.StatusCode == 0 {
+		t.Errorf("Expected non-zero status code, got %d", resp.StatusCode)
+	}
 }
