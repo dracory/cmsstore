@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -20,7 +19,9 @@ func TestDuplicateHandleValidation(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -31,7 +32,9 @@ func TestDuplicateHandleValidation(t *testing.T) {
 		SetHandle("shared-handle")
 
 	err = store.PageCreate(ctx, page1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create second page with same handle (currently allowed)
 	page2 := NewPage().
@@ -41,24 +44,44 @@ func TestDuplicateHandleValidation(t *testing.T) {
 
 	err = store.PageCreate(ctx, page2)
 	// Current implementation allows duplicate handles
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Verify both pages exist
 	found1, err := store.PageFindByID(ctx, page1.ID())
-	require.NoError(t, err)
-	require.NotNil(t, found1)
-	require.Equal(t, "shared-handle", found1.Handle())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found1 == nil {
+		t.Fatal("found1 MUST NOT be nil")
+	}
+	if found1.Handle() != "shared-handle" {
+		t.Fatalf("Expected Handle 'shared-handle', got %s", found1.Handle())
+	}
 
 	found2, err := store.PageFindByID(ctx, page2.ID())
-	require.NoError(t, err)
-	require.NotNil(t, found2)
-	require.Equal(t, "shared-handle", found2.Handle())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found2 == nil {
+		t.Fatal("found2 MUST NOT be nil")
+	}
+	if found2.Handle() != "shared-handle" {
+		t.Fatalf("Expected Handle 'shared-handle', got %s", found2.Handle())
+	}
 
 	// FindByHandle should return one of them (implementation dependent)
 	foundByHandle, err := store.PageFindByHandle(ctx, "shared-handle")
-	require.NoError(t, err)
-	require.NotNil(t, foundByHandle)
-	require.Equal(t, "shared-handle", foundByHandle.Handle())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if foundByHandle == nil {
+		t.Fatal("foundByHandle MUST NOT be nil")
+	}
+	if foundByHandle.Handle() != "shared-handle" {
+		t.Fatalf("Expected Handle 'shared-handle', got %s", foundByHandle.Handle())
+	}
 }
 
 // TestStatusTransitions tests valid status transitions
@@ -73,7 +96,9 @@ func TestStatusTransitions(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -84,19 +109,31 @@ func TestStatusTransitions(t *testing.T) {
 		SetStatus(BLOCK_STATUS_ACTIVE)
 
 	err = store.BlockCreate(ctx, block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Transition to inactive
 	block.SetStatus(BLOCK_STATUS_INACTIVE)
 	err = store.BlockUpdate(ctx, block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Verify status changed
 	found, err := store.BlockFindByID(ctx, block.ID())
-	require.NoError(t, err)
-	require.Equal(t, BLOCK_STATUS_INACTIVE, found.Status())
-	require.True(t, found.IsInactive())
-	require.False(t, found.IsActive())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found.Status() != BLOCK_STATUS_INACTIVE {
+		t.Fatalf("Expected Status %s, got %s", BLOCK_STATUS_INACTIVE, found.Status())
+	}
+	if !found.IsInactive() {
+		t.Fatal("Expected IsInactive to be true")
+	}
+	if found.IsActive() {
+		t.Fatal("Expected IsActive to be false")
+	}
 }
 
 // TestInvalidForeignKeyReferences tests handling of invalid foreign keys
@@ -111,7 +148,9 @@ func TestInvalidForeignKeyReferences(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -138,7 +177,9 @@ func TestRequiredFieldValidation(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -164,7 +205,9 @@ func TestMetadataValidation(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -174,26 +217,44 @@ func TestMetadataValidation(t *testing.T) {
 		SetName("Block with Meta")
 
 	err = block.SetMeta("key1", "value1")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	err = block.SetMeta("key2", "value2")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	err = store.BlockCreate(ctx, block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Retrieve and verify metadata
 	found, err := store.BlockFindByID(ctx, block.ID())
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
-	require.Equal(t, "value1", found.Meta("key1"))
-	require.Equal(t, "value2", found.Meta("key2"))
+	if found.Meta("key1") != "value1" {
+		t.Fatalf("Expected Meta('key1') 'value1', got %s", found.Meta("key1"))
+	}
+	if found.Meta("key2") != "value2" {
+		t.Fatalf("Expected Meta('key2') 'value2', got %s", found.Meta("key2"))
+	}
 
 	// Verify all metas
 	metas, err := found.Metas()
-	require.NoError(t, err)
-	require.Equal(t, "value1", metas["key1"])
-	require.Equal(t, "value2", metas["key2"])
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if metas["key1"] != "value1" {
+		t.Fatalf("Expected metas['key1'] 'value1', got %s", metas["key1"])
+	}
+	if metas["key2"] != "value2" {
+		t.Fatalf("Expected metas['key2'] 'value2', got %s", metas["key2"])
+	}
 }
 
 // TestSequenceOrdering tests sequence-based ordering
@@ -208,7 +269,9 @@ func TestSequenceOrdering(t *testing.T) {
 		TemplateTableName:  "template_table_seq_order",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -221,7 +284,9 @@ func TestSequenceOrdering(t *testing.T) {
 			SetSequenceInt(seq)
 
 		err = store.BlockCreate(ctx, block)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	}
 
 	// Retrieve ordered by sequence
@@ -229,15 +294,29 @@ func TestSequenceOrdering(t *testing.T) {
 		SetSiteID("site1").
 		SetOrderBy("sequence").
 		SetSortOrder("ASC"))
-	require.NoError(t, err)
-	require.Len(t, blocks, 5)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(blocks) != 5 {
+		t.Fatalf("Expected 5 blocks, got %d", len(blocks))
+	}
 
 	// Verify ascending order
-	require.Equal(t, 1, blocks[0].SequenceInt())
-	require.Equal(t, 2, blocks[1].SequenceInt())
-	require.Equal(t, 3, blocks[2].SequenceInt())
-	require.Equal(t, 4, blocks[3].SequenceInt())
-	require.Equal(t, 5, blocks[4].SequenceInt())
+	if blocks[0].SequenceInt() != 1 {
+		t.Fatalf("Expected Sequence 1, got %d", blocks[0].SequenceInt())
+	}
+	if blocks[1].SequenceInt() != 2 {
+		t.Fatalf("Expected Sequence 2, got %d", blocks[1].SequenceInt())
+	}
+	if blocks[2].SequenceInt() != 3 {
+		t.Fatalf("Expected Sequence 3, got %d", blocks[2].SequenceInt())
+	}
+	if blocks[3].SequenceInt() != 4 {
+		t.Fatalf("Expected Sequence 4, got %d", blocks[3].SequenceInt())
+	}
+	if blocks[4].SequenceInt() != 5 {
+		t.Fatalf("Expected Sequence 5, got %d", blocks[4].SequenceInt())
+	}
 }
 
 // TestSoftDeleteBehavior tests soft delete business rules
@@ -252,7 +331,9 @@ func TestSoftDeleteBehavior(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -262,26 +343,40 @@ func TestSoftDeleteBehavior(t *testing.T) {
 		SetName("Block to Delete")
 
 	err = store.BlockCreate(ctx, block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	blockID := block.ID()
 
 	// Soft delete
 	err = store.BlockSoftDeleteByID(ctx, blockID)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Should not find in normal query
 	found, err := store.BlockFindByID(ctx, blockID)
-	require.NoError(t, err)
-	require.Nil(t, found)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found != nil {
+		t.Fatal("Expected found to be nil")
+	}
 
 	// Should find with soft delete included
 	blocks, err := store.BlockList(ctx, BlockQuery().
 		SetID(blockID).
 		SetSoftDeleteIncluded(true))
-	require.NoError(t, err)
-	require.Len(t, blocks, 1)
-	require.True(t, blocks[0].IsSoftDeleted())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(blocks) != 1 {
+		t.Fatalf("Expected 1 block, got %d", len(blocks))
+	}
+	if !blocks[0].IsSoftDeleted() {
+		t.Fatal("Expected block to be soft deleted")
+	}
 
 	// Should not be able to soft delete again
 	err = store.BlockSoftDeleteByID(ctx, blockID)
@@ -301,7 +396,9 @@ func TestHandleNormalization(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -312,15 +409,23 @@ func TestHandleNormalization(t *testing.T) {
 		SetHandle("Test Handle With Spaces")
 
 	err = store.PageCreate(ctx, page)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Retrieve and check handle
 	found, err := store.PageFindByID(ctx, page.ID())
-	require.NoError(t, err)
-	require.NotNil(t, found)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found == nil {
+		t.Fatal("found MUST NOT be nil")
+	}
 
 	// Handle should be stored as-is (no automatic normalization)
-	require.Equal(t, "Test Handle With Spaces", found.Handle())
+	if found.Handle() != "Test Handle With Spaces" {
+		t.Fatalf("Expected Handle 'Test Handle With Spaces', got %s", found.Handle())
+	}
 }
 
 // TestEmptyStringVsNull tests empty string vs null handling
@@ -335,7 +440,9 @@ func TestEmptyStringVsNull(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -346,11 +453,19 @@ func TestEmptyStringVsNull(t *testing.T) {
 		SetContent("")
 
 	err = store.BlockCreate(ctx, block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Retrieve and verify
 	found, err := store.BlockFindByID(ctx, block.ID())
-	require.NoError(t, err)
-	require.Equal(t, "", found.Name())
-	require.Equal(t, "", found.Content())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found.Name() != "" {
+		t.Fatalf("Expected empty Name, got %s", found.Name())
+	}
+	if found.Content() != "" {
+		t.Fatalf("Expected empty Content, got %s", found.Content())
+	}
 }

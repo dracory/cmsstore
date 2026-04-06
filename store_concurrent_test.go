@@ -5,7 +5,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -21,14 +20,18 @@ func TestConcurrentBlockCreate(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
 	// Create site first (this also verifies tables exist after migration)
 	site := NewSite().SetName("Test Site")
 	err = store.SiteCreate(ctx, site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Concurrently create blocks
 	const numGoroutines = 10
@@ -67,12 +70,16 @@ func TestConcurrentBlockCreate(t *testing.T) {
 	for id := range blockIDs {
 		ids = append(ids, id)
 	}
-	require.Len(t, ids, numGoroutines)
+	if len(ids) != numGoroutines {
+		t.Fatalf("Expected %d blocks, got %d", numGoroutines, len(ids))
+	}
 
 	// Verify all IDs are unique
 	uniqueIDs := make(map[string]bool)
 	for _, id := range ids {
-		require.False(t, uniqueIDs[id], "Duplicate ID found: %s", id)
+		if uniqueIDs[id] {
+			t.Fatalf("Duplicate ID found: %s", id)
+		}
 		uniqueIDs[id] = true
 	}
 }
@@ -89,7 +96,9 @@ func TestConcurrentBlockUpdate(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -100,7 +109,9 @@ func TestConcurrentBlockUpdate(t *testing.T) {
 		SetContent("Original Content")
 
 	err = store.BlockCreate(ctx, block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	blockID := block.ID()
 
@@ -141,9 +152,15 @@ func TestConcurrentBlockUpdate(t *testing.T) {
 
 	// Verify final state
 	finalBlock, err := store.BlockFindByID(ctx, blockID)
-	require.NoError(t, err)
-	require.NotNil(t, finalBlock)
-	require.Equal(t, "Updated Content", finalBlock.Content())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if finalBlock == nil {
+		t.Fatal("finalBlock MUST NOT be nil")
+	}
+	if finalBlock.Content() != "Updated Content" {
+		t.Fatalf("Expected Content 'Updated Content', got %s", finalBlock.Content())
+	}
 }
 
 // TestConcurrentReadWrite tests concurrent reads and writes
@@ -158,7 +175,9 @@ func TestConcurrentReadWrite(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -169,7 +188,9 @@ func TestConcurrentReadWrite(t *testing.T) {
 			SetSiteID("Site1").
 			SetName("Block")
 		err = store.BlockCreate(ctx, block)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		blockIDs = append(blockIDs, block.ID())
 	}
 
@@ -205,8 +226,12 @@ func TestConcurrentReadWrite(t *testing.T) {
 
 	// Verify data integrity
 	blocks, err := store.BlockList(ctx, BlockQuery().SetSiteID("Site1"))
-	require.NoError(t, err)
-	require.GreaterOrEqual(t, len(blocks), 5) // At least original 5 blocks
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(blocks) < 5 {
+		t.Fatalf("Expected at least 5 blocks, got %d", len(blocks))
+	}
 }
 
 // TestConcurrentSoftDelete tests concurrent soft deletes
@@ -221,14 +246,18 @@ func TestConcurrentSoftDelete(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
 	// Create a block
 	block := NewBlock().SetSiteID("Site1").SetName("Test Block")
 	err = store.BlockCreate(ctx, block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	blockID := block.ID()
 
@@ -258,18 +287,30 @@ func TestConcurrentSoftDelete(t *testing.T) {
 	}
 
 	// At least one should succeed
-	require.GreaterOrEqual(t, successes, 1)
+	if successes < 1 {
+		t.Fatalf("Expected at least 1 success, got %d", successes)
+	}
 
 	// Verify block is soft deleted
 	found, err := store.BlockFindByID(ctx, blockID)
-	require.NoError(t, err)
-	require.Nil(t, found)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found != nil {
+		t.Fatal("Expected found to be nil")
+	}
 
 	// Should find with soft delete included
 	blocks, err := store.BlockList(ctx, BlockQuery().SetID(blockID).SetSoftDeleteIncluded(true))
-	require.NoError(t, err)
-	require.Len(t, blocks, 1)
-	require.True(t, blocks[0].IsSoftDeleted())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(blocks) != 1 {
+		t.Fatalf("Expected 1 block, got %d", len(blocks))
+	}
+	if !blocks[0].IsSoftDeleted() {
+		t.Fatal("Expected block to be soft deleted")
+	}
 }
 
 // TestConcurrentPageAndBlockCreation tests creating pages and blocks concurrently
@@ -284,14 +325,18 @@ func TestConcurrentPageAndBlockCreation(t *testing.T) {
 		TemplateTableName:  "template_table",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
 	// Create site
 	site := NewSite().SetName("Test Site")
 	err = store.SiteCreate(ctx, site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	const numPages = 5
 	var wg sync.WaitGroup
@@ -336,12 +381,18 @@ func TestConcurrentPageAndBlockCreation(t *testing.T) {
 	for id := range pageIDs {
 		ids = append(ids, id)
 	}
-	require.Len(t, ids, numPages)
+	if len(ids) != numPages {
+		t.Fatalf("Expected %d pages, got %d", numPages, len(ids))
+	}
 
 	// Verify blocks were created (should be 3 per page)
 	blocks, err := store.BlockList(ctx, BlockQuery().SetSiteID(site.ID()))
-	require.NoError(t, err)
-	require.Len(t, blocks, numPages*3)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(blocks) != numPages*3 {
+		t.Fatalf("Expected %d blocks, got %d", numPages*3, len(blocks))
+	}
 }
 
 // TestConcurrentCountOperations tests concurrent count operations
@@ -356,7 +407,9 @@ func TestConcurrentCountOperations(t *testing.T) {
 		TemplateTableName:  "template_table_count_ops",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -364,7 +417,9 @@ func TestConcurrentCountOperations(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		block := NewBlock().SetSiteID("Site1").SetName("Block")
 		err = store.BlockCreate(ctx, block)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	}
 
 	// Concurrent count operations
@@ -394,9 +449,13 @@ func TestConcurrentCountOperations(t *testing.T) {
 		countValues = append(countValues, count)
 	}
 
-	require.Len(t, countValues, numGoroutines)
+	if len(countValues) != numGoroutines {
+		t.Fatalf("Expected %d count values, got %d", numGoroutines, len(countValues))
+	}
 	// All counts should be the same (10)
 	for _, count := range countValues {
-		require.Equal(t, int64(10), count)
+		if count != int64(10) {
+			t.Fatalf("Expected count 10, got %d", count)
+		}
 	}
 }
