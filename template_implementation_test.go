@@ -5,86 +5,152 @@ import (
 
 	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewTemplateDefaults(t *testing.T) {
 	template := NewTemplate()
 
-	require.NotEmpty(t, template.ID())
-	require.NotEmpty(t, template.CreatedAt())
-	require.NotEmpty(t, template.UpdatedAt())
-	require.Equal(t, TEMPLATE_STATUS_DRAFT, template.Status())
-	require.Equal(t, sb.MAX_DATETIME, template.SoftDeletedAt())
-	require.False(t, template.IsSoftDeleted())
+	// Test default values
+	if len(template.ID()) == 0 {
+		t.Error("Expected ID to be non-empty")
+	}
+	if len(template.CreatedAt()) == 0 {
+		t.Error("Expected CreatedAt to be non-empty")
+	}
+	if len(template.UpdatedAt()) == 0 {
+		t.Error("Expected UpdatedAt to be non-empty")
+	}
+	if template.Status() != TEMPLATE_STATUS_DRAFT {
+		t.Errorf("Expected Status %s, got %s", TEMPLATE_STATUS_DRAFT, template.Status())
+	}
+	if template.SoftDeletedAt() != sb.MAX_DATETIME {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", sb.MAX_DATETIME, template.SoftDeletedAt())
+	}
+	if template.IsSoftDeleted() {
+		t.Error("Expected IsSoftDeleted to be false")
+	}
 
 	metas, err := template.Metas()
-	require.NoError(t, err)
-	require.Empty(t, metas)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if len(metas) != 0 {
+		t.Errorf("Expected empty metas, got %v", metas)
+	}
 
 	createdCarbon := template.CreatedAtCarbon()
-	require.NotNil(t, createdCarbon)
-	require.Equal(t, template.CreatedAt(), createdCarbon.ToDateTimeString(carbon.UTC))
+	if createdCarbon == nil {
+		t.Error("Expected CreatedAtCarbon to be non-nil")
+	}
+	if template.CreatedAt() != createdCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected CreatedAt %s, got %s", template.CreatedAt(), createdCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	updatedCarbon := template.UpdatedAtCarbon()
-	require.NotNil(t, updatedCarbon)
-	require.Equal(t, template.UpdatedAt(), updatedCarbon.ToDateTimeString(carbon.UTC))
+	if updatedCarbon == nil {
+		t.Error("Expected UpdatedAtCarbon to be non-nil")
+	}
+	if template.UpdatedAt() != updatedCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected UpdatedAt %s, got %s", template.UpdatedAt(), updatedCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	softDeletedCarbon := template.SoftDeletedAtCarbon()
-	require.NotNil(t, softDeletedCarbon)
-	require.True(t, softDeletedCarbon.Gte(carbon.Now(carbon.UTC)))
+	if softDeletedCarbon == nil {
+		t.Error("Expected SoftDeletedAtCarbon to be non-nil")
+	}
+	if !softDeletedCarbon.Gte(carbon.Now(carbon.UTC)) {
+		t.Error("Expected SoftDeletedAtCarbon to be greater than or equal to now")
+	}
 }
 
 func TestTemplateGetterMethods(t *testing.T) {
 	template := NewTemplate()
 
 	// Test default values
-	require.Equal(t, "", template.Content())
-	require.Equal(t, "", template.Editor())
-	require.Equal(t, "", template.Handle())
-	require.Equal(t, "", template.Memo())
-	require.Equal(t, "", template.Name())
-	require.Equal(t, "", template.SiteID())
+	if template.Content() != "" {
+		t.Errorf("Expected empty Content, got %s", template.Content())
+	}
+	if template.Editor() != "" {
+		t.Errorf("Expected empty Editor, got %s", template.Editor())
+	}
+	if template.Handle() != "" {
+		t.Errorf("Expected empty Handle, got %s", template.Handle())
+	}
+	if template.Memo() != "" {
+		t.Errorf("Expected empty Memo, got %s", template.Memo())
+	}
+	if template.Name() != "" {
+		t.Errorf("Expected empty Name, got %s", template.Name())
+	}
+	if template.SiteID() != "" {
+		t.Errorf("Expected empty SiteID, got %s", template.SiteID())
+	}
 }
 
 func TestTemplateStatusMethods(t *testing.T) {
 	template := NewTemplate()
 
 	// Test default status (DRAFT)
-	require.False(t, template.IsActive())
-	require.False(t, template.IsInactive())
+	if template.IsActive() {
+		t.Error("Expected IsActive to be false")
+	}
+	if template.IsInactive() {
+		t.Error("Expected IsInactive to be false")
+	}
 
 	// Test ACTIVE status
 	template.SetStatus(TEMPLATE_STATUS_ACTIVE)
-	require.True(t, template.IsActive())
-	require.False(t, template.IsInactive())
+	if !template.IsActive() {
+		t.Error("Expected IsActive to be true")
+	}
+	if template.IsInactive() {
+		t.Error("Expected IsInactive to be false")
+	}
 
 	// Test INACTIVE status
 	template.SetStatus(TEMPLATE_STATUS_INACTIVE)
-	require.False(t, template.IsActive())
-	require.True(t, template.IsInactive())
+	if template.IsActive() {
+		t.Error("Expected IsActive to be false")
+	}
+	if !template.IsInactive() {
+		t.Error("Expected IsInactive to be true")
+	}
 
 	// Test other status values
 	template.SetStatus("unknown")
-	require.False(t, template.IsActive())
-	require.False(t, template.IsInactive())
+	if template.IsActive() {
+		t.Error("Expected IsActive to be false")
+	}
+	if template.IsInactive() {
+		t.Error("Expected IsInactive to be false")
+	}
 }
 
 func TestTemplateSoftDeleteMethods(t *testing.T) {
 	template := NewTemplate()
-	require.False(t, template.IsSoftDeleted())
+	if template.IsSoftDeleted() {
+		t.Error("Expected IsSoftDeleted to be false")
+	}
 
 	// Test with future date
 	future := carbon.Now(carbon.UTC).AddHour()
 	template.SetSoftDeletedAt(future.ToDateTimeString(carbon.UTC))
-	require.False(t, template.IsSoftDeleted())
-	require.Equal(t, future.ToDateTimeString(carbon.UTC), template.SoftDeletedAt())
+	if template.IsSoftDeleted() {
+		t.Error("Expected IsSoftDeleted to be false")
+	}
+	if template.SoftDeletedAt() != future.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", future.ToDateTimeString(carbon.UTC), template.SoftDeletedAt())
+	}
 
 	// Test with past date
 	past := carbon.Now(carbon.UTC).SubHour()
 	template.SetSoftDeletedAt(past.ToDateTimeString(carbon.UTC))
-	require.True(t, template.IsSoftDeleted())
-	require.Equal(t, past.ToDateTimeString(carbon.UTC), template.SoftDeletedAt())
+	if !template.IsSoftDeleted() {
+		t.Error("Expected IsSoftDeleted to be true")
+	}
+	if template.SoftDeletedAt() != past.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", past.ToDateTimeString(carbon.UTC), template.SoftDeletedAt())
+	}
 }
 
 func TestTemplateMetasMethods(t *testing.T) {
@@ -92,38 +158,72 @@ func TestTemplateMetasMethods(t *testing.T) {
 
 	// Test empty metas
 	metas, err := template.Metas()
-	require.NoError(t, err)
-	require.Empty(t, metas)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if len(metas) != 0 {
+		t.Errorf("Expected empty metas, got %v", metas)
+	}
 
 	// Test Meta lookup on empty metas
-	require.Equal(t, "", template.Meta("nonexistent"))
+	if template.Meta("nonexistent") != "" {
+		t.Errorf("Expected empty Meta, got %s", template.Meta("nonexistent"))
+	}
 
 	// Test SetMetas
 	err = template.SetMetas(map[string]string{"layout": "main", "theme": "dark"})
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 
 	metas, err = template.Metas()
-	require.NoError(t, err)
-	require.Equal(t, "main", metas["layout"])
-	require.Equal(t, "dark", metas["theme"])
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if metas["layout"] != "main" {
+		t.Errorf("Expected layout 'main', got %s", metas["layout"])
+	}
+	if metas["theme"] != "dark" {
+		t.Errorf("Expected theme 'dark', got %s", metas["theme"])
+	}
 
 	// Test Meta lookup
-	require.Equal(t, "main", template.Meta("layout"))
-	require.Equal(t, "dark", template.Meta("theme"))
-	require.Equal(t, "", template.Meta("nonexistent"))
+	if template.Meta("layout") != "main" {
+		t.Errorf("Expected layout 'main', got %s", template.Meta("layout"))
+	}
+	if template.Meta("theme") != "dark" {
+		t.Errorf("Expected theme 'dark', got %s", template.Meta("theme"))
+	}
+	if template.Meta("nonexistent") != "" {
+		t.Errorf("Expected empty Meta, got %s", template.Meta("nonexistent"))
+	}
 
 	// Test SetMeta
 	err = template.SetMeta("newkey", "newvalue")
-	require.NoError(t, err)
-	require.Equal(t, "newvalue", template.Meta("newkey"))
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if template.Meta("newkey") != "newvalue" {
+		t.Errorf("Expected newkey 'newvalue', got %s", template.Meta("newkey"))
+	}
 
 	// Test UpsertMetas
 	err = template.UpsertMetas(map[string]string{"layout": "sidebar", "color": "blue"})
-	require.NoError(t, err)
-	require.Equal(t, "sidebar", template.Meta("layout")) // Updated
-	require.Equal(t, "dark", template.Meta("theme"))     // Preserved
-	require.Equal(t, "newvalue", template.Meta("newkey")) // Preserved
-	require.Equal(t, "blue", template.Meta("color"))      // Added
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if template.Meta("layout") != "sidebar" { // Updated
+		t.Errorf("Expected layout 'sidebar', got %s", template.Meta("layout"))
+	}
+	if template.Meta("theme") != "dark" { // Preserved
+		t.Errorf("Expected theme 'dark', got %s", template.Meta("theme"))
+	}
+	if template.Meta("newkey") != "newvalue" { // Preserved
+		t.Errorf("Expected newkey 'newvalue', got %s", template.Meta("newkey"))
+	}
+	if template.Meta("color") != "blue" { // Added
+		t.Errorf("Expected color 'blue', got %s", template.Meta("color"))
+	}
 }
 
 func TestTemplateCreatedAtMethods(t *testing.T) {
@@ -131,20 +231,32 @@ func TestTemplateCreatedAtMethods(t *testing.T) {
 
 	// Test default CreatedAt
 	createdAt := template.CreatedAt()
-	require.NotEmpty(t, createdAt)
+	if len(createdAt) == 0 {
+		t.Error("Expected CreatedAt to be non-empty")
+	}
 
 	createdAtCarbon := template.CreatedAtCarbon()
-	require.NotNil(t, createdAtCarbon)
-	require.Equal(t, createdAt, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	if createdAtCarbon == nil {
+		t.Error("Expected CreatedAtCarbon to be non-nil")
+	}
+	if createdAt != createdAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected CreatedAt %s, got %s", createdAt, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	// Test SetCreatedAt
 	testDate := "2023-12-25 10:30:00"
 	template.SetCreatedAt(testDate)
-	require.Equal(t, testDate, template.CreatedAt())
+	if template.CreatedAt() != testDate {
+		t.Errorf("Expected CreatedAt %s, got %s", testDate, template.CreatedAt())
+	}
 
 	createdAtCarbon = template.CreatedAtCarbon()
-	require.NotNil(t, createdAtCarbon)
-	require.Equal(t, testDate, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	if createdAtCarbon == nil {
+		t.Error("Expected CreatedAtCarbon to be non-nil")
+	}
+	if testDate != createdAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected CreatedAt %s, got %s", testDate, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 }
 
 func TestTemplateUpdatedAtMethods(t *testing.T) {
@@ -152,20 +264,32 @@ func TestTemplateUpdatedAtMethods(t *testing.T) {
 
 	// Test default UpdatedAt
 	updatedAt := template.UpdatedAt()
-	require.NotEmpty(t, updatedAt)
+	if len(updatedAt) == 0 {
+		t.Error("Expected UpdatedAt to be non-empty")
+	}
 
 	updatedAtCarbon := template.UpdatedAtCarbon()
-	require.NotNil(t, updatedAtCarbon)
-	require.Equal(t, updatedAt, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	if updatedAtCarbon == nil {
+		t.Error("Expected UpdatedAtCarbon to be non-nil")
+	}
+	if updatedAt != updatedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected UpdatedAt %s, got %s", updatedAt, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	// Test SetUpdatedAt
 	testDate := "2023-12-25 15:45:00"
 	template.SetUpdatedAt(testDate)
-	require.Equal(t, testDate, template.UpdatedAt())
+	if template.UpdatedAt() != testDate {
+		t.Errorf("Expected UpdatedAt %s, got %s", testDate, template.UpdatedAt())
+	}
 
 	updatedAtCarbon = template.UpdatedAtCarbon()
-	require.NotNil(t, updatedAtCarbon)
-	require.Equal(t, testDate, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	if updatedAtCarbon == nil {
+		t.Error("Expected UpdatedAtCarbon to be non-nil")
+	}
+	if testDate != updatedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected UpdatedAt %s, got %s", testDate, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 }
 
 func TestTemplateSoftDeletedAtMethods(t *testing.T) {
@@ -173,20 +297,32 @@ func TestTemplateSoftDeletedAtMethods(t *testing.T) {
 
 	// Test default SoftDeletedAt
 	softDeletedAt := template.SoftDeletedAt()
-	require.Equal(t, sb.MAX_DATETIME, softDeletedAt)
+	if softDeletedAt != sb.MAX_DATETIME {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", sb.MAX_DATETIME, softDeletedAt)
+	}
 
 	softDeletedAtCarbon := template.SoftDeletedAtCarbon()
-	require.NotNil(t, softDeletedAtCarbon)
-	require.Equal(t, softDeletedAt, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	if softDeletedAtCarbon == nil {
+		t.Error("Expected SoftDeletedAtCarbon to be non-nil")
+	}
+	if softDeletedAt != softDeletedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", softDeletedAt, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	// Test SetSoftDeletedAt
 	testDate := "2023-12-25 20:00:00"
 	template.SetSoftDeletedAt(testDate)
-	require.Equal(t, testDate, template.SoftDeletedAt())
+	if template.SoftDeletedAt() != testDate {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", testDate, template.SoftDeletedAt())
+	}
 
 	softDeletedAtCarbon = template.SoftDeletedAtCarbon()
-	require.NotNil(t, softDeletedAtCarbon)
-	require.Equal(t, testDate, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	if softDeletedAtCarbon == nil {
+		t.Error("Expected SoftDeletedAtCarbon to be non-nil")
+	}
+	if testDate != softDeletedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", testDate, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 }
 
 func TestTemplateIDMethods(t *testing.T) {
@@ -194,99 +330,135 @@ func TestTemplateIDMethods(t *testing.T) {
 
 	// Test default ID
 	id := template.ID()
-	require.NotEmpty(t, id)
+	if len(id) == 0 {
+		t.Error("Expected ID to be non-empty")
+	}
 
 	// Test SetID
 	newID := "test-template-id-123"
 	template.SetID(newID)
-	require.Equal(t, newID, template.ID())
+	if template.ID() != newID {
+		t.Errorf("Expected ID %s, got %s", newID, template.ID())
+	}
 }
 
 func TestTemplateContentMethods(t *testing.T) {
 	template := NewTemplate()
 
 	// Test default content
-	require.Equal(t, "", template.Content())
+	if template.Content() != "" {
+		t.Errorf("Expected empty Content, got %s", template.Content())
+	}
 
 	// Test SetContent
 	content := "This is template content"
 	template.SetContent(content)
-	require.Equal(t, content, template.Content())
+	if template.Content() != content {
+		t.Errorf("Expected Content %s, got %s", content, template.Content())
+	}
 }
 
 func TestTemplateEditorMethods(t *testing.T) {
 	template := NewTemplate()
 
 	// Test default editor
-	require.Equal(t, "", template.Editor())
+	if template.Editor() != "" {
+		t.Errorf("Expected empty Editor, got %s", template.Editor())
+	}
 
 	// Test SetEditor
 	editor := "test-editor"
 	template.SetEditor(editor)
-	require.Equal(t, editor, template.Editor())
+	if template.Editor() != editor {
+		t.Errorf("Expected Editor %s, got %s", editor, template.Editor())
+	}
 }
 
 func TestTemplateHandleMethods(t *testing.T) {
 	template := NewTemplate()
 
 	// Test default handle
-	require.Equal(t, "", template.Handle())
+	if template.Handle() != "" {
+		t.Errorf("Expected empty Handle, got %s", template.Handle())
+	}
 
 	// Test SetHandle
 	handle := "test-template-handle"
 	template.SetHandle(handle)
-	require.Equal(t, handle, template.Handle())
+	if template.Handle() != handle {
+		t.Errorf("Expected Handle %s, got %s", handle, template.Handle())
+	}
 }
 
 func TestTemplateMemoMethods(t *testing.T) {
 	template := NewTemplate()
 
 	// Test default memo
-	require.Equal(t, "", template.Memo())
+	if template.Memo() != "" {
+		t.Errorf("Expected empty Memo, got %s", template.Memo())
+	}
 
 	// Test SetMemo
 	memo := "This is a template memo"
 	template.SetMemo(memo)
-	require.Equal(t, memo, template.Memo())
+	if template.Memo() != memo {
+		t.Errorf("Expected Memo %s, got %s", memo, template.Memo())
+	}
 }
 
 func TestTemplateNameMethods(t *testing.T) {
 	template := NewTemplate()
 
 	// Test default name
-	require.Equal(t, "", template.Name())
+	if template.Name() != "" {
+		t.Errorf("Expected empty Name, got %s", template.Name())
+	}
 
 	// Test SetName
 	name := "Test Template Name"
 	template.SetName(name)
-	require.Equal(t, name, template.Name())
+	if template.Name() != name {
+		t.Errorf("Expected Name %s, got %s", name, template.Name())
+	}
 }
 
 func TestTemplateSiteIDMethods(t *testing.T) {
 	template := NewTemplate()
 
 	// Test default site ID
-	require.Equal(t, "", template.SiteID())
+	if template.SiteID() != "" {
+		t.Errorf("Expected empty SiteID, got %s", template.SiteID())
+	}
 
 	// Test SetSiteID
 	siteID := "test-site-id"
 	template.SetSiteID(siteID)
-	require.Equal(t, siteID, template.SiteID())
+	if template.SiteID() != siteID {
+		t.Errorf("Expected SiteID %s, got %s", siteID, template.SiteID())
+	}
 }
 
 func TestTemplateStatusSettersAndGetters(t *testing.T) {
 	template := NewTemplate()
 
 	// Test default status
-	require.Equal(t, TEMPLATE_STATUS_DRAFT, template.Status())
+	if template.Status() != TEMPLATE_STATUS_DRAFT {
+		t.Errorf("Expected Status %s, got %s", TEMPLATE_STATUS_DRAFT, template.Status())
+	}
 
 	// Test SetStatus
 	template.SetStatus(TEMPLATE_STATUS_ACTIVE)
-	require.Equal(t, TEMPLATE_STATUS_ACTIVE, template.Status())
+	if template.Status() != TEMPLATE_STATUS_ACTIVE {
+		t.Errorf("Expected Status %s, got %s", TEMPLATE_STATUS_ACTIVE, template.Status())
+	}
 
 	template.SetStatus(TEMPLATE_STATUS_INACTIVE)
-	require.Equal(t, TEMPLATE_STATUS_INACTIVE, template.Status())
+	if template.Status() != TEMPLATE_STATUS_INACTIVE {
+		t.Errorf("Expected Status %s, got %s", TEMPLATE_STATUS_INACTIVE, template.Status())
+	}
 
 	template.SetStatus("custom-status")
-	require.Equal(t, "custom-status", template.Status())
+	if template.Status() != "custom-status" {
+		t.Errorf("Expected Status %s, got %s", "custom-status", template.Status())
+	}
 }

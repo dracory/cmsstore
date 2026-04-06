@@ -1,240 +1,378 @@
 package cmsstore
 
 import (
+	"slices"
+	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestTemplateQueryDefaults(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default values
-	require.False(t, query.HasCreatedAtGte())
-	require.False(t, query.HasCreatedAtLte())
-	require.False(t, query.HasHandle())
-	require.False(t, query.HasID())
-	require.False(t, query.HasIDIn())
-	require.False(t, query.HasLimit())
-	require.False(t, query.HasNameLike())
-	require.False(t, query.HasOffset())
-	require.False(t, query.HasOrderBy())
-	require.False(t, query.HasSiteID())
-	require.False(t, query.HasSoftDeletedIncluded())
-	require.False(t, query.HasSortOrder())
-	require.False(t, query.HasStatus())
-	require.False(t, query.HasStatusIn())
-	require.False(t, query.HasColumns())
-	require.False(t, query.HasCountOnly())
-	require.False(t, query.IsCountOnly())
-	require.Empty(t, query.Columns())
+	if query.HasCreatedAtGte() {
+		t.Error("Expected HasCreatedAtGte to be false")
+	}
+	if query.HasCreatedAtLte() {
+		t.Error("Expected HasCreatedAtLte to be false")
+	}
+	if query.HasHandle() {
+		t.Error("Expected HasHandle to be false")
+	}
+	if query.HasID() {
+		t.Error("Expected HasID to be false")
+	}
+	if query.HasIDIn() {
+		t.Error("Expected HasIDIn to be false")
+	}
+	if query.HasLimit() {
+		t.Error("Expected HasLimit to be false")
+	}
+	if query.HasNameLike() {
+		t.Error("Expected HasNameLike to be false")
+	}
+	if query.HasOffset() {
+		t.Error("Expected HasOffset to be false")
+	}
+	if query.HasOrderBy() {
+		t.Error("Expected HasOrderBy to be false")
+	}
+	if query.HasSiteID() {
+		t.Error("Expected HasSiteID to be false")
+	}
+	if query.HasSoftDeletedIncluded() {
+		t.Error("Expected HasSoftDeletedIncluded to be false")
+	}
+	if query.HasSortOrder() {
+		t.Error("Expected HasSortOrder to be false")
+	}
+	if query.HasStatus() {
+		t.Error("Expected HasStatus to be false")
+	}
+	if query.HasStatusIn() {
+		t.Error("Expected HasStatusIn to be false")
+	}
+	if query.HasColumns() {
+		t.Error("Expected HasColumns to be false")
+	}
+	if query.HasCountOnly() {
+		t.Error("Expected HasCountOnly to be false")
+	}
+	if query.IsCountOnly() {
+		t.Error("Expected IsCountOnly to be false")
+	}
+	if len(query.Columns()) != 0 {
+		t.Errorf("Expected empty Columns, got %v", query.Columns())
+	}
 }
 
 func TestTemplateQueryColumns(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default columns
-	require.False(t, query.HasColumns())
-	require.Empty(t, query.Columns())
+	if query.HasColumns() {
+		t.Error("Expected HasColumns to be false")
+	}
+	if len(query.Columns()) != 0 {
+		t.Errorf("Expected empty Columns, got %v", query.Columns())
+	}
 
 	// Test SetColumns
 	columns := []string{"id", "name", "status"}
 	query.SetColumns(columns)
-	require.True(t, query.HasColumns())
-	require.Equal(t, columns, query.Columns())
+	if !query.HasColumns() {
+		t.Error("Expected HasColumns to be true")
+	}
+	if !slices.Equal(columns, query.Columns()) {
+		t.Errorf("Expected Columns %v, got %v", columns, query.Columns())
+	}
 }
 
 func TestTemplateQueryCreatedAtGte(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasCreatedAtGte())
+	if query.HasCreatedAtGte() {
+		t.Error("Expected HasCreatedAtGte to be false")
+	}
 
 	// Test setting value
 	query.SetCreatedAtGte("2023-12-25 10:00:00")
-	require.True(t, query.HasCreatedAtGte())
-	require.Equal(t, "2023-12-25 10:00:00", query.CreatedAtGte())
+	if !query.HasCreatedAtGte() {
+		t.Error("Expected HasCreatedAtGte to be true")
+	}
+	if query.CreatedAtGte() != "2023-12-25 10:00:00" {
+		t.Errorf("Expected CreatedAtGte %s, got %s", "2023-12-25 10:00:00", query.CreatedAtGte())
+	}
 }
 
 func TestTemplateQueryCreatedAtLte(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasCreatedAtLte())
+	if query.HasCreatedAtLte() {
+		t.Error("Expected HasCreatedAtLte to be false")
+	}
 
 	// Test setting value
 	query.SetCreatedAtLte("2023-12-25 10:00:00")
-	require.True(t, query.HasCreatedAtLte())
-	require.Equal(t, "2023-12-25 10:00:00", query.CreatedAtLte())
+	if !query.HasCreatedAtLte() {
+		t.Error("Expected HasCreatedAtLte to be true")
+	}
+	if query.CreatedAtLte() != "2023-12-25 10:00:00" {
+		t.Errorf("Expected CreatedAtLte %s, got %s", "2023-12-25 10:00:00", query.CreatedAtLte())
+	}
 }
 
 func TestTemplateQueryHandle(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasHandle())
+	if query.HasHandle() {
+		t.Error("Expected HasHandle to be false")
+	}
 
 	// Test setting value
 	handle := "test-handle"
 	query.SetHandle(handle)
-	require.True(t, query.HasHandle())
-	require.Equal(t, handle, query.Handle())
+	if !query.HasHandle() {
+		t.Error("Expected HasHandle to be true")
+	}
+	if query.Handle() != handle {
+		t.Errorf("Expected Handle %s, got %s", handle, query.Handle())
+	}
 }
 
 func TestTemplateQueryID(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasID())
+	if query.HasID() {
+		t.Error("Expected HasID to be false")
+	}
 
 	// Test setting value
 	id := "test-id"
 	query.SetID(id)
-	require.True(t, query.HasID())
-	require.Equal(t, id, query.ID())
+	if !query.HasID() {
+		t.Error("Expected HasID to be true")
+	}
+	if query.ID() != id {
+		t.Errorf("Expected ID %s, got %s", id, query.ID())
+	}
 }
 
 func TestTemplateQueryIDIn(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasIDIn())
+	if query.HasIDIn() {
+		t.Error("Expected HasIDIn to be false")
+	}
 
 	// Test setting value
 	ids := []string{"id1", "id2", "id3"}
 	query.SetIDIn(ids)
-	require.True(t, query.HasIDIn())
-	require.Equal(t, ids, query.IDIn())
+	if !query.HasIDIn() {
+		t.Error("Expected HasIDIn to be true")
+	}
+	if !slices.Equal(ids, query.IDIn()) {
+		t.Errorf("Expected IDIn %v, got %v", ids, query.IDIn())
+	}
 }
 
 func TestTemplateQueryLimit(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasLimit())
+	if query.HasLimit() {
+		t.Error("Expected HasLimit to be false")
+	}
 
 	// Test setting value
 	limit := 10
 	query.SetLimit(limit)
-	require.True(t, query.HasLimit())
-	require.Equal(t, limit, query.Limit())
+	if !query.HasLimit() {
+		t.Error("Expected HasLimit to be true")
+	}
+	if query.Limit() != limit {
+		t.Errorf("Expected Limit %d, got %d", limit, query.Limit())
+	}
 }
 
 func TestTemplateQueryNameLike(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasNameLike())
+	if query.HasNameLike() {
+		t.Error("Expected HasNameLike to be false")
+	}
 
 	// Test setting value
 	nameLike := "test-name"
 	query.SetNameLike(nameLike)
-	require.True(t, query.HasNameLike())
-	require.Equal(t, nameLike, query.NameLike())
+	if !query.HasNameLike() {
+		t.Error("Expected HasNameLike to be true")
+	}
+	if query.NameLike() != nameLike {
+		t.Errorf("Expected NameLike %s, got %s", nameLike, query.NameLike())
+	}
 }
 
 func TestTemplateQueryOffset(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasOffset())
+	if query.HasOffset() {
+		t.Error("Expected HasOffset to be false")
+	}
 
 	// Test setting value
 	offset := 5
 	query.SetOffset(offset)
-	require.True(t, query.HasOffset())
-	require.Equal(t, offset, query.Offset())
+	if !query.HasOffset() {
+		t.Error("Expected HasOffset to be true")
+	}
+	if query.Offset() != offset {
+		t.Errorf("Expected Offset %d, got %d", offset, query.Offset())
+	}
 }
 
 func TestTemplateQueryOrderBy(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasOrderBy())
+	if query.HasOrderBy() {
+		t.Error("Expected HasOrderBy to be false")
+	}
 
 	// Test setting value
 	orderBy := "name"
 	query.SetOrderBy(orderBy)
-	require.True(t, query.HasOrderBy())
-	require.Equal(t, orderBy, query.OrderBy())
+	if !query.HasOrderBy() {
+		t.Error("Expected HasOrderBy to be true")
+	}
+	if query.OrderBy() != orderBy {
+		t.Errorf("Expected OrderBy %s, got %s", orderBy, query.OrderBy())
+	}
 }
 
 func TestTemplateQuerySiteID(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasSiteID())
+	if query.HasSiteID() {
+		t.Error("Expected HasSiteID to be false")
+	}
 
 	// Test setting value
 	siteID := "site-123"
 	query.SetSiteID(siteID)
-	require.True(t, query.HasSiteID())
-	require.Equal(t, siteID, query.SiteID())
+	if !query.HasSiteID() {
+		t.Error("Expected HasSiteID to be true")
+	}
+	if query.SiteID() != siteID {
+		t.Errorf("Expected SiteID %s, got %s", siteID, query.SiteID())
+	}
 }
 
 func TestTemplateQuerySoftDeletedIncluded(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasSoftDeletedIncluded())
-	require.False(t, query.SoftDeletedIncluded())
+	if query.HasSoftDeletedIncluded() {
+		t.Error("Expected HasSoftDeletedIncluded to be false")
+	}
+	if query.SoftDeletedIncluded() {
+		t.Error("Expected SoftDeletedIncluded to be false")
+	}
 
 	// Test setting value
 	query.SetSoftDeletedIncluded(true)
-	require.True(t, query.HasSoftDeletedIncluded())
-	require.True(t, query.SoftDeletedIncluded())
+	if !query.HasSoftDeletedIncluded() {
+		t.Error("Expected HasSoftDeletedIncluded to be true")
+	}
+	if !query.SoftDeletedIncluded() {
+		t.Error("Expected SoftDeletedIncluded to be true")
+	}
 }
 
 func TestTemplateQuerySortOrder(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasSortOrder())
+	if query.HasSortOrder() {
+		t.Error("Expected HasSortOrder to be false")
+	}
 
 	// Test setting value
 	sortOrder := "asc"
 	query.SetSortOrder(sortOrder)
-	require.True(t, query.HasSortOrder())
-	require.Equal(t, sortOrder, query.SortOrder())
+	if !query.HasSortOrder() {
+		t.Error("Expected HasSortOrder to be true")
+	}
+	if query.SortOrder() != sortOrder {
+		t.Errorf("Expected SortOrder %s, got %s", sortOrder, query.SortOrder())
+	}
 }
 
 func TestTemplateQueryStatus(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasStatus())
+	if query.HasStatus() {
+		t.Error("Expected HasStatus to be false")
+	}
 
 	// Test setting value
 	status := "active"
 	query.SetStatus(status)
-	require.True(t, query.HasStatus())
-	require.Equal(t, status, query.Status())
+	if !query.HasStatus() {
+		t.Error("Expected HasStatus to be true")
+	}
+	if query.Status() != status {
+		t.Errorf("Expected Status %s, got %s", status, query.Status())
+	}
 }
 
 func TestTemplateQueryStatusIn(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasStatusIn())
+	if query.HasStatusIn() {
+		t.Error("Expected HasStatusIn to be false")
+	}
 
 	// Test setting value
 	statuses := []string{"active", "inactive"}
 	query.SetStatusIn(statuses)
-	require.True(t, query.HasStatusIn())
-	require.Equal(t, statuses, query.StatusIn())
+	if !query.HasStatusIn() {
+		t.Error("Expected HasStatusIn to be true")
+	}
+	if !slices.Equal(statuses, query.StatusIn()) {
+		t.Errorf("Expected StatusIn %v, got %v", statuses, query.StatusIn())
+	}
 }
 
 func TestTemplateQueryCountOnly(t *testing.T) {
 	query := TemplateQuery()
 
 	// Test default
-	require.False(t, query.HasCountOnly())
-	require.False(t, query.IsCountOnly())
+	if query.HasCountOnly() {
+		t.Error("Expected HasCountOnly to be false")
+	}
+	if query.IsCountOnly() {
+		t.Error("Expected IsCountOnly to be false")
+	}
 
 	// Test setting value
 	query.SetCountOnly(true)
-	require.True(t, query.HasCountOnly())
-	require.True(t, query.IsCountOnly())
+	if !query.HasCountOnly() {
+		t.Error("Expected HasCountOnly to be true")
+	}
+	if !query.IsCountOnly() {
+		t.Error("Expected IsCountOnly to be true")
+	}
 }
 
 func TestTemplateQueryValidation(t *testing.T) {
@@ -242,81 +380,127 @@ func TestTemplateQueryValidation(t *testing.T) {
 
 	// Test valid query
 	err := query.Validate()
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
 
 	// Test invalid created_at_gte
 	query.SetCreatedAtGte("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "created_at_gte cannot be empty")
+	if err == nil {
+		t.Error("Expected error for empty created_at_gte")
+	}
+	if !strings.Contains(err.Error(), "created_at_gte cannot be empty") {
+		t.Errorf("Expected error message to contain 'created_at_gte cannot be empty', got %s", err.Error())
+	}
 
 	// Test invalid created_at_lte
 	query = TemplateQuery()
 	query.SetCreatedAtLte("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "created_at_lte cannot be empty")
+	if err == nil {
+		t.Error("Expected error for empty created_at_lte")
+	}
+	if !strings.Contains(err.Error(), "created_at_lte cannot be empty") {
+		t.Errorf("Expected error message to contain 'created_at_lte cannot be empty', got %s", err.Error())
+	}
 
 	// Test invalid id
 	query = TemplateQuery()
 	query.SetID("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "id cannot be empty")
+	if err == nil {
+		t.Error("Expected error for empty id")
+	}
+	if !strings.Contains(err.Error(), "id cannot be empty") {
+		t.Errorf("Expected error message to contain 'id cannot be empty', got %s", err.Error())
+	}
 
 	// Test invalid id_in
 	query = TemplateQuery()
 	query.SetIDIn([]string{})
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "id_in cannot be empty array")
+	if err == nil {
+		t.Error("Expected error for empty id_in")
+	}
+	if !strings.Contains(err.Error(), "id_in cannot be empty array") {
+		t.Errorf("Expected error message to contain 'id_in cannot be empty array', got %s", err.Error())
+	}
 
 	// Test invalid limit
 	query = TemplateQuery()
 	query.SetLimit(-1)
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "limit cannot be negative")
+	if err == nil {
+		t.Error("Expected error for negative limit")
+	}
+	if !strings.Contains(err.Error(), "limit cannot be negative") {
+		t.Errorf("Expected error message to contain 'limit cannot be negative', got %s", err.Error())
+	}
 
 	// Test invalid handle
 	query = TemplateQuery()
 	query.SetHandle("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "handle cannot be empty")
+	if err == nil {
+		t.Error("Expected error for empty handle")
+	}
+	if !strings.Contains(err.Error(), "handle cannot be empty") {
+		t.Errorf("Expected error message to contain 'handle cannot be empty', got %s", err.Error())
+	}
 
 	// Test invalid name_like
 	query = TemplateQuery()
 	query.SetNameLike("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "name_like cannot be empty")
+	if err == nil {
+		t.Error("Expected error for empty name_like")
+	}
+	if !strings.Contains(err.Error(), "name_like cannot be empty") {
+		t.Errorf("Expected error message to contain 'name_like cannot be empty', got %s", err.Error())
+	}
 
 	// Test invalid offset
 	query = TemplateQuery()
 	query.SetOffset(-1)
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "offset cannot be negative")
+	if err == nil {
+		t.Error("Expected error for negative offset")
+	}
+	if !strings.Contains(err.Error(), "offset cannot be negative") {
+		t.Errorf("Expected error message to contain 'offset cannot be negative', got %s", err.Error())
+	}
 
 	// Test invalid site_id
 	query = TemplateQuery()
 	query.SetSiteID("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "site_id cannot be empty")
+	if err == nil {
+		t.Error("Expected error for empty site_id")
+	}
+	if !strings.Contains(err.Error(), "site_id cannot be empty") {
+		t.Errorf("Expected error message to contain 'site_id cannot be empty', got %s", err.Error())
+	}
 
 	// Test invalid status
 	query = TemplateQuery()
 	query.SetStatus("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "status cannot be empty")
+	if err == nil {
+		t.Error("Expected error for empty status")
+	}
+	if !strings.Contains(err.Error(), "status cannot be empty") {
+		t.Errorf("Expected error message to contain 'status cannot be empty', got %s", err.Error())
+	}
 
 	// Test invalid status_in
 	query = TemplateQuery()
 	query.SetStatusIn([]string{})
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "status_in cannot be empty array")
+	if err == nil {
+		t.Error("Expected error for empty status_in")
+	}
+	if !strings.Contains(err.Error(), "status_in cannot be empty array") {
+		t.Errorf("Expected error message to contain 'status_in cannot be empty array', got %s", err.Error())
+	}
 }
