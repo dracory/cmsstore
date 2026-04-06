@@ -1,10 +1,10 @@
 package frontend
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/jellydator/ttlcache/v3"
-	"github.com/mingrammer/cfmt"
 )
 
 type LanguageKey struct{}
@@ -12,7 +12,7 @@ type LanguageKey struct{}
 func init() {}
 
 func initCache() *ttlcache.Cache[string, any] {
-	cfmt.Successln("InMemCache Initialized")
+	fmt.Println("InMemCache Initialized")
 
 	inMemCache := ttlcache.New[string, any](
 		ttlcache.WithTTL[string, any](30 * time.Minute),

@@ -11,7 +11,6 @@ require (
 	github.com/dracory/database v0.7.0
 	github.com/dracory/dataobject v1.6.0
 	github.com/dracory/entitystore v1.7.0
-	github.com/dracory/env v1.0.0
 	github.com/dracory/form v0.23.0
 	github.com/dracory/hb v1.88.0
 	github.com/dracory/req v0.1.0
@@ -22,19 +21,15 @@ require (
 	github.com/dracory/uid v1.9.0
 	github.com/dracory/versionstore v0.6.0
 	github.com/dromara/carbon/v2 v2.6.16
-	github.com/go-sql-driver/mysql v1.9.3
-	github.com/lib/pq v1.12.3
 	github.com/samber/lo v1.53.0
 	github.com/spf13/cast v1.10.0
 	modernc.org/sqlite v1.48.1
 )
 
 require (
-	github.com/dracory/crypto v0.3.0 // indirect
-	github.com/dracory/envenc v1.2.0 // indirect
-	github.com/dracory/websrv v0.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/lib/pq v1.12.3 // indirect
 	github.com/mocktools/go-smtp-mock v1.10.0 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -46,19 +41,13 @@ require (
 )
 
 require (
-	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/dracory/shortcode v0.5.0
 	github.com/georgysavva/scany v1.2.3 // indirect
 	github.com/jellydator/ttlcache/v3 v3.4.0
-	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mingrammer/cfmt v1.1.0
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/term v0.41.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 )

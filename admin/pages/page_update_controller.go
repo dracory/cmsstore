@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -17,7 +18,7 @@ import (
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
 	"github.com/dracory/versionstore"
-	"github.com/mingrammer/cfmt"
+
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -1123,11 +1124,11 @@ func (controller pageUpdateController) isLastVersioningSame(
 	lastVersioningContent := lastVersioning.Content()
 
 	if lastVersioningContent == pageVersioningContent {
-		cfmt.Infoln("No changes detected")
+		fmt.Println("No changes detected")
 		return true
 	}
 
-	cfmt.Infoln("Changes detected")
+	fmt.Println("Changes detected")
 
 	// cfmt.Infoln("last versioning content", lastVersioningContent)
 	// cfmt.Warningln("new versioning content", pageVersioningContent)
