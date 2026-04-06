@@ -12,8 +12,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/cmsstore/testutils"
 	"github.com/dracory/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -29,21 +27,34 @@ func initBlockVersioningHandler(store cmsstore.StoreInterface) func(w http.Respo
 
 func Test_BlockVersioningController_BlockIdIsRequired(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "block id is required")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "block id is required") {
+		t.Errorf("Expected body to contain 'block id is required'")
+	}
 }
 
 func Test_BlockVersioningController_BlockIdIsInvalid(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
@@ -52,20 +63,33 @@ func Test_BlockVersioningController_BlockIdIsInvalid(t *testing.T) {
 			"block_id": {"invalid-id"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "block not found")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "block not found") {
+		t.Errorf("Expected body to contain 'block not found'")
+	}
 }
 
 func Test_BlockVersioningController_ListRevisions(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and block
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	block := cmsstore.NewBlock()
 	block.SetName("Test Block")
@@ -74,7 +98,9 @@ func Test_BlockVersioningController_ListRevisions(t *testing.T) {
 	block.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
 	block.SetContent("<p>Original content</p>")
 	err = store.BlockCreate(context.Background(), block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	// Create some versioning entries
 	versioning1 := cmsstore.NewVersioning()
@@ -82,14 +108,18 @@ func Test_BlockVersioningController_ListRevisions(t *testing.T) {
 	versioning1.SetEntityType(cmsstore.VERSIONING_TYPE_BLOCK)
 	versioning1.SetContent(`{"content": "<p>Version 1 content</p>"}`)
 	err = store.VersioningCreate(context.Background(), versioning1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	versioning2 := cmsstore.NewVersioning()
 	versioning2.SetEntityID(block.ID())
 	versioning2.SetEntityType(cmsstore.VERSIONING_TYPE_BLOCK)
 	versioning2.SetContent(`{"content": "<p>Version 2 content</p>"}`)
 	err = store.VersioningCreate(context.Background(), versioning2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
@@ -98,22 +128,38 @@ func Test_BlockVersioningController_ListRevisions(t *testing.T) {
 			"block_id": {block.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Block Revisions")
-	assert.Contains(t, body, "Version")
-	assert.Contains(t, body, "Created")
-	assert.Contains(t, body, "Actions")
+	if !strings.Contains(body, "Block Revisions") {
+		t.Errorf("Expected body to contain 'Block Revisions'")
+	}
+	if !strings.Contains(body, "Version") {
+		t.Errorf("Expected body to contain 'Version'")
+	}
+	if !strings.Contains(body, "Created") {
+		t.Errorf("Expected body to contain 'Created'")
+	}
+	if !strings.Contains(body, "Actions") {
+		t.Errorf("Expected body to contain 'Actions'")
+	}
 }
 
 func Test_BlockVersioningController_PreviewRevision(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and block
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	block := cmsstore.NewBlock()
 	block.SetName("Test Block")
@@ -122,7 +168,9 @@ func Test_BlockVersioningController_PreviewRevision(t *testing.T) {
 	block.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
 	block.SetContent("<p>Current content</p>")
 	err = store.BlockCreate(context.Background(), block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	// Create a versioning entry
 	versioning := cmsstore.NewVersioning()
@@ -130,7 +178,9 @@ func Test_BlockVersioningController_PreviewRevision(t *testing.T) {
 	versioning.SetEntityType(cmsstore.VERSIONING_TYPE_BLOCK)
 	versioning.SetContent(`{"content": "<p>Historical content</p>"}`)
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
@@ -140,20 +190,32 @@ func Test_BlockVersioningController_PreviewRevision(t *testing.T) {
 			"versioning_id": {versioning.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Block Revision")
-	assert.Contains(t, body, "Historical content")
+	if !strings.Contains(body, "Block Revision") {
+		t.Errorf("Expected body to contain 'Block Revision'")
+	}
+	if !strings.Contains(body, "Historical content") {
+		t.Errorf("Expected body to contain 'Historical content'")
+	}
 }
 
 func Test_BlockVersioningController_RestoreAttributes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and block
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	block := cmsstore.NewBlock()
 	block.SetName("Test Block")
@@ -162,7 +224,9 @@ func Test_BlockVersioningController_RestoreAttributes(t *testing.T) {
 	block.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
 	block.SetContent("<p>Current content</p>")
 	err = store.BlockCreate(context.Background(), block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	// Create a versioning entry with different content
 	versioning := cmsstore.NewVersioning()
@@ -170,7 +234,9 @@ func Test_BlockVersioningController_RestoreAttributes(t *testing.T) {
 	versioning.SetEntityType(cmsstore.VERSIONING_TYPE_BLOCK)
 	versioning.SetContent(`{"content": "<p>Restored content</p>"}`)
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
@@ -181,25 +247,42 @@ func Test_BlockVersioningController_RestoreAttributes(t *testing.T) {
 			"revision_attributes": {"content"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "revision attributes restored successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "revision attributes restored successfully") {
+		t.Errorf("Expected body to contain 'revision attributes restored successfully'")
+	}
 
 	// Verify block content was restored
 	restoredBlock, err := store.BlockFindByID(context.Background(), block.ID())
-	require.NoError(t, err)
-	assert.Equal(t, "<p>Restored content</p>", restoredBlock.Content())
+	if err != nil {
+		t.Fatalf("Failed to find block: %v", err)
+	}
+	if restoredBlock.Content() != "<p>Restored content</p>" {
+		t.Errorf("Expected content %q, got %q", "<p>Restored content</p>", restoredBlock.Content())
+	}
 }
 
 func Test_BlockVersioningController_RestoreNoAttributes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and block
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	block := cmsstore.NewBlock()
 	block.SetName("Test Block")
@@ -208,7 +291,9 @@ func Test_BlockVersioningController_RestoreNoAttributes(t *testing.T) {
 	block.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
 	block.SetContent("<p>Current content</p>")
 	err = store.BlockCreate(context.Background(), block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	// Create a versioning entry
 	versioning := cmsstore.NewVersioning()
@@ -216,7 +301,9 @@ func Test_BlockVersioningController_RestoreNoAttributes(t *testing.T) {
 	versioning.SetEntityType(cmsstore.VERSIONING_TYPE_BLOCK)
 	versioning.SetContent(`{"content": "<p>Restored content</p>"}`)
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
@@ -226,20 +313,33 @@ func Test_BlockVersioningController_RestoreNoAttributes(t *testing.T) {
 			"versioning_id": {versioning.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "no revision attributes were selected")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "no revision attributes were selected") {
+		t.Errorf("Expected body to contain 'no revision attributes were selected'")
+	}
 }
 
 func Test_BlockVersioningController_RestoreMultipleAttributes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and block
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	block := cmsstore.NewBlock()
 	block.SetName("Original Block")
@@ -248,7 +348,9 @@ func Test_BlockVersioningController_RestoreMultipleAttributes(t *testing.T) {
 	block.SetStatus(cmsstore.BLOCK_STATUS_DRAFT)
 	block.SetContent("<p>Original content</p>")
 	err = store.BlockCreate(context.Background(), block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	// Create a versioning entry with different values
 	versioning := cmsstore.NewVersioning()
@@ -256,7 +358,9 @@ func Test_BlockVersioningController_RestoreMultipleAttributes(t *testing.T) {
 	versioning.SetEntityType(cmsstore.VERSIONING_TYPE_BLOCK)
 	versioning.SetContent(`{"content": "<p>Restored content</p>", "status": "active"}`)
 	err = store.VersioningCreate(context.Background(), versioning)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
@@ -267,20 +371,33 @@ func Test_BlockVersioningController_RestoreMultipleAttributes(t *testing.T) {
 			"revision_attributes": {"content", "status"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "success")
-	assert.Contains(t, strings.ToLower(body), "revision attributes restored successfully")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "success") {
+		t.Errorf("Expected body to contain 'success'")
+	}
+	if !strings.Contains(bodyLower, "revision attributes restored successfully") {
+		t.Errorf("Expected body to contain 'revision attributes restored successfully'")
+	}
 }
 
 func Test_BlockVersioningController_VersioningNotFound(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and block
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	block := cmsstore.NewBlock()
 	block.SetName("Test Block")
@@ -289,7 +406,9 @@ func Test_BlockVersioningController_VersioningNotFound(t *testing.T) {
 	block.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
 	block.SetContent("<p>Current content</p>")
 	err = store.BlockCreate(context.Background(), block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
@@ -299,20 +418,33 @@ func Test_BlockVersioningController_VersioningNotFound(t *testing.T) {
 			"versioning_id": {"non-existent-versioning-id"},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, strings.ToLower(body), "error")
-	assert.Contains(t, strings.ToLower(body), "versioning not found")
+	bodyLower := strings.ToLower(body)
+	if !strings.Contains(bodyLower, "error") {
+		t.Errorf("Expected body to contain 'error'")
+	}
+	if !strings.Contains(bodyLower, "versioning not found") {
+		t.Errorf("Expected body to contain 'versioning not found'")
+	}
 }
 
 func Test_BlockVersioningController_EmptyRevisions(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site and block (no versioning entries)
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	block := cmsstore.NewBlock()
 	block.SetName("Test Block")
@@ -321,7 +453,9 @@ func Test_BlockVersioningController_EmptyRevisions(t *testing.T) {
 	block.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
 	block.SetContent("<p>Current content</p>")
 	err = store.BlockCreate(context.Background(), block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
@@ -330,21 +464,35 @@ func Test_BlockVersioningController_EmptyRevisions(t *testing.T) {
 			"block_id": {block.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
 
-	assert.Contains(t, body, "Version")
-	assert.Contains(t, body, "Created")
-	assert.Contains(t, body, "Actions")
+	if !strings.Contains(body, "Version") {
+		t.Errorf("Expected body to contain 'Version'")
+	}
+	if !strings.Contains(body, "Created") {
+		t.Errorf("Expected body to contain 'Created'")
+	}
+	if !strings.Contains(body, "Actions") {
+		t.Errorf("Expected body to contain 'Actions'")
+	}
 }
 
 func Test_BlockVersioningController_DifferentBlockTypes(t *testing.T) {
 	store, err := testutils.InitStore(":memory:")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
 
 	// Seed a site
 	site, err := testutils.SeedSite(store, "Test Site")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to seed site: %v", err)
+	}
 
 	handler := initBlockVersioningHandler(store)
 
@@ -356,7 +504,9 @@ func Test_BlockVersioningController_DifferentBlockTypes(t *testing.T) {
 	htmlBlock.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
 	htmlBlock.SetContent("<p>HTML content</p>")
 	err = store.BlockCreate(context.Background(), htmlBlock)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	// Create versioning for HTML block
 	versioning1 := cmsstore.NewVersioning()
@@ -364,17 +514,27 @@ func Test_BlockVersioningController_DifferentBlockTypes(t *testing.T) {
 	versioning1.SetEntityType(cmsstore.VERSIONING_TYPE_BLOCK)
 	versioning1.SetContent(`{"content": "<p>HTML version 1</p>"}`)
 	err = store.VersioningCreate(context.Background(), versioning1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
 		GetValues: map[string][]string{
 			"block_id": {htmlBlock.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, body, "Revisions")
-	assert.Contains(t, body, "Preview")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(body, "Revisions") {
+		t.Errorf("Expected body to contain 'Revisions'")
+	}
+	if !strings.Contains(body, "Preview") {
+		t.Errorf("Expected body to contain 'Preview'")
+	}
 
 	// Test Navbar block versioning
 	navbarBlock := cmsstore.NewBlock()
@@ -383,7 +543,9 @@ func Test_BlockVersioningController_DifferentBlockTypes(t *testing.T) {
 	navbarBlock.SetSiteID(site.ID())
 	navbarBlock.SetStatus(cmsstore.BLOCK_STATUS_ACTIVE)
 	err = store.BlockCreate(context.Background(), navbarBlock)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create block: %v", err)
+	}
 
 	// Create versioning for Navbar block
 	versioning2 := cmsstore.NewVersioning()
@@ -391,17 +553,27 @@ func Test_BlockVersioningController_DifferentBlockTypes(t *testing.T) {
 	versioning2.SetEntityType(cmsstore.VERSIONING_TYPE_BLOCK)
 	versioning2.SetContent(`{"content": "navbar data"}`)
 	err = store.VersioningCreate(context.Background(), versioning2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create versioning: %v", err)
+	}
 
 	body, response, err = test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
 		GetValues: map[string][]string{
 			"block_id": {navbarBlock.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, body, "Revisions")
-	assert.Contains(t, body, "Preview")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(body, "Revisions") {
+		t.Errorf("Expected body to contain 'Revisions'")
+	}
+	if !strings.Contains(body, "Preview") {
+		t.Errorf("Expected body to contain 'Preview'")
+	}
 
 	// Test preview modal shows content for navbar block
 	body, response, err = test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
@@ -410,7 +582,13 @@ func Test_BlockVersioningController_DifferentBlockTypes(t *testing.T) {
 			"versioning_id": {versioning2.ID()},
 		},
 	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Contains(t, body, "navbar data")
+	if err != nil {
+		t.Fatalf("Failed to call endpoint: %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, response.StatusCode)
+	}
+	if !strings.Contains(body, "navbar data") {
+		t.Errorf("Expected body to contain 'navbar data'")
+	}
 }
