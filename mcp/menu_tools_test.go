@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/dracory/cmsstore"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -23,7 +21,9 @@ func TestMenuGet(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a menu
 	menu := cmsstore.NewMenu()
@@ -33,7 +33,9 @@ func TestMenuGet(t *testing.T) {
 	menu.SetHandle("main-menu")
 	menu.SetMemo("Test menu")
 	err = store.MenuCreate(context.Background(), menu)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu: %v", err)
+	}
 
 	tests := []struct {
 		name        string
@@ -84,58 +86,100 @@ func TestMenuGet(t *testing.T) {
 			}
 
 			getBody, err := json.Marshal(getPayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			getResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(getBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 			defer getResp.Body.Close()
 
 			getRespBytes, err := io.ReadAll(getResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to read response: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(getRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal response: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var menuData map[string]any
 				err = json.Unmarshal([]byte(text), &menuData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal menu data: %v", err)
+				}
 
-				assert.Equal(t, tt.expectedID, menuData["id"].(string))
-				assert.Equal(t, "Main Menu", menuData["name"].(string))
-				assert.Equal(t, cmsstore.MENU_STATUS_ACTIVE, menuData["status"].(string))
-				assert.Equal(t, cmsstore.ShortenID(site.ID()), menuData["site_id"].(string))
+				if menuData["id"].(string) != tt.expectedID {
+					t.Errorf("Expected id '%s', got '%s'", tt.expectedID, menuData["id"].(string))
+				}
+				if menuData["name"].(string) != "Main Menu" {
+					t.Errorf("Expected name 'Main Menu', got '%s'", menuData["name"].(string))
+				}
+				if menuData["status"].(string) != cmsstore.MENU_STATUS_ACTIVE {
+					t.Errorf("Expected status '%s', got '%s'", cmsstore.MENU_STATUS_ACTIVE, menuData["status"].(string))
+				}
+				if menuData["site_id"].(string) != cmsstore.ShortenID(site.ID()) {
+					t.Errorf("Expected site_id '%s', got '%s'", cmsstore.ShortenID(site.ID()), menuData["site_id"].(string))
+				}
 
 				// Check for new fields
-				assert.Contains(t, menuData, "memo")
-				assert.Contains(t, menuData, "created_at")
-				assert.Contains(t, menuData, "updated_at")
-				// assert.Contains(t, menuData, "soft_deleted_at") // commented out to match tool response
-				assert.Contains(t, menuData, "metas")
+				if _, ok := menuData["memo"]; !ok {
+					t.Errorf("Expected menuData to contain 'memo'")
+				}
+				if _, ok := menuData["created_at"]; !ok {
+					t.Errorf("Expected menuData to contain 'created_at'")
+				}
+				if _, ok := menuData["updated_at"]; !ok {
+					t.Errorf("Expected menuData to contain 'updated_at'")
+				}
+				// if _, ok := menuData["soft_deleted_at"]; !ok {
+				// 	t.Errorf("Expected menuData to contain 'soft_deleted_at'")
+				// }
+				if _, ok := menuData["metas"]; !ok {
+					t.Errorf("Expected menuData to contain 'metas'")
+				}
 			}
 		})
 	}
@@ -150,7 +194,9 @@ func TestMenuList(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create menus with different properties
 	activeMenu := cmsstore.NewMenu()
@@ -160,7 +206,9 @@ func TestMenuList(t *testing.T) {
 	activeMenu.SetHandle("main-menu")
 	activeMenu.SetMemo("Active menu")
 	err = store.MenuCreate(context.Background(), activeMenu)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu: %v", err)
+	}
 
 	draftMenu := cmsstore.NewMenu()
 	draftMenu.SetName("Draft Menu")
@@ -169,7 +217,9 @@ func TestMenuList(t *testing.T) {
 	draftMenu.SetHandle("draft-menu")
 	draftMenu.SetMemo("Draft menu")
 	err = store.MenuCreate(context.Background(), draftMenu)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu: %v", err)
+	}
 
 	// Test listing all menus
 	t.Run("list all menus", func(t *testing.T) {
@@ -187,42 +237,66 @@ func TestMenuList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var menuList map[string]any
 		err = json.Unmarshal([]byte(text), &menuList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal menu list: %v", err)
+		}
 
 		items, ok := menuList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return both menus
-		assert.Equal(t, 2, len(items), "Expected both menus to be returned")
+		if len(items) != 2 {
+			t.Errorf("Expected both menus to be returned, got %d", len(items))
+		}
 	})
 
 	// Test filtering by site_id
@@ -242,45 +316,71 @@ func TestMenuList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var menuList map[string]any
 		err = json.Unmarshal([]byte(text), &menuList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal menu list: %v", err)
+		}
 
 		items, ok := menuList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return both menus for the site
-		assert.Equal(t, 2, len(items), "Expected both menus for the site")
+		if len(items) != 2 {
+			t.Errorf("Expected both menus for the site, got %d", len(items))
+		}
 		for _, item := range items {
 			itemMap := item.(map[string]interface{})
-			assert.Equal(t, cmsstore.ShortenID(site.ID()), itemMap["site_id"].(string))
+			if itemMap["site_id"].(string) != cmsstore.ShortenID(site.ID()) {
+				t.Errorf("Expected site_id '%s', got '%s'", cmsstore.ShortenID(site.ID()), itemMap["site_id"].(string))
+			}
 		}
 	})
 
@@ -301,44 +401,70 @@ func TestMenuList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var menuList map[string]any
 		err = json.Unmarshal([]byte(text), &menuList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal menu list: %v", err)
+		}
 
 		items, ok := menuList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return only active menu
-		assert.Equal(t, 1, len(items), "Expected only active menu")
+		if len(items) != 1 {
+			t.Errorf("Expected only active menu, got %d", len(items))
+		}
 		item := items[0].(map[string]interface{})
-		assert.Equal(t, cmsstore.MENU_STATUS_ACTIVE, item["status"].(string))
+		if item["status"].(string) != cmsstore.MENU_STATUS_ACTIVE {
+			t.Errorf("Expected status '%s', got '%s'", cmsstore.MENU_STATUS_ACTIVE, item["status"].(string))
+		}
 	})
 
 	// Test filtering by handle
@@ -358,44 +484,70 @@ func TestMenuList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var menuList map[string]any
 		err = json.Unmarshal([]byte(text), &menuList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal menu list: %v", err)
+		}
 
 		items, ok := menuList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return only the menu with matching handle
-		assert.Equal(t, 1, len(items), "Expected only menu with matching handle")
+		if len(items) != 1 {
+			t.Errorf("Expected only menu with matching handle, got %d", len(items))
+		}
 		item := items[0].(map[string]interface{})
-		assert.Equal(t, "main-menu", item["handle"].(string))
+		if item["handle"].(string) != "main-menu" {
+			t.Errorf("Expected handle 'main-menu', got '%s'", item["handle"].(string))
+		}
 	})
 
 	// Test pagination
@@ -414,42 +566,66 @@ func TestMenuList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var menuList map[string]any
 		err = json.Unmarshal([]byte(text), &menuList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal menu list: %v", err)
+		}
 
 		items, ok := menuList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return only 1 menu due to limit
-		assert.Equal(t, 1, len(items), "Expected only 1 menu due to limit")
+		if len(items) != 1 {
+			t.Errorf("Expected only 1 menu due to limit, got %d", len(items))
+		}
 	})
 }
 
@@ -462,7 +638,9 @@ func TestMenuUpsert_Create(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	tests := []struct {
 		name        string
@@ -524,50 +702,80 @@ func TestMenuUpsert_Create(t *testing.T) {
 			}
 
 			upsertBody, err := json.Marshal(upsertPayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			upsertResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(upsertBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 			defer upsertResp.Body.Close()
 
 			upsertRespBytes, err := io.ReadAll(upsertResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(upsertRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var menuData map[string]any
 				err = json.Unmarshal([]byte(text), &menuData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal menu data: %v", err)
+				}
 
-				assert.Equal(t, tt.menuName, menuData["name"].(string))
-				assert.Equal(t, tt.status, menuData["status"].(string))
-				assert.Equal(t, cmsstore.ShortenID(site.ID()), menuData["site_id"].(string))
+				if menuData["name"].(string) != tt.menuName {
+					t.Errorf("Expected name '%s', got '%s'", tt.menuName, menuData["name"].(string))
+				}
+				if menuData["status"].(string) != tt.status {
+					t.Errorf("Expected status '%s', got '%s'", tt.status, menuData["status"].(string))
+				}
+				if menuData["site_id"].(string) != cmsstore.ShortenID(site.ID()) {
+					t.Errorf("Expected site_id '%s', got '%s'", cmsstore.ShortenID(site.ID()), menuData["site_id"].(string))
+				}
 			}
 		})
 	}
@@ -582,7 +790,9 @@ func TestMenuUpsert_Update(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a menu
 	menu := cmsstore.NewMenu()
@@ -592,7 +802,9 @@ func TestMenuUpsert_Update(t *testing.T) {
 	menu.SetHandle("original-menu")
 	menu.SetMemo("Original memo")
 	err = store.MenuCreate(context.Background(), menu)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu: %v", err)
+	}
 
 	tests := []struct {
 		name        string
@@ -649,50 +861,80 @@ func TestMenuUpsert_Update(t *testing.T) {
 			}
 
 			upsertBody, err := json.Marshal(upsertPayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			upsertResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(upsertBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 			defer upsertResp.Body.Close()
 
 			upsertRespBytes, err := io.ReadAll(upsertResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(upsertRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var menuData map[string]any
 				err = json.Unmarshal([]byte(text), &menuData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal menu data: %v", err)
+				}
 
-				assert.Equal(t, tt.menuName, menuData["name"].(string))
-				assert.Equal(t, tt.status, menuData["status"].(string))
-				assert.Equal(t, cmsstore.ShortenID(site.ID()), menuData["site_id"].(string))
+				if menuData["name"].(string) != tt.menuName {
+					t.Errorf("Expected name '%s', got '%s'", tt.menuName, menuData["name"].(string))
+				}
+				if menuData["status"].(string) != tt.status {
+					t.Errorf("Expected status '%s', got '%s'", tt.status, menuData["status"].(string))
+				}
+				if menuData["site_id"].(string) != cmsstore.ShortenID(site.ID()) {
+					t.Errorf("Expected site_id '%s', got '%s'", cmsstore.ShortenID(site.ID()), menuData["site_id"].(string))
+				}
 			}
 		})
 	}
@@ -707,7 +949,9 @@ func TestMenuDelete(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a menu
 	menu := cmsstore.NewMenu()
@@ -715,7 +959,9 @@ func TestMenuDelete(t *testing.T) {
 	menu.SetStatus(cmsstore.MENU_STATUS_ACTIVE)
 	menu.SetSiteID(site.ID())
 	err = store.MenuCreate(context.Background(), menu)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu: %v", err)
+	}
 
 	tests := []struct {
 		name        string
@@ -760,7 +1006,9 @@ func TestMenuDelete(t *testing.T) {
 				m.SetStatus(cmsstore.MENU_STATUS_ACTIVE)
 				m.SetSiteID(site.ID())
 				err = store.MenuCreate(context.Background(), m)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to post request: %v", err)
+				}
 
 				if tt.name == "delete menu with full ID" {
 					targetID = m.ID()
@@ -785,48 +1033,74 @@ func TestMenuDelete(t *testing.T) {
 			}
 
 			deleteBody, err := json.Marshal(deletePayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			deleteResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(deleteBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 			defer deleteResp.Body.Close()
 
 			deleteRespBytes, err := io.ReadAll(deleteResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(deleteRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post request: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var deleteData map[string]any
 				err = json.Unmarshal([]byte(text), &deleteData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal delete data: %v", err)
+				}
 
-				assert.Equal(t, tt.expectedID, deleteData["id"].(string))
+				if deleteData["id"].(string) != tt.expectedID {
+					t.Errorf("Expected id '%s', got '%s'", tt.expectedID, deleteData["id"].(string))
+				}
 			}
 		})
 	}
@@ -853,44 +1127,74 @@ func TestMenuUpsert_WithDefaultSite(t *testing.T) {
 	}
 
 	upsertBody, err := json.Marshal(upsertPayload)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to marshal upsert payload: %v", err)
+	}
 
 	upsertResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(upsertBody))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to post upsert request: %v", err)
+	}
 	defer upsertResp.Body.Close()
 
 	upsertRespBytes, err := io.ReadAll(upsertResp.Body)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to read upsert response: %v", err)
+	}
 
 	// Parse the result
 	var response map[string]any
 	err = json.Unmarshal(upsertRespBytes, &response)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal upsert response: %v", err)
+	}
 
 	// Check for success
 	result, ok := response["result"].(map[string]any)
-	require.True(t, ok, "Expected response to have result")
+	if !ok {
+		t.Fatalf("Expected response to have result")
+	}
 
 	content, ok := result["content"].([]any)
-	require.True(t, ok, "Expected response result.content")
-	require.Len(t, content, 1, "Expected response result.content to have one item")
+	if !ok {
+		t.Fatalf("Expected response result.content")
+	}
+	if len(content) != 1 {
+		t.Fatalf("Expected response result.content to have one item")
+	}
 
 	item0, ok := content[0].(map[string]any)
-	require.True(t, ok, "Expected response result.content[0] object")
+	if !ok {
+		t.Fatalf("Expected response result.content[0] object")
+	}
 
 	text, ok := item0["text"].(string)
-	require.True(t, ok, "Expected response result.content[0].text")
+	if !ok {
+		t.Fatalf("Expected response result.content[0].text")
+	}
 
 	var menuData map[string]any
 	err = json.Unmarshal([]byte(text), &menuData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal menu data: %v", err)
+	}
 
-	assert.Equal(t, "Default Site Menu", menuData["name"].(string))
-	assert.Equal(t, cmsstore.MENU_STATUS_ACTIVE, menuData["status"].(string))
-	assert.Equal(t, "default-menu", menuData["handle"].(string))
-	assert.Equal(t, "Menu with default site", menuData["memo"].(string))
+	if menuData["name"].(string) != "Default Site Menu" {
+		t.Errorf("Expected name 'Default Site Menu', got '%s'", menuData["name"].(string))
+	}
+	if menuData["status"].(string) != cmsstore.MENU_STATUS_ACTIVE {
+		t.Errorf("Expected status '%s', got '%s'", cmsstore.MENU_STATUS_ACTIVE, menuData["status"].(string))
+	}
+	if menuData["handle"].(string) != "default-menu" {
+		t.Errorf("Expected handle 'default-menu', got '%s'", menuData["handle"].(string))
+	}
+	if menuData["memo"].(string) != "Menu with default site" {
+		t.Errorf("Expected memo 'Menu with default site', got '%s'", menuData["memo"].(string))
+	}
 	// site_id should be set to the default site
-	assert.NotEmpty(t, menuData["site_id"].(string))
+	if menuData["site_id"].(string) == "" {
+		t.Errorf("Expected site_id to not be empty")
+	}
 }
 
 func TestMenuList_WithSoftDeleted(t *testing.T) {
@@ -902,7 +1206,9 @@ func TestMenuList_WithSoftDeleted(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Create a menu
 	menu := cmsstore.NewMenu()
@@ -910,11 +1216,15 @@ func TestMenuList_WithSoftDeleted(t *testing.T) {
 	menu.SetStatus(cmsstore.MENU_STATUS_ACTIVE)
 	menu.SetSiteID(site.ID())
 	err = store.MenuCreate(context.Background(), menu)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu: %v", err)
+	}
 
 	// Soft delete the menu
 	err = store.MenuSoftDeleteByID(context.Background(), menu.ID())
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to soft delete menu: %v", err)
+	}
 
 	// Test listing without include_soft_deleted (should not include soft deleted)
 	t.Run("list menus without soft deleted", func(t *testing.T) {
@@ -933,42 +1243,66 @@ func TestMenuList_WithSoftDeleted(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var menuList map[string]any
 		err = json.Unmarshal([]byte(text), &menuList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal menu list: %v", err)
+		}
 
 		items, ok := menuList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should not return the soft deleted menu
-		assert.Equal(t, 0, len(items), "Expected no menus (soft deleted should be excluded)")
+		if len(items) != 0 {
+			t.Errorf("Expected no menus (soft deleted should be excluded), got %d", len(items))
+		}
 	})
 
 	// Test listing with include_soft_deleted (should include soft deleted)
@@ -989,42 +1323,66 @@ func TestMenuList_WithSoftDeleted(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var menuList map[string]any
 		err = json.Unmarshal([]byte(text), &menuList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal menu list: %v", err)
+		}
 
 		items, ok := menuList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return the soft deleted menu
-		assert.Equal(t, 1, len(items), "Expected 1 menu (soft deleted should be included)")
+		if len(items) != 1 {
+			t.Errorf("Expected 1 menu (soft deleted should be included), got %d", len(items))
+		}
 	})
 }
 
@@ -1037,7 +1395,9 @@ func TestMenuList_WithOrdering(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create menus with different names to test ordering
 	menu1 := cmsstore.NewMenu()
@@ -1045,14 +1405,18 @@ func TestMenuList_WithOrdering(t *testing.T) {
 	menu1.SetStatus(cmsstore.MENU_STATUS_ACTIVE)
 	menu1.SetSiteID(site.ID())
 	err = store.MenuCreate(context.Background(), menu1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu1: %v", err)
+	}
 
 	menu2 := cmsstore.NewMenu()
 	menu2.SetName("Beta Menu")
 	menu2.SetStatus(cmsstore.MENU_STATUS_ACTIVE)
 	menu2.SetSiteID(site.ID())
 	err = store.MenuCreate(context.Background(), menu2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu2: %v", err)
+	}
 
 	// Test ordering by name ascending
 	t.Run("list menus ordered by name ascending", func(t *testing.T) {
@@ -1073,44 +1437,72 @@ func TestMenuList_WithOrdering(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var menuList map[string]any
 		err = json.Unmarshal([]byte(text), &menuList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal menu list: %v", err)
+		}
 
 		items, ok := menuList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return menus in alphabetical order
-		assert.Equal(t, 2, len(items), "Expected 2 menus")
-		assert.Equal(t, "Alpha Menu", items[0].(map[string]interface{})["name"].(string))
-		assert.Equal(t, "Beta Menu", items[1].(map[string]interface{})["name"].(string))
+		if len(items) != 2 {
+			t.Errorf("Expected 2 menus, got %d", len(items))
+		}
+		if items[0].(map[string]interface{})["name"].(string) != "Alpha Menu" {
+			t.Errorf("Expected first menu name 'Alpha Menu', got '%s'", items[0].(map[string]interface{})["name"].(string))
+		}
+		if items[1].(map[string]interface{})["name"].(string) != "Beta Menu" {
+			t.Errorf("Expected second menu name 'Beta Menu', got '%s'", items[1].(map[string]interface{})["name"].(string))
+		}
 	})
 
 	// Test ordering by name descending
@@ -1132,43 +1524,71 @@ func TestMenuList_WithOrdering(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post request: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var menuList map[string]any
 		err = json.Unmarshal([]byte(text), &menuList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal menu list: %v", err)
+		}
 
 		items, ok := menuList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return menus in reverse alphabetical order
-		assert.Equal(t, 2, len(items), "Expected 2 menus")
-		assert.Equal(t, "Beta Menu", items[0].(map[string]interface{})["name"].(string))
-		assert.Equal(t, "Alpha Menu", items[1].(map[string]interface{})["name"].(string))
+		if len(items) != 2 {
+			t.Errorf("Expected 2 menus, got %d", len(items))
+		}
+		if items[0].(map[string]interface{})["name"].(string) != "Beta Menu" {
+			t.Errorf("Expected first menu name 'Beta Menu', got '%s'", items[0].(map[string]interface{})["name"].(string))
+		}
+		if items[1].(map[string]interface{})["name"].(string) != "Alpha Menu" {
+			t.Errorf("Expected second menu name 'Alpha Menu', got '%s'", items[1].(map[string]interface{})["name"].(string))
+		}
 	})
 }

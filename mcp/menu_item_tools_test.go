@@ -23,7 +23,9 @@ func TestMenuItemGet(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a menu
 	menu := cmsstore.NewMenu()
@@ -33,7 +35,9 @@ func TestMenuItemGet(t *testing.T) {
 	menu.SetHandle("main-menu")
 	menu.SetMemo("Test menu")
 	err = store.MenuCreate(context.Background(), menu)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu: %v", err)
+	}
 
 	// Create a menu item
 	menuItem := cmsstore.NewMenuItem()
@@ -45,7 +49,9 @@ func TestMenuItemGet(t *testing.T) {
 	menuItem.SetHandle("home")
 	menuItem.SetMemo("Home page link")
 	err = store.MenuItemCreate(context.Background(), menuItem)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create menu item: %v", err)
+	}
 
 	tests := []struct {
 		name        string
@@ -96,63 +102,112 @@ func TestMenuItemGet(t *testing.T) {
 			}
 
 			getBody, err := json.Marshal(getPayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to marshal get payload: %v", err)
+			}
 
 			getResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(getBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post get request: %v", err)
+			}
 			defer getResp.Body.Close()
 
 			getRespBytes, err := io.ReadAll(getResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to read get response: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(getRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal get response: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var menuItemData map[string]any
 				err = json.Unmarshal([]byte(text), &menuItemData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal menu item data: %v", err)
+				}
 
-				assert.Equal(t, tt.expectedID, menuItemData["id"].(string))
-				assert.Equal(t, "Home", menuItemData["name"].(string))
-				assert.Equal(t, "/", menuItemData["url"].(string))
-				assert.Equal(t, "_self", menuItemData["target"].(string))
-				assert.Equal(t, cmsstore.MENU_ITEM_STATUS_ACTIVE, menuItemData["status"].(string))
-				assert.Equal(t, cmsstore.ShortenID(menu.ID()), menuItemData["menu_id"].(string))
+				if menuItemData["id"].(string) != tt.expectedID {
+					t.Errorf("Expected id '%s', got '%s'", tt.expectedID, menuItemData["id"].(string))
+				}
+				if menuItemData["name"].(string) != "Home" {
+					t.Errorf("Expected name 'Home', got '%s'", menuItemData["name"].(string))
+				}
+				if menuItemData["url"].(string) != "/" {
+					t.Errorf("Expected url '/', got '%s'", menuItemData["url"].(string))
+				}
+				if menuItemData["target"].(string) != "_self" {
+					t.Errorf("Expected target '_self', got '%s'", menuItemData["target"].(string))
+				}
+				if menuItemData["status"].(string) != cmsstore.MENU_ITEM_STATUS_ACTIVE {
+					t.Errorf("Expected status '%s', got '%s'", cmsstore.MENU_ITEM_STATUS_ACTIVE, menuItemData["status"].(string))
+				}
+				if menuItemData["menu_id"].(string) != cmsstore.ShortenID(menu.ID()) {
+					t.Errorf("Expected menu_id '%s', got '%s'", cmsstore.ShortenID(menu.ID()), menuItemData["menu_id"].(string))
+				}
 
 				// Check for new fields
-				assert.Contains(t, menuItemData, "memo")
-				assert.Contains(t, menuItemData, "page_id")
-				assert.Contains(t, menuItemData, "parent_id")
-				assert.Contains(t, menuItemData, "sequence")
-				assert.Contains(t, menuItemData, "created_at")
-				assert.Contains(t, menuItemData, "updated_at")
-				// assert.Contains(t, menuItemData, "soft_deleted_at") // commented out to match tool response
-				assert.Contains(t, menuItemData, "metas")
+				if _, ok := menuItemData["memo"]; !ok {
+					t.Errorf("Expected menuItemData to have 'memo' key")
+				}
+				if _, ok := menuItemData["page_id"]; !ok {
+					t.Errorf("Expected menuItemData to have 'page_id' key")
+				}
+				if _, ok := menuItemData["parent_id"]; !ok {
+					t.Errorf("Expected menuItemData to have 'parent_id' key")
+				}
+				if _, ok := menuItemData["sequence"]; !ok {
+					t.Errorf("Expected menuItemData to have 'sequence' key")
+				}
+				if _, ok := menuItemData["created_at"]; !ok {
+					t.Errorf("Expected menuItemData to have 'created_at' key")
+				}
+				if _, ok := menuItemData["updated_at"]; !ok {
+					t.Errorf("Expected menuItemData to have 'updated_at' key")
+				}
+				if _, ok := menuItemData["metas"]; !ok {
+					t.Errorf("Expected menuItemData to have 'metas' key")
+				}
 			}
 		})
 	}
