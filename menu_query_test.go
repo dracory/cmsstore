@@ -1,9 +1,8 @@
 package cmsstore
 
 import (
+	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestMenuQueryDefaults(t *testing.T) {
@@ -311,52 +310,83 @@ func TestMenuQuerySortOrder(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasSortOrder())
+	if query.HasSortOrder() {
+		t.Errorf("expected HasSortOrder to be false")
+	}
 
 	// Test setting value
 	sortOrder := "asc"
 	query.SetSortOrder(sortOrder)
-	require.True(t, query.HasSortOrder())
-	require.Equal(t, sortOrder, query.SortOrder())
+	if !query.HasSortOrder() {
+		t.Errorf("expected HasSortOrder to be true")
+	}
+	if query.SortOrder() != sortOrder {
+		t.Errorf("expected SortOrder %q, got %q", sortOrder, query.SortOrder())
+	}
 }
 
 func TestMenuQueryStatus(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasStatus())
+	if query.HasStatus() {
+		t.Errorf("expected HasStatus to be false")
+	}
 
 	// Test setting value
 	status := "active"
 	query.SetStatus(status)
-	require.True(t, query.HasStatus())
-	require.Equal(t, status, query.Status())
+	if !query.HasStatus() {
+		t.Errorf("expected HasStatus to be true")
+	}
+	if query.Status() != status {
+		t.Errorf("expected Status %q, got %q", status, query.Status())
+	}
 }
 
 func TestMenuQueryStatusIn(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasStatusIn())
+	if query.HasStatusIn() {
+		t.Errorf("expected HasStatusIn to be false")
+	}
 
 	// Test setting value
 	statuses := []string{"active", "inactive"}
 	query.SetStatusIn(statuses)
-	require.True(t, query.HasStatusIn())
-	require.Equal(t, statuses, query.StatusIn())
+	if !query.HasStatusIn() {
+		t.Errorf("expected HasStatusIn to be true")
+	}
+	if len(query.StatusIn()) != len(statuses) {
+		t.Errorf("expected StatusIn length %d, got %d", len(statuses), len(query.StatusIn()))
+	}
+	for i, status := range statuses {
+		if query.StatusIn()[i] != status {
+			t.Errorf("expected StatusIn[%d] %q, got %q", i, status, query.StatusIn()[i])
+		}
+	}
 }
 
 func TestMenuQueryCountOnly(t *testing.T) {
 	query := MenuQuery()
 
 	// Test default
-	require.False(t, query.HasCountOnly())
-	require.False(t, query.IsCountOnly())
+	if query.HasCountOnly() {
+		t.Errorf("expected HasCountOnly to be false")
+	}
+	if query.IsCountOnly() {
+		t.Errorf("expected IsCountOnly to be false")
+	}
 
 	// Test setting value
 	query.SetCountOnly(true)
-	require.True(t, query.HasCountOnly())
-	require.True(t, query.IsCountOnly())
+	if !query.HasCountOnly() {
+		t.Errorf("expected HasCountOnly to be true")
+	}
+	if !query.IsCountOnly() {
+		t.Errorf("expected IsCountOnly to be true")
+	}
 }
 
 func TestMenuQueryValidation(t *testing.T) {
@@ -364,81 +394,127 @@ func TestMenuQueryValidation(t *testing.T) {
 
 	// Test valid query
 	err := query.Validate()
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 
 	// Test invalid created_at_gte
 	query.SetCreatedAtGte("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "created_at_gte cannot be empty")
+	if err == nil {
+		t.Error("expected error for empty created_at_gte")
+	}
+	if !strings.Contains(err.Error(), "created_at_gte cannot be empty") {
+		t.Errorf("expected error to contain 'created_at_gte cannot be empty'")
+	}
 
 	// Test invalid created_at_lte
 	query = MenuQuery()
 	query.SetCreatedAtLte("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "created_at_lte cannot be empty")
+	if err == nil {
+		t.Error("expected error for empty created_at_lte")
+	}
+	if !strings.Contains(err.Error(), "created_at_lte cannot be empty") {
+		t.Errorf("expected error to contain 'created_at_lte cannot be empty'")
+	}
 
 	// Test invalid id
 	query = MenuQuery()
 	query.SetID("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "id cannot be empty")
+	if err == nil {
+		t.Error("expected error for empty id")
+	}
+	if !strings.Contains(err.Error(), "id cannot be empty") {
+		t.Errorf("expected error to contain 'id cannot be empty'")
+	}
 
 	// Test invalid id_in
 	query = MenuQuery()
 	query.SetIDIn([]string{})
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "id_in cannot be empty array")
+	if err == nil {
+		t.Error("expected error for empty id_in")
+	}
+	if !strings.Contains(err.Error(), "id_in cannot be empty array") {
+		t.Errorf("expected error to contain 'id_in cannot be empty array'")
+	}
 
 	// Test invalid limit
 	query = MenuQuery()
 	query.SetLimit(-1)
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "limit cannot be negative")
+	if err == nil {
+		t.Error("expected error for negative limit")
+	}
+	if !strings.Contains(err.Error(), "limit cannot be negative") {
+		t.Errorf("expected error to contain 'limit cannot be negative'")
+	}
 
 	// Test invalid handle
 	query = MenuQuery()
 	query.SetHandle("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "handle cannot be empty")
+	if err == nil {
+		t.Error("expected error for empty handle")
+	}
+	if !strings.Contains(err.Error(), "handle cannot be empty") {
+		t.Errorf("expected error to contain 'handle cannot be empty'")
+	}
 
 	// Test invalid name_like
 	query = MenuQuery()
 	query.SetNameLike("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "name_like cannot be empty")
+	if err == nil {
+		t.Error("expected error for empty name_like")
+	}
+	if !strings.Contains(err.Error(), "name_like cannot be empty") {
+		t.Errorf("expected error to contain 'name_like cannot be empty'")
+	}
 
 	// Test invalid offset
 	query = MenuQuery()
 	query.SetOffset(-1)
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "offset cannot be negative")
+	if err == nil {
+		t.Error("expected error for negative offset")
+	}
+	if !strings.Contains(err.Error(), "offset cannot be negative") {
+		t.Errorf("expected error to contain 'offset cannot be negative'")
+	}
 
 	// Test invalid site_id
 	query = MenuQuery()
 	query.SetSiteID("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "site_id cannot be empty")
+	if err == nil {
+		t.Error("expected error for empty site_id")
+	}
+	if !strings.Contains(err.Error(), "site_id cannot be empty") {
+		t.Errorf("expected error to contain 'site_id cannot be empty'")
+	}
 
 	// Test invalid status
 	query = MenuQuery()
 	query.SetStatus("")
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "status cannot be empty")
+	if err == nil {
+		t.Error("expected error for empty status")
+	}
+	if !strings.Contains(err.Error(), "status cannot be empty") {
+		t.Errorf("expected error to contain 'status cannot be empty'")
+	}
 
 	// Test invalid status_in
 	query = MenuQuery()
 	query.SetStatusIn([]string{})
 	err = query.Validate()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "status_in cannot be empty array")
+	if err == nil {
+		t.Error("expected error for empty status_in")
+	}
+	if !strings.Contains(err.Error(), "status_in cannot be empty array") {
+		t.Errorf("expected error to contain 'status_in cannot be empty array'")
+	}
 }
