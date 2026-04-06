@@ -2,87 +2,148 @@ package cmsstore
 
 import (
 	"encoding/json"
+	"slices"
 	"testing"
 
 	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewSiteDefaults(t *testing.T) {
 	site := NewSite()
 
-	require.NotEmpty(t, site.ID())
-	require.NotEmpty(t, site.CreatedAt())
-	require.NotEmpty(t, site.UpdatedAt())
-	require.Equal(t, TEMPLATE_STATUS_DRAFT, site.Status())
-	require.Equal(t, sb.MAX_DATETIME, site.SoftDeletedAt())
-	require.False(t, site.IsSoftDeleted())
+	// Test default values
+	if len(site.ID()) == 0 {
+		t.Error("Expected ID to be non-empty")
+	}
+	if len(site.CreatedAt()) == 0 {
+		t.Error("Expected CreatedAt to be non-empty")
+	}
+	if len(site.UpdatedAt()) == 0 {
+		t.Error("Expected UpdatedAt to be non-empty")
+	}
+	if site.Status() != TEMPLATE_STATUS_DRAFT {
+		t.Errorf("Expected Status %s, got %s", TEMPLATE_STATUS_DRAFT, site.Status())
+	}
+	if site.SoftDeletedAt() != sb.MAX_DATETIME {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", sb.MAX_DATETIME, site.SoftDeletedAt())
+	}
+	if site.IsSoftDeleted() {
+		t.Error("Expected IsSoftDeleted to be false")
+	}
 
 	metas, err := site.Metas()
-	require.NoError(t, err)
-	require.Empty(t, metas)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if len(metas) != 0 {
+		t.Errorf("Expected empty metas, got %v", metas)
+	}
 
 	createdCarbon := site.CreatedAtCarbon()
-	require.NotNil(t, createdCarbon)
-	require.Equal(t, site.CreatedAt(), createdCarbon.ToDateTimeString(carbon.UTC))
+	if createdCarbon == nil {
+		t.Error("Expected CreatedAtCarbon to be non-nil")
+	}
+	if site.CreatedAt() != createdCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected CreatedAt %s, got %s", site.CreatedAt(), createdCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	updatedCarbon := site.UpdatedAtCarbon()
-	require.NotNil(t, updatedCarbon)
-	require.Equal(t, site.UpdatedAt(), updatedCarbon.ToDateTimeString(carbon.UTC))
+	if updatedCarbon == nil {
+		t.Error("Expected UpdatedAtCarbon to be non-nil")
+	}
+	if site.UpdatedAt() != updatedCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected UpdatedAt %s, got %s", site.UpdatedAt(), updatedCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	softDeletedCarbon := site.SoftDeletedAtCarbon()
-	require.NotNil(t, softDeletedCarbon)
-	require.True(t, softDeletedCarbon.Gte(carbon.Now(carbon.UTC)))
+	if softDeletedCarbon == nil {
+		t.Error("Expected SoftDeletedAtCarbon to be non-nil")
+	}
+	if !softDeletedCarbon.Gte(carbon.Now(carbon.UTC)) {
+		t.Error("Expected SoftDeletedAtCarbon to be greater than or equal to now")
+	}
 }
 
 func TestSiteGetterMethods(t *testing.T) {
 	site := NewSite()
 
 	// Test default values
-	require.Equal(t, "", site.Handle())
-	require.Equal(t, "", site.Memo())
-	require.Equal(t, "", site.Name())
+	if site.Handle() != "" {
+		t.Errorf("Expected empty Handle, got %s", site.Handle())
+	}
+	if site.Memo() != "" {
+		t.Errorf("Expected empty Memo, got %s", site.Memo())
+	}
+	if site.Name() != "" {
+		t.Errorf("Expected empty Name, got %s", site.Name())
+	}
 }
 
 func TestSiteStatusMethods(t *testing.T) {
 	site := NewSite()
 
 	// Test default status (DRAFT)
-	require.False(t, site.IsActive())
-	require.False(t, site.IsInactive())
+	if site.IsActive() {
+		t.Error("Expected IsActive to be false")
+	}
+	if site.IsInactive() {
+		t.Error("Expected IsInactive to be false")
+	}
 
 	// Test ACTIVE status
 	site.SetStatus(PAGE_STATUS_ACTIVE)
-	require.True(t, site.IsActive())
-	require.False(t, site.IsInactive())
+	if !site.IsActive() {
+		t.Error("Expected IsActive to be true")
+	}
+	if site.IsInactive() {
+		t.Error("Expected IsInactive to be false")
+	}
 
 	// Test INACTIVE status
 	site.SetStatus(PAGE_STATUS_INACTIVE)
-	require.False(t, site.IsActive())
-	require.True(t, site.IsInactive())
+	if site.IsActive() {
+		t.Error("Expected IsActive to be false")
+	}
+	if !site.IsInactive() {
+		t.Error("Expected IsInactive to be true")
+	}
 
 	// Test other status values
 	site.SetStatus("unknown")
-	require.False(t, site.IsActive())
-	require.False(t, site.IsInactive())
+	if site.IsActive() {
+		t.Error("Expected IsActive to be false")
+	}
+	if site.IsInactive() {
+		t.Error("Expected IsInactive to be false")
+	}
 }
 
 func TestSiteSoftDeleteMethods(t *testing.T) {
 	site := NewSite()
-	require.False(t, site.IsSoftDeleted())
+	if site.IsSoftDeleted() {
+		t.Error("Expected IsSoftDeleted to be false")
+	}
 
 	// Test with future date
 	future := carbon.Now(carbon.UTC).AddHour()
 	site.SetSoftDeletedAt(future.ToDateTimeString(carbon.UTC))
-	require.False(t, site.IsSoftDeleted())
-	require.Equal(t, future.ToDateTimeString(carbon.UTC), site.SoftDeletedAt())
+	if site.IsSoftDeleted() {
+		t.Error("Expected IsSoftDeleted to be false")
+	}
+	if site.SoftDeletedAt() != future.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", future.ToDateTimeString(carbon.UTC), site.SoftDeletedAt())
+	}
 
 	// Test with past date
 	past := carbon.Now(carbon.UTC).SubHour()
 	site.SetSoftDeletedAt(past.ToDateTimeString(carbon.UTC))
-	require.True(t, site.IsSoftDeleted())
-	require.Equal(t, past.ToDateTimeString(carbon.UTC), site.SoftDeletedAt())
+	if !site.IsSoftDeleted() {
+		t.Error("Expected IsSoftDeleted to be true")
+	}
+	if site.SoftDeletedAt() != past.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", past.ToDateTimeString(carbon.UTC), site.SoftDeletedAt())
+	}
 }
 
 func TestSiteMetasMethods(t *testing.T) {
@@ -90,38 +151,72 @@ func TestSiteMetasMethods(t *testing.T) {
 
 	// Test empty metas
 	metas, err := site.Metas()
-	require.NoError(t, err)
-	require.Empty(t, metas)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if len(metas) != 0 {
+		t.Errorf("Expected empty metas, got %v", metas)
+	}
 
 	// Test Meta lookup on empty metas
-	require.Equal(t, "", site.Meta("nonexistent"))
+	if site.Meta("nonexistent") != "" {
+		t.Errorf("Expected empty Meta, got %s", site.Meta("nonexistent"))
+	}
 
 	// Test SetMetas
 	err = site.SetMetas(map[string]string{"layout": "main", "theme": "dark"})
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 
 	metas, err = site.Metas()
-	require.NoError(t, err)
-	require.Equal(t, "main", metas["layout"])
-	require.Equal(t, "dark", metas["theme"])
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if metas["layout"] != "main" {
+		t.Errorf("Expected layout 'main', got %s", metas["layout"])
+	}
+	if metas["theme"] != "dark" {
+		t.Errorf("Expected theme 'dark', got %s", metas["theme"])
+	}
 
 	// Test Meta lookup
-	require.Equal(t, "main", site.Meta("layout"))
-	require.Equal(t, "dark", site.Meta("theme"))
-	require.Equal(t, "", site.Meta("nonexistent"))
+	if site.Meta("layout") != "main" {
+		t.Errorf("Expected layout 'main', got %s", site.Meta("layout"))
+	}
+	if site.Meta("theme") != "dark" {
+		t.Errorf("Expected theme 'dark', got %s", site.Meta("theme"))
+	}
+	if site.Meta("nonexistent") != "" {
+		t.Errorf("Expected empty Meta, got %s", site.Meta("nonexistent"))
+	}
 
 	// Test SetMeta
 	err = site.SetMeta("newkey", "newvalue")
-	require.NoError(t, err)
-	require.Equal(t, "newvalue", site.Meta("newkey"))
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if site.Meta("newkey") != "newvalue" {
+		t.Errorf("Expected newkey 'newvalue', got %s", site.Meta("newkey"))
+	}
 
 	// Test UpsertMetas
 	err = site.UpsertMetas(map[string]string{"layout": "sidebar", "color": "blue"})
-	require.NoError(t, err)
-	require.Equal(t, "sidebar", site.Meta("layout")) // Updated
-	require.Equal(t, "dark", site.Meta("theme"))     // Preserved
-	require.Equal(t, "newvalue", site.Meta("newkey")) // Preserved
-	require.Equal(t, "blue", site.Meta("color"))      // Added
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if site.Meta("layout") != "sidebar" { // Updated
+		t.Errorf("Expected layout 'sidebar', got %s", site.Meta("layout"))
+	}
+	if site.Meta("theme") != "dark" { // Preserved
+		t.Errorf("Expected theme 'dark', got %s", site.Meta("theme"))
+	}
+	if site.Meta("newkey") != "newvalue" { // Preserved
+		t.Errorf("Expected newkey 'newvalue', got %s", site.Meta("newkey"))
+	}
+	if site.Meta("color") != "blue" { // Added
+		t.Errorf("Expected color 'blue', got %s", site.Meta("color"))
+	}
 }
 
 func TestSiteDomainNamesMethods(t *testing.T) {
@@ -129,25 +224,41 @@ func TestSiteDomainNamesMethods(t *testing.T) {
 
 	// Test default domain names
 	domainNames, err := site.DomainNames()
-	require.NoError(t, err)
-	require.Empty(t, domainNames)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if len(domainNames) != 0 {
+		t.Errorf("Expected empty domainNames, got %v", domainNames)
+	}
 
 	// Test SetDomainNames
 	domains := []string{"example.com", "www.example.com"}
 	site, err = site.SetDomainNames(domains)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 
 	domainNames, err = site.DomainNames()
-	require.NoError(t, err)
-	require.Equal(t, domains, domainNames)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if !slices.Equal(domainNames, domains) {
+		t.Errorf("Expected domainNames %v, got %v", domains, domainNames)
+	}
 
 	// Test empty domain names
 	site, err = site.SetDomainNames([]string{})
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 
 	domainNames, err = site.DomainNames()
-	require.NoError(t, err)
-	require.Empty(t, domainNames)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if len(domainNames) != 0 {
+		t.Errorf("Expected empty domainNames, got %v", domainNames)
+	}
 }
 
 func TestSiteCreatedAtMethods(t *testing.T) {
@@ -155,20 +266,32 @@ func TestSiteCreatedAtMethods(t *testing.T) {
 
 	// Test default CreatedAt
 	createdAt := site.CreatedAt()
-	require.NotEmpty(t, createdAt)
+	if len(createdAt) == 0 {
+		t.Error("Expected CreatedAt to be non-empty")
+	}
 
 	createdAtCarbon := site.CreatedAtCarbon()
-	require.NotNil(t, createdAtCarbon)
-	require.Equal(t, createdAt, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	if createdAtCarbon == nil {
+		t.Error("Expected CreatedAtCarbon to be non-nil")
+	}
+	if createdAt != createdAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected CreatedAt %s, got %s", createdAt, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	// Test SetCreatedAt
 	testDate := "2023-12-25 10:30:00"
 	site.SetCreatedAt(testDate)
-	require.Equal(t, testDate, site.CreatedAt())
+	if site.CreatedAt() != testDate {
+		t.Errorf("Expected CreatedAt %s, got %s", testDate, site.CreatedAt())
+	}
 
 	createdAtCarbon = site.CreatedAtCarbon()
-	require.NotNil(t, createdAtCarbon)
-	require.Equal(t, testDate, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	if createdAtCarbon == nil {
+		t.Error("Expected CreatedAtCarbon to be non-nil")
+	}
+	if testDate != createdAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected CreatedAt %s, got %s", testDate, createdAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 }
 
 func TestSiteUpdatedAtMethods(t *testing.T) {
@@ -176,20 +299,32 @@ func TestSiteUpdatedAtMethods(t *testing.T) {
 
 	// Test default UpdatedAt
 	updatedAt := site.UpdatedAt()
-	require.NotEmpty(t, updatedAt)
+	if len(updatedAt) == 0 {
+		t.Error("Expected UpdatedAt to be non-empty")
+	}
 
 	updatedAtCarbon := site.UpdatedAtCarbon()
-	require.NotNil(t, updatedAtCarbon)
-	require.Equal(t, updatedAt, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	if updatedAtCarbon == nil {
+		t.Error("Expected UpdatedAtCarbon to be non-nil")
+	}
+	if updatedAt != updatedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected UpdatedAt %s, got %s", updatedAt, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	// Test SetUpdatedAt
 	testDate := "2023-12-25 15:45:00"
 	site.SetUpdatedAt(testDate)
-	require.Equal(t, testDate, site.UpdatedAt())
+	if site.UpdatedAt() != testDate {
+		t.Errorf("Expected UpdatedAt %s, got %s", testDate, site.UpdatedAt())
+	}
 
 	updatedAtCarbon = site.UpdatedAtCarbon()
-	require.NotNil(t, updatedAtCarbon)
-	require.Equal(t, testDate, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	if updatedAtCarbon == nil {
+		t.Error("Expected UpdatedAtCarbon to be non-nil")
+	}
+	if testDate != updatedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected UpdatedAt %s, got %s", testDate, updatedAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 }
 
 func TestSiteSoftDeletedAtMethods(t *testing.T) {
@@ -197,20 +332,32 @@ func TestSiteSoftDeletedAtMethods(t *testing.T) {
 
 	// Test default SoftDeletedAt
 	softDeletedAt := site.SoftDeletedAt()
-	require.Equal(t, sb.MAX_DATETIME, softDeletedAt)
+	if softDeletedAt != sb.MAX_DATETIME {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", sb.MAX_DATETIME, softDeletedAt)
+	}
 
 	softDeletedAtCarbon := site.SoftDeletedAtCarbon()
-	require.NotNil(t, softDeletedAtCarbon)
-	require.Equal(t, softDeletedAt, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	if softDeletedAtCarbon == nil {
+		t.Error("Expected SoftDeletedAtCarbon to be non-nil")
+	}
+	if softDeletedAt != softDeletedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", softDeletedAt, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 
 	// Test SetSoftDeletedAt
 	testDate := "2023-12-25 20:00:00"
 	site.SetSoftDeletedAt(testDate)
-	require.Equal(t, testDate, site.SoftDeletedAt())
+	if site.SoftDeletedAt() != testDate {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", testDate, site.SoftDeletedAt())
+	}
 
 	softDeletedAtCarbon = site.SoftDeletedAtCarbon()
-	require.NotNil(t, softDeletedAtCarbon)
-	require.Equal(t, testDate, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	if softDeletedAtCarbon == nil {
+		t.Error("Expected SoftDeletedAtCarbon to be non-nil")
+	}
+	if testDate != softDeletedAtCarbon.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", testDate, softDeletedAtCarbon.ToDateTimeString(carbon.UTC))
+	}
 }
 
 func TestSiteIDMethods(t *testing.T) {
@@ -218,65 +365,89 @@ func TestSiteIDMethods(t *testing.T) {
 
 	// Test default ID
 	id := site.ID()
-	require.NotEmpty(t, id)
+	if len(id) == 0 {
+		t.Error("Expected ID to be non-empty")
+	}
 
 	// Test SetID
 	newID := "test-site-id-123"
 	site.SetID(newID)
-	require.Equal(t, newID, site.ID())
+	if site.ID() != newID {
+		t.Errorf("Expected ID %s, got %s", newID, site.ID())
+	}
 }
 
 func TestSiteHandleMethods(t *testing.T) {
 	site := NewSite()
 
 	// Test default handle
-	require.Equal(t, "", site.Handle())
+	if site.Handle() != "" {
+		t.Errorf("Expected empty Handle, got %s", site.Handle())
+	}
 
 	// Test SetHandle
 	handle := "test-site-handle"
 	site.SetHandle(handle)
-	require.Equal(t, handle, site.Handle())
+	if site.Handle() != handle {
+		t.Errorf("Expected Handle %s, got %s", handle, site.Handle())
+	}
 }
 
 func TestSiteMemoMethods(t *testing.T) {
 	site := NewSite()
 
 	// Test default memo
-	require.Equal(t, "", site.Memo())
+	if site.Memo() != "" {
+		t.Errorf("Expected empty Memo, got %s", site.Memo())
+	}
 
 	// Test SetMemo
 	memo := "This is a site memo"
 	site.SetMemo(memo)
-	require.Equal(t, memo, site.Memo())
+	if site.Memo() != memo {
+		t.Errorf("Expected Memo %s, got %s", memo, site.Memo())
+	}
 }
 
 func TestSiteNameMethods(t *testing.T) {
 	site := NewSite()
 
 	// Test default name
-	require.Equal(t, "", site.Name())
+	if site.Name() != "" {
+		t.Errorf("Expected empty Name, got %s", site.Name())
+	}
 
 	// Test SetName
 	name := "Test Site Name"
 	site.SetName(name)
-	require.Equal(t, name, site.Name())
+	if site.Name() != name {
+		t.Errorf("Expected Name %s, got %s", name, site.Name())
+	}
 }
 
 func TestSiteStatusSettersAndGetters(t *testing.T) {
 	site := NewSite()
 
 	// Test default status
-	require.Equal(t, TEMPLATE_STATUS_DRAFT, site.Status())
+	if site.Status() != TEMPLATE_STATUS_DRAFT {
+		t.Errorf("Expected Status %s, got %s", TEMPLATE_STATUS_DRAFT, site.Status())
+	}
 
 	// Test SetStatus
 	site.SetStatus(PAGE_STATUS_ACTIVE)
-	require.Equal(t, PAGE_STATUS_ACTIVE, site.Status())
+	if site.Status() != PAGE_STATUS_ACTIVE {
+		t.Errorf("Expected Status %s, got %s", PAGE_STATUS_ACTIVE, site.Status())
+	}
 
 	site.SetStatus(PAGE_STATUS_INACTIVE)
-	require.Equal(t, PAGE_STATUS_INACTIVE, site.Status())
+	if site.Status() != PAGE_STATUS_INACTIVE {
+		t.Errorf("Expected Status %s, got %s", PAGE_STATUS_INACTIVE, site.Status())
+	}
 
 	site.SetStatus("custom-status")
-	require.Equal(t, "custom-status", site.Status())
+	if site.Status() != "custom-status" {
+		t.Errorf("Expected Status %s, got %s", "custom-status", site.Status())
+	}
 }
 
 func TestSiteMarshalToVersioning(t *testing.T) {
@@ -287,25 +458,45 @@ func TestSiteMarshalToVersioning(t *testing.T) {
 	site.SetStatus(PAGE_STATUS_ACTIVE)
 
 	versionedJSON, err := site.MarshalToVersioning()
-	require.NoError(t, err)
-	require.NotEmpty(t, versionedJSON)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if len(versionedJSON) == 0 {
+		t.Error("Expected versionedJSON to be non-empty")
+	}
 
 	// Parse the JSON to verify it contains expected fields
 	var versionedData map[string]string
 	err = json.Unmarshal([]byte(versionedJSON), &versionedData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 
 	// Check that expected fields are present
-	require.Equal(t, "test-handle", versionedData[COLUMN_HANDLE])
-	require.Equal(t, "test-memo", versionedData[COLUMN_MEMO])
-	require.Equal(t, "Test Site", versionedData[COLUMN_NAME])
-	require.Equal(t, PAGE_STATUS_ACTIVE, versionedData[COLUMN_STATUS])
+	if versionedData[COLUMN_HANDLE] != "test-handle" {
+		t.Errorf("Expected handle 'test-handle', got %s", versionedData[COLUMN_HANDLE])
+	}
+	if versionedData[COLUMN_MEMO] != "test-memo" {
+		t.Errorf("Expected memo 'test-memo', got %s", versionedData[COLUMN_MEMO])
+	}
+	if versionedData[COLUMN_NAME] != "Test Site" {
+		t.Errorf("Expected name 'Test Site', got %s", versionedData[COLUMN_NAME])
+	}
+	if versionedData[COLUMN_STATUS] != PAGE_STATUS_ACTIVE {
+		t.Errorf("Expected status %s, got %s", PAGE_STATUS_ACTIVE, versionedData[COLUMN_STATUS])
+	}
 
 	// Check that timestamps and soft delete fields are excluded
 	_, hasCreatedAt := versionedData[COLUMN_CREATED_AT]
 	_, hasUpdatedAt := versionedData[COLUMN_UPDATED_AT]
 	_, hasSoftDeletedAt := versionedData[COLUMN_SOFT_DELETED_AT]
-	require.False(t, hasCreatedAt)
-	require.False(t, hasUpdatedAt)
-	require.False(t, hasSoftDeletedAt)
+	if hasCreatedAt {
+		t.Error("Expected hasCreatedAt to be false")
+	}
+	if hasUpdatedAt {
+		t.Error("Expected hasUpdatedAt to be false")
+	}
+	if hasSoftDeletedAt {
+		t.Error("Expected hasSoftDeletedAt to be false")
+	}
 }
