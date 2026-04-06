@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -116,7 +115,9 @@ func TestBlockListByPageID(t *testing.T) {
 	// Create site
 	site := NewSite().SetName("Test Site")
 	err = store.SiteCreate(ctx, site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create two pages
 	page1 := NewPage().SetSiteID(site.ID()).SetTitle("Page 1")
@@ -266,7 +267,9 @@ func TestSiteDeleteWithPages(t *testing.T) {
 	// Create site
 	site := NewSite().SetName("Test Site")
 	err = store.SiteCreate(ctx, site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create pages for the site
 	var pageIDs []string
@@ -468,7 +471,9 @@ func TestMenuItemHierarchy(t *testing.T) {
 	// Create menu
 	menu := NewMenu().SetSiteID("Site1").SetName("Test Menu")
 	err = store.MenuCreate(ctx, menu)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create parent menu item
 	parent := NewMenuItem().
@@ -553,7 +558,9 @@ func TestMenuItemCircularReference(t *testing.T) {
 	// Create menu
 	menu := NewMenu().SetSiteID("Site1").SetName("Test Menu")
 	err = store.MenuCreate(ctx, menu)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create menu item A
 	itemA := NewMenuItem().
