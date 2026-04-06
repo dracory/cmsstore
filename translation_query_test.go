@@ -411,8 +411,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty created_at_gte")
-	}
-	if !strings.Contains(err.Error(), "created_at_gte cannot be empty") {
+	} else if !strings.Contains(err.Error(), "created_at_gte cannot be empty") {
 		t.Errorf("Expected error message to contain 'created_at_gte cannot be empty', got %s", err.Error())
 	}
 
@@ -422,8 +421,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty created_at_lte")
-	}
-	if !strings.Contains(err.Error(), "created_at_lte cannot be empty") {
+	} else if !strings.Contains(err.Error(), "created_at_lte cannot be empty") {
 		t.Errorf("Expected error message to contain 'created_at_lte cannot be empty', got %s", err.Error())
 	}
 
@@ -433,8 +431,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty handle")
-	}
-	if !strings.Contains(err.Error(), "handle cannot be empty") {
+	} else if !strings.Contains(err.Error(), "handle cannot be empty") {
 		t.Errorf("Expected error message to contain 'handle cannot be empty', got %s", err.Error())
 	}
 
@@ -444,8 +441,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty handle_or_id")
-	}
-	if !strings.Contains(err.Error(), "handle_or_id cannot be empty") {
+	} else if !strings.Contains(err.Error(), "handle_or_id cannot be empty") {
 		t.Errorf("Expected error message to contain 'handle_or_id cannot be empty', got %s", err.Error())
 	}
 
@@ -455,8 +451,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty id")
-	}
-	if !strings.Contains(err.Error(), "id cannot be empty") {
+	} else if !strings.Contains(err.Error(), "id cannot be empty") {
 		t.Errorf("Expected error message to contain 'id cannot be empty', got %s", err.Error())
 	}
 
@@ -466,8 +461,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty id_in")
-	}
-	if !strings.Contains(err.Error(), "id_in cannot be empty array") {
+	} else if !strings.Contains(err.Error(), "id_in cannot be empty array") {
 		t.Errorf("Expected error message to contain 'id_in cannot be empty array', got %s", err.Error())
 	}
 
@@ -477,8 +471,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for negative limit")
-	}
-	if !strings.Contains(err.Error(), "limit cannot be negative") {
+	} else if !strings.Contains(err.Error(), "limit cannot be negative") {
 		t.Errorf("Expected error message to contain 'limit cannot be negative', got %s", err.Error())
 	}
 
@@ -488,8 +481,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty name_like")
-	}
-	if !strings.Contains(err.Error(), "name_like cannot be empty") {
+	} else if !strings.Contains(err.Error(), "name_like cannot be empty") {
 		t.Errorf("Expected error message to contain 'name_like cannot be empty', got %s", err.Error())
 	}
 
@@ -499,8 +491,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for negative offset")
-	}
-	if !strings.Contains(err.Error(), "offset cannot be negative") {
+	} else if !strings.Contains(err.Error(), "offset cannot be negative") {
 		t.Errorf("Expected error message to contain 'offset cannot be negative', got %s", err.Error())
 	}
 
@@ -510,8 +501,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty site_id")
-	}
-	if !strings.Contains(err.Error(), "site_id cannot be empty") {
+	} else if !strings.Contains(err.Error(), "site_id cannot be empty") {
 		t.Errorf("Expected error message to contain 'site_id cannot be empty', got %s", err.Error())
 	}
 
@@ -521,8 +511,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty status")
-	}
-	if !strings.Contains(err.Error(), "status cannot be empty") {
+	} else if !strings.Contains(err.Error(), "status cannot be empty") {
 		t.Errorf("Expected error message to contain 'status cannot be empty', got %s", err.Error())
 	}
 
@@ -532,8 +521,7 @@ func TestTranslationQueryValidation(t *testing.T) {
 	err = query.Validate()
 	if err == nil {
 		t.Error("Expected error for empty status_in")
-	}
-	if !strings.Contains(err.Error(), "status_in cannot be empty array") {
+	} else if !strings.Contains(err.Error(), "status_in cannot be empty array") {
 		t.Errorf("Expected error message to contain 'status_in cannot be empty array', got %s", err.Error())
 	}
 }

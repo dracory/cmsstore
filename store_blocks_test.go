@@ -419,80 +419,70 @@ func TestStoreBlockErrorPaths(t *testing.T) {
 	_, err := store.BlockCount(ctx, BlockQuery())
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "db is nil") {
+	} else if !strings.Contains(err.Error(), "db is nil") {
 		t.Errorf("Expected error message to contain 'db is nil', got %s", err.Error())
 	}
 
 	err = store.BlockCreate(ctx, NewBlock())
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "database is nil") {
+	} else if !strings.Contains(err.Error(), "database is nil") {
 		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
 	err = store.BlockDelete(ctx, NewBlock())
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "database is nil") {
+	} else if !strings.Contains(err.Error(), "database is nil") {
 		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
 	err = store.BlockDeleteByID(ctx, "id")
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "database is nil") {
+	} else if !strings.Contains(err.Error(), "database is nil") {
 		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
 	_, err = store.BlockFindByHandle(ctx, "handle")
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "database is nil") {
+	} else if !strings.Contains(err.Error(), "database is nil") {
 		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
 	_, err = store.BlockFindByID(ctx, "id")
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "database is nil") {
+	} else if !strings.Contains(err.Error(), "database is nil") {
 		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
 	_, err = store.BlockList(ctx, BlockQuery())
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "database is nil") {
+	} else if !strings.Contains(err.Error(), "database is nil") {
 		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
 	err = store.BlockSoftDelete(ctx, NewBlock())
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "database is nil") {
+	} else if !strings.Contains(err.Error(), "database is nil") {
 		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
 	err = store.BlockSoftDeleteByID(ctx, "id")
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "database is nil") {
+	} else if !strings.Contains(err.Error(), "database is nil") {
 		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
 	err = store.BlockUpdate(ctx, NewBlock())
 	if err == nil {
 		t.Error("Expected error for nil db")
-	}
-	if !strings.Contains(err.Error(), "database is nil") {
+	} else if !strings.Contains(err.Error(), "database is nil") {
 		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
@@ -501,32 +491,28 @@ func TestStoreBlockErrorPaths(t *testing.T) {
 	err = store.BlockCreate(ctx, nil)
 	if err == nil {
 		t.Error("Expected error for nil block")
-	}
-	if !strings.Contains(err.Error(), "block is nil") {
+	} else if !strings.Contains(err.Error(), "block is nil") {
 		t.Errorf("Expected error message to contain 'block is nil', got %s", err.Error())
 	}
 
 	err = store.BlockDelete(ctx, nil)
 	if err == nil {
 		t.Error("Expected error for nil block")
-	}
-	if !strings.Contains(err.Error(), "block is nil") {
+	} else if !strings.Contains(err.Error(), "block is nil") {
 		t.Errorf("Expected error message to contain 'block is nil', got %s", err.Error())
 	}
 
 	err = store.BlockSoftDelete(ctx, nil)
 	if err == nil {
 		t.Error("Expected error for nil block")
-	}
-	if !strings.Contains(err.Error(), "block is nil") {
+	} else if !strings.Contains(err.Error(), "block is nil") {
 		t.Errorf("Expected error message to contain 'block is nil', got %s", err.Error())
 	}
 
 	err = store.BlockUpdate(ctx, nil)
 	if err == nil {
 		t.Error("Expected error for nil block")
-	}
-	if !strings.Contains(err.Error(), "block is nil") {
+	} else if !strings.Contains(err.Error(), "block is nil") {
 		t.Errorf("Expected error message to contain 'block is nil', got %s", err.Error())
 	}
 
@@ -534,24 +520,21 @@ func TestStoreBlockErrorPaths(t *testing.T) {
 	_, err = store.BlockFindByHandle(ctx, "")
 	if err == nil {
 		t.Error("Expected error for empty handle")
-	}
-	if !strings.Contains(err.Error(), "block handle is empty") {
+	} else if !strings.Contains(err.Error(), "block handle is empty") {
 		t.Errorf("Expected error message to contain 'block handle is empty', got %s", err.Error())
 	}
 
 	_, err = store.BlockFindByID(ctx, "")
 	if err == nil {
 		t.Error("Expected error for empty id")
-	}
-	if !strings.Contains(err.Error(), "block id is empty") {
+	} else if !strings.Contains(err.Error(), "block id is empty") {
 		t.Errorf("Expected error message to contain 'block id is empty', got %s", err.Error())
 	}
 
 	err = store.BlockDeleteByID(ctx, "")
 	if err == nil {
 		t.Error("Expected error for empty id")
-	}
-	if !strings.Contains(err.Error(), "block id is empty") {
+	} else if !strings.Contains(err.Error(), "block id is empty") {
 		t.Errorf("Expected error message to contain 'block id is empty', got %s", err.Error())
 	}
 }
