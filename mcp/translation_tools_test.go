@@ -23,7 +23,9 @@ func TestTranslationGet(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a translation
 	translation := cmsstore.NewTranslation()
@@ -39,10 +41,14 @@ func TestTranslationGet(t *testing.T) {
 		"es": "Hola Mundo",
 	}
 	err = translation.SetContent(content)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to set translation content: %v", err)
+	}
 
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	tests := []struct {
 		name          string
@@ -93,59 +99,101 @@ func TestTranslationGet(t *testing.T) {
 			}
 
 			getBody, err := json.Marshal(getPayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to marshal get payload: %v", err)
+			}
 
 			getResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(getBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post get request: %v", err)
+			}
 			defer getResp.Body.Close()
 
 			getRespBytes, err := io.ReadAll(getResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to read get response: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(getRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal get response: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var translationData map[string]any
 				err = json.Unmarshal([]byte(text), &translationData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal translation data: %v", err)
+				}
 
-				assert.Equal(t, tt.expectedID, translationData["id"].(string))
-				assert.Equal(t, "Test Translation", translationData["name"].(string))
-				assert.Equal(t, "test-translation", translationData["handle"].(string))
-				assert.Equal(t, cmsstore.TRANSLATION_STATUS_ACTIVE, translationData["status"].(string))
-				assert.Equal(t, cmsstore.ShortenID(site.ID()), translationData["site_id"].(string))
+				if translationData["id"].(string) != tt.expectedID {
+					t.Errorf("Expected id '%s', got '%s'", tt.expectedID, translationData["id"].(string))
+				}
+				if translationData["name"].(string) != "Test Translation" {
+					t.Errorf("Expected name 'Test Translation', got '%s'", translationData["name"].(string))
+				}
+				if translationData["handle"].(string) != "test-translation" {
+					t.Errorf("Expected handle 'test-translation', got '%s'", translationData["handle"].(string))
+				}
+				if translationData["status"].(string) != cmsstore.TRANSLATION_STATUS_ACTIVE {
+					t.Errorf("Expected status '%s', got '%s'", cmsstore.TRANSLATION_STATUS_ACTIVE, translationData["status"].(string))
+				}
+				if translationData["site_id"].(string) != cmsstore.ShortenID(site.ID()) {
+					t.Errorf("Expected site_id '%s', got '%s'", cmsstore.ShortenID(site.ID()), translationData["site_id"].(string))
+				}
 
 				// Check content
 				contentMap, ok := translationData["content"].(map[string]any)
-				require.True(t, ok, "Expected content to be a map")
-				assert.Equal(t, "Hello World", contentMap["en"].(string))
-				assert.Equal(t, "Bonjour le monde", contentMap["fr"].(string))
-				assert.Equal(t, "Hola Mundo", contentMap["es"].(string))
+				if !ok {
+					t.Fatalf("Expected content to be a map")
+				}
+				if contentMap["en"].(string) != "Hello World" {
+					t.Errorf("Expected content.en 'Hello World', got '%s'", contentMap["en"].(string))
+				}
+				if contentMap["fr"].(string) != "Bonjour le monde" {
+					t.Errorf("Expected content.fr 'Bonjour le monde', got '%s'", contentMap["fr"].(string))
+				}
+				if contentMap["es"].(string) != "Hola Mundo" {
+					t.Errorf("Expected content.es 'Hola Mundo', got '%s'", contentMap["es"].(string))
+				}
 			}
 		})
 	}
@@ -160,7 +208,9 @@ func TestTranslationList(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create translations with different properties
 	activeTranslation := cmsstore.NewTranslation()
@@ -169,7 +219,9 @@ func TestTranslationList(t *testing.T) {
 	activeTranslation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	activeTranslation.SetSiteID(site.ID())
 	err = store.TranslationCreate(context.Background(), activeTranslation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	draftTranslation := cmsstore.NewTranslation()
 	draftTranslation.SetName("Draft Translation")
@@ -177,7 +229,9 @@ func TestTranslationList(t *testing.T) {
 	draftTranslation.SetStatus(cmsstore.TRANSLATION_STATUS_DRAFT)
 	draftTranslation.SetSiteID(site.ID())
 	err = store.TranslationCreate(context.Background(), draftTranslation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	// Test listing all translations
 	t.Run("list all translations", func(t *testing.T) {
@@ -195,42 +249,66 @@ func TestTranslationList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal list payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post list request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read list response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal list response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var translationList map[string]any
 		err = json.Unmarshal([]byte(text), &translationList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal translation list: %v", err)
+		}
 
 		items, ok := translationList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return both translations
-		assert.Equal(t, 2, len(items), "Expected both translations to be returned")
+		if len(items) != 2 {
+			t.Errorf("Expected 2 translations, got %d", len(items))
+		}
 	})
 
 	// Test filtering by site_id
@@ -577,11 +655,11 @@ func TestTranslationUpsert_Create(t *testing.T) {
 				assert.Equal(t, tt.translationName, translationData["name"].(string))
 				assert.Equal(t, tt.status, translationData["status"].(string))
 				assert.Equal(t, cmsstore.ShortenID(site.ID()), translationData["site_id"].(string))
-				
+
 				if tt.handle != "" {
 					assert.Equal(t, tt.handle, translationData["handle"].(string))
 				}
-				
+
 				if tt.content != nil {
 					contentMap, ok := translationData["content"].(map[string]any)
 					require.True(t, ok, "Expected content to be a map")
@@ -589,7 +667,7 @@ func TestTranslationUpsert_Create(t *testing.T) {
 						assert.Equal(t, text, contentMap[lang])
 					}
 				}
-				
+
 				// Check new fields
 				assert.NotEmpty(t, translationData["created_at"].(string))
 				assert.NotEmpty(t, translationData["updated_at"].(string))

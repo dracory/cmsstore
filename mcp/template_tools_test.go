@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/dracory/cmsstore"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -23,7 +21,9 @@ func TestTemplateList_SiteIDUnshortening(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a template with the site
 	template := cmsstore.NewTemplate()
@@ -32,7 +32,9 @@ func TestTemplateList_SiteIDUnshortening(t *testing.T) {
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template.SetSiteID(site.ID())
 	err = store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	tests := []struct {
 		name           string
@@ -78,54 +80,92 @@ func TestTemplateList_SiteIDUnshortening(t *testing.T) {
 			}
 
 			listBody, err := json.Marshal(listPayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to marshal list payload: %v", err)
+			}
 
 			listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post list request: %v", err)
+			}
 			defer listResp.Body.Close()
 
 			listRespBytes, err := io.ReadAll(listResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to read list response: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(listRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal list response: %v", err)
+			}
 
 			result, ok := response["result"].(map[string]any)
-			require.True(t, ok, "Expected response to have result")
+			if !ok {
+				t.Fatalf("Expected response to have result")
+			}
 
 			content, ok := result["content"].([]any)
-			require.True(t, ok, "Expected response result.content")
-			require.Len(t, content, 1, "Expected response result.content to have one item")
+			if !ok {
+				t.Fatalf("Expected response result.content")
+			}
+			if len(content) != 1 {
+				t.Fatalf("Expected response result.content to have one item")
+			}
 
 			item0, ok := content[0].(map[string]any)
-			require.True(t, ok, "Expected response result.content[0] object")
+			if !ok {
+				t.Fatalf("Expected response result.content[0] object")
+			}
 
 			text, ok := item0["text"].(string)
-			require.True(t, ok, "Expected response result.content[0].text")
+			if !ok {
+				t.Fatalf("Expected response result.content[0].text")
+			}
 
 			var templateList map[string]any
 			err = json.Unmarshal([]byte(text), &templateList)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal template list: %v", err)
+			}
 
 			items, ok := templateList["items"].([]interface{})
-			require.True(t, ok, "Expected 'items' to be a slice")
+			if !ok {
+				t.Fatalf("Expected 'items' to be a slice")
+			}
 
-			assert.Equal(t, tt.expectedCount, len(items), "Unexpected number of templates")
+			if len(items) != tt.expectedCount {
+				t.Errorf("Expected %d templates, got %d", tt.expectedCount, len(items))
+			}
 
 			if tt.expectedCount > 0 {
 				item := items[0].(map[string]interface{})
-				assert.Equal(t, tt.expectedSiteID, item["site_id"].(string))
+				if item["site_id"].(string) != tt.expectedSiteID {
+					t.Errorf("Expected site_id '%s', got '%s'", tt.expectedSiteID, item["site_id"].(string))
+				}
 
 				// Check for new fields
-				assert.Contains(t, item, "memo")
-				assert.Contains(t, item, "handle")
-				assert.Contains(t, item, "editor")
-				assert.Contains(t, item, "created_at")
-				assert.Contains(t, item, "updated_at")
+				if _, ok := item["memo"]; !ok {
+					t.Errorf("Expected 'memo' field in response")
+				}
+				if _, ok := item["handle"]; !ok {
+					t.Errorf("Expected 'handle' field in response")
+				}
+				if _, ok := item["editor"]; !ok {
+					t.Errorf("Expected 'editor' field in response")
+				}
+				if _, ok := item["created_at"]; !ok {
+					t.Errorf("Expected 'created_at' field in response")
+				}
+				if _, ok := item["updated_at"]; !ok {
+					t.Errorf("Expected 'updated_at' field in response")
+				}
 				// assert.Contains(t, item, "soft_deleted_at") // commented out to match tool response
-				assert.Contains(t, item, "metas")
+				if _, ok := item["metas"]; !ok {
+					t.Errorf("Expected 'metas' field in response")
+				}
 			}
 		})
 	}
@@ -140,13 +180,17 @@ func TestTemplateList_NoSiteID(t *testing.T) {
 	site1.SetName("Site 1")
 	site1.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	site2 := cmsstore.NewSite()
 	site2.SetName("Site 2")
 	site2.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err = store.SiteCreate(context.Background(), site2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create templates for both sites
 	template1 := cmsstore.NewTemplate()
@@ -155,7 +199,9 @@ func TestTemplateList_NoSiteID(t *testing.T) {
 	template1.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template1.SetSiteID(site1.ID())
 	err = store.TemplateCreate(context.Background(), template1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	template2 := cmsstore.NewTemplate()
 	template2.SetName("Template 2")
@@ -163,7 +209,9 @@ func TestTemplateList_NoSiteID(t *testing.T) {
 	template2.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	template2.SetSiteID(site2.ID())
 	err = store.TemplateCreate(context.Background(), template2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Call the tool without site_id parameter
 	listPayload := map[string]any{
@@ -180,42 +228,66 @@ func TestTemplateList_NoSiteID(t *testing.T) {
 	}
 
 	listBody, err := json.Marshal(listPayload)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to marshal list payload: %v", err)
+	}
 
 	listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to post list request: %v", err)
+	}
 	defer listResp.Body.Close()
 
 	listRespBytes, err := io.ReadAll(listResp.Body)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to read list response: %v", err)
+	}
 
 	// Parse the result
 	var response map[string]any
 	err = json.Unmarshal(listRespBytes, &response)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal list response: %v", err)
+	}
 
 	result, ok := response["result"].(map[string]any)
-	require.True(t, ok, "Expected response to have result")
+	if !ok {
+		t.Fatalf("Expected response to have result")
+	}
 
 	content, ok := result["content"].([]any)
-	require.True(t, ok, "Expected response result.content")
-	require.Len(t, content, 1, "Expected response result.content to have one item")
+	if !ok {
+		t.Fatalf("Expected response result.content")
+	}
+	if len(content) != 1 {
+		t.Fatalf("Expected response result.content to have one item")
+	}
 
 	item0, ok := content[0].(map[string]any)
-	require.True(t, ok, "Expected response result.content[0] object")
+	if !ok {
+		t.Fatalf("Expected response result.content[0] object")
+	}
 
 	text, ok := item0["text"].(string)
-	require.True(t, ok, "Expected response result.content[0].text")
+	if !ok {
+		t.Fatalf("Expected response result.content[0].text")
+	}
 
 	var templateList map[string]any
 	err = json.Unmarshal([]byte(text), &templateList)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal template list: %v", err)
+	}
 
 	items, ok := templateList["items"].([]interface{})
-	require.True(t, ok, "Expected 'items' to be a slice")
+	if !ok {
+		t.Fatalf("Expected 'items' to be a slice")
+	}
 
 	// Should return all templates when no site_id is specified
-	assert.Equal(t, 2, len(items), "Expected all templates to be returned")
+	if len(items) != 2 {
+		t.Errorf("Expected 2 templates, got %d", len(items))
+	}
 }
 
 func TestTemplateList_WithOtherFilters(t *testing.T) {
@@ -227,7 +299,9 @@ func TestTemplateList_WithOtherFilters(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create templates with different statuses
 	activeTemplate := cmsstore.NewTemplate()
@@ -236,7 +310,9 @@ func TestTemplateList_WithOtherFilters(t *testing.T) {
 	activeTemplate.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	activeTemplate.SetSiteID(site.ID())
 	err = store.TemplateCreate(context.Background(), activeTemplate)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	draftTemplate := cmsstore.NewTemplate()
 	draftTemplate.SetName("Draft Template")
@@ -244,7 +320,9 @@ func TestTemplateList_WithOtherFilters(t *testing.T) {
 	draftTemplate.SetStatus(cmsstore.TEMPLATE_STATUS_DRAFT)
 	draftTemplate.SetSiteID(site.ID())
 	err = store.TemplateCreate(context.Background(), draftTemplate)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	// Call the tool with multiple filters
 	listPayload := map[string]any{
@@ -263,44 +341,70 @@ func TestTemplateList_WithOtherFilters(t *testing.T) {
 	}
 
 	listBody, err := json.Marshal(listPayload)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to marshal list payload: %v", err)
+	}
 
 	listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to post list request: %v", err)
+	}
 	defer listResp.Body.Close()
 
 	listRespBytes, err := io.ReadAll(listResp.Body)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to read list response: %v", err)
+	}
 
 	// Parse the result
 	var response map[string]any
 	err = json.Unmarshal(listRespBytes, &response)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal list response: %v", err)
+	}
 
 	result, ok := response["result"].(map[string]any)
-	require.True(t, ok, "Expected response to have result")
+	if !ok {
+		t.Fatalf("Expected response to have result")
+	}
 
 	content, ok := result["content"].([]any)
-	require.True(t, ok, "Expected response result.content")
-	require.Len(t, content, 1, "Expected response result.content to have one item")
+	if !ok {
+		t.Fatalf("Expected response result.content")
+	}
+	if len(content) != 1 {
+		t.Fatalf("Expected response result.content to have one item")
+	}
 
 	item0, ok := content[0].(map[string]any)
-	require.True(t, ok, "Expected response result.content[0] object")
+	if !ok {
+		t.Fatalf("Expected response result.content[0] object")
+	}
 
 	text, ok := item0["text"].(string)
-	require.True(t, ok, "Expected response result.content[0].text")
+	if !ok {
+		t.Fatalf("Expected response result.content[0].text")
+	}
 
 	var templateList map[string]any
 	err = json.Unmarshal([]byte(text), &templateList)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal template list: %v", err)
+	}
 
 	items, ok := templateList["items"].([]interface{})
-	require.True(t, ok, "Expected 'items' to be a slice")
+	if !ok {
+		t.Fatalf("Expected 'items' to be a slice")
+	}
 
 	// Should return only the active template for the specified site
-	assert.Equal(t, 1, len(items), "Expected only active template")
+	if len(items) != 1 {
+		t.Errorf("Expected 1 template, got %d", len(items))
+	}
 	item := items[0].(map[string]interface{})
-	assert.Equal(t, cmsstore.TEMPLATE_STATUS_ACTIVE, item["status"].(string))
+	if item["status"].(string) != cmsstore.TEMPLATE_STATUS_ACTIVE {
+		t.Errorf("Expected status '%s', got '%s'", cmsstore.TEMPLATE_STATUS_ACTIVE, item["status"].(string))
+	}
 }
 
 func TestTemplateUpsert_Create(t *testing.T) {
@@ -322,23 +426,37 @@ func TestTemplateUpsert_Create(t *testing.T) {
 	}
 
 	createBody, err := json.Marshal(createPayload)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to marshal create payload: %v", err)
+	}
 
 	createResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(createBody))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to post create request: %v", err)
+	}
 	defer createResp.Body.Close()
 
 	createRespBytes, err := io.ReadAll(createResp.Body)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to read create response: %v", err)
+	}
 
 	text := rpcResultText(t, createRespBytes)
 	var templateData map[string]any
 	err = json.Unmarshal([]byte(text), &templateData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal template data: %v", err)
+	}
 
-	assert.Equal(t, "New Template", templateData["name"])
-	assert.Equal(t, "active", templateData["status"])
-	assert.NotEmpty(t, templateData["id"])
+	if templateData["name"] != "New Template" {
+		t.Errorf("Expected name 'New Template', got '%v'", templateData["name"])
+	}
+	if templateData["status"] != "active" {
+		t.Errorf("Expected status 'active', got '%v'", templateData["status"])
+	}
+	if templateData["id"] == "" {
+		t.Errorf("Expected id to not be empty")
+	}
 }
 
 func TestTemplateUpsert_Update(t *testing.T) {
@@ -350,7 +468,9 @@ func TestTemplateUpsert_Update(t *testing.T) {
 	template.SetContent("Original content")
 	template.SetStatus(cmsstore.TEMPLATE_STATUS_ACTIVE)
 	err := store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	updatePayload := map[string]any{
 		"jsonrpc": "2.0",
@@ -366,23 +486,37 @@ func TestTemplateUpsert_Update(t *testing.T) {
 	}
 
 	updateBody, err := json.Marshal(updatePayload)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to marshal update payload: %v", err)
+	}
 
 	updateResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(updateBody))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to post update request: %v", err)
+	}
 	defer updateResp.Body.Close()
 
 	updateRespBytes, err := io.ReadAll(updateResp.Body)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to read update response: %v", err)
+	}
 
 	text := rpcResultText(t, updateRespBytes)
 	var templateData map[string]any
 	err = json.Unmarshal([]byte(text), &templateData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal template data: %v", err)
+	}
 
-	assert.Equal(t, template.ID(), templateData["id"])
-	assert.Equal(t, "Updated Name", templateData["name"])
-	assert.Equal(t, "Original content", templateData["content"]) // Should remain unchanged
+	if templateData["id"] != template.ID() {
+		t.Errorf("Expected id '%s', got '%v'", template.ID(), templateData["id"])
+	}
+	if templateData["name"] != "Updated Name" {
+		t.Errorf("Expected name 'Updated Name', got '%v'", templateData["name"])
+	}
+	if templateData["content"] != "Original content" {
+		t.Errorf("Expected content 'Original content', got '%v'", templateData["content"])
+	}
 }
 
 func TestTemplateGet(t *testing.T) {
@@ -393,7 +527,9 @@ func TestTemplateGet(t *testing.T) {
 	template.SetName("Get Template")
 	template.SetContent("Content")
 	err := store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	getPayload := map[string]any{
 		"jsonrpc": "2.0",
@@ -408,22 +544,34 @@ func TestTemplateGet(t *testing.T) {
 	}
 
 	getBody, err := json.Marshal(getPayload)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to marshal get payload: %v", err)
+	}
 
 	getResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(getBody))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to post get request: %v", err)
+	}
 	defer getResp.Body.Close()
 
 	getRespBytes, err := io.ReadAll(getResp.Body)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to read get response: %v", err)
+	}
 
 	text := rpcResultText(t, getRespBytes)
 	var templateData map[string]any
 	err = json.Unmarshal([]byte(text), &templateData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal template data: %v", err)
+	}
 
-	assert.Equal(t, template.ID(), templateData["id"])
-	assert.Equal(t, "Get Template", templateData["name"])
+	if templateData["id"] != template.ID() {
+		t.Errorf("Expected id '%s', got '%v'", template.ID(), templateData["id"])
+	}
+	if templateData["name"] != "Get Template" {
+		t.Errorf("Expected name 'Get Template', got '%v'", templateData["name"])
+	}
 }
 
 func TestTemplateDelete(t *testing.T) {
@@ -433,7 +581,9 @@ func TestTemplateDelete(t *testing.T) {
 	template := cmsstore.NewTemplate()
 	template.SetName("Delete Template")
 	err := store.TemplateCreate(context.Background(), template)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create template: %v", err)
+	}
 
 	deletePayload := map[string]any{
 		"jsonrpc": "2.0",
@@ -448,24 +598,38 @@ func TestTemplateDelete(t *testing.T) {
 	}
 
 	deleteBody, err := json.Marshal(deletePayload)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to marshal delete payload: %v", err)
+	}
 
 	deleteResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(deleteBody))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to post delete request: %v", err)
+	}
 	defer deleteResp.Body.Close()
 
 	deleteRespBytes, err := io.ReadAll(deleteResp.Body)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to read delete response: %v", err)
+	}
 
 	text := rpcResultText(t, deleteRespBytes)
 	var deleteData map[string]any
 	err = json.Unmarshal([]byte(text), &deleteData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal delete data: %v", err)
+	}
 
-	assert.Equal(t, cmsstore.ShortenID(template.ID()), deleteData["id"])
+	if deleteData["id"] != cmsstore.ShortenID(template.ID()) {
+		t.Errorf("Expected id '%s', got '%v'", cmsstore.ShortenID(template.ID()), deleteData["id"])
+	}
 
 	// Verify it's gone
 	deletedTemplate, err := store.TemplateFindByID(context.Background(), template.ID())
-	require.NoError(t, err)
-	assert.Nil(t, deletedTemplate)
+	if err != nil {
+		t.Fatalf("Failed to find deleted template: %v", err)
+	}
+	if deletedTemplate != nil {
+		t.Errorf("Expected template to be deleted, but it was found")
+	}
 }
