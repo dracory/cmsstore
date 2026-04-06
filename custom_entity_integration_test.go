@@ -3,18 +3,19 @@ package cmsstore
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"testing"
 
 	"github.com/dracory/entitystore"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
 func TestCustomEntityIntegration(t *testing.T) {
 	// Initialize database
 	db, err := sql.Open("sqlite", ":memory:?parseTime=true")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
 	defer db.Close()
 
 	// Create CMS store with custom entities enabled
@@ -44,23 +45,41 @@ func TestCustomEntityIntegration(t *testing.T) {
 			},
 		},
 	})
-	require.NoError(t, err)
-	require.NotNil(t, store)
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	if store == nil {
+		t.Fatal("store is nil")
+	}
 
 	// Verify custom entities are enabled
-	assert.True(t, store.CustomEntitiesEnabled())
+	if !store.CustomEntitiesEnabled() {
+		t.Error("expected CustomEntitiesEnabled to be true")
+	}
 
 	// Get custom entity store
 	customStore := store.CustomEntityStore()
-	require.NotNil(t, customStore)
+	if customStore == nil {
+		t.Fatal("customStore is nil")
+	}
 
 	// Verify entity type is registered
 	def, ok := customStore.GetEntityDefinition("product")
-	assert.True(t, ok)
-	assert.Equal(t, "product", def.Type)
-	assert.Equal(t, "Product", def.TypeLabel)
-	assert.Equal(t, "Shop", def.Group)
-	assert.Len(t, def.Attributes, 3)
+	if !ok {
+		t.Error("expected entity definition 'product' to be registered")
+	}
+	if def.Type != "product" {
+		t.Errorf("expected type 'product', got %q", def.Type)
+	}
+	if def.TypeLabel != "Product" {
+		t.Errorf("expected type label 'Product', got %q", def.TypeLabel)
+	}
+	if def.Group != "Shop" {
+		t.Errorf("expected group 'Shop', got %q", def.Group)
+	}
+	if len(def.Attributes) != 3 {
+		t.Errorf("expected 3 attributes, got %d", len(def.Attributes))
+	}
 
 	ctx := context.Background()
 
@@ -73,26 +92,48 @@ func TestCustomEntityIntegration(t *testing.T) {
 		}
 
 		productID, err := customStore.Create(ctx, "product", attrs, nil, nil)
-		assert.NoError(t, err)
-		assert.NotEmpty(t, productID)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if productID == "" {
+			t.Error("expected non-empty productID")
+		}
 
 		// Verify entity was created
 		entity, err := customStore.FindByID(ctx, productID)
-		assert.NoError(t, err)
-		assert.NotNil(t, entity)
-		assert.Equal(t, "product", entity.GetType())
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if entity == nil {
+			t.Fatal("entity is nil")
+		}
+		if entity.GetType() != "product" {
+			t.Errorf("expected type 'product', got %q", entity.GetType())
+		}
 
 		// Verify attributes
 		titleAttr, err := customStore.Inner().AttributeFind(ctx, entity.ID(), "title")
-		assert.NoError(t, err)
-		assert.NotNil(t, titleAttr)
-		assert.Equal(t, "Test Laptop", titleAttr.GetValue())
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if titleAttr == nil {
+			t.Fatal("titleAttr is nil")
+		}
+		if titleAttr.GetValue() != "Test Laptop" {
+			t.Errorf("expected title 'Test Laptop', got %q", titleAttr.GetValue())
+		}
 
 		priceAttr, err := customStore.Inner().AttributeFind(ctx, entity.ID(), "price")
-		assert.NoError(t, err)
-		assert.NotNil(t, priceAttr)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if priceAttr == nil {
+			t.Fatal("priceAttr is nil")
+		}
 		priceValue, _ := priceAttr.GetFloat()
-		assert.Equal(t, 999.99, priceValue)
+		if priceValue != 999.99 {
+			t.Errorf("expected price 999.99, got %f", priceValue)
+		}
 	})
 
 	// Test 2: Validation - missing required attribute
@@ -103,8 +144,12 @@ func TestCustomEntityIntegration(t *testing.T) {
 		}
 
 		_, err := customStore.Create(ctx, "product", attrs, nil, nil)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "required attribute 'price' is missing")
+		if err == nil {
+			t.Error("expected error for missing required attribute")
+		}
+		if !strings.Contains(err.Error(), "required attribute 'price' is missing") {
+			t.Errorf("expected error to contain 'required attribute 'price' is missing', got %q", err.Error())
+		}
 	})
 
 	// Test 3: Unregistered entity type
@@ -114,8 +159,12 @@ func TestCustomEntityIntegration(t *testing.T) {
 		}
 
 		_, err := customStore.Create(ctx, "unknown_type", attrs, nil, nil)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "entity type 'unknown_type' is not registered")
+		if err == nil {
+			t.Error("expected error for unregistered entity type")
+		}
+		if !strings.Contains(err.Error(), "entity type 'unknown_type' is not registered") {
+			t.Errorf("expected error to contain 'entity type 'unknown_type' is not registered', got %q", err.Error())
+		}
 	})
 
 	// Test 4: Update entity
@@ -127,11 +176,15 @@ func TestCustomEntityIntegration(t *testing.T) {
 		}
 
 		productID, err := customStore.Create(ctx, "product", attrs, nil, nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		// Find entity
 		entity, err := customStore.FindByID(ctx, productID)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		// Update attributes
 		updateAttrs := map[string]interface{}{
@@ -140,15 +193,21 @@ func TestCustomEntityIntegration(t *testing.T) {
 		}
 
 		err = customStore.Update(ctx, entity, updateAttrs)
-		assert.NoError(t, err)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		// Verify update
 		titleAttr, _ := customStore.Inner().AttributeFind(ctx, productID, "title")
-		assert.Equal(t, "Updated Title", titleAttr.GetValue())
+		if titleAttr.GetValue() != "Updated Title" {
+			t.Errorf("expected title 'Updated Title', got %q", titleAttr.GetValue())
+		}
 
 		priceAttr, _ := customStore.Inner().AttributeFind(ctx, productID, "price")
 		priceValue, _ := priceAttr.GetFloat()
-		assert.Equal(t, 75.00, priceValue)
+		if priceValue != 75.00 {
+			t.Errorf("expected price 75.00, got %f", priceValue)
+		}
 	})
 
 	// Test 5: Delete entity
@@ -160,16 +219,24 @@ func TestCustomEntityIntegration(t *testing.T) {
 		}
 
 		productID, err := customStore.Create(ctx, "product", attrs, nil, nil)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		// Delete entity
 		err = customStore.Delete(ctx, productID)
-		assert.NoError(t, err)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		// Verify soft delete (entity should not be found)
 		entity, err := customStore.FindByID(ctx, productID)
-		assert.NoError(t, err)
-		assert.Nil(t, entity)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if entity != nil {
+			t.Error("expected entity to be nil after delete")
+		}
 	})
 
 	// Test 6: Count entities
@@ -181,28 +248,40 @@ func TestCustomEntityIntegration(t *testing.T) {
 				"price": float64(i * 100),
 			}
 			_, err := customStore.Create(ctx, "product", attrs, nil, nil)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 		}
 
 		// Count entities
 		count, err := customStore.Count(ctx, entitystore.EntityQueryOptions{
 			EntityType: "product",
 		})
-		assert.NoError(t, err)
-		assert.GreaterOrEqual(t, count, int64(3))
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if count < 3 {
+			t.Errorf("expected count >= 3, got %d", count)
+		}
 	})
 
 	// Test 7: Get all definitions
 	t.Run("GetAllDefinitions", func(t *testing.T) {
 		defs := customStore.GetAllDefinitions()
-		assert.Len(t, defs, 1)
-		assert.Equal(t, "product", defs[0].Type)
+		if len(defs) != 1 {
+			t.Errorf("expected 1 definition, got %d", len(defs))
+		}
+		if defs[0].Type != "product" {
+			t.Errorf("expected type 'product', got %q", defs[0].Type)
+		}
 	})
 }
 
 func TestCustomEntityWithRelationships(t *testing.T) {
 	db, err := sql.Open("sqlite", ":memory:?parseTime=true")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
 	defer db.Close()
 
 	store, err := NewStore(NewStoreOptions{
@@ -237,7 +316,9 @@ func TestCustomEntityWithRelationships(t *testing.T) {
 			},
 		},
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
 
 	ctx := context.Background()
 	customStore := store.CustomEntityStore()
@@ -245,7 +326,9 @@ func TestCustomEntityWithRelationships(t *testing.T) {
 	// Create author
 	authorAttrs := map[string]interface{}{"name": "John Doe"}
 	authorID, err := customStore.Create(ctx, "author", authorAttrs, nil, nil)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("failed to create author: %v", err)
+	}
 
 	// Create book with relationship
 	bookAttrs := map[string]interface{}{"title": "My Book"}
@@ -258,12 +341,22 @@ func TestCustomEntityWithRelationships(t *testing.T) {
 	}
 
 	bookID, err := customStore.Create(ctx, "book", bookAttrs, relationships, nil)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 
 	// Verify relationship
 	rels, err := customStore.GetRelationships(ctx, bookID)
-	assert.NoError(t, err)
-	assert.Len(t, rels, 1)
-	assert.Equal(t, authorID, rels[0].GetRelatedEntityID())
-	assert.Equal(t, "belongs_to", rels[0].GetRelationshipType())
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if len(rels) != 1 {
+		t.Errorf("expected 1 relationship, got %d", len(rels))
+	}
+	if rels[0].GetRelatedEntityID() != authorID {
+		t.Errorf("expected related entity ID %q, got %q", authorID, rels[0].GetRelatedEntityID())
+	}
+	if rels[0].GetRelationshipType() != "belongs_to" {
+		t.Errorf("expected relationship type 'belongs_to', got %q", rels[0].GetRelationshipType())
+	}
 }
