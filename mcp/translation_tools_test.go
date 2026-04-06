@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/dracory/cmsstore"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
 
@@ -328,45 +326,71 @@ func TestTranslationList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal list payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post list request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read list response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal list response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var translationList map[string]any
 		err = json.Unmarshal([]byte(text), &translationList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal translation list: %v", err)
+		}
 
 		items, ok := translationList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return both translations for the site
-		assert.Equal(t, 2, len(items), "Expected both translations for the site")
+		if len(items) != 2 {
+			t.Errorf("Expected both translations for the site, got %d", len(items))
+		}
 		for _, item := range items {
 			itemMap := item.(map[string]interface{})
-			assert.Equal(t, cmsstore.ShortenID(site.ID()), itemMap["site_id"].(string))
+			if itemMap["site_id"].(string) != cmsstore.ShortenID(site.ID()) {
+				t.Errorf("Expected site_id '%s', got '%s'", cmsstore.ShortenID(site.ID()), itemMap["site_id"].(string))
+			}
 		}
 	})
 
@@ -387,44 +411,70 @@ func TestTranslationList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal list payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post list request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read list response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal list response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var translationList map[string]any
 		err = json.Unmarshal([]byte(text), &translationList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal translation list: %v", err)
+		}
 
 		items, ok := translationList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return only active translation
-		assert.Equal(t, 1, len(items), "Expected only active translation")
+		if len(items) != 1 {
+			t.Errorf("Expected only active translation, got %d", len(items))
+		}
 		item := items[0].(map[string]interface{})
-		assert.Equal(t, cmsstore.TRANSLATION_STATUS_ACTIVE, item["status"].(string))
+		if item["status"].(string) != cmsstore.TRANSLATION_STATUS_ACTIVE {
+			t.Errorf("Expected status '%s', got '%s'", cmsstore.TRANSLATION_STATUS_ACTIVE, item["status"].(string))
+		}
 	})
 
 	// Test filtering by handle
@@ -444,44 +494,70 @@ func TestTranslationList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal list payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post list request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read list response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal list response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var translationList map[string]any
 		err = json.Unmarshal([]byte(text), &translationList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal translation list: %v", err)
+		}
 
 		items, ok := translationList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return only the translation with matching handle
-		assert.Equal(t, 1, len(items), "Expected only translation with matching handle")
+		if len(items) != 1 {
+			t.Errorf("Expected only translation with matching handle, got %d", len(items))
+		}
 		item := items[0].(map[string]interface{})
-		assert.Equal(t, "active-translation", item["handle"].(string))
+		if item["handle"].(string) != "active-translation" {
+			t.Errorf("Expected handle 'active-translation', got '%s'", item["handle"].(string))
+		}
 	})
 
 	// Test pagination
@@ -500,42 +576,66 @@ func TestTranslationList(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal list payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post list request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read list response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal list response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var translationList map[string]any
 		err = json.Unmarshal([]byte(text), &translationList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal translation list: %v", err)
+		}
 
 		items, ok := translationList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return only 1 translation due to limit
-		assert.Equal(t, 1, len(items), "Expected only 1 translation due to limit")
+		if len(items) != 1 {
+			t.Errorf("Expected only 1 translation due to limit, got %d", len(items))
+		}
 	})
 }
 
@@ -548,7 +648,9 @@ func TestTranslationUpsert_Create(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	tests := []struct {
 		name            string
@@ -611,68 +713,112 @@ func TestTranslationUpsert_Create(t *testing.T) {
 			}
 
 			upsertBody, err := json.Marshal(upsertPayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to marshal upsert payload: %v", err)
+			}
 
 			upsertResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(upsertBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post upsert request: %v", err)
+			}
 			defer upsertResp.Body.Close()
 
 			upsertRespBytes, err := io.ReadAll(upsertResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to read upsert response: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(upsertRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal upsert response: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var translationData map[string]any
 				err = json.Unmarshal([]byte(text), &translationData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal translation data: %v", err)
+				}
 
-				assert.Equal(t, tt.translationName, translationData["name"].(string))
-				assert.Equal(t, tt.status, translationData["status"].(string))
-				assert.Equal(t, cmsstore.ShortenID(site.ID()), translationData["site_id"].(string))
+				if translationData["name"].(string) != tt.translationName {
+					t.Errorf("Expected name '%s', got '%s'", tt.translationName, translationData["name"].(string))
+				}
+				if translationData["status"].(string) != tt.status {
+					t.Errorf("Expected status '%s', got '%s'", tt.status, translationData["status"].(string))
+				}
+				if translationData["site_id"].(string) != cmsstore.ShortenID(site.ID()) {
+					t.Errorf("Expected site_id '%s', got '%s'", cmsstore.ShortenID(site.ID()), translationData["site_id"].(string))
+				}
 
 				if tt.handle != "" {
-					assert.Equal(t, tt.handle, translationData["handle"].(string))
+					if translationData["handle"].(string) != tt.handle {
+						t.Errorf("Expected handle '%s', got '%s'", tt.handle, translationData["handle"].(string))
+					}
 				}
 
 				if tt.content != nil {
 					contentMap, ok := translationData["content"].(map[string]any)
-					require.True(t, ok, "Expected content to be a map")
+					if !ok {
+						t.Fatalf("Expected content to be a map")
+					}
 					for lang, text := range tt.content {
-						assert.Equal(t, text, contentMap[lang])
+						if contentMap[lang] != text {
+							t.Errorf("Expected content.%s '%s', got '%s'", lang, text, contentMap[lang])
+						}
 					}
 				}
 
 				// Check new fields
-				assert.NotEmpty(t, translationData["created_at"].(string))
-				assert.NotEmpty(t, translationData["updated_at"].(string))
-				assert.NotEmpty(t, translationData["soft_deleted_at"].(string))
-				assert.NotNil(t, translationData["metas"])
+				if translationData["created_at"].(string) == "" {
+					t.Errorf("Expected created_at to not be empty")
+				}
+				if translationData["updated_at"].(string) == "" {
+					t.Errorf("Expected updated_at to not be empty")
+				}
+				if translationData["soft_deleted_at"].(string) == "" {
+					t.Errorf("Expected soft_deleted_at to not be empty")
+				}
+				if translationData["metas"] == nil {
+					t.Errorf("Expected metas to not be nil")
+				}
 			}
 		})
 	}
@@ -687,7 +833,9 @@ func TestTranslationUpsert_Update(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a translation
 	translation := cmsstore.NewTranslation()
@@ -702,10 +850,14 @@ func TestTranslationUpsert_Update(t *testing.T) {
 		"fr": "Original French",
 	}
 	err = translation.SetContent(originalContent)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to set translation content: %v", err)
+	}
 
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	tests := []struct {
 		name            string
@@ -767,58 +919,94 @@ func TestTranslationUpsert_Update(t *testing.T) {
 			}
 
 			upsertBody, err := json.Marshal(upsertPayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to marshal upsert payload: %v", err)
+			}
 
 			upsertResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(upsertBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post upsert request: %v", err)
+			}
 			defer upsertResp.Body.Close()
 
 			upsertRespBytes, err := io.ReadAll(upsertResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to read upsert response: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(upsertRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal upsert response: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var translationData map[string]any
 				err = json.Unmarshal([]byte(text), &translationData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal translation data: %v", err)
+				}
 
-				assert.Equal(t, tt.translationName, translationData["name"].(string))
-				assert.Equal(t, tt.handle, translationData["handle"].(string))
-				assert.Equal(t, tt.status, translationData["status"].(string))
-				assert.Equal(t, cmsstore.ShortenID(site.ID()), translationData["site_id"].(string))
+				if translationData["name"].(string) != tt.translationName {
+					t.Errorf("Expected name '%s', got '%s'", tt.translationName, translationData["name"].(string))
+				}
+				if translationData["handle"].(string) != tt.handle {
+					t.Errorf("Expected handle '%s', got '%s'", tt.handle, translationData["handle"].(string))
+				}
+				if translationData["status"].(string) != tt.status {
+					t.Errorf("Expected status '%s', got '%s'", tt.status, translationData["status"].(string))
+				}
+				if translationData["site_id"].(string) != cmsstore.ShortenID(site.ID()) {
+					t.Errorf("Expected site_id '%s', got '%s'", cmsstore.ShortenID(site.ID()), translationData["site_id"].(string))
+				}
 
 				// Check updated content
 				if tt.content != nil {
 					contentMap, ok := translationData["content"].(map[string]any)
-					require.True(t, ok, "Expected content to be a map")
+					if !ok {
+						t.Fatalf("Expected content to be a map")
+					}
 					for lang, text := range tt.content {
-						assert.Equal(t, text, contentMap[lang])
+						if contentMap[lang] != text {
+							t.Errorf("Expected content.%s '%s', got '%v'", lang, text, contentMap[lang])
+						}
 					}
 				}
 			}
@@ -835,7 +1023,9 @@ func TestTranslationDelete(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a translation
 	translation := cmsstore.NewTranslation()
@@ -844,7 +1034,9 @@ func TestTranslationDelete(t *testing.T) {
 	translation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation.SetSiteID(site.ID())
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	tests := []struct {
 		name          string
@@ -889,7 +1081,9 @@ func TestTranslationDelete(t *testing.T) {
 				translationObj.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 				translationObj.SetSiteID(site.ID())
 				err = store.TranslationCreate(context.Background(), translationObj)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to create translation: %v", err)
+				}
 
 				if tt.name == "delete translation with full ID" {
 					targetID = translationObj.ID()
@@ -914,48 +1108,74 @@ func TestTranslationDelete(t *testing.T) {
 			}
 
 			deleteBody, err := json.Marshal(deletePayload)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to marshal delete payload: %v", err)
+			}
 
 			deleteResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(deleteBody))
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to post delete request: %v", err)
+			}
 			defer deleteResp.Body.Close()
 
 			deleteRespBytes, err := io.ReadAll(deleteResp.Body)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to read delete response: %v", err)
+			}
 
 			// Parse the result
 			var response map[string]any
 			err = json.Unmarshal(deleteRespBytes, &response)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal delete response: %v", err)
+			}
 
 			if tt.expectError {
 				// Check for error
 				_, hasError := response["error"]
-				assert.True(t, hasError, "Expected error in response")
+				if !hasError {
+					t.Errorf("Expected error in response")
+				}
 				if hasError {
 					errorObj := response["error"].(map[string]any)
-					assert.Equal(t, tt.expectedErr, errorObj["message"])
+					if errorObj["message"] != tt.expectedErr {
+						t.Errorf("Expected error message '%s', got '%s'", tt.expectedErr, errorObj["message"])
+					}
 				}
 			} else {
 				// Check for success
 				result, ok := response["result"].(map[string]any)
-				require.True(t, ok, "Expected response to have result")
+				if !ok {
+					t.Fatalf("Expected response to have result")
+				}
 
 				content, ok := result["content"].([]any)
-				require.True(t, ok, "Expected response result.content")
-				require.Len(t, content, 1, "Expected response result.content to have one item")
+				if !ok {
+					t.Fatalf("Expected response result.content")
+				}
+				if len(content) != 1 {
+					t.Fatalf("Expected response result.content to have one item")
+				}
 
 				item0, ok := content[0].(map[string]any)
-				require.True(t, ok, "Expected response result.content[0] object")
+				if !ok {
+					t.Fatalf("Expected response result.content[0] object")
+				}
 
 				text, ok := item0["text"].(string)
-				require.True(t, ok, "Expected response result.content[0].text")
+				if !ok {
+					t.Fatalf("Expected response result.content[0].text")
+				}
 
 				var deleteData map[string]any
 				err = json.Unmarshal([]byte(text), &deleteData)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal delete data: %v", err)
+				}
 
-				assert.Equal(t, tt.expectedID, deleteData["id"].(string))
+				if deleteData["id"].(string) != tt.expectedID {
+					t.Errorf("Expected id '%s', got '%s'", tt.expectedID, deleteData["id"].(string))
+				}
 			}
 		})
 	}
@@ -983,50 +1203,86 @@ func TestTranslationUpsert_WithDefaultSite(t *testing.T) {
 	}
 
 	upsertBody, err := json.Marshal(upsertPayload)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to marshal upsert payload: %v", err)
+	}
 
 	upsertResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(upsertBody))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to post upsert request: %v", err)
+	}
 	defer upsertResp.Body.Close()
 
 	upsertRespBytes, err := io.ReadAll(upsertResp.Body)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to read upsert response: %v", err)
+	}
 
 	// Parse the result
 	var response map[string]any
 	err = json.Unmarshal(upsertRespBytes, &response)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal upsert response: %v", err)
+	}
 
 	// Check for success
 	result, ok := response["result"].(map[string]any)
-	require.True(t, ok, "Expected response to have result")
+	if !ok {
+		t.Fatalf("Expected response to have result")
+	}
 
 	content, ok := result["content"].([]any)
-	require.True(t, ok, "Expected response result.content")
-	require.Len(t, content, 1, "Expected response result.content to have one item")
+	if !ok {
+		t.Fatalf("Expected response result.content")
+	}
+	if len(content) != 1 {
+		t.Fatalf("Expected response result.content to have one item")
+	}
 
 	item0, ok := content[0].(map[string]any)
-	require.True(t, ok, "Expected response result.content[0] object")
+	if !ok {
+		t.Fatalf("Expected response result.content[0] object")
+	}
 
 	text, ok := item0["text"].(string)
-	require.True(t, ok, "Expected response result.content[0].text")
+	if !ok {
+		t.Fatalf("Expected response result.content[0].text")
+	}
 
 	var translationData map[string]any
 	err = json.Unmarshal([]byte(text), &translationData)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal translation data: %v", err)
+	}
 
-	assert.Equal(t, "Default Site Translation", translationData["name"].(string))
-	assert.Equal(t, cmsstore.TRANSLATION_STATUS_ACTIVE, translationData["status"].(string))
-	assert.Equal(t, "default-translation", translationData["handle"].(string))
-	assert.Equal(t, "Translation with default site", translationData["memo"].(string))
+	if translationData["name"].(string) != "Default Site Translation" {
+		t.Errorf("Expected name 'Default Site Translation', got '%s'", translationData["name"].(string))
+	}
+	if translationData["status"].(string) != cmsstore.TRANSLATION_STATUS_ACTIVE {
+		t.Errorf("Expected status '%s', got '%s'", cmsstore.TRANSLATION_STATUS_ACTIVE, translationData["status"].(string))
+	}
+	if translationData["handle"].(string) != "default-translation" {
+		t.Errorf("Expected handle 'default-translation', got '%s'", translationData["handle"].(string))
+	}
+	if translationData["memo"].(string) != "Translation with default site" {
+		t.Errorf("Expected memo 'Translation with default site', got '%s'", translationData["memo"].(string))
+	}
 	// site_id should be set to the default site
-	assert.NotEmpty(t, translationData["site_id"].(string))
+	if translationData["site_id"].(string) == "" {
+		t.Errorf("Expected site_id to not be empty")
+	}
 
 	// Check content
 	contentMap, ok := translationData["content"].(map[string]any)
-	require.True(t, ok, "Expected content to be a map")
-	assert.Equal(t, "Default content", contentMap["en"].(string))
-	assert.Equal(t, "Contenu par défaut", contentMap["fr"].(string))
+	if !ok {
+		t.Fatalf("Expected content to be a map")
+	}
+	if contentMap["en"].(string) != "Default content" {
+		t.Errorf("Expected content.en 'Default content', got '%s'", contentMap["en"].(string))
+	}
+	if contentMap["fr"].(string) != "Contenu par défaut" {
+		t.Errorf("Expected content.fr 'Contenu par défaut', got '%s'", contentMap["fr"].(string))
+	}
 }
 
 func TestTranslationList_WithSoftDeleted(t *testing.T) {
@@ -1038,7 +1294,9 @@ func TestTranslationList_WithSoftDeleted(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create a translation
 	translation := cmsstore.NewTranslation()
@@ -1047,11 +1305,15 @@ func TestTranslationList_WithSoftDeleted(t *testing.T) {
 	translation.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation.SetSiteID(site.ID())
 	err = store.TranslationCreate(context.Background(), translation)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	// Soft delete the translation
 	err = store.TranslationSoftDeleteByID(context.Background(), translation.ID())
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to soft delete translation: %v", err)
+	}
 
 	// Test listing without include_soft_deleted (should not include soft deleted)
 	t.Run("list translations without soft deleted", func(t *testing.T) {
@@ -1070,42 +1332,66 @@ func TestTranslationList_WithSoftDeleted(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal list payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post list request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read list response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal list response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var translationList map[string]any
 		err = json.Unmarshal([]byte(text), &translationList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal translation list: %v", err)
+		}
 
 		items, ok := translationList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should not return the soft deleted translation
-		assert.Equal(t, 0, len(items), "Expected no translations (soft deleted should be excluded)")
+		if len(items) != 0 {
+			t.Errorf("Expected no translations (soft deleted should be excluded), got %d", len(items))
+		}
 	})
 
 	// Test listing with include_soft_deleted (should include soft deleted)
@@ -1126,42 +1412,66 @@ func TestTranslationList_WithSoftDeleted(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal list payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post list request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read list response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal list response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var translationList map[string]any
 		err = json.Unmarshal([]byte(text), &translationList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal translation list: %v", err)
+		}
 
 		items, ok := translationList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return the soft deleted translation
-		assert.Equal(t, 1, len(items), "Expected 1 translation (soft deleted should be included)")
+		if len(items) != 1 {
+			t.Errorf("Expected 1 translation (soft deleted should be included), got %d", len(items))
+		}
 	})
 }
 
@@ -1174,7 +1484,9 @@ func TestTranslationList_WithOrdering(t *testing.T) {
 	site.SetName("Test Site")
 	site.SetStatus(cmsstore.SITE_STATUS_ACTIVE)
 	err := store.SiteCreate(context.Background(), site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create site: %v", err)
+	}
 
 	// Create translations with different names to test ordering
 	translation1 := cmsstore.NewTranslation()
@@ -1183,7 +1495,9 @@ func TestTranslationList_WithOrdering(t *testing.T) {
 	translation1.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation1.SetSiteID(site.ID())
 	err = store.TranslationCreate(context.Background(), translation1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	translation2 := cmsstore.NewTranslation()
 	translation2.SetName("Beta Translation")
@@ -1191,7 +1505,9 @@ func TestTranslationList_WithOrdering(t *testing.T) {
 	translation2.SetStatus(cmsstore.TRANSLATION_STATUS_ACTIVE)
 	translation2.SetSiteID(site.ID())
 	err = store.TranslationCreate(context.Background(), translation2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create translation: %v", err)
+	}
 
 	// Test ordering by name ascending
 	t.Run("list translations ordered by name ascending", func(t *testing.T) {
@@ -1212,44 +1528,72 @@ func TestTranslationList_WithOrdering(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal list payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post list request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read list response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal list response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var translationList map[string]any
 		err = json.Unmarshal([]byte(text), &translationList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal translation list: %v", err)
+		}
 
 		items, ok := translationList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return translations in alphabetical order
-		assert.Equal(t, 2, len(items), "Expected 2 translations")
-		assert.Equal(t, "Alpha Translation", items[0].(map[string]interface{})["name"].(string))
-		assert.Equal(t, "Beta Translation", items[1].(map[string]interface{})["name"].(string))
+		if len(items) != 2 {
+			t.Errorf("Expected 2 translations, got %d", len(items))
+		}
+		if items[0].(map[string]interface{})["name"].(string) != "Alpha Translation" {
+			t.Errorf("Expected first item name 'Alpha Translation', got '%s'", items[0].(map[string]interface{})["name"].(string))
+		}
+		if items[1].(map[string]interface{})["name"].(string) != "Beta Translation" {
+			t.Errorf("Expected second item name 'Beta Translation', got '%s'", items[1].(map[string]interface{})["name"].(string))
+		}
 	})
 
 	// Test ordering by name descending
@@ -1271,43 +1615,71 @@ func TestTranslationList_WithOrdering(t *testing.T) {
 		}
 
 		listBody, err := json.Marshal(listPayload)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to marshal list payload: %v", err)
+		}
 
 		listResp, err := http.Post(server.URL, "application/json", bytes.NewBuffer(listBody))
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to post list request: %v", err)
+		}
 		defer listResp.Body.Close()
 
 		listRespBytes, err := io.ReadAll(listResp.Body)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to read list response: %v", err)
+		}
 
 		// Parse the result
 		var response map[string]any
 		err = json.Unmarshal(listRespBytes, &response)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal list response: %v", err)
+		}
 
 		result, ok := response["result"].(map[string]any)
-		require.True(t, ok, "Expected response to have result")
+		if !ok {
+			t.Fatalf("Expected response to have result")
+		}
 
 		content, ok := result["content"].([]any)
-		require.True(t, ok, "Expected response result.content")
-		require.Len(t, content, 1, "Expected response result.content to have one item")
+		if !ok {
+			t.Fatalf("Expected response result.content")
+		}
+		if len(content) != 1 {
+			t.Fatalf("Expected response result.content to have one item")
+		}
 
 		item0, ok := content[0].(map[string]any)
-		require.True(t, ok, "Expected response result.content[0] object")
+		if !ok {
+			t.Fatalf("Expected response result.content[0] object")
+		}
 
 		text, ok := item0["text"].(string)
-		require.True(t, ok, "Expected response result.content[0].text")
+		if !ok {
+			t.Fatalf("Expected response result.content[0].text")
+		}
 
 		var translationList map[string]any
 		err = json.Unmarshal([]byte(text), &translationList)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal translation list: %v", err)
+		}
 
 		items, ok := translationList["items"].([]interface{})
-		require.True(t, ok, "Expected 'items' to be a slice")
+		if !ok {
+			t.Fatalf("Expected 'items' to be a slice")
+		}
 
 		// Should return translations in reverse alphabetical order
-		assert.Equal(t, 2, len(items), "Expected 2 translations")
-		assert.Equal(t, "Beta Translation", items[0].(map[string]interface{})["name"].(string))
-		assert.Equal(t, "Alpha Translation", items[1].(map[string]interface{})["name"].(string))
+		if len(items) != 2 {
+			t.Errorf("Expected 2 translations, got %d", len(items))
+		}
+		if items[0].(map[string]interface{})["name"].(string) != "Beta Translation" {
+			t.Errorf("Expected first item name 'Beta Translation', got '%s'", items[0].(map[string]interface{})["name"].(string))
+		}
+		if items[1].(map[string]interface{})["name"].(string) != "Alpha Translation" {
+			t.Errorf("Expected second item name 'Alpha Translation', got '%s'", items[1].(map[string]interface{})["name"].(string))
+		}
 	})
 }
