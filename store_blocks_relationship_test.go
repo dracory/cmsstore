@@ -2,6 +2,7 @@ package cmsstore
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,9 @@ func TestBlockCreateWithInvalidSiteID(t *testing.T) {
 		TemplateTableName:  "template_table_invalid_site",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -34,9 +37,15 @@ func TestBlockCreateWithInvalidSiteID(t *testing.T) {
 	// If it succeeds, we should still be able to query it
 	if err == nil {
 		found, err := store.BlockFindByID(ctx, block.ID())
-		require.NoError(t, err)
-		require.NotNil(t, found)
-		require.Equal(t, "non-existent-site", found.SiteID())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if found == nil {
+			t.Fatal("Block MUST NOT be nil")
+		}
+		if found.SiteID() != "non-existent-site" {
+			t.Fatalf("Expected SiteID 'non-existent-site', got %s", found.SiteID())
+		}
 	}
 }
 
@@ -52,14 +61,18 @@ func TestBlockCreateWithInvalidPageID(t *testing.T) {
 		TemplateTableName:  "template_table_invalid_page",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
 	// Create a valid site first
 	site := NewSite().SetName("Test Site")
 	err = store.SiteCreate(ctx, site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create block with non-existent page ID
 	block := NewBlock().
@@ -70,9 +83,15 @@ func TestBlockCreateWithInvalidPageID(t *testing.T) {
 	err = store.BlockCreate(ctx, block)
 	if err == nil {
 		found, err := store.BlockFindByID(ctx, block.ID())
-		require.NoError(t, err)
-		require.NotNil(t, found)
-		require.Equal(t, "non-existent-page", found.PageID())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if found == nil {
+			t.Fatal("Block MUST NOT be nil")
+		}
+		if found.PageID() != "non-existent-page" {
+			t.Fatalf("Expected PageID 'non-existent-page', got %s", found.PageID())
+		}
 	}
 }
 
@@ -88,7 +107,9 @@ func TestBlockListByPageID(t *testing.T) {
 		TemplateTableName:  "template_table_by_page",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -100,11 +121,15 @@ func TestBlockListByPageID(t *testing.T) {
 	// Create two pages
 	page1 := NewPage().SetSiteID(site.ID()).SetTitle("Page 1")
 	err = store.PageCreate(ctx, page1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	page2 := NewPage().SetSiteID(site.ID()).SetTitle("Page 2")
 	err = store.PageCreate(ctx, page2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create blocks for page1
 	for i := 0; i < 3; i++ {
@@ -113,7 +138,9 @@ func TestBlockListByPageID(t *testing.T) {
 			SetPageID(page1.ID()).
 			SetName("Block for Page 1")
 		err = store.BlockCreate(ctx, block)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	}
 
 	// Create blocks for page2
@@ -123,22 +150,34 @@ func TestBlockListByPageID(t *testing.T) {
 			SetPageID(page2.ID()).
 			SetName("Block for Page 2")
 		err = store.BlockCreate(ctx, block)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	}
 
 	// Query blocks for page1
 	blocks1, err := store.BlockList(ctx, BlockQuery().SetPageID(page1.ID()))
-	require.NoError(t, err)
-	require.Len(t, blocks1, 3)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(blocks1) != 3 {
+		t.Fatalf("Expected 3 blocks, got %d", len(blocks1))
+	}
 
 	// Query blocks for page2
 	blocks2, err := store.BlockList(ctx, BlockQuery().SetPageID(page2.ID()))
-	require.NoError(t, err)
-	require.Len(t, blocks2, 2)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(blocks2) != 2 {
+		t.Fatalf("Expected 2 blocks, got %d", len(blocks2))
+	}
 
 	// Verify all blocks for page1 have correct page_id
 	for _, block := range blocks1 {
-		require.Equal(t, page1.ID(), block.PageID())
+		if block.PageID() != page1.ID() {
+			t.Fatalf("Expected PageID %s, got %s", page1.ID(), block.PageID())
+		}
 	}
 }
 
@@ -154,18 +193,24 @@ func TestPageDeleteWithBlocks(t *testing.T) {
 		TemplateTableName:  "template_table_page_delete",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
 	// Create site and page
 	site := NewSite().SetName("Test Site")
 	err = store.SiteCreate(ctx, site)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	page := NewPage().SetSiteID(site.ID()).SetTitle("Test Page")
 	err = store.PageCreate(ctx, page)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create blocks for the page
 	var blockIDs []string
@@ -175,13 +220,17 @@ func TestPageDeleteWithBlocks(t *testing.T) {
 			SetPageID(page.ID()).
 			SetName("Test Block")
 		err = store.BlockCreate(ctx, block)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		blockIDs = append(blockIDs, block.ID())
 	}
 
 	// Delete the page
 	err = store.PageDeleteByID(ctx, page.ID())
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Check if blocks still exist (orphaned) or were cascade deleted
 	for _, blockID := range blockIDs {
@@ -189,7 +238,9 @@ func TestPageDeleteWithBlocks(t *testing.T) {
 		// Depending on implementation, blocks may be orphaned or deleted
 		if err == nil && block != nil {
 			// Blocks are orphaned - verify they still reference the deleted page
-			require.Equal(t, page.ID(), block.PageID())
+			if block.PageID() != page.ID() {
+				t.Fatalf("Expected PageID %s, got %s", page.ID(), block.PageID())
+			}
 		}
 	}
 }
@@ -206,7 +257,9 @@ func TestSiteDeleteWithPages(t *testing.T) {
 		TemplateTableName:  "template_table_site_delete",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -220,20 +273,26 @@ func TestSiteDeleteWithPages(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		page := NewPage().SetSiteID(site.ID()).SetTitle("Test Page")
 		err = store.PageCreate(ctx, page)
-		require.NoError(t, err)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		pageIDs = append(pageIDs, page.ID())
 	}
 
 	// Delete the site
 	err = store.SiteDeleteByID(ctx, site.ID())
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Check if pages still exist (orphaned) or were cascade deleted
 	for _, pageID := range pageIDs {
 		page, err := store.PageFindByID(ctx, pageID)
 		if err == nil && page != nil {
 			// Pages are orphaned
-			require.Equal(t, site.ID(), page.SiteID())
+			if page.SiteID() != site.ID() {
+				t.Fatalf("Expected SiteID %s, got %s", site.ID(), page.SiteID())
+			}
 		}
 	}
 }
@@ -250,7 +309,9 @@ func TestBlockUpdatePreservesUnchangedFields(t *testing.T) {
 		TemplateTableName:  "template_table_update_preserve",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -266,10 +327,14 @@ func TestBlockUpdatePreservesUnchangedFields(t *testing.T) {
 		"key1": "value1",
 		"key2": "value2",
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	err = store.BlockCreate(ctx, block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	originalCreatedAt := block.CreatedAt()
 	originalID := block.ID()
@@ -277,28 +342,52 @@ func TestBlockUpdatePreservesUnchangedFields(t *testing.T) {
 	// Update only the name
 	block.SetName("Updated Name")
 	err = store.BlockUpdate(ctx, block)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Fetch and verify
 	found, err := store.BlockFindByID(ctx, block.ID())
-	require.NoError(t, err)
-	require.NotNil(t, found)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if found == nil {
+		t.Fatal("Block MUST NOT be nil")
+	}
 
 	// Verify changed field
-	require.Equal(t, "Updated Name", found.Name())
+	if found.Name() != "Updated Name" {
+		t.Fatalf("Expected Name 'Updated Name', got %s", found.Name())
+	}
 
 	// Verify unchanged fields
-	require.Equal(t, originalID, found.ID())
-	require.Equal(t, "Original Content", found.Content())
-	require.Equal(t, "original-handle", found.Handle())
-	require.Equal(t, BLOCK_STATUS_ACTIVE, found.Status())
-	require.Equal(t, "Site1", found.SiteID())
+	if found.ID() != originalID {
+		t.Fatalf("Expected ID %s, got %s", originalID, found.ID())
+	}
+	if found.Content() != "Original Content" {
+		t.Fatalf("Expected Content 'Original Content', got %s", found.Content())
+	}
+	if found.Handle() != "original-handle" {
+		t.Fatalf("Expected Handle 'original-handle', got %s", found.Handle())
+	}
+	if found.Status() != BLOCK_STATUS_ACTIVE {
+		t.Fatalf("Expected Status %s, got %s", BLOCK_STATUS_ACTIVE, found.Status())
+	}
+	if found.SiteID() != "Site1" {
+		t.Fatalf("Expected SiteID 'Site1', got %s", found.SiteID())
+	}
 	// CreatedAt should be preserved (compare timestamp values, format may vary)
-	require.Contains(t, found.CreatedAt(), originalCreatedAt[:19]) // Compare date/time portion without timezone
+	if !strings.Contains(found.CreatedAt(), originalCreatedAt[:19]) { // Compare date/time portion without timezone
+		t.Fatalf("Expected CreatedAt to contain %s, got %s", originalCreatedAt[:19], found.CreatedAt())
+	}
 
 	// Verify metas are preserved
-	require.Equal(t, "value1", found.Meta("key1"))
-	require.Equal(t, "value2", found.Meta("key2"))
+	if found.Meta("key1") != "value1" {
+		t.Fatalf("Expected Meta('key1') 'value1', got %s", found.Meta("key1"))
+	}
+	if found.Meta("key2") != "value2" {
+		t.Fatalf("Expected Meta('key2') 'value2', got %s", found.Meta("key2"))
+	}
 }
 
 // TestBlockDuplicateHandle tests behavior when creating blocks with duplicate handles
@@ -313,7 +402,9 @@ func TestBlockDuplicateHandle(t *testing.T) {
 		TemplateTableName:  "template_table_dup_handle",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -324,7 +415,9 @@ func TestBlockDuplicateHandle(t *testing.T) {
 		SetName("Block 1")
 
 	err = store.BlockCreate(ctx, block1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Try to create second block with same handle
 	block2 := NewBlock().
@@ -338,10 +431,16 @@ func TestBlockDuplicateHandle(t *testing.T) {
 	if err == nil {
 		// Query by handle should return one of them
 		found, err := store.BlockFindByHandle(ctx, "unique-handle")
-		require.NoError(t, err)
-		require.NotNil(t, found)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if found == nil {
+			t.Fatal("Block MUST NOT be nil")
+		}
 		// It should be one of the two blocks
-		require.Contains(t, []string{block1.ID(), block2.ID()}, found.ID())
+		if found.ID() != block1.ID() && found.ID() != block2.ID() {
+			t.Fatalf("Expected ID to be one of %v, got %s", []string{block1.ID(), block2.ID()}, found.ID())
+		}
 	}
 }
 
@@ -360,7 +459,9 @@ func TestMenuItemHierarchy(t *testing.T) {
 		MenuItemTableName:  "menu_item_table_menu_hierarchy",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -375,7 +476,9 @@ func TestMenuItemHierarchy(t *testing.T) {
 		SetName("Parent").
 		SetSequenceInt(1)
 	err = store.MenuItemCreate(ctx, parent)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create child menu items
 	child1 := NewMenuItem().
@@ -384,7 +487,9 @@ func TestMenuItemHierarchy(t *testing.T) {
 		SetName("Child 1").
 		SetSequenceInt(1)
 	err = store.MenuItemCreate(ctx, child1)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	child2 := NewMenuItem().
 		SetMenuID(menu.ID()).
@@ -392,11 +497,15 @@ func TestMenuItemHierarchy(t *testing.T) {
 		SetName("Child 2").
 		SetSequenceInt(2)
 	err = store.MenuItemCreate(ctx, child2)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Query all menu items and filter children
 	allItems, err := store.MenuItemList(ctx, MenuItemQuery().SetMenuID(menu.ID()))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Filter children by parent ID
 	var children []MenuItemInterface
@@ -405,12 +514,18 @@ func TestMenuItemHierarchy(t *testing.T) {
 			children = append(children, item)
 		}
 	}
-	require.Len(t, children, 2)
+	if len(children) != 2 {
+		t.Fatalf("Expected 2 children, got %d", len(children))
+	}
 
 	// Verify parent-child relationships
 	for _, child := range children {
-		require.Equal(t, parent.ID(), child.ParentID())
-		require.Equal(t, menu.ID(), child.MenuID())
+		if child.ParentID() != parent.ID() {
+			t.Fatalf("Expected ParentID %s, got %s", parent.ID(), child.ParentID())
+		}
+		if child.MenuID() != menu.ID() {
+			t.Fatalf("Expected MenuID %s, got %s", menu.ID(), child.MenuID())
+		}
 	}
 }
 
@@ -429,7 +544,9 @@ func TestMenuItemCircularReference(t *testing.T) {
 		MenuItemTableName:  "menu_item_table_circular",
 		AutomigrateEnabled: true,
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -444,7 +561,9 @@ func TestMenuItemCircularReference(t *testing.T) {
 		SetName("Item A").
 		SetSequenceInt(1)
 	err = store.MenuItemCreate(ctx, itemA)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Create menu item B as child of A
 	itemB := NewMenuItem().
@@ -453,7 +572,9 @@ func TestMenuItemCircularReference(t *testing.T) {
 		SetName("Item B").
 		SetSequenceInt(1)
 	err = store.MenuItemCreate(ctx, itemB)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Try to make A a child of B (circular reference)
 	itemA.SetParentID(itemB.ID())
@@ -466,8 +587,12 @@ func TestMenuItemCircularReference(t *testing.T) {
 		foundB, _ := store.MenuItemFindByID(ctx, itemB.ID())
 
 		if foundA != nil && foundB != nil {
-			require.Equal(t, itemB.ID(), foundA.ParentID())
-			require.Equal(t, itemA.ID(), foundB.ParentID())
+			if foundA.ParentID() != itemB.ID() {
+				t.Fatalf("Expected ParentID %s, got %s", itemB.ID(), foundA.ParentID())
+			}
+			if foundB.ParentID() != itemA.ID() {
+				t.Fatalf("Expected ParentID %s, got %s", itemA.ID(), foundB.ParentID())
+			}
 		}
 	}
 }

@@ -1,146 +1,239 @@
 package cmsstore
 
 import (
-    "testing"
+	"testing"
 
-    "github.com/dromara/carbon/v2"
-    "github.com/stretchr/testify/require"
-    "github.com/dracory/sb"
+	"github.com/dracory/sb"
+	"github.com/dromara/carbon/v2"
 )
 
 func TestNewTranslationDefaults(t *testing.T) {
-    translation := NewTranslation()
+	translation := NewTranslation()
 
-    require.NotEmpty(t, translation.ID(), "ID should be generated")
-    require.NotEmpty(t, translation.CreatedAt(), "CreatedAt should be set")
-    require.NotEmpty(t, translation.UpdatedAt(), "UpdatedAt should be set")
-    require.Equal(t, sb.MAX_DATETIME, translation.SoftDeletedAt(), "SoftDeletedAt should default to max datetime")
-    require.Equal(t, TEMPLATE_STATUS_DRAFT, translation.Status(), "Status should default to draft")
-    require.False(t, translation.IsSoftDeleted(), "New translation should not be marked as soft deleted")
+	// Test default values
+	if len(translation.ID()) == 0 {
+		t.Error("ID should be generated")
+	}
+	if len(translation.CreatedAt()) == 0 {
+		t.Error("CreatedAt should be set")
+	}
+	if len(translation.UpdatedAt()) == 0 {
+		t.Error("UpdatedAt should be set")
+	}
+	if translation.SoftDeletedAt() != sb.MAX_DATETIME {
+		t.Errorf("SoftDeletedAt should default to max datetime, got %s", translation.SoftDeletedAt())
+	}
+	if translation.Status() != TEMPLATE_STATUS_DRAFT {
+		t.Errorf("Status should default to draft, got %s", translation.Status())
+	}
+	if translation.IsSoftDeleted() {
+		t.Error("New translation should not be marked as soft deleted")
+	}
 
-    content, err := translation.Content()
-    require.NoError(t, err)
-    require.Empty(t, content, "Content should default to an empty map")
+	content, err := translation.Content()
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if len(content) != 0 {
+		t.Errorf("Content should default to an empty map, got %v", content)
+	}
 
-    metas, err := translation.Metas()
-    require.NoError(t, err)
-    require.Empty(t, metas, "Metas should default to an empty map")
+	metas, err := translation.Metas()
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if len(metas) != 0 {
+		t.Errorf("Metas should default to an empty map, got %v", metas)
+	}
 
-    createdCarbon := translation.CreatedAtCarbon()
-    require.NotNil(t, createdCarbon)
-    require.False(t, createdCarbon.IsZero(), "CreatedAtCarbon should be parseable")
+	createdCarbon := translation.CreatedAtCarbon()
+	if createdCarbon == nil {
+		t.Error("CreatedAtCarbon should not be nil")
+	}
+	if createdCarbon.IsZero() {
+		t.Error("CreatedAtCarbon should be parseable")
+	}
 
-    updatedCarbon := translation.UpdatedAtCarbon()
-    require.NotNil(t, updatedCarbon)
-    require.False(t, updatedCarbon.IsZero(), "UpdatedAtCarbon should be parseable")
+	updatedCarbon := translation.UpdatedAtCarbon()
+	if updatedCarbon == nil {
+		t.Error("UpdatedAtCarbon should not be nil")
+	}
+	if updatedCarbon.IsZero() {
+		t.Error("UpdatedAtCarbon should be parseable")
+	}
 
-    softDeletedCarbon := translation.SoftDeletedAtCarbon()
-    require.NotNil(t, softDeletedCarbon)
-    require.True(t, softDeletedCarbon.Gte(carbon.Now(carbon.UTC)), "SoftDeletedAt should be in the future by default")
+	softDeletedCarbon := translation.SoftDeletedAtCarbon()
+	if softDeletedCarbon == nil {
+		t.Error("SoftDeletedAtCarbon should not be nil")
+	}
+	if !softDeletedCarbon.Gte(carbon.Now(carbon.UTC)) {
+		t.Error("SoftDeletedAt should be in the future by default")
+	}
 }
 
 func TestTranslationContentRoundTrip(t *testing.T) {
-    translation := NewTranslation()
+	translation := NewTranslation()
 
-    expectedContent := map[string]string{
-        "en": "Hello",
-        "fr": "Bonjour",
-    }
+	expectedContent := map[string]string{
+		"en": "Hello",
+		"fr": "Bonjour",
+	}
 
-    err := translation.SetContent(expectedContent)
-    require.NoError(t, err)
+	err := translation.SetContent(expectedContent)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 
-    content, err := translation.Content()
-    require.NoError(t, err)
-    require.Equal(t, expectedContent, content)
+	content, err := translation.Content()
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if content["en"] != expectedContent["en"] || content["fr"] != expectedContent["fr"] {
+		t.Errorf("Expected content %v, got %v", expectedContent, content)
+	}
 }
 
 func TestTranslationMetasUpsertAndMetaLookup(t *testing.T) {
-    translation := NewTranslation()
+	translation := NewTranslation()
 
-    err := translation.SetMetas(map[string]string{"locale": "en"})
-    require.NoError(t, err)
-    require.Equal(t, "en", translation.Meta("locale"))
+	err := translation.SetMetas(map[string]string{"locale": "en"})
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if translation.Meta("locale") != "en" {
+		t.Errorf("Expected locale 'en', got %s", translation.Meta("locale"))
+	}
 
-    err = translation.UpsertMetas(map[string]string{"locale": "fr", "category": "general"})
-    require.NoError(t, err)
-    require.Equal(t, "fr", translation.Meta("locale"))
-    require.Equal(t, "general", translation.Meta("category"))
+	err = translation.UpsertMetas(map[string]string{"locale": "fr", "category": "general"})
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if translation.Meta("locale") != "fr" {
+		t.Errorf("Expected locale 'fr', got %s", translation.Meta("locale"))
+	}
+	if translation.Meta("category") != "general" {
+		t.Errorf("Expected category 'general', got %s", translation.Meta("category"))
+	}
 
-    require.Equal(t, "", translation.Meta("missing"))
+	if translation.Meta("missing") != "" {
+		t.Errorf("Expected empty Meta for missing key, got %s", translation.Meta("missing"))
+	}
 }
 
 func TestTranslationSoftDeleteBehaviour(t *testing.T) {
-    translation := NewTranslation()
-    require.False(t, translation.IsSoftDeleted())
+	translation := NewTranslation()
+	if translation.IsSoftDeleted() {
+		t.Error("New translation should not be soft deleted")
+	}
 
-    past := carbon.Now(carbon.UTC).SubHour()
-    translation.SetSoftDeletedAt(past.ToDateTimeString(carbon.UTC))
+	past := carbon.Now(carbon.UTC).SubHour()
+	translation.SetSoftDeletedAt(past.ToDateTimeString(carbon.UTC))
 
-    require.True(t, translation.IsSoftDeleted(), "Translation should be marked as soft deleted when past timestamp is set")
-    require.Equal(t, past.ToDateTimeString(carbon.UTC), translation.SoftDeletedAt())
+	if !translation.IsSoftDeleted() {
+		t.Error("Translation should be marked as soft deleted when past timestamp is set")
+	}
+	if translation.SoftDeletedAt() != past.ToDateTimeString(carbon.UTC) {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", past.ToDateTimeString(carbon.UTC), translation.SoftDeletedAt())
+	}
 }
 
 func TestNewTranslationFromExistingData(t *testing.T) {
-    data := map[string]string{
-        COLUMN_ID:      "test-id",
-        COLUMN_NAME:    "test-name",
-        COLUMN_STATUS:  PAGE_STATUS_ACTIVE,
-        COLUMN_CONTENT: "{\"en\":\"Hello\"}",
-    }
+	data := map[string]string{
+		COLUMN_ID:      "test-id",
+		COLUMN_NAME:    "test-name",
+		COLUMN_STATUS:  PAGE_STATUS_ACTIVE,
+		COLUMN_CONTENT: "{\"en\":\"Hello\"}",
+	}
 
-    translation := NewTranslationFromExistingData(data)
+	translation := NewTranslationFromExistingData(data)
 
-    require.Equal(t, "test-id", translation.ID())
-    require.Equal(t, "test-name", translation.Name())
-    require.Equal(t, PAGE_STATUS_ACTIVE, translation.Status())
-    
-    content, err := translation.Content()
-    require.NoError(t, err)
-    require.Equal(t, "Hello", content["en"])
+	if translation.ID() != "test-id" {
+		t.Errorf("Expected ID 'test-id', got %s", translation.ID())
+	}
+	if translation.Name() != "test-name" {
+		t.Errorf("Expected Name 'test-name', got %s", translation.Name())
+	}
+	if translation.Status() != PAGE_STATUS_ACTIVE {
+		t.Errorf("Expected Status %s, got %s", PAGE_STATUS_ACTIVE, translation.Status())
+	}
+
+	content, err := translation.Content()
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if content["en"] != "Hello" {
+		t.Errorf("Expected content['en'] 'Hello', got %s", content["en"])
+	}
 }
 
 func TestTranslationStatusChecks(t *testing.T) {
-    translation := NewTranslation()
-    
-    translation.SetStatus(PAGE_STATUS_ACTIVE)
-    require.True(t, translation.IsActive())
-    require.False(t, translation.IsInactive())
+	translation := NewTranslation()
 
-    translation.SetStatus(PAGE_STATUS_INACTIVE)
-    require.False(t, translation.IsActive())
-    require.True(t, translation.IsInactive())
+	translation.SetStatus(PAGE_STATUS_ACTIVE)
+	if !translation.IsActive() {
+		t.Error("Expected IsActive to be true")
+	}
+	if translation.IsInactive() {
+		t.Error("Expected IsInactive to be false")
+	}
+
+	translation.SetStatus(PAGE_STATUS_INACTIVE)
+	if translation.IsActive() {
+		t.Error("Expected IsActive to be false")
+	}
+	if !translation.IsInactive() {
+		t.Error("Expected IsInactive to be true")
+	}
 }
 
 func TestTranslationSetMeta(t *testing.T) {
-    translation := NewTranslation()
+	translation := NewTranslation()
 
-    err := translation.SetMeta("key1", "value1")
-    require.NoError(t, err)
-    require.Equal(t, "value1", translation.Meta("key1"))
+	err := translation.SetMeta("key1", "value1")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if translation.Meta("key1") != "value1" {
+		t.Errorf("Expected Meta('key1') 'value1', got %s", translation.Meta("key1"))
+	}
 
-    err = translation.SetMeta("key1", "value2")
-    require.NoError(t, err)
-    require.Equal(t, "value2", translation.Meta("key1"))
+	err = translation.SetMeta("key1", "value2")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if translation.Meta("key1") != "value2" {
+		t.Errorf("Expected Meta('key1') 'value2', got %s", translation.Meta("key1"))
+	}
 }
 
 func TestTranslationSettersGetters(t *testing.T) {
-    translation := NewTranslation()
+	translation := NewTranslation()
 
-    translation.SetHandle("test-handle")
-    require.Equal(t, "test-handle", translation.Handle())
+	translation.SetHandle("test-handle")
+	if translation.Handle() != "test-handle" {
+		t.Errorf("Expected Handle 'test-handle', got %s", translation.Handle())
+	}
 
-    translation.SetMemo("test-memo")
-    require.Equal(t, "test-memo", translation.Memo())
+	translation.SetMemo("test-memo")
+	if translation.Memo() != "test-memo" {
+		t.Errorf("Expected Memo 'test-memo', got %s", translation.Memo())
+	}
 
-    translation.SetName("test-name")
-    require.Equal(t, "test-name", translation.Name())
+	translation.SetName("test-name")
+	if translation.Name() != "test-name" {
+		t.Errorf("Expected Name 'test-name', got %s", translation.Name())
+	}
 
-    translation.SetSiteID("test-site")
-    require.Equal(t, "test-site", translation.SiteID())
+	translation.SetSiteID("test-site")
+	if translation.SiteID() != "test-site" {
+		t.Errorf("Expected SiteID 'test-site', got %s", translation.SiteID())
+	}
 
-    translation.SetUpdatedAt("2023-01-01 12:00:00")
-    require.Equal(t, "2023-01-01 12:00:00", translation.UpdatedAt())
-    require.NotNil(t, translation.UpdatedAtCarbon())
+	translation.SetUpdatedAt("2023-01-01 12:00:00")
+	if translation.UpdatedAt() != "2023-01-01 12:00:00" {
+		t.Errorf("Expected UpdatedAt '2023-01-01 12:00:00', got %s", translation.UpdatedAt())
+	}
+	if translation.UpdatedAtCarbon() == nil {
+		t.Error("Expected UpdatedAtCarbon to be non-nil")
+	}
 }
-

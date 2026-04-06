@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/dracory/sb"
-	"github.com/stretchr/testify/require"
 )
 
 func TestStoreBlockCreate(t *testing.T) {
@@ -413,80 +412,148 @@ func TestStoreBlockDelete(t *testing.T) {
 
 func TestStoreBlockErrorPaths(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test with nil DB
 	store := &storeImplementation{db: nil}
-	
+
 	_, err := store.BlockCount(ctx, BlockQuery())
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "db is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "db is nil") {
+		t.Errorf("Expected error message to contain 'db is nil', got %s", err.Error())
+	}
 
 	err = store.BlockCreate(ctx, NewBlock())
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "database is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
+	}
 
 	err = store.BlockDelete(ctx, NewBlock())
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "database is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
+	}
 
 	err = store.BlockDeleteByID(ctx, "id")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "database is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
+	}
 
 	_, err = store.BlockFindByHandle(ctx, "handle")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "database is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
+	}
 
 	_, err = store.BlockFindByID(ctx, "id")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "database is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
+	}
 
 	_, err = store.BlockList(ctx, BlockQuery())
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "database is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
+	}
 
 	err = store.BlockSoftDelete(ctx, NewBlock())
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "database is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
+	}
 
 	err = store.BlockSoftDeleteByID(ctx, "id")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "database is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
+	}
 
 	err = store.BlockUpdate(ctx, NewBlock())
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "database is nil")
+	if err == nil {
+		t.Error("Expected error for nil db")
+	}
+	if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
+	}
 
 	// Test with nil entity
 	store.db = initDB(":memory:")
 	err = store.BlockCreate(ctx, nil)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "block is nil")
+	if err == nil {
+		t.Error("Expected error for nil block")
+	}
+	if !strings.Contains(err.Error(), "block is nil") {
+		t.Errorf("Expected error message to contain 'block is nil', got %s", err.Error())
+	}
 
 	err = store.BlockDelete(ctx, nil)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "block is nil")
+	if err == nil {
+		t.Error("Expected error for nil block")
+	}
+	if !strings.Contains(err.Error(), "block is nil") {
+		t.Errorf("Expected error message to contain 'block is nil', got %s", err.Error())
+	}
 
 	err = store.BlockSoftDelete(ctx, nil)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "block is nil")
+	if err == nil {
+		t.Error("Expected error for nil block")
+	}
+	if !strings.Contains(err.Error(), "block is nil") {
+		t.Errorf("Expected error message to contain 'block is nil', got %s", err.Error())
+	}
 
 	err = store.BlockUpdate(ctx, nil)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "block is nil")
+	if err == nil {
+		t.Error("Expected error for nil block")
+	}
+	if !strings.Contains(err.Error(), "block is nil") {
+		t.Errorf("Expected error message to contain 'block is nil', got %s", err.Error())
+	}
 
 	// Test with empty ID/handle
 	_, err = store.BlockFindByHandle(ctx, "")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "block handle is empty")
+	if err == nil {
+		t.Error("Expected error for empty handle")
+	}
+	if !strings.Contains(err.Error(), "block handle is empty") {
+		t.Errorf("Expected error message to contain 'block handle is empty', got %s", err.Error())
+	}
 
 	_, err = store.BlockFindByID(ctx, "")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "block id is empty")
+	if err == nil {
+		t.Error("Expected error for empty id")
+	}
+	if !strings.Contains(err.Error(), "block id is empty") {
+		t.Errorf("Expected error message to contain 'block id is empty', got %s", err.Error())
+	}
 
 	err = store.BlockDeleteByID(ctx, "")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "block id is empty")
+	if err == nil {
+		t.Error("Expected error for empty id")
+	}
+	if !strings.Contains(err.Error(), "block id is empty") {
+		t.Errorf("Expected error message to contain 'block id is empty', got %s", err.Error())
+	}
 }
 
 func TestStoreBlockUpdate(t *testing.T) {
