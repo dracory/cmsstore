@@ -1,4 +1,4 @@
-# Proposal: Custom Blocks Affecting Page Properties
+# Proposal: Custom Block Variable Substitution
 
 **Date:** 2026-04-06  
 **Status:** Draft  
@@ -8,382 +8,33 @@
 
 ## Problem Statement
 
-Currently, custom blocks in the CMS have no mechanism to modify or influence the page or template they are displayed on. This is a significant limitation for use cases such as:
+Currently, custom blocks in the CMS have no mechanism to expose dynamic data that can be used in the surrounding page or template content. This is a significant limitation for use cases such as:
 
-- **Blog blocks** that need to set the page title based on the blog post being viewed
-- **SEO blocks** that need to dynamically set meta descriptions, keywords, or canonical URLs
-- **Product detail blocks** that should propagate product information to page-level metadata
-- **Dynamic content blocks** that need to modify page-level robots directives
+- **Blog blocks** that need to expose post title, author, date, category for use in page headers or meta tags
+- **Product blocks** that need to expose price, name, SKU for use in structured data or page titles
+- **Event blocks** that need to expose event date, location, organizer information
+- **User profile blocks** that need to expose user data for personalized content
+- **Any dynamic content** that should be referenceable elsewhere in the page/template
 
 **Important consideration:** Blocks can be displayed in both **pages** and **templates**. The solution must work for both contexts.
 
-The current `BlockType.Render()` interface only returns an HTML string, providing no mechanism for blocks to communicate back to the rendering process.
+The current `BlockType.Render()` interface only returns an HTML string, providing no mechanism for blocks to expose data for variable substitution.
 
 ---
 
 ## Goals
 
-1. Enable custom blocks to read and modify page-level properties
+1. Enable custom blocks to set arbitrary variables that can be referenced anywhere in page/template content
 2. Maintain backward compatibility with existing block implementations
-3. Ensure thread-safe, context-aware access to page data
+3. Ensure thread-safe, context-aware variable storage
 4. Keep the solution simple and idiomatic to the existing codebase
+5. Allow complete flexibility in variable naming (no enforced conventions)
 
 ---
 
-## Proposed Solutions
+## Current Rendering Flow Problem
 
-### Option 1: Context-Based Access (Recommended)
-
-**Overview:** Extend the context system to expose the current renderable (page or template) via context accessors, similar to the existing `RequestFromContext()` pattern.
-
-**Implementation:**
-
-```go
-// In context.go
-
-// Context keys for page and template access
-const (
-    pageContextKey     contextKey = "page"
-    templateContextKey contextKey = "template"
-)
-
-// PageFromContext retrieves the PageInterface from context when rendering page content
-func PageFromContext(ctx context.Context) PageInterface {
-    if page, ok := ctx.Value(pageContextKey).(PageInterface); ok {
-        return page
-    }
-    return nil
-}
-
-// TemplateFromContext retrieves the TemplateInterface from context when rendering template content
-func TemplateFromContext(ctx context.Context) TemplateInterface {
-    if template, ok := ctx.Value(templateContextKey).(TemplateInterface); ok {
-        return template
-    }
-    return nil
-}
-
-// Renderable interface for common metadata operations on pages and templates
-type Renderable interface {
-    // Getters
-    Title() string
-    MetaDescription() string
-    MetaKeywords() string
-    MetaRobots() string
-    CanonicalUrl() string
-    
-    // Setters
-    SetTitle(title string)
-    SetMetaDescription(metaDescription string)
-    SetMetaKeywords(metaKeywords string)
-    SetMetaRobots(metaRobots string)
-    SetCanonicalUrl(canonicalUrl string)
-}
-
-func RenderableFromContext(ctx context.Context) Renderable {
-    if page := PageFromContext(ctx); page != nil {
-        return page
-    }
-    return TemplateFromContext(ctx)
-}
-```
-
-**Usage in custom blocks:**
-
-```go
-func (b *BlogBlockType) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
-    // Option A: Check for specific type
-    if page := cmsstore.PageFromContext(ctx); page != nil {
-        page.SetTitle("My Blog Post | " + page.Title())
-        page.SetMetaDescription("Blog post excerpt...")
-    }
-    
-    // Option B: Generic renderable (works for both pages and templates)
-    if r := cmsstore.RenderableFromContext(ctx); r != nil {
-        r.SetTitle("My Blog Post")
-        r.SetMetaDescription("Blog post excerpt...")
-    }
-    
-    return renderBlogContent(block), nil
-}
-```
-
-**Changes Required:**
-1. Move `pageContextKey` from `frontend/frontend.go` to `context.go` and add `templateContextKey` constant
-2. Add `PageFromContext()`, `TemplateFromContext()`, and `RenderableFromContext()` functions to `context.go`
-3. **CRITICAL**: Update `PageRenderHtmlBySiteAndAlias()` to set page in context **before** calling `renderContentToHtml()`
-4. Update `TemplateRenderHtmlByID()` to set template in context **before** calling `renderContentToHtml()`
-5. Add complete `Renderable` interface with both getters and setters for metadata operations
-6. Update both `PageInterface` and `TemplateInterface` to implement `Renderable` interface
-7. Update documentation
-
----
-
-### Option 2: Return Value Extension
-
-**Overview:** Extend the `Render()` return type to include optional page metadata modifications.
-
-**Implementation:**
-
-```go
-// New types
-type PageModifications struct {
-    Title           string
-    MetaDescription string
-    MetaKeywords    string
-    MetaRobots      string
-    CanonicalUrl    string
-    CustomMetas     map[string]string
-}
-
-type RenderResult struct {
-    HTML          string
-    PageModifications *PageModifications
-}
-
-// Updated BlockType interface
-type BlockType interface {
-    // ... other methods
-    Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (*RenderResult, error)
-}
-```
-
-**Usage in custom blocks:**
-
-```go
-func (b *BlogBlockType) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (*RenderResult, error) {
-    content := renderBlogContent(block)
-    
-    return &RenderResult{
-        HTML: content,
-        PageModifications: &PageModifications{
-            Title:           "My Blog Post",
-            MetaDescription: "Blog post excerpt...",
-        },
-    }, nil
-}
-```
-
-**Changes Required:**
-1. Add new `RenderResult` and `PageModifications` types
-2. Modify `BlockType` interface `Render()` signature
-3. Update `BlockRendererRegistry.RenderBlock()` to handle return value
-4. Update all existing block implementations (HTML, Menu, Navbar, Breadcrumbs)
-5. Update `renderContentToHtml()` to collect and merge modifications
-
-**Pros:**
-- Explicit modification mechanism
-- No side effects during rendering
-- Can merge multiple block modifications deterministically
-
-**Cons:**
-- **BREAKING CHANGE** - all existing block types must be updated
-- More complex API
-- Requires coordination between multiple blocks
-
----
-
-### Option 3: Two-Pass Rendering
-
-**Overview:** Split rendering into two phases: metadata collection, then HTML generation.
-
-**Implementation:**
-
-```go
-type MetadataCollector interface {
-    CollectMetadata(ctx context.Context, block BlockInterface, page PageInterface) error
-}
-
-// In frontend:
-func (f *frontend) renderContentToHtml(...) (string, error) {
-    // Phase 1: Collect metadata from all blocks
-    blocks := extractBlocks(content)
-    for _, block := range blocks {
-        if collector, ok := blockType.(MetadataCollector); ok {
-            collector.CollectMetadata(ctx, block, page)
-        }
-    }
-    
-    // Phase 2: Render HTML
-    html := renderBlocks(blocks)
-    return html, nil
-}
-```
-
-**Usage in custom blocks:**
-
-```go
-type BlogBlockType struct{}
-
-func (b *BlogBlockType) CollectMetadata(ctx context.Context, block BlockInterface, page PageInterface) error {
-    page.SetTitle("My Blog Post")
-    return nil
-}
-
-func (b *BlogBlockType) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
-    return renderBlogContent(block), nil
-}
-```
-
-**Changes Required:**
-1. Add `MetadataCollector` interface
-2. Refactor `renderContentToHtml()` to two-phase approach
-3. Update block extraction to happen before rendering
-4. Update documentation
-
-**Pros:**
-- Separation of concerns (metadata vs rendering)
-- Metadata collected before HTML generation
-- Optional interface - existing blocks unaffected
-
-**Cons:**
-- More complex rendering pipeline
-- Requires block extraction to be done separately
-- Potential double work (blocks parsed twice)
-
----
-
-### Option 4: Event/Hook System
-
-**Overview:** Blocks emit events during rendering that the frontend collects and processes.
-
-**Implementation:**
-
-```go
-type PageModifierEvent struct {
-    BlockID         string
-    Title           string
-    MetaDescription string
-    MetaKeywords    string
-    MetaRobots      string
-    CanonicalUrl    string
-}
-
-func EmitPageModifier(ctx context.Context, event PageModifierEvent) {
-    if hooks, ok := ctx.Value(pageModifierHooksKey).([]PageModifierEvent); ok {
-        // Append to collection
-    }
-}
-
-// In frontend:
-func (f *frontend) renderContentToHtml(...) (string, error) {
-    ctx = withPageModifierHooks(ctx)
-    
-    html := renderBlocks(ctx, content)
-    
-    // Apply collected modifications
-    events := getPageModifierHooks(ctx)
-    for _, event := range events {
-        applyPageModification(page, event)
-    }
-    
-    return html, nil
-}
-```
-
-**Usage in custom blocks:**
-
-```go
-func (b *BlogBlockType) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
-    // Emit modification event
-    cmsstore.EmitPageModifier(ctx, cmsstore.PageModifierEvent{
-        BlockID:         block.ID(),
-        Title:           "My Blog Post",
-        MetaDescription: "Blog post excerpt...",
-    })
-    
-    return renderBlogContent(block), nil
-}
-```
-
-**Changes Required:**
-1. Add event types and context key
-2. Add `EmitPageModifier()` function
-3. Update `renderContentToHtml()` to support hooks
-4. Update documentation
-
-**Pros:**
-- Decoupled communication
-- Can handle multiple block modifications
-- Event history available for debugging
-
-**Cons:**
-- More complex infrastructure
-- Requires understanding of event system
-- Less direct than context access
-
----
-
-### Option 5: Template Variable Injection
-
-**Overview:** Instead of modifying the page directly, blocks set template variables that can be used in the template's `<head>` section.
-
-**Implementation:**
-
-```go
-type TemplateContext interface {
-    SetVariable(key string, value string)
-    GetVariable(key string) string
-}
-
-func TemplateContextFromContext(ctx context.Context) TemplateContext {
-    // ... similar to RequestFromContext
-}
-```
-
-**Usage in templates:**
-
-```html
-<head>
-    <title>[[PageTitle]]</title>
-    <meta name="description" content="[[PageMetaDescription]]">
-    <!-- Can also use custom variables set by blocks -->
-    <meta property="og:title" content="[[OGTitle]]">
-</head>
-<body>
-    [[BLOCK_blog_content]]
-</body>
-```
-
-**Usage in blocks:**
-
-```go
-func (b *BlogBlockType) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
-    if tc := cmsstore.TemplateContextFromContext(ctx); tc != nil {
-        tc.SetVariable("OGTitle", "My Blog Post")
-        tc.SetVariable("OGDescription", "Blog post excerpt...")
-    }
-    return renderBlogContent(block), nil
-}
-```
-
-**Changes Required:**
-1. Add `TemplateContext` interface
-2. Add context accessor function
-3. Initialize context before rendering
-4. Update templates to use new placeholders
-
-**Pros:**
-- Non-invasive to Page interface
-- Flexible variable system
-- Can be used for any template variable, not just SEO
-- Could complement Option 1 for additional template variables
-
-**Cons:**
-- Requires template updates
-- Indirect (not modifying actual page properties)
-- Variables only available in current render context
-- Doesn't solve the core problem of modifying persistent page metadata
-
----
-
-### Option 6: Custom Template Variables from Blocks
-
-**Overview:** Allow blocks to set custom template variables (e.g., `[[blog:title]]`, `[[blog:author]]`) that can be used anywhere in the page or template content. This solves the need for blocks to expose data that the surrounding content can reference.
-
-**Current Rendering Order Problem:**
-
-Looking at `frontend/frontend.go` line 562-578, the current flow is:
+Looking at `frontend/frontend.go` lines 562-578, the current rendering order is:
 
 ```go
 // Line 571-574: Standard placeholders replaced FIRST
@@ -391,309 +42,530 @@ for keyWord, value := range replacementsKeywords {
     content = strings.ReplaceAll(content, "[["+keyWord+"]]", value)
 }
 
-// Line 578: Blocks rendered AFTER (can't affect prior replacement)
+// Line 578: Blocks rendered AFTER (blocks cannot affect placeholder replacement)
 content, err = frontend.contentRenderBlocks(ctx, content)
 ```
 
-This means blocks cannot affect `[[PageTitle]]` because the replacement already happened.
+This means blocks cannot set variables because placeholder replacement happens before blocks are rendered.
 
-**Solution A: Two-Pass Placeholder Replacement**
+---
 
-```go
-// In renderContentToHtml():
+## Solution: Context-Based Variable Storage
 
-// Phase 1: Replace standard placeholders
-for keyWord, value := range replacementsKeywords {
-    content = strings.ReplaceAll(content, "[["+keyWord+"]]", value)
-}
+### Overview
 
-// Phase 2: Render blocks (blocks can set custom vars via context)
-ctx = WithVarsContext(ctx)  // Initialize variable storage in context
-content, err = frontend.contentRenderBlocks(ctx, content)
+Allow blocks to set arbitrary custom variables via context that can be referenced anywhere in page or template content using `[[variable_name]]` syntax. Users have complete freedom in naming variables.
 
-// Phase 3: Replace custom variables set by blocks
-vars := GetVarsFromContext(ctx)
-for key, value := range vars {
-    content = strings.ReplaceAll(content, "[["+key+"]]", value)
-}
-```
+### Key Concept
 
-**Block Usage:**
-
-```go
-func (b *BlogBlockType) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
-    // Set custom variables via context
-    if vars := cmsstore.VarsFromContext(ctx); vars != nil {
-        vars.Set("blog:title", "My Blog Post")
-        vars.Set("blog:author", "John Doe")
-        vars.Set("blog:date", "2024-01-15")
-    }
-    
-    return renderBlogContent(block), nil
-}
-```
-
-**Template/Page Usage:**
-
+**Page/Template Content:**
 ```html
-<head>
-    <!-- Standard placeholders -->
-    <title>[[PageTitle]]</title>
-    
-    <!-- Custom variables from blog block -->
-    <meta property="og:title" content="[[blog:title]]">
-    <meta property="article:author" content="[[blog:author]]">
-    <meta property="article:published_time" content="[[blog:date]]">
-</head>
-<body>
-    <h1>[[blog:title]]</h1>
-    <p>By [[blog:author]] on [[blog:date]]</p>
-    
-    <!-- The block that sets these variables -->
-    [[BLOCK_blog_content]]
-</body>
+<h1>Blog. [[blog_title]]</h1>
+<p>By [[author_name]] on [[publish_date]]</p>
+<div>Price: [[product_price]] [[currency]]</div>
 ```
 
-**Solution B: Variable Collection Interface**
+**Block Sets Variables:**
+```go
+vars.Set("blog_title", "Hello World")
+vars.Set("author_name", "John Doe")
+vars.Set("publish_date", "2026-04-07")
+```
+
+**Rendered Output:**
+```html
+<h1>Blog. Hello World</h1>
+<p>By John Doe on 2026-04-07</p>
+```
+
+---
+
+## Implementation
+
+### Step 1: Add VarsContext to context.go
 
 ```go
-// Optional interface for blocks that want to expose variables
-type VariableCollector interface {
-    CollectVars(ctx context.Context, block BlockInterface) map[string]string
+// In context.go
+
+type contextKey string
+
+const (
+    varsContextKey contextKey = "vars"
+)
+
+// VarsContext stores custom variables set by blocks during rendering
+type VarsContext struct {
+    vars map[string]string
+    mu   sync.RWMutex
 }
 
-// In frontend - pre-collect before rendering:
-func (f *frontend) renderContentToHtml(...) (string, error) {
-    // Step 1: Extract and pre-render blocks to collect variables
-    blockIDs := extractBlockIDs(content)
-    vars := make(map[string]string)
-    
-    for _, blockID := range blockIDs {
-        block := f.store.BlockFindByID(ctx, blockID)
-        blockType := cmsstore.GetBlockType(block.Type())
-        
-        if collector, ok := blockType.(VariableCollector); ok {
-            blockVars := collector.CollectVars(ctx, block)
-            for k, v := range blockVars {
-                vars[k] = v
-            }
-        }
+// NewVarsContext creates a new variable context
+func NewVarsContext() *VarsContext {
+    return &VarsContext{
+        vars: make(map[string]string),
     }
+}
+
+// Set stores a variable that can be referenced as [[key]] in content
+func (v *VarsContext) Set(key, value string) {
+    v.mu.Lock()
+    defer v.mu.Unlock()
+    v.vars[key] = value
+}
+
+// Get retrieves a variable value
+func (v *VarsContext) Get(key string) (string, bool) {
+    v.mu.RLock()
+    defer v.mu.RUnlock()
+    val, ok := v.vars[key]
+    return val, ok
+}
+
+// All returns all variables (creates a copy for thread safety)
+func (v *VarsContext) All() map[string]string {
+    v.mu.RLock()
+    defer v.mu.RUnlock()
     
-    // Step 2: Merge custom vars into replacements
-    for key, value := range vars {
-        replacementsKeywords[key] = value
+    result := make(map[string]string, len(v.vars))
+    for k, v := range v.vars {
+        result[k] = v
     }
-    
-    // Step 3: Replace all placeholders at once
+    return result
+}
+
+// WithVarsContext adds a VarsContext to the context
+func WithVarsContext(ctx context.Context) context.Context {
+    return context.WithValue(ctx, varsContextKey, NewVarsContext())
+}
+
+// VarsFromContext retrieves the VarsContext from context
+func VarsFromContext(ctx context.Context) *VarsContext {
+    if vars, ok := ctx.Value(varsContextKey).(*VarsContext); ok {
+        return vars
+    }
+    return nil
+}
+```
+
+### Step 2: Update frontend.go renderContentToHtml()
+
+Modify the rendering pipeline to support custom variable replacement:
+
+```go
+// In frontend/frontend.go, update renderContentToHtml() around line 562-578
+
+func (frontend *frontend) renderContentToHtml(
+    ctx context.Context,
+    content string,
+    replacementsKeywords map[string]string,
+) (string, error) {
+    // Phase 1: Replace standard placeholders (PageTitle, SiteName, etc.)
     for keyWord, value := range replacementsKeywords {
         content = strings.ReplaceAll(content, "[["+keyWord+"]]", value)
     }
     
-    // Step 4: Render blocks for HTML output
-    content = f.contentRenderBlocks(ctx, content)
+    // Phase 2: Initialize vars context and render blocks
+    // Context flows through: contentRenderBlocks -> contentRenderBlockByID -> 
+    // fetchBlockContent -> renderBlockByType -> BlockRendererRegistry.RenderBlock -> 
+    // BlockType.Render(ctx, block) where blocks can access VarsFromContext(ctx)
+    ctx = cmsstore.WithVarsContext(ctx)
+    content, err := frontend.contentRenderBlocks(ctx, content)
+    if err != nil {
+        return "", err
+    }
+    
+    // Phase 3: Replace custom variables set by blocks
+    if vars := cmsstore.VarsFromContext(ctx); vars != nil {
+        for key, value := range vars.All() {
+            content = strings.ReplaceAll(content, "[["+key+"]]", value)
+        }
+    }
     
     return content, nil
 }
 ```
 
-**Changes Required:**
-1. Add `VarsContext` and `VarsFromContext()` to manage custom variables
-2. Modify `renderContentToHtml()` to support two-pass replacement OR variable pre-collection
-3. Document naming conventions (e.g., `blocktype:key` format to avoid collisions)
-4. Update block development guide
+### Context Flow
 
-**Pros:**
-- Blocks can expose arbitrary data to the surrounding content
-- Enables rich integration between blocks and templates
-- No breaking changes to existing `BlockType` interface
-- Can complement Option 1 (blocks can both modify page metadata AND set custom vars)
-- Solves real-world use case: blog post metadata in page `<head>`
+The context flows through the entire rendering pipeline:
 
-**Cons:**
-- Requires changes to rendering pipeline
-- Variable namespacing needed (prefix with block type to avoid collisions)
-- Two-pass rendering adds slight overhead
-- Custom variables only available during current render cycle
+1. `renderContentToHtml(ctx, ...)` - Adds VarsContext **pointer** to ctx
+2. `contentRenderBlocks(ctx, ...)` - Passes ctx through
+3. `contentRenderBlockByID(ctx, ...)` - Passes ctx through
+4. `fetchBlockContent(ctx, ...)` - Passes ctx through
+5. `renderBlockByType(ctx, block)` - Passes ctx through
+6. `BlockRendererRegistry.RenderBlock(ctx, block)` - Passes ctx through
+7. `BlockType.Render(ctx, block)` - Block receives ctx with VarsContext!
 
-**Naming Convention Recommendation:**
-
-To avoid collisions between multiple blocks, use namespaced keys:
+This is verified in `frontend/block_renderer.go` line 120-121:
 
 ```go
-// Format: blocktype:key
-vars.Set("blog:title", "My Post")       // Blog block
-echo "product:price", "$99.99") // Product block
-vars.Set("event:date", "2024-03-15")    // Event block
-```
-
----
-
-## Comparison Matrix
-
-| Criteria | Option 1 | Option 2 | Option 3 | Option 4 | Option 5 | Option 6 |
-|----------|----------|----------|----------|----------|----------|----------|
-| **Breaking Changes** | No | Yes | No | No | No | No |
-| **Works with Pages** | Yes | Yes | Yes | Yes | Yes | Yes |
-| **Works with Templates** | Yes | Yes | Yes | Yes | Yes | Yes |
-| **Complexity** | Low | Medium | Medium | High | Medium | Medium |
-| **API Surface** | Minimal | Medium | Medium | Large | Medium | Medium |
-| **Backward Compat** | Full | Requires migration | Full | Full | Full | Full |
-| **Multi-block Coordination** | Last wins | Merge strategy | First wins | Merge strategy | N/A | Last wins |
-| **Implementation Effort** | Low | High | Medium | High | Medium | Medium |
-| **Pattern Consistency** | High (matches RequestFromContext) | Low | Medium | Medium | Medium | Medium |
-| **Custom Variables** | No | No | No | No | Yes | Yes |
-| **Modifies Page Metadata** | Yes | Yes | Yes | Yes | No | No |
-
----
-
-## Recommendation
-
-**Primary Recommendation: Option 1 (Context-Based Page Access)**
-
-This option is recommended because:
-
-1. **Minimal changes** - Only requires moving context key and exporting a function
-2. **Pattern consistency** - Follows the existing `RequestFromContext()` pattern already in use
-3. **No breaking changes** - Existing block implementations continue to work
-4. **Low complexity** - Simple, idiomatic Go solution
-5. **Immediate availability** - Can be implemented quickly
-
-**Trade-offs and Considerations:**
-
-1. **"Last block wins" semantics** for multiple blocks modifying the same property:
-   - Acceptable because typically only one content block modifies SEO metadata
-   - Block rendering order is deterministic (follows content order)
-   - Should be clearly documented
-
-2. **Template vs Page context priority:**
-   - When rendering a page with a template, blocks will access the page context
-   - When rendering a template directly, blocks will access the template context
-   - This is the correct behavior as pages override template defaults
-
-3. **Thread safety:**
-   - Page/template modifications happen during single-threaded rendering
-   - No additional synchronization needed
-
----
-
-## Implementation Plan (Option 1)
-
-### Phase 1: Core Changes
-
-1. **Update `context.go`:**
-   - Move `pageContextKey` from `frontend/frontend.go` to `context.go` (line 85)
-   - Add `templateContextKey` constant
-   - Add `PageFromContext()`, `TemplateFromContext()` functions
-   - Add complete `Renderable` interface with getters and setters
-   - Add `RenderableFromContext()` function
-
-2. **Update `frontend.go`:**
-   - Remove local `pageContextKey` definition (line 85)
-   - **CRITICAL FIX**: Move page context setting in `PageRenderHtmlBySiteAndAlias()` from line 471 to **before** line 455 (before `renderContentToHtml()` call)
-   - Update `TemplateRenderHtmlByID()` to set template in context **before** calling `renderContentToHtml()`
-
-3. **Update interfaces:**
-   - Ensure `PageInterface` implements `Renderable` (already has all required methods)
-   - **ISSUE**: `TemplateInterface` is missing SEO-related methods and needs to be extended:
-     - Add `Title()` and `SetTitle()` methods
-     - Add `MetaDescription()` and `SetMetaDescription()` methods  
-     - Add `MetaKeywords()` and `SetMetaKeywords()` methods
-     - Add `MetaRobots()` and `SetMetaRobots()` methods
-     - Add `CanonicalUrl()` and `SetCanonicalUrl()` methods
-
-### Phase 2: Documentation
-
-1. Update block development documentation
-2. Add examples for page modification in custom blocks
-3. Document "last block wins" behavior
-
-### Phase 3: Example Implementation
-
-1. Create example blog block that modifies page title
-2. Add tests demonstrating the feature
-
----
-
-## Important Considerations
-
-### Breaking Changes for TemplateInterface
-
-**Warning**: Extending `TemplateInterface` with SEO methods is a **breaking change** that affects:
-- All existing template implementations
-- Database schema (may need migration for new fields)
-- Template creation/update logic
-
-**Mitigation strategies:**
-1. **Gradual rollout**: Implement with default empty values for new fields
-2. **Interface segregation**: Create `SEORenderable` interface that only pages implement initially
-3. **Template metadata**: Store SEO data in template `Meta()` fields instead of dedicated columns
-
-### Alternative: Page-Only Implementation
-
-For faster implementation with zero breaking changes:
-
-```go
-// Modified RenderableFromContext that only works with pages
-func RenderableFromContext(ctx context.Context) PageInterface {
-    return PageFromContext(ctx) // Returns nil for template-only rendering
+globalBlockType := cmsstore.GetBlockType(blockType)
+if globalBlockType != nil {
+    return globalBlockType.Render(ctx, block)  // Context passed to block!
 }
 ```
 
-This approach:
-- ✅ Solves the primary use case (page SEO modification)
-- ✅ Zero breaking changes
-- ✅ Can be extended to templates later
-- ❌ Blocks in template-only rendering cannot modify metadata
+### How Variables Get Back
 
----
+Even though Go passes context by value, the `VarsContext` stored inside is a **pointer**. This means:
 
-## Recommended Combination: Option 1 + Option 6
+```go
+// In renderContentToHtml:
+ctx = cmsstore.WithVarsContext(ctx)  // Stores *VarsContext pointer in ctx
+varsPtr := cmsstore.VarsFromContext(ctx)  // Get the pointer (e.g., 0x12345)
 
-For a complete solution that covers all use cases:
+// Context is passed by value through the call chain, but the pointer remains the same
 
-1. **Option 1 (Context-Based Access)** for modifying standard page metadata like `[[PageTitle]]`
-2. **Option 6 (Custom Variables)** for block-specific data like `[[blog:title]]`
+// In BlockType.Render (deep in the call stack):
+vars := cmsstore.VarsFromContext(ctx)  // Gets the SAME pointer (0x12345)
+vars.Set("blog_title", "Hello")        // Modifies the map at 0x12345
 
-**Example combined usage:**
+// Back in renderContentToHtml:
+vars := cmsstore.VarsFromContext(ctx)  // Still the SAME pointer (0x12345)
+vars.All()                             // Returns map with "blog_title" = "Hello"
+```
+
+The `VarsContext` struct contains a map and mutex, and since we store a pointer to it in the context, all functions in the call chain share the same underlying data structure. When blocks call `vars.Set()`, they're modifying the shared map, which is then accessible back in `renderContentToHtml`.
+
+**Visual Representation:**
+
+```
+renderContentToHtml:
+  ctx contains: varsContextKey -> *VarsContext{vars: map[string]string{}}
+                                        ↓ (pointer: 0x12345)
+  ↓ pass ctx by value
+contentRenderBlocks:
+  ctx contains: varsContextKey -> *VarsContext{vars: map[string]string{}}
+                                        ↓ (same pointer: 0x12345)
+  ↓ pass ctx by value
+BlockType.Render:
+  ctx contains: varsContextKey -> *VarsContext{vars: map[string]string{}}
+                                        ↓ (same pointer: 0x12345)
+  vars.Set("key", "value")  // Modifies map at 0x12345
+  
+  ↑ return (context not returned, but pointer was modified)
+renderContentToHtml:
+  ctx contains: varsContextKey -> *VarsContext{vars: map["key"]="value"}
+                                        ↑ (same pointer: 0x12345, now has data)
+```
+
+This is why the `VarsContext` type must be a struct with a pointer receiver, not just a plain map.
+
+### Step 3: Usage in Custom Blocks
+
+Blocks can now set arbitrary variables:
 
 ```go
 func (b *BlogBlockType) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
-    // Option 1: Modify page metadata
-    if page := cmsstore.PageFromContext(ctx); page != nil {
-        page.SetTitle("My Blog Post")
-        page.SetMetaDescription("A post about...")
-    }
+    // Fetch blog post data
+    post := fetchBlogPost(block.Data())
     
-    // Option 6: Set custom variables for template
+    // Set custom variables - user chooses any naming convention
     if vars := cmsstore.VarsFromContext(ctx); vars != nil {
-        vars.Set("blog:title", "My Blog Post")
-        vars.Set("blog:author", "John Doe")
+        vars.Set("blog_title", post.Title)
+        vars.Set("author_name", post.Author)
+        vars.Set("publish_date", post.Date.Format("2006-01-02"))
+        vars.Set("category", post.Category)
+        
+        // Or use different naming styles
+        vars.Set("BlogTitle", post.Title)        // PascalCase
+        vars.Set("blog:title", post.Title)       // Namespaced
+        vars.Set("$blogTitle", post.Title)       // Prefixed
+        vars.Set("user_name", post.Author)       // Snake case
     }
     
-    return renderBlogContent(block), nil
+    return renderBlogHTML(post), nil
 }
 ```
 
-This gives maximum flexibility:
-- Standard metadata (title, description) flow through `[[PageTitle]]`, `[[PageMetaDescription]]`
-- Block-specific data flows through `[[blog:title]]`, `[[product:price]]`, etc.
-- Both can be used in templates for OpenGraph, Schema.org, or custom display
+### Step 4: Usage in Pages/Templates
+
+Variables can be referenced anywhere in content:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>[[PageTitle]] - [[blog_title]]</title>
+    <meta name="description" content="[[PageMetaDescription]]">
+    <meta property="og:title" content="[[blog_title]]">
+    <meta property="article:author" content="[[author_name]]">
+    <meta property="article:published_time" content="[[publish_date]]">
+</head>
+<body>
+    <header>
+        <h1>[[blog_title]]</h1>
+        <p>By [[author_name]] on [[publish_date]] in [[category]]</p>
+    </header>
+    
+    <main>
+        [[BLOCK_blog_content]]
+    </main>
+    
+    <footer>
+        <p>Author: [[user_name]]</p>
+    </footer>
+</body>
+</html>
+```
 
 ---
 
-## Alternative Consideration
+## Variable Naming
 
-If the "last block wins" limitation becomes problematic, **Option 3 (Two-Pass Rendering)** could be implemented as an enhancement later. This would:
+Users have complete freedom in naming variables. Common patterns:
 
-- Add the `MetadataCollector` interface
-- Allow explicit metadata collection before HTML rendering
-- Maintain backward compatibility with blocks that don't implement the interface
+- `snake_case`: `blog_title`, `user_name`, `product_price`
+- `camelCase`: `blogTitle`, `userName`, `productPrice`
+- `PascalCase`: `BlogTitle`, `UserName`, `ProductPrice`
+- `namespaced`: `blog:title`, `product:price`, `event:date`
+- `prefixed`: `$blogTitle`, `@userName`, `#productPrice`
 
-This hybrid approach would provide the best of both worlds: simple API for basic cases, explicit control for complex scenarios.
+The system doesn't enforce any convention - users choose what works for their project.
+
+---
+
+## Multiple Blocks
+
+Multiple blocks can set different variables without conflicts:
+
+```go
+// Blog block sets blog-related variables
+vars.Set("blog_title", "My Post")
+vars.Set("blog_author", "John")
+
+// Product block sets product-related variables
+vars.Set("product_name", "Widget")
+vars.Set("product_price", "$99")
+
+// User block sets user-related variables
+vars.Set("user_name", "Jane")
+vars.Set("user_role", "Admin")
+```
+
+All variables are available for substitution in the final content.
+
+---
+
+## Variable Collision Handling
+
+If multiple blocks set the same variable name, the last block wins (based on rendering order in content). This is simple and predictable. Users should choose unique names or use namespacing to avoid collisions.
+
+---
+
+## Changes Required
+
+1. **context.go**
+   - Add `VarsContext` type with thread-safe variable storage
+   - Add `WithVarsContext()` and `VarsFromContext()` functions
+   - Add `varsContextKey` constant
+
+2. **frontend/frontend.go**
+   - Update `renderContentToHtml()` to initialize vars context before block rendering
+   - Add third phase to replace custom variables after blocks are rendered
+   - Ensure context is passed through to `contentRenderBlocks()`
+
+3. **Documentation**
+   - Add block development guide section on setting custom variables
+   - Provide examples of different naming conventions
+   - Document variable collision behavior
+   - Add examples for common use cases (blog, products, events, users)
+
+---
+
+## Benefits
+
+1. **Complete flexibility** - Users choose any variable naming convention
+2. **No breaking changes** - Existing blocks continue to work unchanged
+3. **Simple API** - Just `vars.Set(key, value)` in block render
+4. **Thread-safe** - Mutex-protected variable storage
+5. **Composable** - Multiple blocks can set different variables
+6. **Works everywhere** - Variables can be used in pages, templates, and block content
+7. **Predictable** - Clear rendering order and collision handling
+
+---
+
+## Use Cases
+
+### Blog Post Metadata
+
+```go
+vars.Set("post_title", "Understanding Go Contexts")
+vars.Set("post_author", "Jane Developer")
+vars.Set("post_date", "2026-04-07")
+vars.Set("post_reading_time", "5 min read")
+```
+
+### E-commerce Product
+
+```go
+vars.Set("product_name", "Wireless Headphones")
+vars.Set("product_price", "$149.99")
+vars.Set("product_sku", "WH-1000XM4")
+vars.Set("product_availability", "In Stock")
+```
+
+### Event Information
+
+```go
+vars.Set("event_name", "Go Conference 2026")
+vars.Set("event_date", "2026-09-15")
+vars.Set("event_location", "San Francisco, CA")
+vars.Set("event_capacity", "500 attendees")
+```
+
+### User Profile
+
+```go
+vars.Set("user_display_name", "John Doe")
+vars.Set("user_role", "Administrator")
+vars.Set("user_join_date", "2024-01-15")
+vars.Set("user_post_count", "42")
+```
+
+---
+
+## Testing Strategy
+
+### Unit Tests
+
+```go
+func TestVarsContext(t *testing.T) {
+    ctx := cmsstore.WithVarsContext(context.Background())
+    vars := cmsstore.VarsFromContext(ctx)
+    
+    // Test Set and Get
+    vars.Set("test_key", "test_value")
+    val, ok := vars.Get("test_key")
+    assert.True(t, ok)
+    assert.Equal(t, "test_value", val)
+    
+    // Test All
+    vars.Set("key1", "value1")
+    vars.Set("key2", "value2")
+    all := vars.All()
+    assert.Equal(t, 3, len(all))
+}
+
+func TestVariableReplacement(t *testing.T) {
+    // Test that custom variables are replaced after blocks render
+    content := "<h1>[[custom_title]]</h1>[[BLOCK_test]]"
+    
+    // Mock block that sets custom_title
+    // ... render content
+    
+    assert.Contains(t, result, "<h1>My Custom Title</h1>")
+}
+
+func TestMultipleBlocksVariables(t *testing.T) {
+    // Test that multiple blocks can set different variables
+    // ... test scenario
+}
+```
+
+### Integration Tests
+
+1. Create test page with custom variable placeholders
+2. Create test block that sets those variables
+3. Render page and verify variables are replaced
+4. Test variable collision (last block wins)
+5. Test with both pages and templates
+
+---
+
+## Migration Path
+
+This feature requires no migration:
+
+1. Existing blocks work unchanged (they simply don't set variables)
+2. Existing pages/templates work unchanged (unknown variables remain as `[[var]]`)
+3. New blocks can opt-in by using `VarsFromContext()`
+4. New pages/templates can reference custom variables as needed
+
+---
+
+## Performance Considerations
+
+1. **Variable storage** - Small map in context, minimal memory overhead
+2. **Replacement** - Additional string replacement pass after block rendering
+3. **Thread safety** - Mutex overhead only when blocks actually set variables
+4. **Optimization** - Skip variable replacement if no variables were set
+
+Potential optimization:
+
+```go
+// Only do replacement if variables were actually set
+if vars := cmsstore.VarsFromContext(ctx); vars != nil && len(vars.All()) > 0 {
+    for key, value := range vars.All() {
+        content = strings.ReplaceAll(content, "[["+key+"]]", value)
+    }
+}
+```
+
+---
+
+## Documentation Updates
+
+### Block Development Guide
+
+Add new section: "Setting Custom Variables"
+
+```markdown
+## Setting Custom Variables
+
+Blocks can expose data as custom variables that can be referenced anywhere in the page or template content.
+
+### Basic Usage
+
+```go
+func (b *MyBlockType) Render(ctx context.Context, block BlockInterface, opts ...RenderOption) (string, error) {
+    if vars := cmsstore.VarsFromContext(ctx); vars != nil {
+        vars.Set("my_variable", "my value")
+    }
+    return html, nil
+}
+```
+
+### Naming Conventions
+
+You can use any naming convention that suits your project:
+
+- Snake case: `blog_title`, `user_name`
+- Camel case: `blogTitle`, `userName`
+- Namespaced: `blog:title`, `user:name`
+- Prefixed: `$blogTitle`, `@userName`
+
+### Using Variables in Content
+
+Reference variables using `[[variable_name]]` syntax:
+
+```html
+<h1>[[blog_title]]</h1>
+<p>By [[author_name]] on [[publish_date]]</p>
+```
+
+### Variable Collisions
+
+If multiple blocks set the same variable name, the last block (in content order) wins. Use unique names or namespacing to avoid conflicts.
+```
+
+---
+
+## Future Enhancements
+
+Potential future additions (not in initial implementation):
+
+1. **Variable scoping** - Block-local vs global variables
+2. **Variable types** - Support for non-string values (numbers, booleans)
+3. **Variable functions** - `[[uppercase:blog_title]]`, `[[format_date:publish_date]]`
+4. **Variable defaults** - `[[blog_title|Default Title]]`
+5. **Conditional variables** - `[[if:user_logged_in]]...[[endif]]`
+
+These can be added later without breaking changes to the core variable system.
 
 ---
 
 ## Conclusion
 
-The context-based approach (Option 1) provides the most pragmatic solution with minimal changes and maximum backward compatibility. It enables the desired functionality while maintaining the simplicity of the current architecture.
+The custom variable substitution approach provides maximum flexibility with minimal complexity. Users can set any variable names they want, and blocks can expose arbitrary data to the surrounding content. This solves the original problem while maintaining backward compatibility and keeping the implementation simple.

@@ -575,10 +575,22 @@ func (frontend *frontend) renderContentToHtml(
 
 	// Add request to context so blocks can access it (e.g., for query parameters)
 	ctx := cmsstore.RequestToContext(r.Context(), r)
+	
+	// Add vars context so blocks can set custom variables
+	ctx = cmsstore.WithVarsContext(ctx)
+	
 	content, err = frontend.contentRenderBlocks(ctx, content)
 
 	if err != nil {
 		return "", err
+	}
+
+	// Replace custom variables set by blocks
+	if vars := cmsstore.VarsFromContext(ctx); vars != nil {
+		for key, value := range vars.All() {
+			content = strings.ReplaceAll(content, "[["+key+"]]", value)
+			content = strings.ReplaceAll(content, "[[ "+key+" ]]", value)
+		}
 	}
 
 	// Apply new block attribute syntax: <block id="..." attr="value" />
