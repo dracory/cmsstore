@@ -172,6 +172,117 @@ func (b *myBlockType) Render(ctx context.Context, block cmsstore.BlockInterface)
 
 ---
 
+## Custom Variables in Blocks
+
+Blocks can set custom variables that are automatically replaced in the final rendered content. This allows blocks to expose dynamic data that can be referenced anywhere in page or template content.
+
+### How It Works
+
+During rendering, blocks can set variables via `VarsFromContext()`. After all blocks are rendered, these variables are replaced in the content using `[[variable_name]]` syntax.
+
+### Setting Variables in Blocks
+
+```go
+func (b *BlogBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, opts ...cmsstore.RenderOption) (string, error) {
+    // Fetch your data
+    post := fetchBlogPost(block.Data())
+    
+    // Set custom variables
+    if vars := cmsstore.VarsFromContext(ctx); vars != nil {
+        vars.Set("blog_title", post.Title)
+        vars.Set("blog_author", post.Author)
+        vars.Set("blog_date", post.Date.Format("2006-01-02"))
+        vars.Set("blog_excerpt", post.Excerpt)
+    }
+    
+    // Return the block's HTML
+    return renderBlogHTML(post), nil
+}
+```
+
+### Using Variables in Content
+
+Reference variables in your page or template content:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>[[PageTitle]] - [[blog_title]]</title>
+    <meta name="description" content="[[blog_excerpt]]">
+    <meta property="og:title" content="[[blog_title]]">
+    <meta property="article:author" content="[[blog_author]]">
+    <meta property="article:published_time" content="[[blog_date]]">
+</head>
+<body>
+    <header>
+        <h1>[[blog_title]]</h1>
+        <p>By [[blog_author]] on [[blog_date]]</p>
+    </header>
+    
+    <main>
+        [[BLOCK_blog_content]]
+    </main>
+</body>
+</html>
+```
+
+### Variable Naming
+
+You have complete freedom in naming variables. Common patterns:
+
+- **snake_case**: `blog_title`, `user_name`, `product_price`
+- **camelCase**: `blogTitle`, `userName`, `productPrice`
+- **PascalCase**: `BlogTitle`, `UserName`, `ProductPrice`
+- **namespaced**: `blog:title`, `product:price`, `event:date`
+- **prefixed**: `$blogTitle`, `@userName`, `#productPrice`
+
+### Important Notes
+
+- **Always check for nil**: `VarsFromContext()` returns `nil` if variables are not available
+- **Thread-safe**: Variable storage is protected by mutex
+- **Collision handling**: If multiple blocks set the same variable, the last block wins (based on content order)
+- **Scope**: Variables are only available during the current render cycle
+
+### Use Cases
+
+**Blog Post SEO:**
+```go
+vars.Set("post_title", post.Title)
+vars.Set("post_excerpt", post.Excerpt)
+vars.Set("post_author", post.Author)
+vars.Set("post_image", post.FeaturedImage)
+```
+
+**E-commerce Product:**
+```go
+vars.Set("product_name", product.Name)
+vars.Set("product_price", product.Price)
+vars.Set("product_sku", product.SKU)
+vars.Set("product_availability", product.Availability)
+```
+
+**Event Information:**
+```go
+vars.Set("event_name", event.Name)
+vars.Set("event_date", event.Date.Format("2006-01-02"))
+vars.Set("event_location", event.Location)
+vars.Set("event_organizer", event.Organizer)
+```
+
+**User Profile:**
+```go
+vars.Set("user_display_name", user.Name)
+vars.Set("user_role", user.Role)
+vars.Set("user_join_date", user.CreatedAt.Format("2006-01-02"))
+```
+
+### Complete Example
+
+See `examples/custom-variables/` for a complete working example with blog and product blocks.
+
+---
+
 ### Current State (Built-in Types)
 - ✅ HTML and Menu blocks now use unified `BlockType` in `blocks/` folder
 - ✅ Legacy providers in `admin/blocks/admin_provider_*.go` kept for reference

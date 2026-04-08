@@ -294,6 +294,44 @@ func (b *myBlockType) Render(ctx context.Context, block cmsstore.BlockInterface)
 
 For complete details, see [Request Context in Blocks](./BLOCK_SYSTEM_ARCHITECTURE.md#request-context-in-blocks).
 
+### 7. Setting Custom Variables
+
+Blocks can expose data as custom variables that can be referenced anywhere in page or template content:
+
+```go
+func (b *BlogBlockType) Render(ctx context.Context, block cmsstore.BlockInterface) (string, error) {
+    post := fetchBlogPost(block.Data())
+    
+    // Set custom variables
+    if vars := cmsstore.VarsFromContext(ctx); vars != nil {
+        vars.Set("blog_title", post.Title)
+        vars.Set("blog_author", post.Author)
+        vars.Set("blog_date", post.Date.Format("2006-01-02"))
+    }
+    
+    return renderHTML(post), nil
+}
+```
+
+Then use in page/template content:
+
+```html
+<head>
+    <title>[[PageTitle]] - [[blog_title]]</title>
+    <meta property="og:title" content="[[blog_title]]">
+    <meta property="article:author" content="[[blog_author]]">
+</head>
+<body>
+    <h1>[[blog_title]]</h1>
+    <p>By [[blog_author]] on [[blog_date]]</p>
+    [[BLOCK_blog_content]]
+</body>
+```
+
+**Variable naming**: Use any convention - `snake_case`, `camelCase`, `namespaced:var`, `$prefixed`, etc.
+
+For complete details and examples, see [Custom Variables in Blocks](./BLOCK_SYSTEM_ARCHITECTURE.md#custom-variables-in-blocks).
+
 ## Testing Blocks
 
 ```go
