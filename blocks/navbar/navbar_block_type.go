@@ -285,6 +285,11 @@ func (t *NavbarBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.
 	return fieldsContent
 }
 
+// GetCustomVariables returns nil as navbar blocks do not set any custom variables.
+func (t *NavbarBlockType) GetCustomVariables() []cmsstore.BlockCustomVariable {
+	return nil
+}
+
 // SaveAdminFields processes form submission and updates the navbar block.
 func (t *NavbarBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
 	r.ParseForm()

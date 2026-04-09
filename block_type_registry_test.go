@@ -20,6 +20,7 @@ func (t *testSystemBlock) GetAdminFields(block BlockInterface, r *http.Request) 
 func (t *testSystemBlock) SaveAdminFields(r *http.Request, block BlockInterface) error {
 	return nil
 }
+func (t *testSystemBlock) GetCustomVariables() []BlockCustomVariable { return nil }
 
 type testCustomBlock struct{}
 
@@ -34,6 +35,7 @@ func (t *testCustomBlock) GetAdminFields(block BlockInterface, r *http.Request) 
 func (t *testCustomBlock) SaveAdminFields(r *http.Request, block BlockInterface) error {
 	return nil
 }
+func (t *testCustomBlock) GetCustomVariables() []BlockCustomVariable { return nil }
 
 func TestBlockTypeRegistryOrigin(t *testing.T) {
 	// Clear registry for clean test

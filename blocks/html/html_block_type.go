@@ -106,6 +106,11 @@ setTimeout(function () {
 	return fieldsContent
 }
 
+// GetCustomVariables returns nil as HTML blocks do not set any custom variables.
+func (t *HTMLBlockType) GetCustomVariables() []cmsstore.BlockCustomVariable {
+	return nil
+}
+
 // SaveAdminFields processes form submission and updates the HTML block.
 func (t *HTMLBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
 	content := req.GetStringTrimmed(r, "block_content")

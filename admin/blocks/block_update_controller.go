@@ -217,7 +217,47 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 			`<block id="`+data.blockID+`" depth="2" style="horizontal" />`)).
 		Child(controller.codeSnippet(
 			"Alternative Syntax (for HTML attributes)",
-			`[[block id='`+data.blockID+`']]`))
+			`[[block id='`+data.blockID+`']]`)).
+		Child(controller.customVariablesSection(data))
+}
+
+// customVariablesSection renders a reference table of custom variables exposed by the block type.
+// Returns nil if the block type exposes no custom variables.
+func (controller blockUpdateController) customVariablesSection(data blockUpdateControllerData) hb.TagInterface {
+	blockType := cmsstore.GetBlockType(data.block.Type())
+	if blockType == nil {
+		return hb.Div()
+	}
+
+	vars := blockType.GetCustomVariables()
+	if len(vars) == 0 {
+		return hb.Div()
+	}
+
+	rows := hb.Tbody()
+	for _, v := range vars {
+		rows.Child(hb.TR().
+			Child(hb.TD().Child(hb.Code().Text("[[" + v.Name + "]]"))).
+			Child(hb.TD().Text(v.Description)))
+	}
+
+	return hb.Div().
+		Class("card mt-4").
+		Child(hb.Div().
+			Class("card-header").
+			Text("Available Custom Variables")).
+		Child(hb.Div().
+			Class("card-body p-0").
+			Child(hb.Div().
+				Class("text-muted px-3 pt-3 pb-2").
+				Text("This block type sets the following variables. Use them in your page or template content as shown.")).
+			Child(hb.Table().
+				Class("table table-sm table-bordered mb-0").
+				Child(hb.Thead().
+					Child(hb.TR().
+						Child(hb.TH().Text("Variable")).
+						Child(hb.TH().Text("Description")))).
+				Child(rows)))
 }
 
 func (controller blockUpdateController) form(data blockUpdateControllerData) hb.TagInterface {

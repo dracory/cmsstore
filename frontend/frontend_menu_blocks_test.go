@@ -337,6 +337,9 @@ func (t *testBlockTypeWithRequestCheck) GetAdminFields(block cmsstore.BlockInter
 func (t *testBlockTypeWithRequestCheck) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
 	return nil
 }
+func (t *testBlockTypeWithRequestCheck) GetCustomVariables() []cmsstore.BlockCustomVariable {
+	return nil
+}
 
 func (t *testBlockTypeWithRequestCheck) Validate(block cmsstore.BlockInterface) error {
 	return nil

@@ -203,6 +203,11 @@ func (t *BreadcrumbsBlockType) GetAdminFields(block cmsstore.BlockInterface, r *
 	return fieldsContent
 }
 
+// GetCustomVariables returns nil as breadcrumbs blocks do not set any custom variables.
+func (t *BreadcrumbsBlockType) GetCustomVariables() []cmsstore.BlockCustomVariable {
+	return nil
+}
+
 // SaveAdminFields processes form submission and updates the breadcrumbs block.
 func (t *BreadcrumbsBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
 	r.ParseForm()

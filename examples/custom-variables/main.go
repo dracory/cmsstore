@@ -23,6 +23,17 @@ func (b *BlogBlockType) Description() string {
 	return "A blog post block that exposes variables for use in page/template content"
 }
 
+func (b *BlogBlockType) GetCustomVariables() []cmsstore.BlockCustomVariable {
+	return []cmsstore.BlockCustomVariable{
+		{Name: "blog_title", Description: "The blog post title"},
+		{Name: "blog_author", Description: "The post author name"},
+		{Name: "blog_date", Description: "Publication date in YYYY-MM-DD format"},
+		{Name: "blog_category", Description: "The post category"},
+		{Name: "blog_reading_time", Description: "Estimated reading time"},
+		{Name: "blog_excerpt", Description: "Short summary of the post"},
+	}
+}
+
 func (b *BlogBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, opts ...cmsstore.RenderOption) (string, error) {
 	// Simulate fetching blog post data
 	post := struct {
@@ -52,11 +63,11 @@ func (b *BlogBlockType) Render(ctx context.Context, block cmsstore.BlockInterfac
 		vars.Set("blog_excerpt", post.Excerpt)
 
 		// You can also use other naming conventions
-		vars.Set("BlogTitle", post.Title)           // PascalCase
-		vars.Set("blog:title", post.Title)          // Namespaced
-		vars.Set("$blogTitle", post.Title)          // Prefixed
-		vars.Set("post.title", post.Title)          // Dotted
-		vars.Set("POST_TITLE", post.Title)          // Upper case
+		vars.Set("BlogTitle", post.Title)  // PascalCase
+		vars.Set("blog:title", post.Title) // Namespaced
+		vars.Set("$blogTitle", post.Title) // Prefixed
+		vars.Set("post.title", post.Title) // Dotted
+		vars.Set("POST_TITLE", post.Title) // Upper case
 	}
 
 	// Return the HTML for the block itself
@@ -91,6 +102,16 @@ func (p *ProductBlockType) Label() string {
 
 func (p *ProductBlockType) Description() string {
 	return "A product block that exposes product data as variables"
+}
+
+func (p *ProductBlockType) GetCustomVariables() []cmsstore.BlockCustomVariable {
+	return []cmsstore.BlockCustomVariable{
+		{Name: "product_name", Description: "The product name"},
+		{Name: "product_price", Description: "The product price with currency symbol"},
+		{Name: "product_sku", Description: "The product SKU/model number"},
+		{Name: "product_availability", Description: "Stock availability status"},
+		{Name: "product_brand", Description: "The product brand name"},
+	}
 }
 
 func (p *ProductBlockType) Render(ctx context.Context, block cmsstore.BlockInterface, opts ...cmsstore.RenderOption) (string, error) {

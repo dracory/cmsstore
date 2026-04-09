@@ -119,6 +119,27 @@ type BlockType interface {
 	// Returns:
 	//   - Error if validation fails, or nil on success
 	SaveAdminFields(r *http.Request, block BlockInterface) error
+
+	// GetCustomVariables returns metadata about custom variables this block type
+	// can set during rendering via VarsFromContext. Returns nil or empty slice if none.
+	//
+	// Variables are always strings and are referenced in content as [[name]].
+	//
+	// Example:
+	//   func (b *BlogBlockType) GetCustomVariables() []BlockCustomVariable {
+	//       return []BlockCustomVariable{
+	//           {Name: "blog_title",  Description: "The blog post title"},
+	//           {Name: "blog_author", Description: "The post author name"},
+	//       }
+	//   }
+	GetCustomVariables() []BlockCustomVariable
+}
+
+// BlockCustomVariable describes a custom variable that a block type can set during rendering.
+// Variables are always strings and are referenced in content as [[name]].
+type BlockCustomVariable struct {
+	Name        string // Variable name, e.g. "blog_title"
+	Description string // Human-readable description of what the variable contains
 }
 
 // BlockTypeRegistry manages all registered block types.

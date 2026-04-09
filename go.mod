@@ -19,7 +19,7 @@ require (
 	github.com/dracory/test v0.10.0
 	github.com/dracory/ui v0.17.0
 	github.com/dracory/uid v1.9.0
-	github.com/dracory/versionstore v0.6.0
+	github.com/dracory/versionstore v0.9.0
 	github.com/dromara/carbon/v2 v2.6.16
 	github.com/samber/lo v1.53.0
 	github.com/spf13/cast v1.10.0

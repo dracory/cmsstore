@@ -268,6 +268,11 @@ func (t *MenuBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.Re
 	return fieldsContent
 }
 
+// GetCustomVariables returns nil as menu blocks do not set any custom variables.
+func (t *MenuBlockType) GetCustomVariables() []cmsstore.BlockCustomVariable {
+	return nil
+}
+
 // SaveAdminFields processes form submission and updates the menu block.
 func (t *MenuBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
 	menuID := req.GetStringTrimmed(r, "menu_id")

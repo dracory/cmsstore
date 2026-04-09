@@ -876,3 +876,16 @@ func TestNavbarBlockType_SaveAdminFields_BrandImage(t *testing.T) {
 func contains(s, substr string) bool {
 	return strings.Contains(s, substr)
 }
+
+func TestNavbarBlockType_GetCustomVariables(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	bt := NewNavbarBlockType(store)
+	vars := bt.GetCustomVariables()
+	if vars != nil {
+		t.Errorf("expected nil custom variables for navbar block, got %v", vars)
+	}
+}

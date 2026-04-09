@@ -112,6 +112,9 @@ func (t *GalleryBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http
 	}
 }
 
+// GetCustomVariables returns nil as this example block does not set custom variables.
+func (t *GalleryBlockType) GetCustomVariables() []cmsstore.BlockCustomVariable { return nil }
+
 // SaveAdminFields implements form submission handling.
 func (t *GalleryBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
 	// Get form values
@@ -252,6 +255,8 @@ func (t *VueTreeBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http
 		}),
 	}
 }
+
+func (t *VueTreeBlockType) GetCustomVariables() []cmsstore.BlockCustomVariable { return nil }
 
 func (t *VueTreeBlockType) SaveAdminFields(r *http.Request, block cmsstore.BlockInterface) error {
 	treeData := req.GetStringTrimmed(r, "tree_data")

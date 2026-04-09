@@ -344,3 +344,16 @@ func (b *TestBreadcrumbsBlock) UpsertMetas(metas map[string]string) error {
 func contains(s, substr string) bool {
 	return len(s) > 0 && len(substr) > 0
 }
+
+func TestBreadcrumbsBlockType_GetCustomVariables(t *testing.T) {
+	store, err := testutils.InitStore(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+
+	bt := NewBreadcrumbsBlockType(store)
+	vars := bt.GetCustomVariables()
+	if vars != nil {
+		t.Errorf("expected nil custom variables for breadcrumbs block, got %v", vars)
+	}
+}

@@ -94,6 +94,12 @@ func (a *BlockTypeAdapter) SaveAdminFields(r *http.Request, block BlockInterface
 	return a.adminProvider.SaveContentFields(r, block)
 }
 
+// GetCustomVariables returns nil as the adapter has no knowledge of custom variables.
+// Implement GetCustomVariables directly on your BlockType for variable metadata.
+func (a *BlockTypeAdapter) GetCustomVariables() []BlockCustomVariable {
+	return nil
+}
+
 // RendererOnlyAdapter creates a BlockType from just a renderer.
 //
 // This is useful when you only need frontend rendering and don't need admin UI.
