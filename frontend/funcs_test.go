@@ -154,7 +154,7 @@ func TestIsJSON(t *testing.T) {
 		{
 			name:     "Valid JSON array",
 			input:    `[1, 2, 3]`,
-			expected: false, // isJSON only validates objects, not arrays
+			expected: true, // isJSON now validates both objects and arrays
 		},
 		{
 			name:     "Valid JSON nested object",
@@ -229,7 +229,7 @@ func TestIsJSON(t *testing.T) {
 		{
 			name:     "Empty array",
 			input:    `[]`,
-			expected: false, // isJSON only validates objects, not arrays
+			expected: true, // isJSON now validates both objects and arrays
 		},
 		{
 			name:     "JSON with escaped characters",

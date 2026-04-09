@@ -27,6 +27,19 @@ func contentFindIdsByPatternPrefix(content, prefix string) []string {
 }
 
 func isJSON(str string) bool {
-	var js map[string]any
-	return json.Unmarshal([]byte(str), &js) == nil
+	var js any
+	err := json.Unmarshal([]byte(str), &js)
+	if err != nil {
+		return false
+	}
+
+	// Accept both objects (map) and arrays (slice), but not primitives
+	switch js.(type) {
+	case map[string]any:
+		return true
+	case []any:
+		return true
+	default:
+		return false
+	}
 }
