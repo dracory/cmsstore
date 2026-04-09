@@ -568,28 +568,42 @@ func (frontend *frontend) renderContentToHtml(
 
 	// Render blocks FIRST so they can set custom variables
 	// This allows variables to "bubble up" from blocks to the page/template level
-	content, err = frontend.contentRenderBlocks(ctx, content)
 
+	// Render [[BLOCK_xxx]] syntax in template
+	content, err = frontend.contentRenderBlocks(ctx, content)
 	if err != nil {
 		return "", err
 	}
 
-	// Prepare all replacements, including standard and custom variables
-	allReplacements := make(map[string]string)
-
-	// Get custom variables from blocks
-	customVars := cmsstore.VarsFromContext(ctx)
-	if customVars != nil {
-		maps.Copy(allReplacements, customVars.All())
+	// Render <block id="..." /> syntax in template
+	content, err = frontend.applyBlockAttributeSyntax(ctx, r, content)
+	if err != nil {
+		return "", err
 	}
 
 	// Render blocks in PageContent so variables can bubble up from page content to template
 	pageContentRendered := options.PageContent
 	if pageContentRendered != "" {
+		// Render [[BLOCK_xxx]] syntax
 		pageContentRendered, err = frontend.contentRenderBlocks(ctx, pageContentRendered)
 		if err != nil {
 			return "", err
 		}
+
+		// Render <block id="..." /> syntax so these blocks can also set variables
+		pageContentRendered, err = frontend.applyBlockAttributeSyntax(ctx, r, pageContentRendered)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// Prepare all replacements, including standard and custom variables
+	allReplacements := make(map[string]string)
+
+	// Get custom variables from blocks (AFTER rendering page content blocks)
+	customVars := cmsstore.VarsFromContext(ctx)
+	if customVars != nil {
+		maps.Copy(allReplacements, customVars.All())
 	}
 
 	// Prepare standard placeholders
@@ -620,12 +634,8 @@ func (frontend *frontend) renderContentToHtml(
 		content = strings.ReplaceAll(content, "[[ "+key+" ]]", value)
 	}
 
-	// Apply new block attribute syntax: <block id="..." attr="value" />
-	content, err = frontend.applyBlockAttributeSyntax(r, content)
-
-	if err != nil {
-		return "", err
-	}
+	// Block attribute syntax already applied earlier (lines 579 and 596)
+	// to ensure variables from blocks bubble up before placeholder replacement
 
 	content, err = frontend.contentRenderPageURLs(r.Context(), content)
 

@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"context"
 	"html"
 	"net/http"
 	"regexp"
@@ -23,7 +24,7 @@ var attributePattern = regexp.MustCompile(`([\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']
 // 1. <block id="..." attr="value" /> - Primary syntax
 // 2. [[block id='...' attr='value']] - Alternative for HTML attribute contexts
 // This is called after legacy [[BLOCK_id]] processing.
-func (frontend *frontend) applyBlockAttributeSyntax(req *http.Request, content string) (string, error) {
+func (frontend *frontend) applyBlockAttributeSyntax(ctx context.Context, req *http.Request, content string) (string, error) {
 	// Find all <block ... /> tags (angle bracket syntax)
 	angleMatches := blockAttributeAngleBrackets.FindAllStringSubmatch(content, -1)
 
@@ -98,8 +99,7 @@ func (frontend *frontend) applyBlockAttributeSyntax(req *http.Request, content s
 
 		// Render with attributes
 		var htmlOutput string
-		// Inject request into context so blocks can access it
-		ctx := cmsstore.RequestToContext(req.Context(), req)
+		// Use the passed context which already has VarsContext and request
 		if blockType != nil {
 			// Render with attributes (or without if empty)
 			// Block types validate attributes internally if needed

@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"net/http"
 	"testing"
@@ -45,7 +46,7 @@ func setupVariableBubblingTest(t *testing.T) (*frontend, *cmsstore.BlockInterfac
 	}
 
 	// Create frontend
-	logger := slog.New(slog.NewTextHandler(nil, nil))
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	fe := New(Config{
 		Store:  store,
 		Logger: logger,

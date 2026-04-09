@@ -257,7 +257,8 @@ func TestApplyBlockAttributeSyntax(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
-			result, err := f.applyBlockAttributeSyntax(req, tt.content)
+			ctx := cmsstore.WithVarsContext(req.Context())
+			result, err := f.applyBlockAttributeSyntax(ctx, req, tt.content)
 
 			if err != nil {
 				t.Errorf("applyBlockAttributeSyntax() error = %v", err)
@@ -310,8 +311,9 @@ func TestApplyBlockAttributeSyntax_InactiveBlock(t *testing.T) {
 	f := fe.(*frontend)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	ctx = cmsstore.WithVarsContext(req.Context())
 	content := `<block id="` + block.ID() + `" />`
-	result, err := f.applyBlockAttributeSyntax(req, content)
+	result, err := f.applyBlockAttributeSyntax(ctx, req, content)
 
 	if err != nil {
 		t.Errorf("applyBlockAttributeSyntax() error = %v", err)
@@ -363,9 +365,10 @@ func TestApplyBlockAttributeSyntax_XSSPrevention(t *testing.T) {
 	f := fe.(*frontend)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	ctx = cmsstore.WithVarsContext(req.Context())
 	// Use properly encoded HTML entities in attribute value (as browsers would parse it)
 	content := `<block id="` + block.ID() + `" wrap="&lt;script&gt;alert('xss')&lt;/script&gt;" />`
-	result, err := f.applyBlockAttributeSyntax(req, content)
+	result, err := f.applyBlockAttributeSyntax(ctx, req, content)
 
 	if err != nil {
 		t.Errorf("applyBlockAttributeSyntax() error = %v", err)
