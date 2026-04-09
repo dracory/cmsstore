@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"maps"
 	"net/http"
 	"regexp"
 	"sort"
@@ -579,9 +580,7 @@ func (frontend *frontend) renderContentToHtml(
 	// Get custom variables from blocks
 	customVars := cmsstore.VarsFromContext(ctx)
 	if customVars != nil {
-		for key, value := range customVars.All() {
-			allReplacements[key] = value
-		}
+		maps.Copy(allReplacements, customVars.All())
 	}
 
 	// Prepare standard placeholders
