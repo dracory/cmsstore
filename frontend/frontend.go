@@ -583,9 +583,18 @@ func (frontend *frontend) renderContentToHtml(
 		maps.Copy(allReplacements, customVars.All())
 	}
 
+	// Render blocks in PageContent so variables can bubble up from page content to template
+	pageContentRendered := options.PageContent
+	if pageContentRendered != "" {
+		pageContentRendered, err = frontend.contentRenderBlocks(ctx, pageContentRendered)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	// Prepare standard placeholders
 	replacementsKeywords := map[string]string{
-		"PageContent":         options.PageContent,
+		"PageContent":         pageContentRendered,
 		"PageCanonicalUrl":    options.PageCanonicalURL,
 		"PageMetaDescription": options.PageMetaDescription,
 		"PageMetaKeywords":    options.PageMetaKeywords,

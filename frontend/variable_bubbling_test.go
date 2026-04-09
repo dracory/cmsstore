@@ -85,9 +85,10 @@ func TestCustomVariableReplacement(t *testing.T) {
 	}
 }
 
-// TestVariableBubblingToPageTitle verifies that variables set by blocks
-// bubble up and are available BEFORE standard placeholders like [[PageTitle]]
-// are processed. This is the failing test demonstrating the bug.
+// TestVariableBubblingToPageTitle verifies that variables set by blocks IN THE TEMPLATE
+// bubble up and are available when standard placeholders like [[PageTitle]] are processed.
+// NOTE: This test only covers blocks in template content. See TestVariableBubblingFromPageContentToTemplate
+// for the critical test of blocks in page content bubbling up to template placeholders.
 func TestVariableBubblingToPageTitle(t *testing.T) {
 	f, block, cleanup := setupVariableBubblingTest(t)
 	defer cleanup()
@@ -147,6 +148,94 @@ func TestMultipleVariablesFromBlock(t *testing.T) {
 		if !contains(html, expected) {
 			t.Errorf("Expected content to contain '%s', got: %s", expected, html)
 		}
+	}
+}
+
+// TestVariableBubblingFromPageContentToTemplate is the CRITICAL test that verifies
+// variables set by blocks in PAGE CONTENT bubble up to TEMPLATE placeholders.
+// This is the real-world scenario where:
+// - Template has: <title>[[PageTitle]]</title>
+// - Page title contains: "Blog Post [[blog_title]]"
+// - Page content has: [[BLOCK_xxx]] (the Blog Post block)
+// - The block sets: blog_title = "My Blog Post Title"
+// Expected: The <title> should show "Blog Post My Blog Post Title"
+func TestVariableBubblingFromPageContentToTemplate(t *testing.T) {
+	f, block, cleanup := setupVariableBubblingTest(t)
+	defer cleanup()
+
+	req, _ := http.NewRequest("GET", "/test", nil)
+
+	// This simulates the TEMPLATE content with [[PageTitle]] placeholder
+	templateContent := "<html><head><title>[[PageTitle]]</title></head><body>[[PageContent]]</body></html>"
+
+	// This simulates the PAGE CONTENT with the Blog Post block
+	pageContent := "[[BLOCK_" + (*block).ID() + "]]<p>Blog content here</p>"
+
+	// This simulates the page title from the database containing a variable reference
+	pageTitle := "Blog Post [[blog_title]]"
+
+	html, err := f.renderContentToHtml(req, templateContent, TemplateRenderHtmlByIDOptions{
+		PageContent: pageContent, // Block is in page content, not template
+		PageTitle:   pageTitle,   // Title contains variable reference
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The critical assertion: [[blog_title]] in PageTitle should be resolved
+	// to "My Blog Post Title" (set by the block in page content)
+	expectedTitle := "<title>Blog Post My Blog Post Title</title>"
+	if !contains(html, expectedTitle) {
+		t.Errorf("Variable bubbling from page content to template failed.\nExpected title: %s\nActual HTML: %s", expectedTitle, html)
+	}
+
+	// Also verify the block rendered in the page content
+	if !contains(html, "<!-- Block rendered -->") {
+		t.Errorf("Block in page content did not render")
+	}
+
+	// Verify the variable is NOT left unreplaced
+	if contains(html, "[[blog_title]]") {
+		t.Errorf("Variable [[blog_title]] was not replaced in the output: %s", html)
+	}
+}
+
+// TestVariableBubblingFromPageContentToMultiplePlaceholders verifies that
+// variables from page content blocks are available in ALL template placeholders,
+// not just PageTitle.
+func TestVariableBubblingFromPageContentToMultiplePlaceholders(t *testing.T) {
+	f, block, cleanup := setupVariableBubblingTest(t)
+	defer cleanup()
+
+	req, _ := http.NewRequest("GET", "/test", nil)
+
+	// Template uses variables in multiple places
+	templateContent := `<html>
+		<head>
+			<title>[[PageTitle]]</title>
+			<meta name="description" content="[[PageMetaDescription]]">
+		</head>
+		<body>[[PageContent]]</body>
+	</html>`
+
+	// Page content has the block that sets variables
+	pageContent := "[[BLOCK_" + (*block).ID() + "]]"
+
+	html, err := f.renderContentToHtml(req, templateContent, TemplateRenderHtmlByIDOptions{
+		PageContent:         pageContent,
+		PageTitle:           "[[blog_title]]",            // Variable in title
+		PageMetaDescription: "Summary: [[blog_summary]]", // Variable in meta
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Both should be resolved
+	if !contains(html, "<title>My Blog Post Title</title>") {
+		t.Errorf("PageTitle variable not resolved: %s", html)
+	}
+	if !contains(html, `content="Summary: This is a summary"`) {
+		t.Errorf("PageMetaDescription variable not resolved: %s", html)
 	}
 }
 
