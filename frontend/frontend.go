@@ -559,6 +559,32 @@ func (frontend *frontend) renderContentToHtml(
 	content string,
 	options TemplateRenderHtmlByIDOptions,
 ) (html string, err error) {
+	// Add request to context so blocks can access it (e.g., for query parameters)
+	ctx := cmsstore.RequestToContext(r.Context(), r)
+
+	// Add vars context so blocks can set custom variables
+	ctx = cmsstore.WithVarsContext(ctx)
+
+	// Render blocks FIRST so they can set custom variables
+	// This allows variables to "bubble up" from blocks to the page/template level
+	content, err = frontend.contentRenderBlocks(ctx, content)
+
+	if err != nil {
+		return "", err
+	}
+
+	// Prepare all replacements, including standard and custom variables
+	allReplacements := make(map[string]string)
+
+	// Get custom variables from blocks
+	customVars := cmsstore.VarsFromContext(ctx)
+	if customVars != nil {
+		for key, value := range customVars.All() {
+			allReplacements[key] = value
+		}
+	}
+
+	// Prepare standard placeholders
 	replacementsKeywords := map[string]string{
 		"PageContent":         options.PageContent,
 		"PageCanonicalUrl":    options.PageCanonicalURL,
@@ -568,29 +594,22 @@ func (frontend *frontend) renderContentToHtml(
 		"PageTitle":           options.PageTitle,
 	}
 
-	for keyWord, value := range replacementsKeywords {
-		content = strings.ReplaceAll(content, "[["+keyWord+"]]", value)
-		content = strings.ReplaceAll(content, "[[ "+keyWord+" ]]", value)
-	}
-
-	// Add request to context so blocks can access it (e.g., for query parameters)
-	ctx := cmsstore.RequestToContext(r.Context(), r)
-	
-	// Add vars context so blocks can set custom variables
-	ctx = cmsstore.WithVarsContext(ctx)
-	
-	content, err = frontend.contentRenderBlocks(ctx, content)
-
-	if err != nil {
-		return "", err
-	}
-
-	// Replace custom variables set by blocks
-	if vars := cmsstore.VarsFromContext(ctx); vars != nil {
-		for key, value := range vars.All() {
-			content = strings.ReplaceAll(content, "[["+key+"]]", value)
-			content = strings.ReplaceAll(content, "[[ "+key+" ]]", value)
+	// Resolve any custom variables within the standard placeholder values
+	for key, value := range replacementsKeywords {
+		resolvedValue := value
+		if customVars != nil {
+			for cKey, cValue := range customVars.All() {
+				resolvedValue = strings.ReplaceAll(resolvedValue, "[["+cKey+"]]", cValue)
+				resolvedValue = strings.ReplaceAll(resolvedValue, "[[ "+cKey+" ]]", cValue)
+			}
 		}
+		allReplacements[key] = resolvedValue
+	}
+
+	// Perform all replacements in a single pass
+	for key, value := range allReplacements {
+		content = strings.ReplaceAll(content, "[["+key+"]]", value)
+		content = strings.ReplaceAll(content, "[[ "+key+" ]]", value)
 	}
 
 	// Apply new block attribute syntax: <block id="..." attr="value" />

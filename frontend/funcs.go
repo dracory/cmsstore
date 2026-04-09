@@ -9,7 +9,7 @@ import (
 func contentFindIdsByPatternPrefix(content, prefix string) []string {
 	ids := []string{}
 
-	re := regexp.MustCompilePOSIX("|\\[\\[" + prefix + "_(.*)\\]\\]|U")
+	re := regexp.MustCompilePOSIX(`\[\[` + prefix + `_([a-zA-Z0-9_-]+)\]\]`)
 
 	matches := re.FindAllStringSubmatch(content, -1)
 
