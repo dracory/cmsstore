@@ -27,6 +27,6 @@ func contentFindIdsByPatternPrefix(content, prefix string) []string {
 }
 
 func isJSON(str string) bool {
-	var js map[string]interface{}
+	var js map[string]any
 	return json.Unmarshal([]byte(str), &js) == nil
 }

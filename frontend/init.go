@@ -14,7 +14,7 @@ func init() {}
 func initCache() *ttlcache.Cache[string, any] {
 	fmt.Println("InMemCache Initialized")
 
-	inMemCache := ttlcache.New[string, any](
+	inMemCache := ttlcache.New(
 		ttlcache.WithTTL[string, any](30 * time.Minute),
 	)
 
