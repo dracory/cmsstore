@@ -261,7 +261,7 @@ func (m *mockMenuItem) IsSoftDeleted() bool                 { return false }
 // Data methods (stubs)
 func (m *mockMenuItem) Data() map[string]string              { return nil }
 func (m *mockMenuItem) DataChanged() map[string]string       { return nil }
-func (m *mockMenuItem) MarkAsNotDirty()                      {}
+func (m *mockMenuItem) MarkAsNotDirty(...string)             {}
 func (m *mockMenuItem) MarshalToVersioning() (string, error) { return "", nil }
 
 // Meta methods

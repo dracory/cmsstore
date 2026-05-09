@@ -29,7 +29,7 @@ func (m *TestNavbarMenuItem) Data() map[string]string {
 	return m.data
 }
 func (m *TestNavbarMenuItem) DataChanged() map[string]string                           { return make(map[string]string) }
-func (m *TestNavbarMenuItem) MarkAsNotDirty()                                          {}
+func (m *TestNavbarMenuItem) MarkAsNotDirty(...string)                                 {}
 func (m *TestNavbarMenuItem) ID() string                                               { return m.id }
 func (m *TestNavbarMenuItem) Name() string                                             { return m.name }
 func (m *TestNavbarMenuItem) URL() string                                              { return m.url }
@@ -118,7 +118,7 @@ func (b *TestNavbarBlock) Data() map[string]string {
 	return b.meta
 }
 func (b *TestNavbarBlock) DataChanged() map[string]string { return make(map[string]string) }
-func (b *TestNavbarBlock) MarkAsNotDirty()                {}
+func (b *TestNavbarBlock) MarkAsNotDirty(...string)       {}
 
 func (b *TestNavbarBlock) ID() string                                        { return "test-block" }
 func (b *TestNavbarBlock) SetID(id string) cmsstore.BlockInterface           { return b }

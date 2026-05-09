@@ -10,7 +10,7 @@ import (
 type BlockInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
-	MarkAsNotDirty()
+	MarkAsNotDirty(...string)
 
 	ID() string
 	SetID(id string) BlockInterface
@@ -90,7 +90,7 @@ type BlockInterface interface {
 type MenuInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
-	MarkAsNotDirty()
+	MarkAsNotDirty(...string)
 
 	// Methods
 
@@ -142,7 +142,7 @@ type MenuInterface interface {
 type MenuItemInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
-	MarkAsNotDirty()
+	MarkAsNotDirty(...string)
 
 	// Methods
 
@@ -211,7 +211,7 @@ type MenuItemInterface interface {
 type PageInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
-	MarkAsNotDirty()
+	MarkAsNotDirty(...string)
 
 	// Methods
 
@@ -296,7 +296,7 @@ type PageInterface interface {
 type SiteInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
-	MarkAsNotDirty()
+	MarkAsNotDirty(...string)
 
 	// Methods
 
@@ -463,7 +463,7 @@ type StoreInterface interface {
 type TemplateInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
-	MarkAsNotDirty()
+	MarkAsNotDirty(...string)
 
 	ID() string
 	SetID(id string) TemplateInterface
@@ -515,7 +515,7 @@ type TemplateInterface interface {
 type TranslationInterface interface {
 	Data() map[string]string
 	DataChanged() map[string]string
-	MarkAsNotDirty()
+	MarkAsNotDirty(...string)
 
 	ID() string
 	SetID(id string) TranslationInterface

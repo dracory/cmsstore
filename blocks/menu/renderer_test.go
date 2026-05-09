@@ -24,7 +24,7 @@ func (m *TestMenuItem) Data() map[string]string {
 	return m.data
 }
 func (m *TestMenuItem) DataChanged() map[string]string                                   { return make(map[string]string) }
-func (m *TestMenuItem) MarkAsNotDirty()                                                  {}
+func (m *TestMenuItem) MarkAsNotDirty(...string)                                         {}
 func (m *TestMenuItem) ID() string                                                       { return "test-id" }
 func (m *TestMenuItem) Name() string                                                     { return m.name }
 func (m *TestMenuItem) URL() string                                                      { return m.url }

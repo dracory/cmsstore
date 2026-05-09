@@ -277,7 +277,7 @@ func (b *TestBreadcrumbsBlock) Data() map[string]string {
 	return b.meta
 }
 func (b *TestBreadcrumbsBlock) DataChanged() map[string]string { return make(map[string]string) }
-func (b *TestBreadcrumbsBlock) MarkAsNotDirty()                {}
+func (b *TestBreadcrumbsBlock) MarkAsNotDirty(...string)       {}
 
 func (b *TestBreadcrumbsBlock) ID() string                                        { return "test-block" }
 func (b *TestBreadcrumbsBlock) SetID(id string) cmsstore.BlockInterface           { return b }
