@@ -183,7 +183,7 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 			return nil, err
 		}
 		if opts.VersioningEnabled {
-			if err := versionStore.AutoMigrate(); err != nil {
+			if err := versionStore.MigrateUp(ctx); err != nil {
 				return nil, err
 			}
 		}

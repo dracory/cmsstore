@@ -53,6 +53,7 @@ var _ StoreInterface = (*storeImplementation)(nil) // verify it extends the inte
 // PUBLIC METHODS ============================================================
 
 // AutoMigrate performs automatic database migrations.
+// Deprecated: Use MigrateUp instead.
 func (store *storeImplementation) AutoMigrate(ctx context.Context, opts ...Option) error {
 	if store.db == nil {
 		return errors.New("cms store: database is nil")
@@ -173,7 +174,7 @@ func (store *storeImplementation) AutoMigrate(ctx context.Context, opts ...Optio
 	}
 
 	if store.versioningEnabled {
-		err := store.versioningStore.AutoMigrate()
+		err := store.versioningStore.MigrateUp(ctx)
 
 		if err != nil {
 			return err
@@ -288,7 +289,7 @@ func (store *storeImplementation) MigrateUp(ctx context.Context, tx ...*sql.Tx) 
 	}
 
 	if store.versioningEnabled {
-		err := store.versioningStore.AutoMigrate()
+		err := store.versioningStore.MigrateUp(ctx, txToUse)
 		if err != nil {
 			return err
 		}
