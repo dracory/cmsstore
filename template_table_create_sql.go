@@ -70,3 +70,10 @@ func (st *storeImplementation) templateTableCreateSql() (string, error) {
 
 	return sql, nil
 }
+
+// templateTableDropSql returns a SQL string for dropping the template table
+func (st *storeImplementation) templateTableDropSql() (string, error) {
+	return sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+		Table(st.templateTableName).
+		Drop()
+}

@@ -75,3 +75,10 @@ func (st *storeImplementation) menuTableCreateSql() (string, error) {
 	// Return the generated SQL string
 	return sql, nil
 }
+
+// menuTableDropSql returns a SQL string for dropping the menu table
+func (st *storeImplementation) menuTableDropSql() (string, error) {
+	return sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+		Table(st.menuTableName).
+		Drop()
+}

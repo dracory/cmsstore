@@ -73,3 +73,10 @@ func (st *storeImplementation) siteTableCreateSql() (string, error) {
 
 	return sql, nil
 }
+
+// siteTableDropSql returns a SQL string for dropping the site table
+func (st *storeImplementation) siteTableDropSql() (string, error) {
+	return sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+		Table(st.siteTableName).
+		Drop()
+}

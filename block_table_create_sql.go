@@ -95,3 +95,10 @@ func (st *storeImplementation) blockTableCreateSql() (string, error) {
 
 	return sql, nil
 }
+
+// blockTableDropSql returns a SQL string for dropping the block table
+func (st *storeImplementation) blockTableDropSql() (string, error) {
+	return sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+		Table(st.blockTableName).
+		Drop()
+}

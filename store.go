@@ -183,6 +183,196 @@ func (store *storeImplementation) AutoMigrate(ctx context.Context, opts ...Optio
 	return nil
 }
 
+// MigrateUp creates the cms store tables
+func (store *storeImplementation) MigrateUp(ctx context.Context, tx ...*sql.Tx) error {
+	var txToUse *sql.Tx
+	if len(tx) > 0 {
+		txToUse = tx[0]
+	}
+
+	if store.db == nil {
+		return errors.New("cms store: database is nil")
+	}
+
+	blockSql, err := store.blockTableCreateSql()
+	if err != nil {
+		return err
+	}
+	pageSql, err := store.pageTableCreateSql()
+	if err != nil {
+		return err
+	}
+	tableSql, err := store.siteTableCreateSql()
+	if err != nil {
+		return err
+	}
+	templateSql, err := store.templateTableCreateSql()
+	if err != nil {
+		return err
+	}
+
+	var menuSql, menuItemSql, translationSql string
+	if store.menusEnabled {
+		menuSql, err = store.menuTableCreateSql()
+		if err != nil {
+			return err
+		}
+		menuItemSql, err = store.menuItemTableCreateSql()
+		if err != nil {
+			return err
+		}
+	}
+
+	if store.translationsEnabled {
+		translationSql, err = store.translationTableCreateSql()
+		if err != nil {
+			return err
+		}
+	}
+
+	if blockSql == "" {
+		return errors.New("block table create sql is empty")
+	}
+
+	if pageSql == "" {
+		return errors.New("page table create sql is empty")
+	}
+
+	if tableSql == "" {
+		return errors.New("site table create sql is empty")
+	}
+
+	if templateSql == "" {
+		return errors.New("template table create sql is empty")
+	}
+
+	if store.menusEnabled && store.menuTableName == "" {
+		return errors.New("menu table name is empty")
+	}
+
+	if store.menusEnabled && store.menuItemTableName == "" {
+		return errors.New("menu item table name is empty")
+	}
+
+	if store.translationsEnabled && translationSql == "" {
+		return errors.New("translation table create sql is empty")
+	}
+
+	sqlList := []string{
+		blockSql,
+		pageSql,
+		tableSql,
+		templateSql,
+	}
+
+	if store.menusEnabled {
+		sqlList = append(sqlList, menuSql)
+		sqlList = append(sqlList, menuItemSql)
+	}
+
+	if store.translationsEnabled {
+		sqlList = append(sqlList, translationSql)
+	}
+
+	for _, sql := range sqlList {
+		var errExec error
+		if txToUse != nil {
+			_, errExec = txToUse.Exec(sql)
+		} else {
+			_, errExec = store.db.Exec(sql)
+		}
+
+		if errExec != nil {
+			return errExec
+		}
+	}
+
+	if store.versioningEnabled {
+		err := store.versioningStore.AutoMigrate()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// MigrateDown drops the cms store tables
+func (store *storeImplementation) MigrateDown(ctx context.Context, tx ...*sql.Tx) error {
+	var txToUse *sql.Tx
+	if len(tx) > 0 {
+		txToUse = tx[0]
+	}
+
+	if store.db == nil {
+		return errors.New("cms store: database is nil")
+	}
+
+	// Drop in reverse order of creation
+	sqlList := []string{}
+
+	if store.translationsEnabled {
+		translationSql, err := store.translationTableDropSql()
+		if err != nil {
+			return err
+		}
+		sqlList = append(sqlList, translationSql)
+	}
+
+	if store.menusEnabled {
+		menuItemSql, err := store.menuItemTableDropSql()
+		if err != nil {
+			return err
+		}
+		sqlList = append(sqlList, menuItemSql)
+
+		menuSql, err := store.menuTableDropSql()
+		if err != nil {
+			return err
+		}
+		sqlList = append(sqlList, menuSql)
+	}
+
+	templateSql, err := store.templateTableDropSql()
+	if err != nil {
+		return err
+	}
+	sqlList = append(sqlList, templateSql)
+
+	tableSql, err := store.siteTableDropSql()
+	if err != nil {
+		return err
+	}
+	sqlList = append(sqlList, tableSql)
+
+	pageSql, err := store.pageTableDropSql()
+	if err != nil {
+		return err
+	}
+	sqlList = append(sqlList, pageSql)
+
+	blockSql, err := store.blockTableDropSql()
+	if err != nil {
+		return err
+	}
+	sqlList = append(sqlList, blockSql)
+
+	for _, sql := range sqlList {
+		var errExec error
+		if txToUse != nil {
+			_, errExec = txToUse.Exec(sql)
+		} else {
+			_, errExec = store.db.Exec(sql)
+		}
+
+		if errExec != nil {
+			return errExec
+		}
+	}
+
+	return nil
+}
+
 // EnableDebug enables or disables debug mode.
 func (st *storeImplementation) EnableDebug(debug bool) {
 	st.debugEnabled = debug

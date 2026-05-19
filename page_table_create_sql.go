@@ -137,3 +137,10 @@ func (st *storeImplementation) pageTableCreateSql() (string, error) {
 
 	return sql, nil
 }
+
+// pageTableDropSql returns a SQL string for dropping the page table
+func (st *storeImplementation) pageTableDropSql() (string, error) {
+	return sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+		Table(st.pageTableName).
+		Drop()
+}

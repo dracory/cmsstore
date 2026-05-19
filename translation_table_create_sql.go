@@ -65,3 +65,10 @@ func (st *storeImplementation) translationTableCreateSql() (string, error) {
 
 	return sql, nil
 }
+
+// translationTableDropSql returns a SQL string for dropping the translation table
+func (st *storeImplementation) translationTableDropSql() (string, error) {
+	return sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+		Table(st.translationTableName).
+		Drop()
+}

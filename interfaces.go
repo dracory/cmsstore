@@ -2,6 +2,7 @@ package cmsstore
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/dracory/versionstore"
 	"github.com/dromara/carbon/v2"
@@ -346,7 +347,16 @@ type SiteInterface interface {
 }
 
 type StoreInterface interface {
+	// AutoMigrate runs the auto-migration process for the cms store
+	// Deprecated: Use MigrateUp and MigrateDown instead
 	AutoMigrate(ctx context.Context, opts ...Option) error
+
+	// MigrateDown drops the cms store tables
+	MigrateDown(ctx context.Context, tx ...*sql.Tx) error
+
+	// MigrateUp creates the cms store tables
+	MigrateUp(ctx context.Context, tx ...*sql.Tx) error
+
 	EnableDebug(debug bool)
 
 	BlockCreate(ctx context.Context, block BlockInterface) error

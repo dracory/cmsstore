@@ -104,3 +104,10 @@ func (st *storeImplementation) menuItemTableCreateSql() (string, error) {
 
 	return sql, nil
 }
+
+// menuItemTableDropSql returns a SQL string for dropping the menu_item table
+func (st *storeImplementation) menuItemTableDropSql() (string, error) {
+	return sb.NewBuilder(sb.DatabaseDriverName(st.db)).
+		Table(st.menuItemTableName).
+		Drop()
+}
