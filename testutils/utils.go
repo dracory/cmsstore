@@ -3,9 +3,11 @@ package testutils
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"os"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dracory/uid"
 	_ "modernc.org/sqlite"
 )
 
@@ -19,34 +21,27 @@ const TRANSLATION_01 = "TRANSLATION_01"
 const TRANSLATION_02 = "TRANSLATION_02"
 
 func initDB(filepath string) *sql.DB {
-	if filepath != ":memory:" && fileExists(filepath) {
-		err := os.Remove(filepath) // remove database
-
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	// For in-memory databases, use cache=shared to allow concurrent access
-	// from multiple goroutines using the same connection pool
 	dsn := filepath
 	if filepath == ":memory:" {
-		dsn = "file::memory:?cache=shared&parseTime=true"
+		// Use a unique name for each in-memory database to prevent interference between tests
+		// while still using cache=shared for consistency within a single test.
+		uniqueID := uid.HumanUid()
+		dsn = fmt.Sprintf("file:%s?mode=memory&cache=shared&parseTime=true", uniqueID)
+	} else if !fileExists(filepath) {
+		dsn += "?parseTime=true"
 	} else {
+		_ = os.Remove(filepath) // remove existing database file
 		dsn += "?parseTime=true"
 	}
 
 	db, err := sql.Open("sqlite", dsn)
-
 	if err != nil {
 		panic(err)
 	}
 
-	// For in-memory databases, set connection pool to 1 to ensure
-	// all goroutines share the same database instance
-	if filepath == ":memory:" {
-		db.SetMaxOpenConns(1)
-	}
+	// For SQLite, allow multiple connections to avoid deadlocks when using shared cache.
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(10)
 
 	return db
 }
@@ -66,7 +61,7 @@ func InitStore(filepath string) (cmsstore.StoreInterface, error) {
 		TranslationsEnabled:        true,
 		TranslationTableName:       "translation_table",
 		TranslationLanguageDefault: "en",
-		VersioningEnabled:          false, // Workaround: Disabled versioning for in-memory SQLite to avoid deadlocks
+		VersioningEnabled:          true,
 		VersioningTableName:        "versioning_table",
 		AutomigrateEnabled:         true,
 	})

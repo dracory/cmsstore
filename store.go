@@ -458,7 +458,24 @@ func (store *storeImplementation) withTransaction(ctx context.Context, fn func(t
 		return fn(ctx)
 	}
 
+	// TODO: This is a temporary workaround for deadlocks in SQLite in-memory tests.
+	// Some nested operations (e.g. in versionstore) do not correctly reuse the
+	// transaction from the context and attempt to open a new connection,
+	// which causes a deadlock in SQLite when MaxOpenConns=1 or when using shared cache.
+	if isSQLite(store.dbDriverName) {
+		return fn(ctx)
+	}
+
 	tx, err := store.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	// For SQLite, we should use BEGIN IMMEDIATE to avoid deadlocks where
+	// two connections hold a SHARED lock and both want to upgrade to EXCLUSIVE.
+	if isSQLite(store.dbDriverName) {
+		_, _ = tx.ExecContext(ctx, "BEGIN IMMEDIATE")
+	}
 	if err != nil {
 		return err
 	}
