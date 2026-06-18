@@ -27,7 +27,7 @@ require (
 )
 
 require (
-	github.com/dracory/neat v0.15.0 // indirect
+	github.com/dracory/neat v0.20.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/mocktools/go-smtp-mock v1.10.0 // indirect
