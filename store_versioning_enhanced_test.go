@@ -443,7 +443,7 @@ func TestVersioningSoftDelete(t *testing.T) {
 	if len(versions) != 1 {
 		t.Errorf("Expected 1 version, got %d", len(versions))
 	}
-	if versions[0].SoftDeletedAt() == "" {
+	if versions[0].GetSoftDeletedAt() == "" {
 		t.Errorf("Expected soft deleted at to be not empty, got empty")
 	}
 }
@@ -579,14 +579,14 @@ func TestVersioningOrderBy(t *testing.T) {
 		// First of ascending should have earliest timestamp
 		// Last of descending should have earliest timestamp
 		// Compare the timestamps - Since CreatedAt returns strings, compare them directly
-		if versionsAsc[0].CreatedAt() > versionsDesc[len(versionsDesc)-1].CreatedAt() {
-			t.Errorf("Expected ascending first version to have earlier timestamp, got %v and %v", versionsAsc[0].CreatedAt(), versionsDesc[len(versionsDesc)-1].CreatedAt())
+		if versionsAsc[0].GetCreatedAt() > versionsDesc[len(versionsDesc)-1].GetCreatedAt() {
+			t.Errorf("Expected ascending first version to have earlier timestamp, got %v and %v", versionsAsc[0].GetCreatedAt(), versionsDesc[len(versionsDesc)-1].GetCreatedAt())
 		}
 
 		// Last of ascending should have latest timestamp
 		// First of descending should have latest timestamp
-		if versionsAsc[len(versionsAsc)-1].CreatedAt() < versionsDesc[0].CreatedAt() {
-			t.Errorf("Expected ascending last version to have later timestamp, got %v and %v", versionsAsc[len(versionsAsc)-1].CreatedAt(), versionsDesc[0].CreatedAt())
+		if versionsAsc[len(versionsAsc)-1].GetCreatedAt() < versionsDesc[0].GetCreatedAt() {
+			t.Errorf("Expected ascending last version to have later timestamp, got %v and %v", versionsAsc[len(versionsAsc)-1].GetCreatedAt(), versionsDesc[0].GetCreatedAt())
 		}
 	}
 }

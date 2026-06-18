@@ -81,7 +81,7 @@ func (controller *pageVersioningController) modal(data pageVersioningControllerD
 
 	modalHeading := hb.Heading5().HTML("Page Revisions").Style(`margin:0px;`)
 	if data.versioning != nil {
-		name := carbon.Parse(data.versioning.CreatedAt(), carbon.UTC).Format("Y-m-d H:i")
+		name := carbon.Parse(data.versioning.GetCreatedAt(), carbon.UTC).Format("Y-m-d H:i")
 		modalHeading = hb.Heading5().HTML("Page Revision: " + name).Style(`margin:0px;`)
 	}
 
@@ -201,7 +201,7 @@ func (controller *pageVersioningController) tableRevision(data pageVersioningCon
 					Attr("readonly", "readonly").
 					Value(value)
 
-		if key == cmsstore.COLUMN_CONTENT {
+				if key == cmsstore.COLUMN_CONTENT {
 					valueContainer = hb.TextArea().
 						Class("form-control w-100").
 						Style(`background-color:#eee;`).
@@ -231,8 +231,8 @@ func (controller *pageVersioningController) tableRevisions(data pageVersioningCo
 				}),
 			}),
 			hb.Tbody().Children(lo.Map(data.versionings, func(versioning cmsstore.VersioningInterface, _ int) hb.TagInterface {
-				name := carbon.Parse(versioning.CreatedAt(), carbon.UTC).Format("Y-m-d H:i")
-				ago := carbon.Parse(versioning.CreatedAt(), carbon.UTC).DiffForHumans()
+				name := carbon.Parse(versioning.GetCreatedAt(), carbon.UTC).Format("Y-m-d H:i")
+				ago := carbon.Parse(versioning.GetCreatedAt(), carbon.UTC).DiffForHumans()
 
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().

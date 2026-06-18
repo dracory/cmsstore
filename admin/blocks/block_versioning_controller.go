@@ -81,7 +81,7 @@ func (controller *blockVersioningController) modal(data blockVersioningControlle
 
 	modalHeading := hb.Heading5().HTML("Block Revisions").Style(`margin:0px;`)
 	if data.versioning != nil {
-		name := carbon.Parse(data.versioning.CreatedAt(), carbon.UTC).Format("Y-m-d H:i")
+		name := carbon.Parse(data.versioning.GetCreatedAt(), carbon.UTC).Format("Y-m-d H:i")
 		modalHeading = hb.Heading5().HTML("Block Revision: " + name).Style(`margin:0px;`)
 	}
 
@@ -230,8 +230,8 @@ func (controller *blockVersioningController) tableRevisions(data blockVersioning
 				}),
 			}),
 			hb.Tbody().Children(lo.Map(data.versionings, func(versioning cmsstore.VersioningInterface, _ int) hb.TagInterface {
-				name := carbon.Parse(versioning.CreatedAt(), carbon.UTC).Format("Y-m-d H:i")
-				ago := carbon.Parse(versioning.CreatedAt(), carbon.UTC).DiffForHumans()
+				name := carbon.Parse(versioning.GetCreatedAt(), carbon.UTC).Format("Y-m-d H:i")
+				ago := carbon.Parse(versioning.GetCreatedAt(), carbon.UTC).DiffForHumans()
 
 				return hb.TR().Children([]hb.TagInterface{
 					hb.TD().
