@@ -9,7 +9,6 @@ import (
 
 	"github.com/dracory/database"
 	"github.com/dracory/neat"
-	"github.com/dracory/versionstore"
 	"github.com/samber/lo"
 )
 
@@ -141,7 +140,7 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 	}
 
 	// Initialize versioning store if versioning is enabled
-	versionStore, err := initializeVersioningStore(opts)
+	versionStore, err := initializeVersioningStore(neatDB, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -190,18 +189,13 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		if err := store.AutoMigrate(ctx); err != nil {
 			return nil, err
 		}
-		if opts.VersioningEnabled {
-			if err := versionStore.MigrateUp(ctx); err != nil {
-				return nil, err
-			}
-		}
 	}
 
 	return store, nil
 }
 
 // initializeVersioningStore initializes a versioning store if versioning is enabled.
-func initializeVersioningStore(opts NewStoreOptions) (versionstore.StoreInterface, error) {
+func initializeVersioningStore(neatDB *neat.Database, opts NewStoreOptions) (*versioningStore, error) {
 	if !opts.VersioningEnabled {
 		return nil, nil
 	}
@@ -210,13 +204,7 @@ func initializeVersioningStore(opts NewStoreOptions) (versionstore.StoreInterfac
 		return nil, errors.New("cms store: VersioningTableName is required")
 	}
 
-	versionStore, err := versionstore.NewStore(versionstore.NewStoreOptions{
-		TableName:          opts.VersioningTableName,
-		DB:                 opts.DB,
-		AutomigrateEnabled: opts.AutomigrateEnabled,
-		DebugEnabled:       opts.DebugEnabled,
-	})
-
+	versionStore, err := newVersioningStore(neatDB, opts.VersioningTableName)
 	if err != nil {
 		return nil, err
 	}

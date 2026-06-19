@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dracory/versionstore"
 	_ "modernc.org/sqlite"
 )
 
@@ -60,7 +59,7 @@ func TestVersioningMultipleUpdates(t *testing.T) {
 	versions, err := store.VersioningList(ctx, NewVersioningQuery().
 		SetEntityType(VERSIONING_TYPE_PAGE).
 		SetEntityID(page.ID()).
-		SetOrderBy(versionstore.COLUMN_CREATED_AT).
+		SetOrderBy(COLUMN_CREATED_AT).
 		SetSortOrder("ASC"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -553,7 +552,7 @@ func TestVersioningOrderBy(t *testing.T) {
 	versionsAsc, err := store.VersioningList(ctx, NewVersioningQuery().
 		SetEntityType(VERSIONING_TYPE_PAGE).
 		SetEntityID(page.ID()).
-		SetOrderBy(versionstore.COLUMN_CREATED_AT).
+		SetOrderBy(COLUMN_CREATED_AT).
 		SetSortOrder("ASC"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -563,7 +562,7 @@ func TestVersioningOrderBy(t *testing.T) {
 	versionsDesc, err := store.VersioningList(ctx, NewVersioningQuery().
 		SetEntityType(VERSIONING_TYPE_PAGE).
 		SetEntityID(page.ID()).
-		SetOrderBy(versionstore.COLUMN_CREATED_AT).
+		SetOrderBy(COLUMN_CREATED_AT).
 		SetSortOrder("DESC"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

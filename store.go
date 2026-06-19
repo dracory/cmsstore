@@ -7,7 +7,6 @@ import (
 
 	"github.com/dracory/database"
 	"github.com/dracory/neat"
-	"github.com/dracory/versionstore"
 )
 
 // == TYPE ====================================================================
@@ -37,7 +36,7 @@ type storeImplementation struct {
 
 	versioningEnabled bool
 	//versioningTableName string
-	versioningStore versionstore.StoreInterface
+	versioningStore *versioningStore
 
 	// Custom Entities
 	customEntitiesEnabled bool

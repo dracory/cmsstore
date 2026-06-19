@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/dracory/versionstore"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -572,17 +571,76 @@ type TranslationInterface interface {
 }
 
 type VersioningInterface interface {
-	versionstore.VersionInterface
+	IsSoftDeleted() bool
+
+	ID() string
+	SetID(id string) VersioningInterface
+
+	EntityType() string
+	SetEntityType(entityType string) VersioningInterface
+
+	EntityID() string
+	SetEntityID(entityID string) VersioningInterface
+
+	Content() string
+	SetContent(content string) VersioningInterface
+
+	GetCreatedAt() string
+	GetCreatedAtCarbon() *carbon.Carbon
+	SetCreatedAt(createdAt string) VersioningInterface
+
+	GetSoftDeletedAt() string
+	GetSoftDeletedAtCarbon() *carbon.Carbon
+	SetSoftDeletedAt(softDeletedAt string) VersioningInterface
 }
 
 func NewVersioning() VersioningInterface {
-	return versionstore.NewVersion()
+	return newVersioning()
 }
 
 type VersioningQueryInterface interface {
-	versionstore.VersionQueryInterface
+	Validate() error
+
+	Columns() []string
+	SetColumns(columns []string) VersioningQueryInterface
+
+	HasCountOnly() bool
+	IsCountOnly() bool
+	SetCountOnly(countOnly bool) VersioningQueryInterface
+
+	HasID() bool
+	ID() string
+	SetID(id string) VersioningQueryInterface
+
+	HasEntityID() bool
+	EntityID() string
+	SetEntityID(entityID string) VersioningQueryInterface
+
+	HasEntityType() bool
+	EntityType() string
+	SetEntityType(entityType string) VersioningQueryInterface
+
+	HasOffset() bool
+	Offset() int64
+	SetOffset(offset int64) VersioningQueryInterface
+
+	HasLimit() bool
+	Limit() int
+	SetLimit(limit int) VersioningQueryInterface
+
+	HasSortOrder() bool
+	SortOrder() string
+	SetSortOrder(sortOrder string) VersioningQueryInterface
+
+	HasOrderBy() bool
+	OrderBy() string
+	SetOrderBy(orderBy string) VersioningQueryInterface
+
+	HasSoftDeletedIncluded() bool
+	SoftDeletedIncluded() bool
+	SetSoftDeletedIncluded(includeSoftDeleted bool) VersioningQueryInterface
 }
 
 func NewVersioningQuery() VersioningQueryInterface {
-	return versionstore.NewVersionQuery()
+	return newVersioningQuery()
 }

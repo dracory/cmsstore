@@ -11,7 +11,6 @@ import (
 	"errors"
 
 	"github.com/dracory/database"
-	"github.com/dracory/versionstore"
 )
 
 type versioningMarshalToInterface interface {
@@ -92,7 +91,7 @@ func (store *storeImplementation) versioningCreateIfChanged(ctx context.Context,
 	lastVersioningList, err := store.VersioningList(ctx, NewVersioningQuery().
 		SetEntityType(entityType).
 		SetEntityID(entityID).
-		SetOrderBy(versionstore.COLUMN_CREATED_AT).
+		SetOrderBy(COLUMN_CREATED_AT).
 		SetSortOrder("DESC").
 		SetLimit(1))
 	if err != nil {
@@ -182,8 +181,7 @@ func (store *storeImplementation) VersioningList(ctx context.Context, query Vers
 	newlist := []VersioningInterface{}
 
 	for _, v := range list {
-		// Manual filtering as a workaround for a bug in the versionstore library where it
-		// sometimes ignores EntityType and EntityID filters.
+		// Defensive filtering to ensure EntityType and EntityID filters are respected.
 		if query.HasEntityType() && v.EntityType() != query.EntityType() {
 			continue
 		}

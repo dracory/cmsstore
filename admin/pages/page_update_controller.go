@@ -17,7 +17,6 @@ import (
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
 	"github.com/dracory/sb"
-	"github.com/dracory/versionstore"
 
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
@@ -1081,7 +1080,7 @@ func (controller pageUpdateController) createVersioning(ctx context.Context, pag
 	lastVersioningList, err := controller.ui.Store().VersioningList(ctx, cmsstore.NewVersioningQuery().
 		SetEntityType(cmsstore.VERSIONING_TYPE_PAGE).
 		SetEntityID(page.ID()).
-		SetOrderBy(versionstore.COLUMN_CREATED_AT).
+		SetOrderBy(cmsstore.COLUMN_CREATED_AT).
 		SetSortOrder(sb.DESC).
 		SetLimit(1))
 

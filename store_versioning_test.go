@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dracory/versionstore"
 	_ "modernc.org/sqlite"
 )
 
@@ -65,7 +64,7 @@ func TestStoreVersioningTrack(t *testing.T) {
 	versions, err = store.VersioningList(ctx, NewVersioningQuery().
 		SetEntityType(VERSIONING_TYPE_PAGE).
 		SetEntityID(page.ID()).
-		SetOrderBy(versionstore.COLUMN_CREATED_AT).
+		SetOrderBy(COLUMN_CREATED_AT).
 		SetSortOrder("DESC"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

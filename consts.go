@@ -109,6 +109,8 @@ const (
 	COLUMN_CREATED_AT         = "created_at"
 	COLUMN_DOMAIN_NAMES       = "domain_names"
 	COLUMN_EDITOR             = "editor"
+	COLUMN_ENTITY_ID          = "entity_id"
+	COLUMN_ENTITY_TYPE        = "entity_type"
 	COLUMN_ID                 = "id"
 	COLUMN_HANDLE             = "handle"
 	COLUMN_MEMO               = "memo"
@@ -133,6 +135,9 @@ const (
 	COLUMN_UPDATED_AT         = "updated_at"
 	COLUMN_URL                = "url"
 )
+
+// VERSIONING_MAX_DATETIME is a far-future datetime used as the default soft-delete sentinel for versioning records.
+const VERSIONING_MAX_DATETIME = "9999-12-31 23:59:59"
 
 // Menu Statuses
 const (
