@@ -44,6 +44,15 @@ type storeImplementation struct {
 	// Shortcodes
 	shortcodes  []ShortcodeInterface
 	middlewares []MiddlewareInterface
+
+	// Pending versioning operations to execute after transaction commit
+	pendingVersioningOps []pendingVersioningOp
+}
+
+type pendingVersioningOp struct {
+	entityType string
+	entityID   string
+	entity     any
 }
 
 // == INTERFACE ===============================================================
@@ -458,6 +467,9 @@ func (store *storeImplementation) withTransaction(ctx context.Context, fn func(t
 		return fn(ctx)
 	}
 
+	// Clear pending operations before starting new transaction
+	store.pendingVersioningOps = nil
+
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -470,5 +482,22 @@ func (store *storeImplementation) withTransaction(ctx context.Context, fn func(t
 		return err
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	// Execute pending versioning operations after successful commit
+	if len(store.pendingVersioningOps) > 0 {
+		for _, op := range store.pendingVersioningOps {
+			content, err := store.versioningContentFromEntity(op.entity, "")
+			if err != nil {
+				// Log error but don't fail the transaction
+				continue
+			}
+			store.versioningCreateIfChanged(ctx, op.entityType, op.entityID, content)
+		}
+		store.pendingVersioningOps = nil
+	}
+
+	return nil
 }

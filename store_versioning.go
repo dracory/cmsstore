@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/dracory/database"
 	"github.com/dracory/versionstore"
 )
 
@@ -116,6 +117,17 @@ func (store *storeImplementation) versioningTrackEntity(ctx context.Context, ent
 		return nil
 	}
 
+	// If we're in a transaction context, queue the versioning operation for later
+	if database.IsQueryableContext(ctx) {
+		store.pendingVersioningOps = append(store.pendingVersioningOps, pendingVersioningOp{
+			entityType: entityType,
+			entityID:   entityID,
+			entity:     entity,
+		})
+		return nil
+	}
+
+	// If not in a transaction, execute immediately
 	content, err := store.versioningContentFromEntity(entity, "")
 	if err != nil {
 		return err

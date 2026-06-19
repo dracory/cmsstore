@@ -50,9 +50,6 @@ func rpcResultText(t *testing.T, respBytes []byte) string {
 func initMCPServer(t *testing.T) (*httptest.Server, func()) {
 	t.Helper()
 
-	// Set environment variable to bypass versioning check for tests
-	t.Setenv("MCP_SKIP_VERSIONING_CHECK", "true")
-
 	store, err := testutils.InitStore(":memory:")
 	if err != nil {
 		t.Fatalf("Failed to initialize store: %v", err)
@@ -69,9 +66,6 @@ func initMCPServer(t *testing.T) (*httptest.Server, func()) {
 
 func initMCPServerWithStore(t *testing.T) (*httptest.Server, cmsstore.StoreInterface, func()) {
 	t.Helper()
-
-	// Set environment variable to bypass versioning check for tests
-	t.Setenv("MCP_SKIP_VERSIONING_CHECK", "true")
 
 	store, err := testutils.InitStore(":memory:")
 	if err != nil {
