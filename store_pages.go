@@ -4,22 +4,17 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strconv"
 	"strings"
 
-	"github.com/doug-martin/goqu/v9"
-	"github.com/dracory/database"
+	contractsorm "github.com/dracory/neat/contracts/database/orm"
 	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
-	"github.com/samber/lo"
 )
 
 func (store *storeImplementation) PageCount(ctx context.Context, options PageQueryInterface) (int64, error) {
-	if store.db == nil {
-		return -1, errors.New("cms store: db is nil")
+	if store.neatDB == nil {
+		return -1, errors.New("cms store: database is nil")
 	}
-
-	options.SetCountOnly(true)
 
 	q, _, err := store.pageSelectQuery(options)
 
@@ -27,47 +22,16 @@ func (store *storeImplementation) PageCount(ctx context.Context, options PageQue
 		return -1, err
 	}
 
-	sqlStr, params, errSql := q.Prepared(true).
-		Limit(1).
-		Select(goqu.COUNT(goqu.Star()).As("count")).
-		ToSQL()
-
-	if errSql != nil {
-		return -1, errSql
-	}
-
-	// Fix SQLite compatibility: replace ILIKE with LIKE
-	if isSQLite(store.dbDriverName) {
-		sqlStr = strings.ReplaceAll(sqlStr, " ILIKE ", " LIKE ")
-	}
-
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
-
-	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
-
-	if err != nil {
-		return -1, err
-	}
-
-	if len(mapped) < 1 {
-		return -1, nil
-	}
-
-	countStr := mapped[0]["count"]
-
-	i, err := strconv.ParseInt(countStr, 10, 64)
-
-	if err != nil {
-		return -1, err
-
-	}
-
-	return i, nil
+	var count int64
+	err = q.Table(store.pageTableName).Count(&count)
+	return count, err
 }
 
 func (store *storeImplementation) PageCreate(ctx context.Context, page PageInterface) error {
+	if store.neatDB == nil {
+		return errors.New("pagestore: database is nil")
+	}
+
 	if page == nil {
 		return errors.New("page is nil")
 	}
@@ -78,25 +42,11 @@ func (store *storeImplementation) PageCreate(ctx context.Context, page PageInter
 	return store.withTransaction(ctx, func(txCtx context.Context) error {
 		data := page.Data()
 
-		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-			Insert(store.pageTableName).
-			Prepared(true).
-			Rows(data).
-			ToSQL()
-
-		if errSql != nil {
-			return errSql
-		}
-
 		if store.debugEnabled {
-			log.Println(sqlStr)
+			log.Println("PageCreate:", data)
 		}
 
-		if store.db == nil {
-			return errors.New("pagestore: database is nil")
-		}
-
-		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		err := store.neatDB.Query().Table(store.pageTableName).Create(data)
 
 		if err != nil {
 			return err
@@ -109,6 +59,10 @@ func (store *storeImplementation) PageCreate(ctx context.Context, page PageInter
 }
 
 func (store *storeImplementation) PageDelete(ctx context.Context, page PageInterface) error {
+	if store.neatDB == nil {
+		return errors.New("pagestore: database is nil")
+	}
+
 	if page == nil {
 		return errors.New("page is nil")
 	}
@@ -117,7 +71,7 @@ func (store *storeImplementation) PageDelete(ctx context.Context, page PageInter
 }
 
 func (store *storeImplementation) PageDeleteByID(ctx context.Context, id string) error {
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("pagestore: database is nil")
 	}
 
@@ -125,26 +79,20 @@ func (store *storeImplementation) PageDeleteByID(ctx context.Context, id string)
 		return errors.New("page id is empty")
 	}
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Delete(store.pageTableName).
-		Prepared(true).
-		Where(goqu.C("id").Eq(id)).
-		ToSQL()
-
-	if errSql != nil {
-		return errSql
-	}
-
 	if store.debugEnabled {
-		log.Println(sqlStr)
+		log.Println("PageDeleteByID:", id)
 	}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+	_, err := store.neatDB.Query().Table(store.pageTableName).Where("id = ?", id).Delete()
 
 	return err
 }
 
 func (store *storeImplementation) PageFindByHandle(ctx context.Context, handle string) (page PageInterface, err error) {
+	if store.neatDB == nil {
+		return nil, errors.New("pagestore: database is nil")
+	}
+
 	if handle == "" {
 		return nil, errors.New("page handle is empty")
 	}
@@ -201,44 +149,53 @@ func (store *storeImplementation) PageFindByID(ctx context.Context, id string) (
 }
 
 func (store *storeImplementation) PageList(ctx context.Context, query PageQueryInterface) ([]PageInterface, error) {
-	q, columns, err := store.pageSelectQuery(query)
+	if store.neatDB == nil {
+		return []PageInterface{}, errors.New("pagestore: database is nil")
+	}
+
+	q, _, err := store.pageSelectQuery(query)
 
 	if err != nil {
 		return []PageInterface{}, err
 	}
 
-	sqlStr, _, errSql := q.Select(columns...).ToSQL()
-
-	if errSql != nil {
-		return []PageInterface{}, errSql
+	type pageRow struct {
+		ID            string `db:"id"`
+		SiteID        string `db:"site_id"`
+		TemplateID    string `db:"template_id"`
+		Name          string `db:"name"`
+		Handle        string `db:"handle"`
+		Alias         string `db:"alias"`
+		Status        string `db:"status"`
+		Content       string `db:"content"`
+		CreatedAt     string `db:"created_at"`
+		UpdatedAt     string `db:"updated_at"`
+		SoftDeletedAt string `db:"soft_deleted_at"`
 	}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
-
-	if store.db == nil {
-		return []PageInterface{}, errors.New("pagestore: database is nil")
-	}
-
-	db := sb.NewDatabase(store.db, store.dbDriverName)
-
-	if db == nil {
-		return []PageInterface{}, errors.New("pagestore: database is nil")
-	}
-
-	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
-
-	if err != nil {
+	var rows []pageRow
+	if err := q.Table(store.pageTableName).Get(&rows); err != nil {
 		return []PageInterface{}, err
 	}
 
-	list := []PageInterface{}
-
-	lo.ForEach(modelMaps, func(modelMap map[string]string, index int) {
+	list := make([]PageInterface, 0, len(rows))
+	for _, r := range rows {
+		modelMap := map[string]string{
+			"id":              r.ID,
+			"site_id":         r.SiteID,
+			"template_id":     r.TemplateID,
+			"name":            r.Name,
+			"handle":          r.Handle,
+			"alias":           r.Alias,
+			"status":          r.Status,
+			"content":         r.Content,
+			"created_at":      r.CreatedAt,
+			"updated_at":      r.UpdatedAt,
+			"soft_deleted_at": r.SoftDeletedAt,
+		}
 		model := NewPageFromExistingData(modelMap)
 		list = append(list, model)
-	})
+	}
 
 	return list, nil
 }
@@ -254,16 +211,28 @@ func (store *storeImplementation) PageSoftDelete(ctx context.Context, page PageI
 }
 
 func (store *storeImplementation) PageSoftDeleteByID(ctx context.Context, id string) error {
+	if store.neatDB == nil {
+		return errors.New("pagestore: database is nil")
+	}
+
 	page, err := store.PageFindByID(ctx, id)
 
 	if err != nil {
 		return err
 	}
 
+	if page == nil {
+		return errors.New("page not found")
+	}
+
 	return store.PageSoftDelete(ctx, page)
 }
 
 func (store *storeImplementation) PageUpdate(ctx context.Context, page PageInterface) error {
+	if store.neatDB == nil {
+		return errors.New("pagestore: database is nil")
+	}
+
 	if page == nil {
 		return errors.New("page is nil")
 	}
@@ -279,26 +248,11 @@ func (store *storeImplementation) PageUpdate(ctx context.Context, page PageInter
 			return nil
 		}
 
-		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-			Update(store.pageTableName).
-			Prepared(true).
-			Set(dataChanged).
-			Where(goqu.C(COLUMN_ID).Eq(page.ID())).
-			ToSQL()
-
-		if errSql != nil {
-			return errSql
-		}
-
 		if store.debugEnabled {
-			log.Println(sqlStr)
+			log.Println("PageUpdate:", dataChanged)
 		}
 
-		if store.db == nil {
-			return errors.New("pagestore: database is nil")
-		}
-
-		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		_, err := store.neatDB.Query().Table(store.pageTableName).Where("id = ?", page.ID()).Update(dataChanged)
 		if err != nil {
 			return err
 		}
@@ -309,7 +263,7 @@ func (store *storeImplementation) PageUpdate(ctx context.Context, page PageInter
 	})
 }
 
-func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (selectDataset *goqu.SelectDataset, selectColumns []any, err error) {
+func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (query contractsorm.Query, selectColumns []any, err error) {
 	if options == nil {
 		return nil, []any{}, errors.New("page options cannot be nil")
 	}
@@ -318,74 +272,81 @@ func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (s
 		return nil, []any{}, err
 	}
 
-	q := goqu.Dialect(store.dbDriverName).From(store.pageTableName)
+	q := store.neatDB.Query().Table(store.pageTableName)
 
 	if options.HasAlias() {
-		q = q.Where(goqu.C(COLUMN_ALIAS).Eq(options.Alias()))
+		q = q.Where(COLUMN_ALIAS+" = ?", options.Alias())
 	}
 
 	if options.HasAliasLike() {
-		if store.dbDriverName == "sqlite" {
-			q = q.Where(goqu.C(COLUMN_ALIAS).Like(options.AliasLike()))
-		} else {
-			q = q.Where(goqu.C(COLUMN_ALIAS).ILike(options.AliasLike()))
-		}
+		q = q.Where(COLUMN_ALIAS+" LIKE ?", options.AliasLike())
 	}
 
 	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
-		q = q.Where(
-			goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()),
-			goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()),
-		)
+		q = q.Where(COLUMN_CREATED_AT+" >= ? AND "+COLUMN_CREATED_AT+" <= ?", options.CreatedAtGte(), options.CreatedAtLte())
 	} else if options.HasCreatedAtGte() {
-		q = q.Where(goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()))
+		q = q.Where(COLUMN_CREATED_AT+" >= ?", options.CreatedAtGte())
 	} else if options.HasCreatedAtLte() {
-		q = q.Where(goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()))
+		q = q.Where(COLUMN_CREATED_AT+" <= ?", options.CreatedAtLte())
 	}
 
 	if options.HasHandle() {
-		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
+		q = q.Where(COLUMN_HANDLE+" = ?", options.Handle())
 	}
 
 	if options.HasNameLike() {
-		if store.dbDriverName == "sqlite" {
-			q = q.Where(goqu.C(COLUMN_NAME).Like(options.NameLike()))
-		} else {
-			q = q.Where(goqu.C(COLUMN_NAME).ILike(options.NameLike()))
-		}
+		q = q.Where(COLUMN_NAME+" LIKE ?", options.NameLike())
 	}
 
 	if options.HasID() {
-		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
+		q = q.Where(COLUMN_ID+" = ?", options.ID())
 	}
 
 	if options.HasIDIn() {
-		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
+		idIn := options.IDIn()
+		if len(idIn) > 0 {
+			placeholders := make([]string, len(idIn))
+			args := make([]any, len(idIn))
+			for i, v := range idIn {
+				placeholders[i] = "?"
+				args[i] = v
+			}
+			q = q.Where(COLUMN_ID+" IN ("+strings.Join(placeholders, ", ")+")", args...)
+		}
 	}
 
 	if options.HasSiteID() {
-		q = q.Where(goqu.C(COLUMN_SITE_ID).Eq(options.SiteID()))
+		q = q.Where(COLUMN_SITE_ID+" = ?", options.SiteID())
 	}
 
 	if options.HasStatus() {
-		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
+		q = q.Where(COLUMN_STATUS+" = ?", options.Status())
 	}
 
 	if options.HasStatusIn() {
-		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
+		statusIn := options.StatusIn()
+		if len(statusIn) > 0 {
+			placeholders := make([]string, len(statusIn))
+			args := make([]any, len(statusIn))
+			for i, v := range statusIn {
+				placeholders[i] = "?"
+				args[i] = v
+			}
+			q = q.Where(COLUMN_STATUS+" IN ("+strings.Join(placeholders, ", ")+")", args...)
+		}
 	}
 
 	if options.HasTemplateID() {
-		q = q.Where(goqu.C(COLUMN_TEMPLATE_ID).Eq(options.TemplateID()))
+		q = q.Where(COLUMN_TEMPLATE_ID+" = ?", options.TemplateID())
 	}
 
 	if !options.IsCountOnly() {
 		if options.HasLimit() {
-			q = q.Limit(uint(options.Limit()))
+			q = q.Limit(options.Limit())
 		}
 
 		if options.HasOffset() {
-			q = q.Offset(uint(options.Offset()))
+			q = q.Offset(options.Offset())
 		}
 	}
 
@@ -394,12 +355,11 @@ func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (s
 		sortOrder = options.SortOrder()
 	}
 
-	// Do not apply ORDER BY to COUNT queries in Postgres.
 	if !options.IsCountOnly() && options.HasOrderBy() {
 		if strings.EqualFold(sortOrder, sb.ASC) {
-			q = q.Order(goqu.I(options.OrderBy()).Asc())
+			q = q.OrderBy(options.OrderBy(), "ASC")
 		} else {
-			q = q.Order(goqu.I(options.OrderBy()).Desc())
+			q = q.OrderBy(options.OrderBy(), "DESC")
 		}
 	}
 
@@ -407,8 +367,7 @@ func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (s
 		return q, []any{}, nil // soft deleted pages requested specifically
 	}
 
-	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).
-		Gt(carbon.Now(carbon.UTC).ToDateTimeString())
+	q = q.Where(COLUMN_SOFT_DELETED_AT+" > ?", carbon.Now(carbon.UTC).ToDateTimeString())
 
 	columns := []any{}
 
@@ -416,5 +375,5 @@ func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (s
 		columns = append(columns, column)
 	}
 
-	return q.Where(softDeleted), columns, nil
+	return q, columns, nil
 }

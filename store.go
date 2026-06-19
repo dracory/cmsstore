@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/dracory/database"
+	"github.com/dracory/neat"
 	"github.com/dracory/versionstore"
 )
 
@@ -18,6 +19,7 @@ type storeImplementation struct {
 	siteTableName      string
 	templateTableName  string
 	db                 *sql.DB
+	neatDB             *neat.Database
 	dbDriverName       string
 	automigrateEnabled bool
 	debugEnabled       bool
@@ -64,133 +66,11 @@ var _ StoreInterface = (*storeImplementation)(nil) // verify it extends the inte
 // AutoMigrate performs automatic database migrations.
 // Deprecated: Use MigrateUp instead.
 func (store *storeImplementation) AutoMigrate(ctx context.Context, opts ...Option) error {
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("cms store: database is nil")
 	}
 
-	options := &Options{}
-	for _, opt := range opts {
-		opt(options)
-	}
-
-	transaction, hasTransaction := options.params["tx"].(*sql.Tx)
-	isDryRun, hasDryRun := options.params["dryRun"].(bool)
-
-	blockSql, err := store.blockTableCreateSql()
-	if err != nil {
-		return err
-	}
-	pageSql, err := store.pageTableCreateSql()
-	if err != nil {
-		return err
-	}
-	tableSql, err := store.siteTableCreateSql()
-	if err != nil {
-		return err
-	}
-	templateSql, err := store.templateTableCreateSql()
-	if err != nil {
-		return err
-	}
-
-	var menuSql, menuItemSql, translationSql string
-	if store.menusEnabled {
-		menuSql, err = store.menuTableCreateSql()
-		if err != nil {
-			return err
-		}
-		menuItemSql, err = store.menuItemTableCreateSql()
-		if err != nil {
-			return err
-		}
-	}
-
-	if store.translationsEnabled {
-		translationSql, err = store.translationTableCreateSql()
-		if err != nil {
-			return err
-		}
-	}
-
-	if blockSql == "" {
-		return errors.New("block table create sql is empty")
-	}
-
-	if pageSql == "" {
-		return errors.New("page table create sql is empty")
-	}
-
-	if tableSql == "" {
-		return errors.New("site table create sql is empty")
-	}
-
-	if templateSql == "" {
-		return errors.New("template table create sql is empty")
-	}
-
-	if store.menusEnabled && store.menuTableName == "" {
-		return errors.New("menu table name is empty")
-	}
-
-	if store.menusEnabled && store.menuItemTableName == "" {
-		return errors.New("menu item table name is empty")
-	}
-
-	if store.translationsEnabled && translationSql == "" {
-		return errors.New("translation table create sql is empty")
-	}
-
-	// if store.versioningEnabled && store.versioningTableName == "" {
-	// 	return errors.New("versioning table name is empty")
-	// }
-
-	sqlList := []string{
-		blockSql,
-		pageSql,
-		tableSql,
-		templateSql,
-	}
-
-	if store.menusEnabled {
-		sqlList = append(sqlList, menuSql)
-		sqlList = append(sqlList, menuItemSql)
-	}
-
-	if store.translationsEnabled {
-		sqlList = append(sqlList, translationSql)
-	}
-
-	for _, sql := range sqlList {
-		if hasDryRun && isDryRun {
-			continue
-		}
-
-		if hasTransaction {
-			_, err := transaction.ExecContext(ctx, sql)
-
-			if err != nil {
-				return err
-			}
-
-			continue
-		} else {
-			_, err := store.db.ExecContext(ctx, sql)
-
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if store.versioningEnabled {
-		err := store.versioningStore.MigrateUp(ctx)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return store.MigrateUp(ctx)
 }
 
 // MigrateUp creates the cms store tables
@@ -200,7 +80,7 @@ func (store *storeImplementation) MigrateUp(ctx context.Context, tx ...*sql.Tx) 
 		txToUse = tx[0]
 	}
 
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("cms store: database is nil")
 	}
 
@@ -314,7 +194,7 @@ func (store *storeImplementation) MigrateDown(ctx context.Context, tx ...*sql.Tx
 		txToUse = tx[0]
 	}
 
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("cms store: database is nil")
 	}
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dracory/neat"
 	"github.com/dracory/sb"
 )
 
@@ -419,8 +420,8 @@ func TestStoreBlockErrorPaths(t *testing.T) {
 	_, err := store.BlockCount(ctx, BlockQuery())
 	if err == nil {
 		t.Error("Expected error for nil db")
-	} else if !strings.Contains(err.Error(), "db is nil") {
-		t.Errorf("Expected error message to contain 'db is nil', got %s", err.Error())
+	} else if !strings.Contains(err.Error(), "database is nil") {
+		t.Errorf("Expected error message to contain 'database is nil', got %s", err.Error())
 	}
 
 	err = store.BlockCreate(ctx, NewBlock())
@@ -487,7 +488,10 @@ func TestStoreBlockErrorPaths(t *testing.T) {
 	}
 
 	// Test with nil entity
-	store.db = initDB(":memory:")
+	db := initDB(":memory:")
+	neatDB, _ := neat.NewFromSQLDB(db)
+	store.db = db
+	store.neatDB = neatDB
 	err = store.BlockCreate(ctx, nil)
 	if err == nil {
 		t.Error("Expected error for nil block")

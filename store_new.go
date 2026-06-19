@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	"github.com/dracory/database"
+	"github.com/dracory/neat"
 	"github.com/dracory/versionstore"
 	"github.com/samber/lo"
 )
@@ -118,6 +119,12 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 		return nil, errors.New("cms store: DB is required")
 	}
 
+	// Wrap sql.DB with neat
+	neatDB, err := neat.NewFromSQLDB(opts.DB)
+	if err != nil {
+		return nil, err
+	}
+
 	// Set default database driver name if not provided
 	if opts.DbDriverName == "" {
 		opts.DbDriverName = database.DatabaseType(opts.DB)
@@ -149,6 +156,7 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 	store := &storeImplementation{
 		automigrateEnabled: opts.AutomigrateEnabled,
 		db:                 opts.DB,
+		neatDB:             neatDB,
 		dbDriverName:       opts.DbDriverName,
 		debugEnabled:       opts.DebugEnabled,
 

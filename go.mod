@@ -3,7 +3,6 @@ module github.com/dracory/cmsstore
 go 1.26.3
 
 require (
-	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/dracory/api v1.7.0
 	github.com/dracory/blockeditor v0.24.0
 	github.com/dracory/bs v0.16.0
@@ -13,6 +12,7 @@ require (
 	github.com/dracory/entitystore v1.8.0
 	github.com/dracory/form v0.23.0
 	github.com/dracory/hb v1.88.0
+	github.com/dracory/neat v0.20.0
 	github.com/dracory/req v0.1.0
 	github.com/dracory/sb v0.26.0
 	github.com/dracory/str v0.18.0
@@ -27,7 +27,7 @@ require (
 )
 
 require (
-	github.com/dracory/neat v0.20.0 // indirect
+	github.com/doug-martin/goqu/v9 v9.19.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/mocktools/go-smtp-mock v1.10.0 // indirect

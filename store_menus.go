@@ -4,65 +4,39 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strconv"
 	"strings"
 
-	"github.com/doug-martin/goqu/v9"
-	"github.com/dracory/database"
+	contractsorm "github.com/dracory/neat/contracts/database/orm"
 	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
-	"github.com/samber/lo"
 )
 
 // MenuCount returns the count of menus that match the provided query options.
 func (store *storeImplementation) MenuCount(ctx context.Context, options MenuQueryInterface) (int64, error) {
-	if store.db == nil {
-		return -1, errors.New("cms store: db is nil")
+	if store.neatDB == nil {
+		return -1, errors.New("cms store: database is nil")
 	}
 
 	if !store.menusEnabled {
 		return -1, errors.New("menus are disabled")
 	}
 
-	options.SetCountOnly(true)
-
 	q, _, err := store.menuSelectQuery(options)
 	if err != nil {
 		return -1, err
 	}
 
-	sqlStr, params, errSql := q.Prepared(true).
-		Limit(1).
-		Select(goqu.COUNT(goqu.Star()).As("count")).
-		ToSQL()
-	if errSql != nil {
-		return -1, errSql
-	}
-
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
-
-	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...)
-	if err != nil {
-		return -1, err
-	}
-
-	if len(mapped) < 1 {
-		return -1, nil
-	}
-
-	countStr := mapped[0]["count"]
-	i, err := strconv.ParseInt(countStr, 10, 64)
-	if err != nil {
-		return -1, err
-	}
-
-	return i, nil
+	var count int64
+	err = q.Table(store.menuTableName).Count(&count)
+	return count, err
 }
 
 // MenuCreate creates a new menu in the database.
 func (store *storeImplementation) MenuCreate(ctx context.Context, menu MenuInterface) error {
+	if store.neatDB == nil {
+		return errors.New("menustore: database is nil")
+	}
+
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -80,24 +54,11 @@ func (store *storeImplementation) MenuCreate(ctx context.Context, menu MenuInter
 	return store.withTransaction(ctx, func(txCtx context.Context) error {
 		data := menu.Data()
 
-		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-			Insert(store.menuTableName).
-			Prepared(true).
-			Rows(data).
-			ToSQL()
-		if errSql != nil {
-			return errSql
-		}
-
 		if store.debugEnabled {
-			log.Println(sqlStr)
+			log.Println("MenuCreate:", data)
 		}
 
-		if store.db == nil {
-			return errors.New("menustore: database is nil")
-		}
-
-		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		err := store.neatDB.Query().Table(store.menuTableName).Create(data)
 		if err != nil {
 			return err
 		}
@@ -123,7 +84,7 @@ func (store *storeImplementation) MenuDelete(ctx context.Context, menu MenuInter
 
 // MenuDeleteByID deletes a menu from the database by its ID.
 func (store *storeImplementation) MenuDeleteByID(ctx context.Context, id string) error {
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("menustore: database is nil")
 	}
 
@@ -135,20 +96,11 @@ func (store *storeImplementation) MenuDeleteByID(ctx context.Context, id string)
 		return errors.New("menu id is empty")
 	}
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Delete(store.menuTableName).
-		Prepared(true).
-		Where(goqu.C("id").Eq(id)).
-		ToSQL()
-	if errSql != nil {
-		return errSql
-	}
-
 	if store.debugEnabled {
-		log.Println(sqlStr)
+		log.Println("MenuDeleteByID:", id)
 	}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...)
+	_, err := store.neatDB.Query().Table(store.menuTableName).Where("id = ?", id).Delete()
 
 	return err
 }
@@ -223,34 +175,46 @@ func (store *storeImplementation) MenuList(ctx context.Context, query MenuQueryI
 		return []MenuInterface{}, errors.New("menus are disabled")
 	}
 
-	q, columns, err := store.menuSelectQuery(query)
-	if err != nil {
-		return []MenuInterface{}, err
-	}
-
-	sqlStr, _, errSql := q.Select(columns...).ToSQL()
-	if errSql != nil {
-		return []MenuInterface{}, errSql
-	}
-
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
-
-	if store.db == nil {
+	if store.neatDB == nil {
 		return []MenuInterface{}, errors.New("menustore: database is nil")
 	}
 
-	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
+	q, _, err := store.menuSelectQuery(query)
 	if err != nil {
 		return []MenuInterface{}, err
 	}
 
-	list := []MenuInterface{}
-	lo.ForEach(modelMaps, func(modelMap map[string]string, index int) {
+	type menuRow struct {
+		ID            string `db:"id"`
+		SiteID        string `db:"site_id"`
+		Name          string `db:"name"`
+		Handle        string `db:"handle"`
+		Status        string `db:"status"`
+		CreatedAt     string `db:"created_at"`
+		UpdatedAt     string `db:"updated_at"`
+		SoftDeletedAt string `db:"soft_deleted_at"`
+	}
+
+	var rows []menuRow
+	if err := q.Table(store.menuTableName).Get(&rows); err != nil {
+		return []MenuInterface{}, err
+	}
+
+	list := make([]MenuInterface, 0, len(rows))
+	for _, r := range rows {
+		modelMap := map[string]string{
+			"id":              r.ID,
+			"site_id":         r.SiteID,
+			"name":            r.Name,
+			"handle":          r.Handle,
+			"status":          r.Status,
+			"created_at":      r.CreatedAt,
+			"updated_at":      r.UpdatedAt,
+			"soft_deleted_at": r.SoftDeletedAt,
+		}
 		model := NewMenuFromExistingData(modelMap)
 		list = append(list, model)
-	})
+	}
 
 	return list, nil
 }
@@ -286,6 +250,10 @@ func (store *storeImplementation) MenuSoftDeleteByID(ctx context.Context, id str
 
 // MenuUpdate updates an existing menu in the database.
 func (store *storeImplementation) MenuUpdate(ctx context.Context, menu MenuInterface) error {
+	if store.neatDB == nil {
+		return errors.New("menustore: database is nil")
+	}
+
 	if !store.menusEnabled {
 		return errors.New("menus are disabled")
 	}
@@ -304,25 +272,11 @@ func (store *storeImplementation) MenuUpdate(ctx context.Context, menu MenuInter
 			return nil
 		}
 
-		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-			Update(store.menuTableName).
-			Prepared(true).
-			Set(dataChanged).
-			Where(goqu.C(COLUMN_ID).Eq(menu.ID())).
-			ToSQL()
-		if errSql != nil {
-			return errSql
-		}
-
 		if store.debugEnabled {
-			log.Println(sqlStr)
+			log.Println("MenuUpdate:", dataChanged)
 		}
 
-		if store.db == nil {
-			return errors.New("menustore: database is nil")
-		}
-
-		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		_, err := store.neatDB.Query().Table(store.menuTableName).Where("id = ?", menu.ID()).Update(dataChanged)
 		if err != nil {
 			return err
 		}
@@ -334,7 +288,7 @@ func (store *storeImplementation) MenuUpdate(ctx context.Context, menu MenuInter
 }
 
 // menuSelectQuery constructs a SQL query for selecting menus based on the provided query options.
-func (store *storeImplementation) menuSelectQuery(options MenuQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
+func (store *storeImplementation) menuSelectQuery(options MenuQueryInterface) (query contractsorm.Query, columns []any, err error) {
 	if options == nil {
 		return nil, nil, errors.New("menu query cannot be nil")
 	}
@@ -343,54 +297,69 @@ func (store *storeImplementation) menuSelectQuery(options MenuQueryInterface) (s
 		return nil, nil, err
 	}
 
-	q := goqu.Dialect(store.dbDriverName).From(store.menuTableName)
+	q := store.neatDB.Query().Table(store.menuTableName)
 
 	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
-		q = q.Where(
-			goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()),
-			goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()),
-		)
+		q = q.Where(COLUMN_CREATED_AT+" >= ? AND "+COLUMN_CREATED_AT+" <= ?", options.CreatedAtGte(), options.CreatedAtLte())
 	} else if options.HasCreatedAtGte() {
-		q = q.Where(goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()))
+		q = q.Where(COLUMN_CREATED_AT+" >= ?", options.CreatedAtGte())
 	} else if options.HasCreatedAtLte() {
-		q = q.Where(goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()))
+		q = q.Where(COLUMN_CREATED_AT+" <= ?", options.CreatedAtLte())
 	}
 
 	if options.HasHandle() {
-		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
+		q = q.Where(COLUMN_HANDLE+" = ?", options.Handle())
 	}
 
 	if options.HasID() {
-		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
+		q = q.Where(COLUMN_ID+" = ?", options.ID())
 	}
 
 	if options.HasIDIn() {
-		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
+		idIn := options.IDIn()
+		if len(idIn) > 0 {
+			placeholders := make([]string, len(idIn))
+			args := make([]any, len(idIn))
+			for i, v := range idIn {
+				placeholders[i] = "?"
+				args[i] = v
+			}
+			q = q.Where(COLUMN_ID+" IN ("+strings.Join(placeholders, ", ")+")", args...)
+		}
 	}
 
 	if options.HasNameLike() {
-		q = q.Where(goqu.C(COLUMN_NAME).Like(options.NameLike()))
+		q = q.Where(COLUMN_NAME+" LIKE ?", options.NameLike())
 	}
 
 	if options.HasSiteID() {
-		q = q.Where(goqu.C(COLUMN_SITE_ID).Eq(options.SiteID()))
+		q = q.Where(COLUMN_SITE_ID+" = ?", options.SiteID())
 	}
 
 	if options.HasStatus() {
-		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
+		q = q.Where(COLUMN_STATUS+" = ?", options.Status())
 	}
 
 	if options.HasStatusIn() {
-		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
+		statusIn := options.StatusIn()
+		if len(statusIn) > 0 {
+			placeholders := make([]string, len(statusIn))
+			args := make([]any, len(statusIn))
+			for i, v := range statusIn {
+				placeholders[i] = "?"
+				args[i] = v
+			}
+			q = q.Where(COLUMN_STATUS+" IN ("+strings.Join(placeholders, ", ")+")", args...)
+		}
 	}
 
 	if !options.IsCountOnly() {
 		if options.HasLimit() {
-			q = q.Limit(uint(options.Limit()))
+			q = q.Limit(options.Limit())
 		}
 
 		if options.HasOffset() {
-			q = q.Offset(uint(options.Offset()))
+			q = q.Offset(options.Offset())
 		}
 	}
 
@@ -401,9 +370,9 @@ func (store *storeImplementation) menuSelectQuery(options MenuQueryInterface) (s
 
 	if !options.IsCountOnly() && options.HasOrderBy() {
 		if strings.EqualFold(sortOrder, sb.ASC) {
-			q = q.Order(goqu.I(options.OrderBy()).Asc())
+			q = q.OrderBy(options.OrderBy(), "ASC")
 		} else {
-			q = q.Order(goqu.I(options.OrderBy()).Desc())
+			q = q.OrderBy(options.OrderBy(), "DESC")
 		}
 	}
 
@@ -416,8 +385,7 @@ func (store *storeImplementation) menuSelectQuery(options MenuQueryInterface) (s
 		return q, columns, nil // soft deleted menus requested specifically
 	}
 
-	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).
-		Gt(carbon.Now(carbon.UTC).ToDateTimeString())
+	q = q.Where(COLUMN_SOFT_DELETED_AT+" > ?", carbon.Now(carbon.UTC).ToDateTimeString())
 
-	return q.Where(softDeleted), columns, nil
+	return q, columns, nil
 }

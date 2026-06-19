@@ -7,64 +7,31 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/doug-martin/goqu/v9"
-	"github.com/dracory/database"
+	contractsorm "github.com/dracory/neat/contracts/database/orm"
 	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
-	"github.com/samber/lo"
 )
 
 // BlockCount returns the count of blocks matching the provided query options.
 func (store *storeImplementation) BlockCount(ctx context.Context, options BlockQueryInterface) (int64, error) {
-	if store.db == nil {
-		return -1, errors.New("cms store: db is nil") // Return an error if the database connection is not established
+	if store.neatDB == nil {
+		return -1, errors.New("cms store: database is nil")
 	}
 
-	options.SetCountOnly(true) // Set the query to count only
-
-	q, _, err := store.blockSelectQuery(options) // Generate the select query for the block count
+	q, _, err := store.blockSelectQuery(options)
 
 	if err != nil {
-		return -1, err // Return the error if the query generation failed
+		return -1, err
 	}
 
-	sqlStr, params, errSql := q.Prepared(true).
-		Limit(1).                                    // Limit the query to 1 result
-		Select(goqu.COUNT(goqu.Star()).As("count")). // Select the count of all matching blocks
-		ToSQL()                                      // Convert the query to SQL string and parameters
-
-	if errSql != nil {
-		return -1, nil // Return an error if the SQL conversion failed
-	}
-
-	if store.debugEnabled {
-		log.Println(sqlStr) // Log the SQL query if debug mode is enabled
-	}
-
-	mapped, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr, params...) // Execute the SQL query and get the result
-
-	if err != nil {
-		return -1, err // Return the error if the query execution failed
-	}
-
-	if len(mapped) < 1 {
-		return -1, nil // Return an error if no results were found
-	}
-
-	countStr := mapped[0]["count"] // Extract the count string from the result
-
-	i, err := strconv.ParseInt(countStr, 10, 64) // Convert the count string to an integer
-
-	if err != nil {
-		return -1, err // Return the error if the conversion failed
-	}
-
-	return i, nil // Return the count of blocks
+	var count int64
+	err = q.Table(store.blockTableName).Count(&count)
+	return count, err
 }
 
 // BlockCreate creates a new block in the database.
 func (store *storeImplementation) BlockCreate(ctx context.Context, block BlockInterface) error {
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("blockstore: database is nil") // Return an error if the database connection is not established
 	}
 
@@ -78,21 +45,11 @@ func (store *storeImplementation) BlockCreate(ctx context.Context, block BlockIn
 	return store.withTransaction(ctx, func(txCtx context.Context) error {
 		data := block.Data() // Get the data from the block to be inserted
 
-		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-			Insert(store.blockTableName). // Insert into the block table
-			Prepared(true).
-			Rows(data). // Insert the block data
-			ToSQL()     // Convert the query to SQL string and parameters
-
-		if errSql != nil {
-			return errSql // Return the error if the SQL conversion failed
-		}
-
 		if store.debugEnabled {
-			log.Println(sqlStr) // Log the SQL query if debug mode is enabled
+			log.Println("BlockCreate:", data)
 		}
 
-		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...) // Execute the SQL query
+		err := store.neatDB.Query().Table(store.blockTableName).Create(data)
 
 		if err != nil {
 			return err // Return the error if the query execution failed
@@ -106,20 +63,20 @@ func (store *storeImplementation) BlockCreate(ctx context.Context, block BlockIn
 
 // BlockDelete deletes a block from the database by its ID.
 func (store *storeImplementation) BlockDelete(ctx context.Context, block BlockInterface) error {
-	if store.db == nil {
-		return errors.New("blockstore: database is nil") // Return an error if the database connection is not established
+	if store.neatDB == nil {
+		return errors.New("blockstore: database is nil")
 	}
 
 	if block == nil {
-		return errors.New("block is nil") // Return an error if the block is not provided
+		return errors.New("block is nil")
 	}
 
-	return store.BlockDeleteByID(ctx, block.ID()) // Delete the block by its ID
+	return store.BlockDeleteByID(ctx, block.ID())
 }
 
 // BlockDeleteByID deletes a block from the database by its ID.
 func (store *storeImplementation) BlockDeleteByID(ctx context.Context, id string) error {
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("blockstore: database is nil") // Return an error if the database connection is not established
 	}
 
@@ -127,52 +84,42 @@ func (store *storeImplementation) BlockDeleteByID(ctx context.Context, id string
 		return errors.New("block id is empty") // Return an error if the block ID is empty
 	}
 
-	sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-		Delete(store.blockTableName). // Delete from the block table
-		Prepared(true).
-		Where(goqu.C("id").Eq(id)). // Where the block ID matches the provided ID
-		ToSQL()                     // Convert the query to SQL string and parameters
-
-	if errSql != nil {
-		return errSql // Return the error if the SQL conversion failed
-	}
-
 	if store.debugEnabled {
-		log.Println(sqlStr) // Log the SQL query if debug mode is enabled
+		log.Println("BlockDeleteByID:", id)
 	}
 
-	_, err := database.Execute(store.toQuerableContext(ctx), sqlStr, params...) // Execute the SQL query
+	_, err := store.neatDB.Query().Table(store.blockTableName).Where("id = ?", id).Delete()
 
 	return err // Return the error if the query execution failed
 }
 
 // BlockFindByHandle finds a block by its handle (unique identifier).
 func (store *storeImplementation) BlockFindByHandle(ctx context.Context, handle string) (block BlockInterface, err error) {
-	if store.db == nil {
-		return nil, errors.New("blockstore: database is nil") // Return an error if the database connection is not established
+	if store.neatDB == nil {
+		return nil, errors.New("blockstore: database is nil")
 	}
 
 	if handle == "" {
-		return nil, errors.New("block handle is empty") // Return an error if the block handle is empty
+		return nil, errors.New("block handle is empty")
 	}
 
-	list, err := store.BlockList(ctx, BlockQuery().SetHandle(handle).SetLimit(1)) // Get the list of blocks matching the handle
+	list, err := store.BlockList(ctx, BlockQuery().SetHandle(handle).SetLimit(1))
 
 	if err != nil {
-		return nil, err // Return the error if the query execution failed
+		return nil, err
 	}
 
 	if len(list) > 0 {
-		return list[0], nil // Return the first block if found
+		return list[0], nil
 	}
 
-	return nil, nil // Return nil if no block is found
+	return nil, nil
 }
 
 // BlockFindByID finds a block by its ID.
 func (store *storeImplementation) BlockFindByID(ctx context.Context, id string) (block BlockInterface, err error) {
-	if store.db == nil {
-		return nil, errors.New("blockstore: database is nil") // Return an error if the database connection is not established
+	if store.neatDB == nil {
+		return nil, errors.New("blockstore: database is nil")
 	}
 
 	if id == "" {
@@ -211,7 +158,7 @@ func (store *storeImplementation) BlockFindByID(ctx context.Context, id string) 
 }
 
 func (store *storeImplementation) BlockList(ctx context.Context, query BlockQueryInterface) ([]BlockInterface, error) {
-	if store.db == nil {
+	if store.neatDB == nil {
 		return []BlockInterface{}, errors.New("blockstore: database is nil")
 	}
 
@@ -219,40 +166,61 @@ func (store *storeImplementation) BlockList(ctx context.Context, query BlockQuer
 		return []BlockInterface{}, nil
 	}
 
-	q, columns, err := store.blockSelectQuery(query)
+	q, _, err := store.blockSelectQuery(query)
 
 	if err != nil {
 		return []BlockInterface{}, err
 	}
 
-	sqlStr, _, errSql := q.Select(columns...).ToSQL()
-
-	if errSql != nil {
-		return []BlockInterface{}, errSql
+	type blockRow struct {
+		ID            string `db:"id"`
+		SiteID        string `db:"site_id"`
+		PageID        string `db:"page_id"`
+		TemplateID    string `db:"template_id"`
+		ParentID      string `db:"parent_id"`
+		Name          string `db:"name"`
+		Handle        string `db:"handle"`
+		Type          string `db:"type"`
+		Content       string `db:"content"`
+		Sequence      int    `db:"sequence"`
+		Status        string `db:"status"`
+		CreatedAt     string `db:"created_at"`
+		UpdatedAt     string `db:"updated_at"`
+		SoftDeletedAt string `db:"soft_deleted_at"`
 	}
 
-	if store.debugEnabled {
-		log.Println(sqlStr)
-	}
-
-	modelMaps, err := database.SelectToMapString(store.toQuerableContext(ctx), sqlStr)
-
-	if err != nil {
+	var rows []blockRow
+	if err := q.Table(store.blockTableName).Get(&rows); err != nil {
 		return []BlockInterface{}, err
 	}
 
-	list := []BlockInterface{}
-
-	lo.ForEach(modelMaps, func(modelMap map[string]string, index int) {
+	list := make([]BlockInterface, 0, len(rows))
+	for _, r := range rows {
+		modelMap := map[string]string{
+			"id":              r.ID,
+			"site_id":         r.SiteID,
+			"page_id":         r.PageID,
+			"template_id":     r.TemplateID,
+			"parent_id":       r.ParentID,
+			"name":            r.Name,
+			"handle":          r.Handle,
+			"type":            r.Type,
+			"content":         r.Content,
+			"sequence":        strconv.Itoa(r.Sequence),
+			"status":          r.Status,
+			"created_at":      r.CreatedAt,
+			"updated_at":      r.UpdatedAt,
+			"soft_deleted_at": r.SoftDeletedAt,
+		}
 		model := NewBlockFromExistingData(modelMap)
 		list = append(list, model)
-	})
+	}
 
 	return list, nil
 }
 
 func (store *storeImplementation) BlockSoftDelete(ctx context.Context, block BlockInterface) error {
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("blockstore: database is nil")
 	}
 
@@ -266,7 +234,7 @@ func (store *storeImplementation) BlockSoftDelete(ctx context.Context, block Blo
 }
 
 func (store *storeImplementation) BlockSoftDeleteByID(ctx context.Context, id string) error {
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("blockstore: database is nil")
 	}
 
@@ -276,11 +244,15 @@ func (store *storeImplementation) BlockSoftDeleteByID(ctx context.Context, id st
 		return err
 	}
 
+	if block == nil {
+		return errors.New("block not found")
+	}
+
 	return store.BlockSoftDelete(ctx, block)
 }
 
 func (store *storeImplementation) BlockUpdate(ctx context.Context, block BlockInterface) error {
-	if store.db == nil {
+	if store.neatDB == nil {
 		return errors.New("blockstore: database is nil")
 	}
 
@@ -299,26 +271,11 @@ func (store *storeImplementation) BlockUpdate(ctx context.Context, block BlockIn
 			return nil
 		}
 
-		sqlStr, params, errSql := goqu.Dialect(store.dbDriverName).
-			Update(store.blockTableName).
-			Prepared(true).
-			Set(dataChanged).
-			Where(goqu.C(COLUMN_ID).Eq(block.ID())).
-			ToSQL()
-
-		if errSql != nil {
-			return errSql
-		}
-
 		if store.debugEnabled {
-			log.Println(sqlStr)
+			log.Println("BlockUpdate:", dataChanged)
 		}
 
-		if store.db == nil {
-			return errors.New("blockstore: database is nil")
-		}
-
-		_, err := database.Execute(store.toQuerableContext(txCtx), sqlStr, params...)
+		_, err := store.neatDB.Query().Table(store.blockTableName).Where("id = ?", block.ID()).Update(dataChanged)
 		if err != nil {
 			return err
 		}
@@ -329,7 +286,7 @@ func (store *storeImplementation) BlockUpdate(ctx context.Context, block BlockIn
 	})
 }
 
-func (store *storeImplementation) blockSelectQuery(options BlockQueryInterface) (selectDataset *goqu.SelectDataset, columns []any, err error) {
+func (store *storeImplementation) blockSelectQuery(options BlockQueryInterface) (query contractsorm.Query, columns []any, err error) {
 	if options == nil {
 		return nil, []any{}, errors.New("block query: cannot be nil")
 	}
@@ -338,74 +295,89 @@ func (store *storeImplementation) blockSelectQuery(options BlockQueryInterface) 
 		return nil, []any{}, err
 	}
 
-	q := goqu.Dialect(store.dbDriverName).From(store.blockTableName)
+	q := store.neatDB.Query().Table(store.blockTableName)
 
 	if options.HasCreatedAtGte() && options.HasCreatedAtLte() {
-		q = q.Where(
-			goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()),
-			goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()),
-		)
+		q = q.Where(COLUMN_CREATED_AT+" >= ? AND "+COLUMN_CREATED_AT+" <= ?", options.CreatedAtGte(), options.CreatedAtLte())
 	} else if options.HasCreatedAtGte() {
-		q = q.Where(goqu.C(COLUMN_CREATED_AT).Gte(options.CreatedAtGte()))
+		q = q.Where(COLUMN_CREATED_AT+" >= ?", options.CreatedAtGte())
 	} else if options.HasCreatedAtLte() {
-		q = q.Where(goqu.C(COLUMN_CREATED_AT).Lte(options.CreatedAtLte()))
+		q = q.Where(COLUMN_CREATED_AT+" <= ?", options.CreatedAtLte())
 	}
 
 	if options.HasHandle() {
-		q = q.Where(goqu.C(COLUMN_HANDLE).Eq(options.Handle()))
+		q = q.Where(COLUMN_HANDLE+" = ?", options.Handle())
 	}
 
 	if options.HasID() {
-		q = q.Where(goqu.C(COLUMN_ID).Eq(options.ID()))
+		q = q.Where(COLUMN_ID+" = ?", options.ID())
 	}
 
 	if options.HasIDIn() {
-		q = q.Where(goqu.C(COLUMN_ID).In(options.IDIn()))
+		idIn := options.IDIn()
+		if len(idIn) > 0 {
+			placeholders := make([]string, len(idIn))
+			args := make([]any, len(idIn))
+			for i, v := range idIn {
+				placeholders[i] = "?"
+				args[i] = v
+			}
+			q = q.Where(COLUMN_ID+" IN ("+strings.Join(placeholders, ", ")+")", args...)
+		}
 	}
 
 	if options.HasNameLike() {
-		q = q.Where(goqu.C(COLUMN_NAME).Like(`%` + options.NameLike() + `%`))
+		q = q.Where(COLUMN_NAME+" LIKE ?", "%"+options.NameLike()+"%")
 	}
 
 	if options.HasPageID() {
-		q = q.Where(goqu.C(COLUMN_PAGE_ID).Eq(options.PageID()))
+		q = q.Where(COLUMN_PAGE_ID+" = ?", options.PageID())
 	}
 
 	if options.HasParentID() {
-		q = q.Where(goqu.C(COLUMN_PARENT_ID).Eq(options.ParentID()))
+		q = q.Where(COLUMN_PARENT_ID+" = ?", options.ParentID())
 	}
 
 	if options.HasSequence() {
-		q = q.Where(goqu.C(COLUMN_SEQUENCE).Eq(options.Sequence()))
+		q = q.Where(COLUMN_SEQUENCE+" = ?", options.Sequence())
 	}
 
 	if options.HasSiteID() {
-		q = q.Where(goqu.C(COLUMN_SITE_ID).Eq(options.SiteID()))
+		q = q.Where(COLUMN_SITE_ID+" = ?", options.SiteID())
 	}
 
 	if options.HasStatus() {
-		q = q.Where(goqu.C(COLUMN_STATUS).Eq(options.Status()))
+		q = q.Where(COLUMN_STATUS+" = ?", options.Status())
 	}
 
 	if options.HasStatusIn() {
-		q = q.Where(goqu.C(COLUMN_STATUS).In(options.StatusIn()))
+		statusIn := options.StatusIn()
+		if len(statusIn) > 0 {
+			placeholders := make([]string, len(statusIn))
+			args := make([]any, len(statusIn))
+			for i, v := range statusIn {
+				placeholders[i] = "?"
+				args[i] = v
+			}
+			q = q.Where(COLUMN_STATUS+" IN ("+strings.Join(placeholders, ", ")+")", args...)
+		}
 	}
 
 	if options.HasTemplateID() {
-		q = q.Where(goqu.C(COLUMN_TEMPLATE_ID).Eq(options.TemplateID()))
+		q = q.Where(COLUMN_TEMPLATE_ID+" = ?", options.TemplateID())
 	}
 
 	if options.HasType() {
-		q = q.Where(goqu.C(COLUMN_TYPE).Eq(options.Type()))
+		q = q.Where(COLUMN_TYPE+" = ?", options.Type())
 	}
 
 	if !options.IsCountOnly() {
 		if options.HasLimit() {
-			q = q.Limit(uint(options.Limit()))
+			q = q.Limit(options.Limit())
 		}
 
 		if options.HasOffset() {
-			q = q.Offset(uint(options.Offset()))
+			q = q.Offset(options.Offset())
 		}
 	}
 
@@ -416,9 +388,9 @@ func (store *storeImplementation) blockSelectQuery(options BlockQueryInterface) 
 
 	if !options.IsCountOnly() && options.HasOrderBy() && options.OrderBy() != "" {
 		if strings.EqualFold(sortOrder, sb.ASC) {
-			q = q.Order(goqu.I(options.OrderBy()).Asc())
+			q = q.OrderBy(options.OrderBy(), "ASC")
 		} else {
-			q = q.Order(goqu.I(options.OrderBy()).Desc())
+			q = q.OrderBy(options.OrderBy(), "DESC")
 		}
 	}
 
@@ -432,8 +404,7 @@ func (store *storeImplementation) blockSelectQuery(options BlockQueryInterface) 
 		return q, columns, nil // soft deleted blocks requested specifically
 	}
 
-	softDeleted := goqu.C(COLUMN_SOFT_DELETED_AT).
-		Gt(carbon.Now(carbon.UTC).ToDateTimeString())
+	q = q.Where(COLUMN_SOFT_DELETED_AT+" > ?", carbon.Now(carbon.UTC).ToDateTimeString())
 
-	return q.Where(softDeleted), columns, nil
+	return q, columns, nil
 }
