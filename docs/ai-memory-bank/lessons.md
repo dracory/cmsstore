@@ -1,5 +1,15 @@
 # MCP Tools Test Coverage Analysis
 
+## [2026-06-19] Versioning Test Deadlocks Root Cause
+- **Issue**: 47 versioning tests are skipped with message `Skipping versioning test due to deadlock issues with neat ORM migration`
+- **Root Cause**: The store's `withTransaction` helper wraps entity create/update operations in a raw `database/sql` transaction when versioning is enabled. Inside that transaction, the code executes neat ORM queries via `store.neatDB.Query()` without binding them to the transaction context. This causes neat to request a new connection from the pool while the transaction already holds the only available SQLite connection, resulting in a deadlock.
+- **Evidence**: Reproduced with a temporary test (`TestTempVersioningMultipleUpdates`). With `:memory:` or file-based SQLite + `MaxOpenConns(1)`, the test deadlocks at `PageCreate`. Removing `MaxOpenConns(1)` for a file-based database makes the test pass.
+- **Current Workaround (Staged)**: All versioning tests were disabled with `t.Skip(...)` in currently staged changes. The shared `testutils.InitStore` also disables versioning (`VersioningEnabled: false`).
+- **Affected Files**: `store_versioning_test.go`, `store_versioning_enhanced_test.go`, `admin/pages/page_versioning_controller_test.go`, `admin/blocks/block_versioning_controller_test.go`, `admin/menus/menu_versioning_controller_test.go`, `admin/templates/template_versioning_controller_test.go`, `admin/translations/translation_versioning_controller_test.go`.
+- **Potential Fix**: Make entity operations inside `withTransaction` participate in the same database transaction, e.g., by using neat's `Query.Transaction`/`Begin` API or by binding the raw `sql.Tx` to the neat query so queries do not open additional connections.
+- **Fix Applied**: Rewrote `withTransaction` in `store.go` to call `fn(ctx)` directly without creating a raw `sql.Tx`. Versioning records are now written immediately after each entity write via `versioningTrackEntity`. Removed all 47 `t.Skip()` calls, reverted all tests to use `initDB(":memory:")`, and restored `testutils.InitStore` to `VersioningEnabled: true`. All 25 packages now pass with 0 skips.
+- **Application**: Do not mix raw `database/sql` transactions with neat ORM queries on the same `*sql.DB` — they compete for connections. Use neat's own `Begin`/`Transaction` API or avoid wrapping single-statement operations in an outer `sql.Tx`.
+
 ## Overview
 Analysis of test coverage for CMS Store MCP (Model Context Protocol) tools conducted on 2026-03-06.
 

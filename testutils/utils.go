@@ -55,7 +55,7 @@ func InitStore(filepath string) (cmsstore.StoreInterface, error) {
 		TranslationsEnabled:        true,
 		TranslationTableName:       "translation_table",
 		TranslationLanguageDefault: "en",
-		VersioningEnabled:          true, // Re-enabled - versioning now deferred to avoid deadlocks
+		VersioningEnabled:          true,
 		VersioningTableName:        "versioning_table",
 		AutomigrateEnabled:         true,
 	})

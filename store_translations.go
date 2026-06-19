@@ -215,6 +215,8 @@ func (store *storeImplementation) TranslationList(ctx context.Context, query Tra
 		Status        string `db:"status"`
 		Language      string `db:"language"`
 		Content       string `db:"content"`
+		Metas         string `db:"metas"`
+		Memo          string `db:"memo"`
 		CreatedAt     string `db:"created_at"`
 		UpdatedAt     string `db:"updated_at"`
 		SoftDeletedAt string `db:"soft_deleted_at"`
@@ -235,6 +237,8 @@ func (store *storeImplementation) TranslationList(ctx context.Context, query Tra
 			"status":          r.Status,
 			"language":        r.Language,
 			"content":         r.Content,
+			"metas":           r.Metas,
+			"memo":            r.Memo,
 			"created_at":      r.CreatedAt,
 			"updated_at":      r.UpdatedAt,
 			"soft_deleted_at": r.SoftDeletedAt,

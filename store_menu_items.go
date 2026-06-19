@@ -197,6 +197,8 @@ func (store *storeImplementation) MenuItemList(ctx context.Context, query MenuIt
 		Target        string `db:"target"`
 		Sequence      int    `db:"sequence"`
 		Status        string `db:"status"`
+		Metas         string `db:"metas"`
+		Memo          string `db:"memo"`
 		CreatedAt     string `db:"created_at"`
 		UpdatedAt     string `db:"updated_at"`
 		SoftDeletedAt string `db:"soft_deleted_at"`
@@ -221,6 +223,8 @@ func (store *storeImplementation) MenuItemList(ctx context.Context, query MenuIt
 			"target":          r.Target,
 			"sequence":        strconv.Itoa(r.Sequence),
 			"status":          r.Status,
+			"metas":           r.Metas,
+			"memo":            r.Memo,
 			"created_at":      r.CreatedAt,
 			"updated_at":      r.UpdatedAt,
 			"soft_deleted_at": r.SoftDeletedAt,

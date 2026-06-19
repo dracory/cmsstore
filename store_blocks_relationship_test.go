@@ -380,8 +380,11 @@ func TestBlockUpdatePreservesUnchangedFields(t *testing.T) {
 		t.Fatalf("Expected SiteID 'Site1', got %s", found.SiteID())
 	}
 	// CreatedAt should be preserved (compare timestamp values, format may vary)
-	if !strings.Contains(found.CreatedAt(), originalCreatedAt[:19]) { // Compare date/time portion without timezone
-		t.Fatalf("Expected CreatedAt to contain %s, got %s", originalCreatedAt[:19], found.CreatedAt())
+	// Normalize both to ISO format for comparison (replace space with T for consistency)
+	expectedTime := strings.Replace(originalCreatedAt[:19], " ", "T", 1)
+	actualTime := strings.Replace(found.CreatedAt()[:19], " ", "T", 1)
+	if expectedTime != actualTime {
+		t.Fatalf("Expected CreatedAt to contain %s, got %s", expectedTime, actualTime)
 	}
 
 	// Verify metas are preserved

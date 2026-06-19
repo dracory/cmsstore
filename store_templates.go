@@ -169,6 +169,9 @@ func (store *storeImplementation) TemplateList(ctx context.Context, query Templa
 		Handle        string `db:"handle"`
 		Status        string `db:"status"`
 		Content       string `db:"content"`
+		Editor        string `db:"editor"`
+		Metas         string `db:"metas"`
+		Memo          string `db:"memo"`
 		CreatedAt     string `db:"created_at"`
 		UpdatedAt     string `db:"updated_at"`
 		SoftDeletedAt string `db:"soft_deleted_at"`
@@ -188,6 +191,9 @@ func (store *storeImplementation) TemplateList(ctx context.Context, query Templa
 			"handle":          r.Handle,
 			"status":          r.Status,
 			"content":         r.Content,
+			"editor":          r.Editor,
+			"metas":           r.Metas,
+			"memo":            r.Memo,
 			"created_at":      r.CreatedAt,
 			"updated_at":      r.UpdatedAt,
 			"soft_deleted_at": r.SoftDeletedAt,

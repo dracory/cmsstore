@@ -189,6 +189,8 @@ func (store *storeImplementation) MenuList(ctx context.Context, query MenuQueryI
 		Name          string `db:"name"`
 		Handle        string `db:"handle"`
 		Status        string `db:"status"`
+		Metas         string `db:"metas"`
+		Memo          string `db:"memo"`
 		CreatedAt     string `db:"created_at"`
 		UpdatedAt     string `db:"updated_at"`
 		SoftDeletedAt string `db:"soft_deleted_at"`
@@ -207,6 +209,8 @@ func (store *storeImplementation) MenuList(ctx context.Context, query MenuQueryI
 			"name":            r.Name,
 			"handle":          r.Handle,
 			"status":          r.Status,
+			"metas":           r.Metas,
+			"memo":            r.Memo,
 			"created_at":      r.CreatedAt,
 			"updated_at":      r.UpdatedAt,
 			"soft_deleted_at": r.SoftDeletedAt,

@@ -192,6 +192,8 @@ func (store *storeImplementation) SiteList(ctx context.Context, query SiteQueryI
 		Handle        string `db:"handle"`
 		Status        string `db:"status"`
 		DomainNames   string `db:"domain_names"`
+		Metas         string `db:"metas"`
+		Memo          string `db:"memo"`
 		CreatedAt     string `db:"created_at"`
 		UpdatedAt     string `db:"updated_at"`
 		SoftDeletedAt string `db:"soft_deleted_at"`
@@ -210,6 +212,8 @@ func (store *storeImplementation) SiteList(ctx context.Context, query SiteQueryI
 			"handle":          r.Handle,
 			"status":          r.Status,
 			"domain_names":    r.DomainNames,
+			"metas":           r.Metas,
+			"memo":            r.Memo,
 			"created_at":      r.CreatedAt,
 			"updated_at":      r.UpdatedAt,
 			"soft_deleted_at": r.SoftDeletedAt,

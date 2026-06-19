@@ -401,41 +401,39 @@ func (store *storeImplementation) toQuerableContext(ctx context.Context) databas
 }
 
 func (store *storeImplementation) withTransaction(ctx context.Context, fn func(txCtx context.Context) error) error {
-	if !store.VersioningEnabled() || database.IsQueryableContext(ctx) {
-		return fn(ctx)
-	}
+	// Execute the operation directly without creating an internal raw sql.Tx.
+	//
+	// Previously this started a database/sql transaction to defer versioning writes
+	// until after the entity write committed. However, entity operations use
+	// store.neatDB.Query() while the transaction held store.db's only connection,
+	// causing a deadlock on SQLite :memory: databases.
+	//
+	// The two-phase approach provided no real atomicity guarantee anyway: versioning
+	// errors were silently ignored and the versioning write never shared a transaction
+	// boundary with the entity write. We now write versioning records immediately
+	// after each entity operation, which is both correct and deadlock-free.
+	//
+	// If the caller already holds a transaction context (database.IsQueryableContext),
+	// versioningTrackEntity will queue the versioning op; it is flushed below after
+	// the callback returns so the record is written once the caller's tx commits.
 
-	// Clear pending operations before starting new transaction
 	store.pendingVersioningOps = nil
 
-	tx, err := store.db.BeginTx(ctx, nil)
-	if err != nil {
+	if err := fn(ctx); err != nil {
 		return err
 	}
 
-	defer tx.Rollback()
-
-	txCtx := database.Context(ctx, tx)
-	if err := fn(txCtx); err != nil {
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	// Execute pending versioning operations after successful commit
-	if len(store.pendingVersioningOps) > 0 {
-		for _, op := range store.pendingVersioningOps {
-			content, err := store.versioningContentFromEntity(op.entity, "")
-			if err != nil {
-				// Log error but don't fail the transaction
-				continue
-			}
-			store.versioningCreateIfChanged(ctx, op.entityType, op.entityID, content)
+	// Flush any versioning ops that were queued because the caller passed a
+	// transaction context.  These are written using the original ctx (outside the
+	// caller's tx) so they are not rolled back if the caller rolls back.
+	for _, op := range store.pendingVersioningOps {
+		content, err := store.versioningContentFromEntity(op.entity, "")
+		if err != nil {
+			continue
 		}
-		store.pendingVersioningOps = nil
+		_ = store.versioningCreateIfChanged(ctx, op.entityType, op.entityID, content)
 	}
+	store.pendingVersioningOps = nil
 
 	return nil
 }

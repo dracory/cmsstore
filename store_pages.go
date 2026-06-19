@@ -159,17 +159,27 @@ func (store *storeImplementation) PageList(ctx context.Context, query PageQueryI
 	}
 
 	type pageRow struct {
-		ID            string `db:"id"`
-		SiteID        string `db:"site_id"`
-		TemplateID    string `db:"template_id"`
-		Name          string `db:"name"`
-		Handle        string `db:"handle"`
-		Alias         string `db:"alias"`
-		Status        string `db:"status"`
-		Content       string `db:"content"`
-		CreatedAt     string `db:"created_at"`
-		UpdatedAt     string `db:"updated_at"`
-		SoftDeletedAt string `db:"soft_deleted_at"`
+		ID                string `db:"id"`
+		SiteID            string `db:"site_id"`
+		TemplateID        string `db:"template_id"`
+		Name              string `db:"name"`
+		Handle            string `db:"handle"`
+		Alias             string `db:"alias"`
+		Status            string `db:"status"`
+		Title             string `db:"title"`
+		Content           string `db:"content"`
+		Editor            string `db:"editor"`
+		CanonicalURL      string `db:"canonical_url"`
+		MetaKeywords      string `db:"meta_keywords"`
+		MetaDescription   string `db:"meta_description"`
+		MetaRobots        string `db:"meta_robots"`
+		MiddlewaresAfter  string `db:"middlewares_after"`
+		MiddlewaresBefore string `db:"middlewares_before"`
+		Metas             string `db:"metas"`
+		Memo              string `db:"memo"`
+		CreatedAt         string `db:"created_at"`
+		UpdatedAt         string `db:"updated_at"`
+		SoftDeletedAt     string `db:"soft_deleted_at"`
 	}
 
 	var rows []pageRow
@@ -180,17 +190,27 @@ func (store *storeImplementation) PageList(ctx context.Context, query PageQueryI
 	list := make([]PageInterface, 0, len(rows))
 	for _, r := range rows {
 		modelMap := map[string]string{
-			"id":              r.ID,
-			"site_id":         r.SiteID,
-			"template_id":     r.TemplateID,
-			"name":            r.Name,
-			"handle":          r.Handle,
-			"alias":           r.Alias,
-			"status":          r.Status,
-			"content":         r.Content,
-			"created_at":      r.CreatedAt,
-			"updated_at":      r.UpdatedAt,
-			"soft_deleted_at": r.SoftDeletedAt,
+			"id":                 r.ID,
+			"site_id":            r.SiteID,
+			"template_id":        r.TemplateID,
+			"name":               r.Name,
+			"handle":             r.Handle,
+			"alias":              r.Alias,
+			"status":             r.Status,
+			"title":              r.Title,
+			"content":            r.Content,
+			"editor":             r.Editor,
+			"canonical_url":      r.CanonicalURL,
+			"meta_keywords":      r.MetaKeywords,
+			"meta_description":   r.MetaDescription,
+			"meta_robots":        r.MetaRobots,
+			"middlewares_after":  r.MiddlewaresAfter,
+			"middlewares_before": r.MiddlewaresBefore,
+			"metas":              r.Metas,
+			"memo":               r.Memo,
+			"created_at":         r.CreatedAt,
+			"updated_at":         r.UpdatedAt,
+			"soft_deleted_at":    r.SoftDeletedAt,
 		}
 		model := NewPageFromExistingData(modelMap)
 		list = append(list, model)

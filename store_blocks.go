@@ -183,6 +183,9 @@ func (store *storeImplementation) BlockList(ctx context.Context, query BlockQuer
 		Content       string `db:"content"`
 		Sequence      int    `db:"sequence"`
 		Status        string `db:"status"`
+		Editor        string `db:"editor"`
+		Metas         string `db:"metas"`
+		Memo          string `db:"memo"`
 		CreatedAt     string `db:"created_at"`
 		UpdatedAt     string `db:"updated_at"`
 		SoftDeletedAt string `db:"soft_deleted_at"`
@@ -207,6 +210,9 @@ func (store *storeImplementation) BlockList(ctx context.Context, query BlockQuer
 			"content":         r.Content,
 			"sequence":        strconv.Itoa(r.Sequence),
 			"status":          r.Status,
+			"editor":          r.Editor,
+			"metas":           r.Metas,
+			"memo":            r.Memo,
 			"created_at":      r.CreatedAt,
 			"updated_at":      r.UpdatedAt,
 			"soft_deleted_at": r.SoftDeletedAt,
