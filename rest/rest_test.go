@@ -71,7 +71,7 @@ func initTestStore(t *testing.T, db *sql.DB) cmsstore.StoreInterface {
 		MenuTableName:     "rest_test_menu",
 		MenuItemTableName: "rest_test_menu_item",
 
-		VersioningEnabled:   true,
+		VersioningEnabled:   false, // Disabled for in-memory SQLite to avoid deadlocks
 		VersioningTableName: "rest_test_version",
 
 		AutomigrateEnabled: true,

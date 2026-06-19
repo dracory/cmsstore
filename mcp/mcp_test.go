@@ -58,7 +58,10 @@ func initMCPServer(t *testing.T) (*httptest.Server, func()) {
 	mcpHandler := mcp.NewMCP(store)
 
 	server := httptest.NewServer(http.HandlerFunc(mcpHandler.Handler))
-	return server, server.Close
+	cleanup := func() {
+		server.Close()
+	}
+	return server, cleanup
 }
 
 func initMCPServerWithStore(t *testing.T) (*httptest.Server, cmsstore.StoreInterface, func()) {
@@ -71,7 +74,10 @@ func initMCPServerWithStore(t *testing.T) (*httptest.Server, cmsstore.StoreInter
 
 	mcpHandler := mcp.NewMCP(store)
 	server := httptest.NewServer(http.HandlerFunc(mcpHandler.Handler))
-	return server, store, server.Close
+	cleanup := func() {
+		server.Close()
+	}
+	return server, store, cleanup
 }
 
 func Test_MCP_ListTools(t *testing.T) {

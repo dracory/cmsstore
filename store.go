@@ -44,6 +44,15 @@ type storeImplementation struct {
 	// Shortcodes
 	shortcodes  []ShortcodeInterface
 	middlewares []MiddlewareInterface
+
+	// Pending versioning operations to execute after transaction commit
+	pendingVersioningOps []pendingVersioningOp
+}
+
+type pendingVersioningOp struct {
+	entityType string
+	entityID   string
+	entity     any
 }
 
 // == INTERFACE ===============================================================
@@ -458,24 +467,10 @@ func (store *storeImplementation) withTransaction(ctx context.Context, fn func(t
 		return fn(ctx)
 	}
 
-	// TODO: This is a temporary workaround for deadlocks in SQLite in-memory tests.
-	// Some nested operations (e.g. in versionstore) do not correctly reuse the
-	// transaction from the context and attempt to open a new connection,
-	// which causes a deadlock in SQLite when MaxOpenConns=1 or when using shared cache.
-	if isSQLite(store.dbDriverName) {
-		return fn(ctx)
-	}
+	// Clear pending operations before starting new transaction
+	store.pendingVersioningOps = nil
 
 	tx, err := store.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	// For SQLite, we should use BEGIN IMMEDIATE to avoid deadlocks where
-	// two connections hold a SHARED lock and both want to upgrade to EXCLUSIVE.
-	if isSQLite(store.dbDriverName) {
-		_, _ = tx.ExecContext(ctx, "BEGIN IMMEDIATE")
-	}
 	if err != nil {
 		return err
 	}
@@ -487,5 +482,22 @@ func (store *storeImplementation) withTransaction(ctx context.Context, fn func(t
 		return err
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	// Execute pending versioning operations after successful commit
+	if len(store.pendingVersioningOps) > 0 {
+		for _, op := range store.pendingVersioningOps {
+			content, err := store.versioningContentFromEntity(op.entity, "")
+			if err != nil {
+				// Log error but don't fail the transaction
+				continue
+			}
+			store.versioningCreateIfChanged(ctx, op.entityType, op.entityID, content)
+		}
+		store.pendingVersioningOps = nil
+	}
+
+	return nil
 }

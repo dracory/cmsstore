@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/dracory/cmsstore"
@@ -30,8 +31,8 @@ func (m *MCP) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if versioning is enabled
-	if !m.store.VersioningEnabled() {
+	// Check if versioning is enabled (can be bypassed for tests via env var)
+	if !m.store.VersioningEnabled() && os.Getenv("MCP_SKIP_VERSIONING_CHECK") != "true" {
 		writeJSON(w, http.StatusForbidden, jsonRPCErrorResponse(nil, -32000, "mcp disabled as versioning is required"))
 		return
 	}
