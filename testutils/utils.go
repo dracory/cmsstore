@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"os"
+	"testing"
 
 	"github.com/dracory/cmsstore"
-	_ "modernc.org/sqlite"
 )
 
 const SITE_01 = "SITE_01"
@@ -27,25 +27,14 @@ func initDB(filepath string) *sql.DB {
 		}
 	}
 
-	// For in-memory databases, use cache=shared to allow concurrent access
-	// from multiple goroutines using the same connection pool
-	dsn := filepath
-	if filepath == ":memory:" {
-		dsn = "file::memory:?cache=shared&parseTime=true"
-	} else {
-		dsn += "?parseTime=true"
-	}
-
-	db, err := sql.Open("sqlite", dsn)
+	db, err := sql.Open("sqlite", filepath)
 
 	if err != nil {
 		panic(err)
 	}
 
-	// For in-memory databases, set connection pool to 1 to ensure
-	// all goroutines share the same database instance
-	if filepath == ":memory:" {
-		db.SetMaxOpenConns(1)
+	if err = db.Ping(); err != nil {
+		panic(err)
 	}
 
 	return db
@@ -66,7 +55,7 @@ func InitStore(filepath string) (cmsstore.StoreInterface, error) {
 		TranslationsEnabled:        true,
 		TranslationTableName:       "translation_table",
 		TranslationLanguageDefault: "en",
-		VersioningEnabled:          false, // Workaround: Disabled versioning for in-memory SQLite to avoid deadlocks
+		VersioningEnabled:          false, // Disabled for in-memory SQLite to avoid deadlocks
 		VersioningTableName:        "versioning_table",
 		AutomigrateEnabled:         true,
 	})
@@ -76,6 +65,91 @@ func InitStore(filepath string) (cmsstore.StoreInterface, error) {
 	}
 
 	return store, nil
+}
+
+// InitStoreWithVersioning creates a store with versioning enabled.
+// Use a file-based database path instead of ":memory:" to avoid deadlocks.
+func InitStoreWithVersioning(filepath string) (cmsstore.StoreInterface, error) {
+	db := initDB(filepath)
+
+	store, err := cmsstore.NewStore(cmsstore.NewStoreOptions{
+		DB:                         db,
+		BlockTableName:             "block_table",
+		PageTableName:              "page_table",
+		SiteTableName:              "site_table",
+		TemplateTableName:          "template_table",
+		MenusEnabled:               true,
+		MenuTableName:              "menu_table",
+		MenuItemTableName:          "menu_item_table",
+		TranslationsEnabled:        true,
+		TranslationTableName:       "translation_table",
+		TranslationLanguageDefault: "en",
+		VersioningEnabled:          true,
+		VersioningTableName:        "versioning_table",
+		AutomigrateEnabled:         true,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return store, nil
+}
+
+// InitStoreWithVersioningAndDB creates a store with versioning enabled and returns both the store and db connection.
+// Use a file-based database path instead of ":memory:" to avoid deadlocks.
+func InitStoreWithVersioningAndDB(filepath string) (cmsstore.StoreInterface, *sql.DB, error) {
+	db := initDB(filepath)
+
+	// Enable WAL mode for better concurrency with versioning
+	_, err := db.Exec("PRAGMA journal_mode=WAL")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Set connection pool to 1 for file-based databases to avoid lock issues
+	db.SetMaxOpenConns(1)
+
+	store, err := cmsstore.NewStore(cmsstore.NewStoreOptions{
+		DB:                         db,
+		BlockTableName:             "block_table",
+		PageTableName:              "page_table",
+		SiteTableName:              "site_table",
+		TemplateTableName:          "template_table",
+		MenusEnabled:               true,
+		MenuTableName:              "menu_table",
+		MenuItemTableName:          "menu_item_table",
+		TranslationsEnabled:        true,
+		TranslationTableName:       "translation_table",
+		TranslationLanguageDefault: "en",
+		VersioningEnabled:          true,
+		VersioningTableName:        "versioning_table",
+		AutomigrateEnabled:         true,
+	})
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return store, db, nil
+}
+
+// InitStoreWithVersioningForTest creates a store with versioning enabled using a file-based database.
+// This is intended for tests that require versioning functionality.
+func InitStoreWithVersioningForTest(t *testing.T) (cmsstore.StoreInterface, func()) {
+	t.Helper()
+
+	dbPath := t.TempDir() + "/" + t.Name() + ".db"
+	store, db, err := InitStoreWithVersioningAndDB(dbPath)
+	if err != nil {
+		t.Fatalf("Failed to initialize store with versioning: %v", err)
+	}
+
+	cleanup := func() {
+		db.Close()
+	}
+
+	return store, cleanup
 }
 
 func SeedPage(store cmsstore.StoreInterface, siteID string, pageID string) (cmsstore.PageInterface, error) {

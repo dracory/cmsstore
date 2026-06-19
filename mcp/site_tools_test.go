@@ -24,6 +24,7 @@ func TestSiteGet(t *testing.T) {
 	site.SetDomainNames([]string{"example.com", "www.example.com"})
 	err := store.SiteCreate(context.Background(), site)
 	if err != nil {
+		t.Logf("Site ID: %s, Name: %s", site.ID(), site.Name())
 		t.Fatalf("Failed to create site: %v", err)
 	}
 
