@@ -12,7 +12,6 @@ import (
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/dracory/sb"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -420,10 +419,10 @@ func (controller *blockManagerController) tableRecords(data blockManagerControll
 func (controller *blockManagerController) sortableColumnLabel(data blockManagerControllerData, tableLabel string, columnName string) hb.TagInterface {
 	isSelected := strings.EqualFold(data.sortBy, columnName)
 
-	direction := lo.If(data.sortOrder == sb.ASC, sb.DESC).Else(sb.ASC)
+	direction := lo.If(data.sortOrder == cmsstore.SORT_ORDER_ASC, cmsstore.SORT_ORDER_DESC).Else(cmsstore.SORT_ORDER_ASC)
 
 	if !isSelected {
-		direction = sb.ASC
+		direction = cmsstore.SORT_ORDER_ASC
 	}
 
 	link := shared.URLR(data.request, shared.PathBlocksBlockManager, map[string]string{
@@ -583,7 +582,7 @@ func (controller *blockManagerController) prepareData(r *http.Request) (data blo
 
 	data.siteList, err = controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
-		SetSortOrder(sb.ASC).
+		SetSortOrder(cmsstore.SORT_ORDER_ASC).
 		SetOffset(0).
 		SetLimit(100))
 

@@ -4,8 +4,6 @@ import (
 	"context"
 	"strings"
 	"testing"
-
-	"github.com/dracory/sb"
 )
 
 func TestStorePageCreate(t *testing.T) {
@@ -209,7 +207,7 @@ func TestStorePageSoftDelete(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	if page.SoftDeletedAt() != sb.MAX_DATETIME {
+	if page.SoftDeletedAt() != MAX_DATETIME {
 		t.Fatal("Page MUST NOT be soft deleted")
 	}
 
@@ -236,7 +234,7 @@ func TestStorePageSoftDelete(t *testing.T) {
 		t.Fatal("Page MUST be soft deleted")
 	}
 
-	if strings.Contains(pageFindWithSoftDeleted[0].SoftDeletedAt(), sb.MAX_DATETIME) {
+	if strings.Contains(pageFindWithSoftDeleted[0].SoftDeletedAt(), MAX_DATETIME) {
 		t.Fatal("Page MUST be soft deleted", pageFindWithSoftDeleted[0].SoftDeletedAt())
 	}
 

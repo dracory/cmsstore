@@ -6,14 +6,14 @@ A modular, embeddable CMS package for Go applications that provides content mana
 ## Technical Stack
 - **Language**: Go (Golang)
 - **Database**: SQL (database-agnostic, uses database/sql)
-- **Query Builder**: goqu/v9
+- **ORM**: neat (github.com/dracory/neat)
 - **Dependency Management**: Go modules
 - **Testing**: Native Go testing package
 
 ## Architecture
 - **Modular Design**: Separate components for blocks, menus, pages, templates, sites, and translations
 - **Store Pattern**: Central store interface for database operations
-- **Query Builder Pattern**: Type-safe query construction
+- **ORM Pattern**: Type-safe database operations using neat
 - **Middleware Support**: Extensible through middleware interface
 - **Versioning**: Built-in support for content versioning
 
@@ -26,16 +26,15 @@ A modular, embeddable CMS package for Go applications that provides content mana
 ## Project Structure
 - `/admin`: Admin interface components
 - `/frontend`: Frontend assets and templates
-- `*_table_create_sql.go`: SQL schema definitions
-- `store_*.go`: Core store implementations
+- `store.go`: Core store implementations with schema migrations
+- `store_*.go`: Entity-specific store implementations
 - `*_query.go`: Query builder implementations
 - `*_test.go`: Test files
 
 ## Dependencies
-- `github.com/doug-martin/goqu/v9`: SQL query builder
+- `github.com/dracory/neat`: ORM for database operations
 - `github.com/dromara/carbon/v2`: Date/time handling
 - `github.com/dracory/database`: Database utilities
-- `github.com/dracory/sb`: SQL builder utilities
 - `github.com/samber/lo`: Lo-Dash like Go utilities
 
 ## Development Status

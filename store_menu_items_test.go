@@ -4,8 +4,6 @@ import (
 	"context"
 	"strings"
 	"testing"
-
-	"github.com/dracory/sb"
 )
 
 func TestStoreMenuItemCreate(t *testing.T) {
@@ -146,7 +144,7 @@ func TestStoreMenuItemSoftDelete(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	if menuItem.SoftDeletedAt() != sb.MAX_DATETIME {
+	if menuItem.SoftDeletedAt() != MAX_DATETIME {
 		t.Fatal("MenuItem MUST NOT be soft deleted")
 	}
 
@@ -173,7 +171,7 @@ func TestStoreMenuItemSoftDelete(t *testing.T) {
 		t.Fatal("MenuItem MUST be soft deleted")
 	}
 
-	if strings.Contains(menuItemFindWithSoftDeleted[0].SoftDeletedAt(), sb.MAX_DATETIME) {
+	if strings.Contains(menuItemFindWithSoftDeleted[0].SoftDeletedAt(), MAX_DATETIME) {
 		t.Fatal("MenuItem MUST be soft deleted", menuItem.SoftDeletedAt())
 	}
 

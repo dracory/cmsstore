@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/dracory/dataobject"
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -34,7 +33,7 @@ func NewTemplate() TemplateInterface {
 	o.SetStatus(TEMPLATE_STATUS_DRAFT)
 	o.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	o.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
-	o.SetSoftDeletedAt(sb.MAX_DATETIME)
+	o.SetSoftDeletedAt(MAX_DATETIME)
 	return o
 }
 

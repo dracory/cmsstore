@@ -3,7 +3,6 @@ package cmsstore
 import (
 	"testing"
 
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -22,8 +21,8 @@ func TestNewBlockDefaults(t *testing.T) {
 	if block.Status() != BLOCK_STATUS_DRAFT {
 		t.Errorf("expected status %q, got %q", BLOCK_STATUS_DRAFT, block.Status())
 	}
-	if block.SoftDeletedAt() != sb.MAX_DATETIME {
-		t.Errorf("expected SoftDeletedAt %q, got %q", sb.MAX_DATETIME, block.SoftDeletedAt())
+	if block.SoftDeletedAt() != MAX_DATETIME {
+		t.Errorf("expected SoftDeletedAt %q, got %q", MAX_DATETIME, block.SoftDeletedAt())
 	}
 	if block.IsSoftDeleted() {
 		t.Errorf("expected IsSoftDeleted to be false")
@@ -353,8 +352,8 @@ func TestBlockSoftDeletedAtMethods(t *testing.T) {
 
 	// Test default SoftDeletedAt
 	softDeletedAt := block.SoftDeletedAt()
-	if softDeletedAt != sb.MAX_DATETIME {
-		t.Errorf("expected SoftDeletedAt %q, got %q", sb.MAX_DATETIME, softDeletedAt)
+	if softDeletedAt != MAX_DATETIME {
+		t.Errorf("expected SoftDeletedAt %q, got %q", MAX_DATETIME, softDeletedAt)
 	}
 
 	softDeletedAtCarbon := block.SoftDeletedAtCarbon()

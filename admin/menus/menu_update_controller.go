@@ -11,7 +11,6 @@ import (
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/dracory/sb"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -71,7 +70,7 @@ func (controller *menuUpdateController) treeEditorHandle(r *http.Request, data m
 	pageList, err := controller.ui.Store().PageList(r.Context(), cmsstore.PageQuery().
 		SetSiteID(data.menu.SiteID()).
 		SetOrderBy(cmsstore.COLUMN_NAME).
-		SetSortOrder(sb.ASC))
+		SetSortOrder(cmsstore.SORT_ORDER_ASC))
 
 	if err != nil {
 		controller.ui.Logger().Error("At menuUpdateController > treeEditorHandle", "error", err.Error())

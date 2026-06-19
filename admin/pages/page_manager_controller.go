@@ -12,7 +12,6 @@ import (
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/dracory/sb"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -366,10 +365,10 @@ func (controller *pageManagerController) tableRecords(data pageManagerController
 func (controller *pageManagerController) sortableColumnLabel(data pageManagerControllerData, tableLabel string, columnName string) hb.TagInterface {
 	isSelected := strings.EqualFold(data.sortBy, columnName)
 
-	direction := lo.If(data.sortOrder == sb.ASC, sb.DESC).Else(sb.ASC)
+	direction := lo.If(data.sortOrder == cmsstore.SORT_ORDER_ASC, cmsstore.SORT_ORDER_DESC).Else(cmsstore.SORT_ORDER_ASC)
 
 	if !isSelected {
-		direction = sb.ASC
+		direction = cmsstore.SORT_ORDER_ASC
 	}
 
 	link := shared.URLR(data.request, shared.PathPagesPageManager, map[string]string{
@@ -490,7 +489,7 @@ func (controller *pageManagerController) prepareData(r *http.Request) (data page
 	data.page = req.GetStringTrimmedOr(r, "page", "0")
 	data.pageInt = cast.ToInt(data.page)
 	data.perPage = cast.ToInt(req.GetStringTrimmedOr(r, "per_page", cast.ToString(initialPerPage)))
-	data.sortOrder = req.GetStringTrimmedOr(r, "sort", sb.DESC)
+	data.sortOrder = req.GetStringTrimmedOr(r, "sort", cmsstore.SORT_ORDER_DESC)
 	data.sortBy = req.GetStringTrimmedOr(r, "by", cmsstore.COLUMN_CREATED_AT)
 
 	data.formCreatedFrom = req.GetStringTrimmed(r, "filter_created_from")
@@ -508,7 +507,7 @@ func (controller *pageManagerController) prepareData(r *http.Request) (data page
 
 	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
-		SetSortOrder(sb.ASC).
+		SetSortOrder(cmsstore.SORT_ORDER_ASC).
 		SetOffset(0).
 		SetLimit(100))
 

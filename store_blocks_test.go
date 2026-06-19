@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/dracory/neat"
-	"github.com/dracory/sb"
 )
 
 func TestStoreBlockCreate(t *testing.T) {
@@ -229,7 +228,7 @@ func TestStoreBlockSoftDelete(t *testing.T) {
 		t.Fatal("unexpected error:", err)
 	}
 
-	if block.SoftDeletedAt() != sb.MAX_DATETIME {
+	if block.SoftDeletedAt() != MAX_DATETIME {
 		t.Fatal("Block MUST NOT be soft deleted")
 	}
 
@@ -256,7 +255,7 @@ func TestStoreBlockSoftDelete(t *testing.T) {
 		t.Fatal("Exam MUST be soft deleted")
 	}
 
-	if strings.Contains(blockFindWithSoftDeleted[0].SoftDeletedAt(), sb.MAX_DATETIME) {
+	if strings.Contains(blockFindWithSoftDeleted[0].SoftDeletedAt(), MAX_DATETIME) {
 		t.Fatal("Block MUST be soft deleted", block.SoftDeletedAt())
 	}
 

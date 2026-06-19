@@ -7,7 +7,6 @@ import (
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/dracory/sb"
 )
 
 // MenuAdminProvider provides admin UI for Menu block types.
@@ -45,7 +44,7 @@ func (p *MenuAdminProvider) GetContentFields(block cmsstore.BlockInterface, r *h
 	menuList, err := p.store.MenuList(r.Context(), cmsstore.MenuQuery().
 		SetStatus(cmsstore.MENU_STATUS_ACTIVE).
 		SetOrderBy(cmsstore.COLUMN_NAME).
-		SetSortOrder(sb.ASC))
+		SetSortOrder(cmsstore.SORT_ORDER_ASC))
 
 	if err != nil {
 		p.logger.Error("Error loading menus", "error", err.Error())

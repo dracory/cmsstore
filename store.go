@@ -7,6 +7,7 @@ import (
 
 	"github.com/dracory/database"
 	"github.com/dracory/neat"
+	contractsschema "github.com/dracory/neat/contracts/database/schema"
 )
 
 // == TYPE ====================================================================
@@ -74,110 +75,182 @@ func (store *storeImplementation) AutoMigrate(ctx context.Context, opts ...Optio
 
 // MigrateUp creates the cms store tables
 func (store *storeImplementation) MigrateUp(ctx context.Context, tx ...*sql.Tx) error {
-	var txToUse *sql.Tx
-	if len(tx) > 0 {
-		txToUse = tx[0]
-	}
-
 	if store.neatDB == nil {
 		return errors.New("cms store: database is nil")
 	}
 
-	blockSql, err := store.blockTableCreateSql()
-	if err != nil {
-		return err
-	}
-	pageSql, err := store.pageTableCreateSql()
-	if err != nil {
-		return err
-	}
-	tableSql, err := store.siteTableCreateSql()
-	if err != nil {
-		return err
-	}
-	templateSql, err := store.templateTableCreateSql()
-	if err != nil {
-		return err
+	// Create page table
+	if !store.neatDB.Schema().HasTable(store.pageTableName) {
+		err := store.neatDB.Schema().Create(store.pageTableName, func(table contractsschema.Blueprint) {
+			table.String(COLUMN_ID, 40)
+			table.Primary(COLUMN_ID)
+			table.String(COLUMN_SITE_ID, 40)
+			table.String(COLUMN_STATUS, 40)
+			table.String(COLUMN_ALIAS, 255)
+			table.String(COLUMN_NAME, 255)
+			table.String(COLUMN_TITLE, 255)
+			table.Text(COLUMN_CONTENT)
+			table.String(COLUMN_EDITOR, 40)
+			table.String(COLUMN_TEMPLATE_ID, 40)
+			table.String(COLUMN_CANONICAL_URL, 255)
+			table.String(COLUMN_META_KEYWORDS, 255)
+			table.String(COLUMN_META_DESCRIPTION, 255)
+			table.String(COLUMN_META_ROBOTS, 255)
+			table.String(COLUMN_HANDLE, 40)
+			table.Text(COLUMN_MIDDLEWARES_AFTER)
+			table.Text(COLUMN_MIDDLEWARES_BEFORE)
+			table.Text(COLUMN_METAS)
+			table.Text(COLUMN_MEMO)
+			table.DateTime(COLUMN_CREATED_AT)
+			table.DateTime(COLUMN_UPDATED_AT)
+			table.DateTime(COLUMN_SOFT_DELETED_AT)
+		})
+		if err != nil {
+			return err
+		}
 	}
 
-	var menuSql, menuItemSql, translationSql string
+	// Create block table
+	if !store.neatDB.Schema().HasTable(store.blockTableName) {
+		err := store.neatDB.Schema().Create(store.blockTableName, func(table contractsschema.Blueprint) {
+			table.String(COLUMN_ID, 40)
+			table.Primary(COLUMN_ID)
+			table.String(COLUMN_SITE_ID, 40)
+			table.String(COLUMN_PAGE_ID, 40)
+			table.String(COLUMN_TEMPLATE_ID, 40)
+			table.String(COLUMN_STATUS, 40)
+			table.String(COLUMN_PARENT_ID, 40)
+			table.Integer(COLUMN_SEQUENCE)
+			table.String(COLUMN_TYPE, 100)
+			table.String(COLUMN_NAME, 255)
+			table.Text(COLUMN_CONTENT)
+			table.String(COLUMN_EDITOR, 40)
+			table.String(COLUMN_HANDLE, 40)
+			table.Text(COLUMN_METAS)
+			table.Text(COLUMN_MEMO)
+			table.DateTime(COLUMN_CREATED_AT)
+			table.DateTime(COLUMN_UPDATED_AT)
+			table.DateTime(COLUMN_SOFT_DELETED_AT)
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Create site table
+	if !store.neatDB.Schema().HasTable(store.siteTableName) {
+		err := store.neatDB.Schema().Create(store.siteTableName, func(table contractsschema.Blueprint) {
+			table.String(COLUMN_ID, 40)
+			table.Primary(COLUMN_ID)
+			table.String(COLUMN_STATUS, 40)
+			table.String(COLUMN_NAME, 255)
+			table.Text(COLUMN_DOMAIN_NAMES)
+			table.String(COLUMN_HANDLE, 40)
+			table.Text(COLUMN_METAS)
+			table.Text(COLUMN_MEMO)
+			table.DateTime(COLUMN_CREATED_AT)
+			table.DateTime(COLUMN_UPDATED_AT)
+			table.DateTime(COLUMN_SOFT_DELETED_AT)
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Create template table
+	if !store.neatDB.Schema().HasTable(store.templateTableName) {
+		err := store.neatDB.Schema().Create(store.templateTableName, func(table contractsschema.Blueprint) {
+			table.String(COLUMN_ID, 40)
+			table.Primary(COLUMN_ID)
+			table.String(COLUMN_SITE_ID, 40)
+			table.String(COLUMN_STATUS, 40)
+			table.String(COLUMN_NAME, 255)
+			table.Text(COLUMN_CONTENT)
+			table.String(COLUMN_EDITOR, 40)
+			table.String(COLUMN_HANDLE, 40)
+			table.Text(COLUMN_METAS)
+			table.Text(COLUMN_MEMO)
+			table.DateTime(COLUMN_CREATED_AT)
+			table.DateTime(COLUMN_UPDATED_AT)
+			table.DateTime(COLUMN_SOFT_DELETED_AT)
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Create menu table if enabled
 	if store.menusEnabled {
-		menuSql, err = store.menuTableCreateSql()
-		if err != nil {
-			return err
+		if !store.neatDB.Schema().HasTable(store.menuTableName) {
+			err := store.neatDB.Schema().Create(store.menuTableName, func(table contractsschema.Blueprint) {
+				table.String(COLUMN_ID, 40)
+				table.Primary(COLUMN_ID)
+				table.String(COLUMN_SITE_ID, 40)
+				table.String(COLUMN_STATUS, 40)
+				table.String(COLUMN_NAME, 255)
+				table.String(COLUMN_HANDLE, 40)
+				table.Text(COLUMN_METAS)
+				table.Text(COLUMN_MEMO)
+				table.DateTime(COLUMN_CREATED_AT)
+				table.DateTime(COLUMN_UPDATED_AT)
+				table.DateTime(COLUMN_SOFT_DELETED_AT)
+			})
+			if err != nil {
+				return err
+			}
 		}
-		menuItemSql, err = store.menuItemTableCreateSql()
-		if err != nil {
-			return err
+
+		// Create menu item table
+		if !store.neatDB.Schema().HasTable(store.menuItemTableName) {
+			err := store.neatDB.Schema().Create(store.menuItemTableName, func(table contractsschema.Blueprint) {
+				table.String(COLUMN_ID, 40)
+				table.Primary(COLUMN_ID)
+				table.String(COLUMN_MENU_ID, 40)
+				table.String(COLUMN_STATUS, 40)
+				table.String(COLUMN_NAME, 255)
+				table.String(COLUMN_PARENT_ID, 40)
+				table.Integer(COLUMN_SEQUENCE)
+				table.String(COLUMN_PAGE_ID, 40)
+				table.String(COLUMN_URL, 255)
+				table.String(COLUMN_TARGET, 40)
+				table.String(COLUMN_HANDLE, 40)
+				table.Text(COLUMN_METAS)
+				table.Text(COLUMN_MEMO)
+				table.DateTime(COLUMN_CREATED_AT)
+				table.DateTime(COLUMN_UPDATED_AT)
+				table.DateTime(COLUMN_SOFT_DELETED_AT)
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
+	// Create translation table if enabled
 	if store.translationsEnabled {
-		translationSql, err = store.translationTableCreateSql()
-		if err != nil {
-			return err
-		}
-	}
-
-	if blockSql == "" {
-		return errors.New("block table create sql is empty")
-	}
-
-	if pageSql == "" {
-		return errors.New("page table create sql is empty")
-	}
-
-	if tableSql == "" {
-		return errors.New("site table create sql is empty")
-	}
-
-	if templateSql == "" {
-		return errors.New("template table create sql is empty")
-	}
-
-	if store.menusEnabled && store.menuTableName == "" {
-		return errors.New("menu table name is empty")
-	}
-
-	if store.menusEnabled && store.menuItemTableName == "" {
-		return errors.New("menu item table name is empty")
-	}
-
-	if store.translationsEnabled && translationSql == "" {
-		return errors.New("translation table create sql is empty")
-	}
-
-	sqlList := []string{
-		blockSql,
-		pageSql,
-		tableSql,
-		templateSql,
-	}
-
-	if store.menusEnabled {
-		sqlList = append(sqlList, menuSql)
-		sqlList = append(sqlList, menuItemSql)
-	}
-
-	if store.translationsEnabled {
-		sqlList = append(sqlList, translationSql)
-	}
-
-	for _, sql := range sqlList {
-		var errExec error
-		if txToUse != nil {
-			_, errExec = txToUse.Exec(sql)
-		} else {
-			_, errExec = store.db.Exec(sql)
-		}
-
-		if errExec != nil {
-			return errExec
+		if !store.neatDB.Schema().HasTable(store.translationTableName) {
+			err := store.neatDB.Schema().Create(store.translationTableName, func(table contractsschema.Blueprint) {
+				table.String(COLUMN_ID, 40)
+				table.Primary(COLUMN_ID)
+				table.String(COLUMN_SITE_ID, 40)
+				table.String(COLUMN_STATUS, 40)
+				table.String(COLUMN_NAME, 255)
+				table.String(COLUMN_HANDLE, 40)
+				table.Text(COLUMN_CONTENT)
+				table.Text(COLUMN_METAS)
+				table.Text(COLUMN_MEMO)
+				table.DateTime(COLUMN_CREATED_AT)
+				table.DateTime(COLUMN_UPDATED_AT)
+				table.DateTime(COLUMN_SOFT_DELETED_AT)
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	if store.versioningEnabled {
-		err := store.versioningStore.MigrateUp(ctx, txToUse)
+		err := store.versioningStore.MigrateUp(ctx)
 		if err != nil {
 			return err
 		}
@@ -188,74 +261,60 @@ func (store *storeImplementation) MigrateUp(ctx context.Context, tx ...*sql.Tx) 
 
 // MigrateDown drops the cms store tables
 func (store *storeImplementation) MigrateDown(ctx context.Context, tx ...*sql.Tx) error {
-	var txToUse *sql.Tx
-	if len(tx) > 0 {
-		txToUse = tx[0]
-	}
-
 	if store.neatDB == nil {
 		return errors.New("cms store: database is nil")
 	}
 
 	// Drop in reverse order of creation
-	sqlList := []string{}
-
 	if store.translationsEnabled {
-		translationSql, err := store.translationTableDropSql()
-		if err != nil {
-			return err
+		if store.neatDB.Schema().HasTable(store.translationTableName) {
+			err := store.neatDB.Schema().Drop(store.translationTableName)
+			if err != nil {
+				return err
+			}
 		}
-		sqlList = append(sqlList, translationSql)
 	}
 
 	if store.menusEnabled {
-		menuItemSql, err := store.menuItemTableDropSql()
+		if store.neatDB.Schema().HasTable(store.menuItemTableName) {
+			err := store.neatDB.Schema().Drop(store.menuItemTableName)
+			if err != nil {
+				return err
+			}
+		}
+		if store.neatDB.Schema().HasTable(store.menuTableName) {
+			err := store.neatDB.Schema().Drop(store.menuTableName)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if store.neatDB.Schema().HasTable(store.templateTableName) {
+		err := store.neatDB.Schema().Drop(store.templateTableName)
 		if err != nil {
 			return err
 		}
-		sqlList = append(sqlList, menuItemSql)
+	}
 
-		menuSql, err := store.menuTableDropSql()
+	if store.neatDB.Schema().HasTable(store.siteTableName) {
+		err := store.neatDB.Schema().Drop(store.siteTableName)
 		if err != nil {
 			return err
 		}
-		sqlList = append(sqlList, menuSql)
 	}
 
-	templateSql, err := store.templateTableDropSql()
-	if err != nil {
-		return err
-	}
-	sqlList = append(sqlList, templateSql)
-
-	tableSql, err := store.siteTableDropSql()
-	if err != nil {
-		return err
-	}
-	sqlList = append(sqlList, tableSql)
-
-	pageSql, err := store.pageTableDropSql()
-	if err != nil {
-		return err
-	}
-	sqlList = append(sqlList, pageSql)
-
-	blockSql, err := store.blockTableDropSql()
-	if err != nil {
-		return err
-	}
-	sqlList = append(sqlList, blockSql)
-
-	for _, sql := range sqlList {
-		var errExec error
-		if txToUse != nil {
-			_, errExec = txToUse.Exec(sql)
-		} else {
-			_, errExec = store.db.Exec(sql)
+	if store.neatDB.Schema().HasTable(store.pageTableName) {
+		err := store.neatDB.Schema().Drop(store.pageTableName)
+		if err != nil {
+			return err
 		}
+	}
 
-		if errExec != nil {
-			return errExec
+	if store.neatDB.Schema().HasTable(store.blockTableName) {
+		err := store.neatDB.Schema().Drop(store.blockTableName)
+		if err != nil {
+			return err
 		}
 	}
 

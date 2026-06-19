@@ -14,7 +14,6 @@ import (
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
@@ -272,7 +271,7 @@ func (controller *menuVersioningController) prepareDataAndValidate(r *http.Reque
 		SetEntityType(cmsstore.VERSIONING_TYPE_MENU).
 		SetEntityID(data.menuID).
 		SetOrderBy(cmsstore.COLUMN_CREATED_AT).
-		SetSortOrder(sb.DESC))
+		SetSortOrder(cmsstore.SORT_ORDER_DESC))
 
 	if err != nil {
 		controller.ui.Logger().Error("At menuVersioningController > prepareDataAndValidate", "error", err.Error())

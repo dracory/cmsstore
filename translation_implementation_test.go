@@ -3,7 +3,6 @@ package cmsstore
 import (
 	"testing"
 
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -20,7 +19,7 @@ func TestNewTranslationDefaults(t *testing.T) {
 	if len(translation.UpdatedAt()) == 0 {
 		t.Error("UpdatedAt should be set")
 	}
-	if translation.SoftDeletedAt() != sb.MAX_DATETIME {
+	if translation.SoftDeletedAt() != MAX_DATETIME {
 		t.Errorf("SoftDeletedAt should default to max datetime, got %s", translation.SoftDeletedAt())
 	}
 	if translation.Status() != TEMPLATE_STATUS_DRAFT {

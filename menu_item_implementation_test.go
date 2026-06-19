@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -23,8 +22,8 @@ func TestNewMenuItemDefaults(t *testing.T) {
 	if menuItem.Status() != MENU_ITEM_STATUS_DRAFT {
 		t.Errorf("expected status %q, got %q", MENU_ITEM_STATUS_DRAFT, menuItem.Status())
 	}
-	if menuItem.SoftDeletedAt() != sb.MAX_DATETIME {
-		t.Errorf("expected SoftDeletedAt %q, got %q", sb.MAX_DATETIME, menuItem.SoftDeletedAt())
+	if menuItem.SoftDeletedAt() != MAX_DATETIME {
+		t.Errorf("expected SoftDeletedAt %q, got %q", MAX_DATETIME, menuItem.SoftDeletedAt())
 	}
 	if menuItem.IsSoftDeleted() {
 		t.Error("expected IsSoftDeleted to be false")
@@ -348,8 +347,8 @@ func TestMenuItemSoftDeletedAtMethods(t *testing.T) {
 
 	// Test default SoftDeletedAt
 	softDeletedAt := menuItem.SoftDeletedAt()
-	if softDeletedAt != sb.MAX_DATETIME {
-		t.Errorf("expected SoftDeletedAt %q, got %q", sb.MAX_DATETIME, softDeletedAt)
+	if softDeletedAt != MAX_DATETIME {
+		t.Errorf("expected SoftDeletedAt %q, got %q", MAX_DATETIME, softDeletedAt)
 	}
 
 	softDeletedAtCarbon := menuItem.SoftDeletedAtCarbon()

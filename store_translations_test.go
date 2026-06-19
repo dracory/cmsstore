@@ -5,7 +5,6 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 	_ "modernc.org/sqlite"
 )
@@ -548,9 +547,9 @@ func TestTranslationQueryMethods(t *testing.T) {
 		t.Error("Expected SoftDeletedIncluded to be true")
 	}
 
-	q.SetSortOrder(sb.ASC)
-	if q.SortOrder() != sb.ASC {
-		t.Errorf("Expected SortOrder sb.ASC, got %v", q.SortOrder())
+	q.SetSortOrder(SORT_ORDER_ASC)
+	if q.SortOrder() != SORT_ORDER_ASC {
+		t.Errorf("Expected SortOrder SORT_ORDER_ASC, got %v", q.SortOrder())
 	}
 
 	q.SetStatus(TRANSLATION_STATUS_ACTIVE)

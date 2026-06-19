@@ -6,7 +6,6 @@ import (
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/hb"
-	"github.com/dracory/sb"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -14,7 +13,7 @@ import (
 func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 	siteList, err := a.store.SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
-		SetSortOrder(sb.ASC).
+		SetSortOrder(cmsstore.SORT_ORDER_ASC).
 		SetOffset(0).
 		SetLimit(100))
 

@@ -11,7 +11,6 @@ import (
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/dracory/sb"
 )
 
 const VIEW_SETTINGS = "settings"
@@ -529,7 +528,7 @@ func (controller templateUpdateController) prepareDataAndValidate(r *http.Reques
 
 	siteList, err := controller.ui.Store().SiteList(r.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
-		SetSortOrder(sb.ASC).
+		SetSortOrder(cmsstore.SORT_ORDER_ASC).
 		SetOffset(0).
 		SetLimit(100))
 

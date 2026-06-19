@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/dracory/dataobject"
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -45,7 +44,7 @@ func NewPage() PageInterface {
 	o.SetTitle("")
 	o.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	o.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
-	o.SetSoftDeletedAt(sb.MAX_DATETIME)
+	o.SetSoftDeletedAt(MAX_DATETIME)
 	return o
 }
 

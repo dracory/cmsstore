@@ -9,7 +9,6 @@ import (
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/dracory/sb"
 	"github.com/spf13/cast"
 )
 
@@ -163,7 +162,7 @@ func (t *MenuBlockType) GetAdminFields(block cmsstore.BlockInterface, r *http.Re
 	menuList, err := t.store.MenuList(r.Context(), cmsstore.MenuQuery().
 		SetStatus(cmsstore.MENU_STATUS_ACTIVE).
 		SetOrderBy(cmsstore.COLUMN_NAME).
-		SetSortOrder(sb.ASC))
+		SetSortOrder(cmsstore.SORT_ORDER_ASC))
 
 	if err != nil {
 		t.logger.Error("Error loading menus", "error", err.Error())

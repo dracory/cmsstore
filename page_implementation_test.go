@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -23,8 +22,8 @@ func TestNewPageDefaults(t *testing.T) {
 	if page.Status() != PAGE_STATUS_DRAFT {
 		t.Errorf("expected status %q, got %q", PAGE_STATUS_DRAFT, page.Status())
 	}
-	if page.SoftDeletedAt() != sb.MAX_DATETIME {
-		t.Errorf("expected SoftDeletedAt %q, got %q", sb.MAX_DATETIME, page.SoftDeletedAt())
+	if page.SoftDeletedAt() != MAX_DATETIME {
+		t.Errorf("expected SoftDeletedAt %q, got %q", MAX_DATETIME, page.SoftDeletedAt())
 	}
 	if page.IsSoftDeleted() {
 		t.Error("expected IsSoftDeleted to be false")
@@ -364,8 +363,8 @@ func TestPageSoftDeletedAtMethods(t *testing.T) {
 
 	// Test default SoftDeletedAt
 	softDeletedAt := page.SoftDeletedAt()
-	if softDeletedAt != sb.MAX_DATETIME {
-		t.Errorf("expected SoftDeletedAt %q, got %q", sb.MAX_DATETIME, softDeletedAt)
+	if softDeletedAt != MAX_DATETIME {
+		t.Errorf("expected SoftDeletedAt %q, got %q", MAX_DATETIME, softDeletedAt)
 	}
 
 	softDeletedAtCarbon := page.SoftDeletedAtCarbon()

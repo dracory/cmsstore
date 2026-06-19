@@ -5,7 +5,6 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -25,8 +24,8 @@ func TestNewSiteDefaults(t *testing.T) {
 	if site.Status() != TEMPLATE_STATUS_DRAFT {
 		t.Errorf("Expected Status %s, got %s", TEMPLATE_STATUS_DRAFT, site.Status())
 	}
-	if site.SoftDeletedAt() != sb.MAX_DATETIME {
-		t.Errorf("Expected SoftDeletedAt %s, got %s", sb.MAX_DATETIME, site.SoftDeletedAt())
+	if site.SoftDeletedAt() != MAX_DATETIME {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", MAX_DATETIME, site.SoftDeletedAt())
 	}
 	if site.IsSoftDeleted() {
 		t.Error("Expected IsSoftDeleted to be false")
@@ -332,8 +331,8 @@ func TestSiteSoftDeletedAtMethods(t *testing.T) {
 
 	// Test default SoftDeletedAt
 	softDeletedAt := site.SoftDeletedAt()
-	if softDeletedAt != sb.MAX_DATETIME {
-		t.Errorf("Expected SoftDeletedAt %s, got %s", sb.MAX_DATETIME, softDeletedAt)
+	if softDeletedAt != MAX_DATETIME {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", MAX_DATETIME, softDeletedAt)
 	}
 
 	softDeletedAtCarbon := site.SoftDeletedAtCarbon()

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	contractsorm "github.com/dracory/neat/contracts/database/orm"
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -339,13 +338,13 @@ func (store *storeImplementation) templateSelectQuery(options TemplateQueryInter
 		}
 	}
 
-	sortOrder := sb.DESC
+	sortOrder := SORT_ORDER_DESC
 	if options.HasSortOrder() {
 		sortOrder = options.SortOrder()
 	}
 
 	if !options.IsCountOnly() && options.HasOrderBy() {
-		if strings.EqualFold(sortOrder, sb.ASC) {
+		if strings.EqualFold(sortOrder, SORT_ORDER_ASC) {
 			q = q.OrderBy(options.OrderBy(), "ASC")
 		} else {
 			q = q.OrderBy(options.OrderBy(), "DESC")

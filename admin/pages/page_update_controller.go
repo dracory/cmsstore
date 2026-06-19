@@ -16,7 +16,6 @@ import (
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/dracory/sb"
 
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
@@ -1018,7 +1017,7 @@ func (controller pageUpdateController) savePage(r *http.Request, data pageUpdate
 	if data.view == VIEW_SETTINGS {
 		// make sure the date is in the correct format
 		// data.formPublishedAt = lo.Substring(strings.ReplaceAll(data.formPublishedAt, " ", "T")+":00", 0, 19)
-		// publishedAt := lo.Ternary(data.formPublishedAt == "", sb.NULL_DATE, carbon.Parse(data.formPublishedAt).ToDateTimeString(carbon.UTC))
+		// publishedAt := lo.Ternary(data.formPublishedAt == "", "", carbon.Parse(data.formPublishedAt).ToDateTimeString(carbon.UTC))
 		data.page.SetEditor(data.formEditor)
 		data.page.SetMemo(data.formMemo)
 		data.page.SetName(data.formName)
@@ -1081,7 +1080,7 @@ func (controller pageUpdateController) createVersioning(ctx context.Context, pag
 		SetEntityType(cmsstore.VERSIONING_TYPE_PAGE).
 		SetEntityID(page.ID()).
 		SetOrderBy(cmsstore.COLUMN_CREATED_AT).
-		SetSortOrder(sb.DESC).
+		SetSortOrder(cmsstore.SORT_ORDER_DESC).
 		SetLimit(1))
 
 	if err != nil {
@@ -1222,7 +1221,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 
 	data.siteList, err = controller.ui.Store().SiteList(data.request.Context(), cmsstore.SiteQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
-		SetSortOrder(sb.ASC).
+		SetSortOrder(cmsstore.SORT_ORDER_ASC).
 		SetOffset(0).
 		SetLimit(100))
 
@@ -1232,7 +1231,7 @@ func (controller pageUpdateController) prepareDataAndValidate(r *http.Request) (
 
 	templateList, err := controller.ui.Store().TemplateList(data.request.Context(), cmsstore.TemplateQuery().
 		SetOrderBy(cmsstore.COLUMN_NAME).
-		SetSortOrder(sb.ASC).
+		SetSortOrder(cmsstore.SORT_ORDER_ASC).
 		SetOffset(0).
 		SetLimit(100))
 

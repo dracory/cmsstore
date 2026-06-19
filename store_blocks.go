@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	contractsorm "github.com/dracory/neat/contracts/database/orm"
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -381,13 +380,13 @@ func (store *storeImplementation) blockSelectQuery(options BlockQueryInterface) 
 		}
 	}
 
-	sortOrder := sb.DESC
+	sortOrder := SORT_ORDER_DESC
 	if options.HasSortOrder() && options.SortOrder() != "" {
 		sortOrder = options.SortOrder()
 	}
 
 	if !options.IsCountOnly() && options.HasOrderBy() && options.OrderBy() != "" {
-		if strings.EqualFold(sortOrder, sb.ASC) {
+		if strings.EqualFold(sortOrder, SORT_ORDER_ASC) {
 			q = q.OrderBy(options.OrderBy(), "ASC")
 		} else {
 			q = q.OrderBy(options.OrderBy(), "DESC")

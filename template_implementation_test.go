@@ -3,7 +3,6 @@ package cmsstore
 import (
 	"testing"
 
-	"github.com/dracory/sb"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -23,8 +22,8 @@ func TestNewTemplateDefaults(t *testing.T) {
 	if template.Status() != TEMPLATE_STATUS_DRAFT {
 		t.Errorf("Expected Status %s, got %s", TEMPLATE_STATUS_DRAFT, template.Status())
 	}
-	if template.SoftDeletedAt() != sb.MAX_DATETIME {
-		t.Errorf("Expected SoftDeletedAt %s, got %s", sb.MAX_DATETIME, template.SoftDeletedAt())
+	if template.SoftDeletedAt() != MAX_DATETIME {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", MAX_DATETIME, template.SoftDeletedAt())
 	}
 	if template.IsSoftDeleted() {
 		t.Error("Expected IsSoftDeleted to be false")
@@ -297,8 +296,8 @@ func TestTemplateSoftDeletedAtMethods(t *testing.T) {
 
 	// Test default SoftDeletedAt
 	softDeletedAt := template.SoftDeletedAt()
-	if softDeletedAt != sb.MAX_DATETIME {
-		t.Errorf("Expected SoftDeletedAt %s, got %s", sb.MAX_DATETIME, softDeletedAt)
+	if softDeletedAt != MAX_DATETIME {
+		t.Errorf("Expected SoftDeletedAt %s, got %s", MAX_DATETIME, softDeletedAt)
 	}
 
 	softDeletedAtCarbon := template.SoftDeletedAtCarbon()
