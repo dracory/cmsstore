@@ -3,9 +3,12 @@ package testutils
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"os"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dracory/uid"
+	_ "modernc.org/sqlite"
 )
 
 const SITE_01 = "SITE_01"
@@ -18,20 +21,27 @@ const TRANSLATION_01 = "TRANSLATION_01"
 const TRANSLATION_02 = "TRANSLATION_02"
 
 func initDB(filepath string) *sql.DB {
-	if filepath != ":memory:" && fileExists(filepath) {
-		err := os.Remove(filepath) // remove database
-
-		if err != nil {
-			panic(err)
-		}
+	dsn := filepath
+	if filepath == ":memory:" {
+		// Use a unique name for each in-memory database to prevent interference between tests
+		// while still using cache=shared for consistency within a single test.
+		uniqueID := uid.HumanUid()
+		dsn = fmt.Sprintf("file:%s?mode=memory&cache=shared&parseTime=true", uniqueID)
+	} else if !fileExists(filepath) {
+		dsn += "?parseTime=true"
+	} else {
+		_ = os.Remove(filepath) // remove existing database file
+		dsn += "?parseTime=true"
 	}
 
-	dsn := filepath + "?parseTime=true"
 	db, err := sql.Open("sqlite", dsn)
-
 	if err != nil {
 		panic(err)
 	}
+
+	// For SQLite, allow multiple connections to avoid deadlocks when using shared cache.
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(10)
 
 	return db
 }

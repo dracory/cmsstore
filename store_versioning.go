@@ -126,26 +126,41 @@ func (store *storeImplementation) versioningTrackEntity(ctx context.Context, ent
 
 // VersioningCreate creates a new versioning.
 func (store *storeImplementation) VersioningCreate(ctx context.Context, version VersioningInterface) error {
+	if store.versioningStore == nil {
+		return errors.New("cmsstore: versioning store is nil")
+	}
 	return store.versioningStore.VersionCreate(store.toQuerableContext(ctx), version)
 }
 
 // VersioningDelete deletes a versioning.
 func (store *storeImplementation) VersioningDelete(ctx context.Context, version VersioningInterface) error {
+	if store.versioningStore == nil {
+		return errors.New("cmsstore: versioning store is nil")
+	}
 	return store.versioningStore.VersionDelete(store.toQuerableContext(ctx), version)
 }
 
 // VersioningDeleteByID deletes a versioning by ID.
 func (store *storeImplementation) VersioningDeleteByID(ctx context.Context, id string) error {
+	if store.versioningStore == nil {
+		return errors.New("cmsstore: versioning store is nil")
+	}
 	return store.versioningStore.VersionDeleteByID(store.toQuerableContext(ctx), id)
 }
 
 // VersioningFindByID finds a versioning by ID.
 func (store *storeImplementation) VersioningFindByID(ctx context.Context, versioningID string) (VersioningInterface, error) {
+	if store.versioningStore == nil {
+		return nil, errors.New("cmsstore: versioning store is nil")
+	}
 	return store.versioningStore.VersionFindByID(store.toQuerableContext(ctx), versioningID)
 }
 
 // VersioningList lists versionings.
 func (store *storeImplementation) VersioningList(ctx context.Context, query VersioningQueryInterface) ([]VersioningInterface, error) {
+	if store.versioningStore == nil {
+		return nil, errors.New("cmsstore: versioning store is nil")
+	}
 	list, err := store.versioningStore.VersionList(store.toQuerableContext(ctx), query)
 
 	if err != nil {
@@ -171,15 +186,24 @@ func (store *storeImplementation) VersioningList(ctx context.Context, query Vers
 
 // VersioningSoftDelete soft deletes a versioning.
 func (store *storeImplementation) VersioningSoftDelete(ctx context.Context, versioning VersioningInterface) error {
+	if store.versioningStore == nil {
+		return errors.New("cmsstore: versioning store is nil")
+	}
 	return store.versioningStore.VersionSoftDelete(store.toQuerableContext(ctx), versioning)
 }
 
 // VersioningSoftDeleteByID soft deletes a versioning by ID.
 func (store *storeImplementation) VersioningSoftDeleteByID(ctx context.Context, id string) error {
+	if store.versioningStore == nil {
+		return errors.New("cmsstore: versioning store is nil")
+	}
 	return store.versioningStore.VersionSoftDeleteByID(store.toQuerableContext(ctx), id)
 }
 
 // VersioningUpdate updates a versioning.
 func (store *storeImplementation) VersioningUpdate(ctx context.Context, version VersioningInterface) error {
+	if store.versioningStore == nil {
+		return errors.New("cmsstore: versioning store is nil")
+	}
 	return store.versioningStore.VersionUpdate(store.toQuerableContext(ctx), version)
 }
