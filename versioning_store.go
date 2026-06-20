@@ -243,7 +243,8 @@ func (store *versioningStore) VersionUpdate(ctx context.Context, version Version
 
 // buildQuery builds a neat query from the versioning query interface.
 func (store *versioningStore) buildQuery(options VersioningQueryInterface) contractsorm.Query {
-	q := store.db.Query()
+	// Use Model() to enable neat's automatic soft delete handling via SoftDeletesMaxDate
+	q := store.db.Query().Model(&versioning{})
 
 	if options == nil {
 		return q
@@ -279,8 +280,6 @@ func (store *versioningStore) buildQuery(options VersioningQueryInterface) contr
 
 	if options.HasSoftDeletedIncluded() && options.SoftDeletedIncluded() {
 		q = q.WithSoftDeleted()
-	} else {
-		q = q.Where(COLUMN_SOFT_DELETED_AT+" = ?", carbon.Parse(VERSIONING_MAX_DATETIME, carbon.UTC).StdTime())
 	}
 
 	return q

@@ -12,7 +12,7 @@ require (
 	github.com/dracory/entitystore v1.9.0
 	github.com/dracory/form v0.23.0
 	github.com/dracory/hb v1.88.0
-	github.com/dracory/neat v0.20.0
+	github.com/dracory/neat v0.23.0
 	github.com/dracory/req v0.1.0
 	github.com/dracory/str v0.18.0
 	github.com/dracory/test v0.10.0
