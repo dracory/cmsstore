@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strconv"
 	"strings"
 
 	contractsorm "github.com/dracory/neat/contracts/database/orm"
@@ -13,6 +14,10 @@ import (
 func (store *storeImplementation) MediaCount(ctx context.Context, options MediaQueryInterface) (int64, error) {
 	if store.neatDB == nil {
 		return -1, errors.New("cms store: database is nil")
+	}
+
+	if options != nil && !options.IsCountOnly() {
+		options.SetCountOnly(true)
 	}
 
 	q, _, err := store.mediaSelectQuery(options)
@@ -167,7 +172,7 @@ func (store *storeImplementation) MediaList(ctx context.Context, query MediaQuer
 		MediaType     string `db:"media_type"`
 		FileSize      string `db:"file_size"`
 		FileExtension string `db:"file_extension"`
-		Sequence      string `db:"sequence"`
+		Sequence      int    `db:"sequence"`
 		Status        string `db:"status"`
 		Handle        string `db:"handle"`
 		Metas         string `db:"metas"`
@@ -195,7 +200,7 @@ func (store *storeImplementation) MediaList(ctx context.Context, query MediaQuer
 			"media_type":      r.MediaType,
 			"file_size":       r.FileSize,
 			"file_extension":  r.FileExtension,
-			"sequence":        r.Sequence,
+			"sequence":        strconv.Itoa(r.Sequence),
 			"status":          r.Status,
 			"handle":          r.Handle,
 			"metas":           r.Metas,
@@ -383,5 +388,11 @@ func (store *storeImplementation) mediaSelectQuery(options MediaQueryInterface) 
 
 	q = q.Where(COLUMN_SOFT_DELETED_AT+" > ?", carbon.Now(carbon.UTC).ToDateTimeString())
 
-	return q, []any{}, nil
+	columns := []any{}
+
+	for _, column := range options.Columns() {
+		columns = append(columns, column)
+	}
+
+	return q, columns, nil
 }

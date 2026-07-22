@@ -6,6 +6,7 @@ import (
 
 	"github.com/dracory/dataobject"
 	"github.com/dromara/carbon/v2"
+	"github.com/spf13/cast"
 )
 
 type mediaImplementation struct {
@@ -181,19 +182,7 @@ func (o *mediaImplementation) Sequence() string {
 }
 
 func (o *mediaImplementation) SequenceInt() int {
-	s := o.Sequence()
-	if s == "" {
-		return 0
-	}
-	n := 0
-	for _, c := range s {
-		if c >= '0' && c <= '9' {
-			n = n*10 + int(c-'0')
-		} else {
-			break
-		}
-	}
-	return n
+	return cast.ToInt(o.Sequence())
 }
 
 func (o *mediaImplementation) SetSequence(sequence string) MediaInterface {
@@ -202,7 +191,7 @@ func (o *mediaImplementation) SetSequence(sequence string) MediaInterface {
 }
 
 func (o *mediaImplementation) SetSequenceInt(sequence int) MediaInterface {
-	o.Set(COLUMN_SEQUENCE, jsonIntToString(sequence))
+	o.Set(COLUMN_SEQUENCE, cast.ToString(sequence))
 	return o
 }
 
@@ -329,24 +318,4 @@ func (o *mediaImplementation) SetSoftDeletedAt(softDeletedAt string) MediaInterf
 
 func (o *mediaImplementation) SoftDeletedAtCarbon() *carbon.Carbon {
 	return carbon.Parse(o.SoftDeletedAt())
-}
-
-func jsonIntToString(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	negative := false
-	if n < 0 {
-		negative = true
-		n = -n
-	}
-	digits := []byte{}
-	for n > 0 {
-		digits = append([]byte{byte('0' + n%10)}, digits...)
-		n /= 10
-	}
-	if negative {
-		digits = append([]byte{'-'}, digits...)
-	}
-	return string(digits)
 }
