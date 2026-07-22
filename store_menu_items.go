@@ -22,6 +22,10 @@ func (store *storeImplementation) MenuItemCount(ctx context.Context, options Men
 		return -1, errors.New("menus are disabled")
 	}
 
+	if options != nil && !options.IsCountOnly() {
+		options.SetCountOnly(true)
+	}
+
 	// Generate the select query based on the options
 	q, _, err := store.menuItemSelectQuery(options)
 

@@ -17,6 +17,10 @@ func (store *storeImplementation) BlockCount(ctx context.Context, options BlockQ
 		return -1, errors.New("cms store: database is nil")
 	}
 
+	if options != nil && !options.IsCountOnly() {
+		options.SetCountOnly(true)
+	}
+
 	q, _, err := store.blockSelectQuery(options)
 
 	if err != nil {

@@ -15,6 +15,10 @@ func (store *storeImplementation) PageCount(ctx context.Context, options PageQue
 		return -1, errors.New("cms store: database is nil")
 	}
 
+	if options != nil && !options.IsCountOnly() {
+		options.SetCountOnly(true)
+	}
+
 	q, _, err := store.pageSelectQuery(options)
 
 	if err != nil {
@@ -382,17 +386,17 @@ func (store *storeImplementation) pageSelectQuery(options PageQueryInterface) (q
 		}
 	}
 
-	if options.SoftDeletedIncluded() {
-		return q, []any{}, nil // soft deleted pages requested specifically
-	}
-
-	q = q.Where(COLUMN_SOFT_DELETED_AT+" > ?", carbon.Now(carbon.UTC).ToDateTimeString())
-
 	columns := []any{}
 
 	for _, column := range options.Columns() {
 		columns = append(columns, column)
 	}
+
+	if options.SoftDeletedIncluded() {
+		return q, columns, nil // soft deleted pages requested specifically
+	}
+
+	q = q.Where(COLUMN_SOFT_DELETED_AT+" > ?", carbon.Now(carbon.UTC).ToDateTimeString())
 
 	return q, columns, nil
 }

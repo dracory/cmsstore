@@ -19,6 +19,10 @@ func (store *storeImplementation) TranslationCount(ctx context.Context, options 
 		return -1, errors.New("translations are disabled")
 	}
 
+	if options != nil && !options.IsCountOnly() {
+		options.SetCountOnly(true)
+	}
+
 	q, _, err := store.translationSelectQuery(options)
 
 	if err != nil {

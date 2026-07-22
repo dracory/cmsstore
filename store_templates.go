@@ -15,6 +15,10 @@ func (store *storeImplementation) TemplateCount(ctx context.Context, options Tem
 		return -1, errors.New("cms store: database is nil")
 	}
 
+	if options != nil && !options.IsCountOnly() {
+		options.SetCountOnly(true)
+	}
+
 	q, _, err := store.templateSelectQuery(options)
 
 	if err != nil {

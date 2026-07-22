@@ -19,6 +19,10 @@ func (store *storeImplementation) SiteCount(ctx context.Context, options SiteQue
 		return -1, errors.New("site options cannot be nil")
 	}
 
+	if options != nil && !options.IsCountOnly() {
+		options.SetCountOnly(true)
+	}
+
 	q, _, err := store.siteSelectQuery(options)
 
 	if err != nil {

@@ -382,17 +382,17 @@ func (store *storeImplementation) mediaSelectQuery(options MediaQueryInterface) 
 		}
 	}
 
-	if options.SoftDeletedIncluded() {
-		return q, []any{}, nil
-	}
-
-	q = q.Where(COLUMN_SOFT_DELETED_AT+" > ?", carbon.Now(carbon.UTC).ToDateTimeString())
-
 	columns := []any{}
 
 	for _, column := range options.Columns() {
 		columns = append(columns, column)
 	}
+
+	if options.SoftDeletedIncluded() {
+		return q, columns, nil
+	}
+
+	q = q.Where(COLUMN_SOFT_DELETED_AT+" > ?", carbon.Now(carbon.UTC).ToDateTimeString())
 
 	return q, columns, nil
 }
