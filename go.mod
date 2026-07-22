@@ -9,7 +9,7 @@ require (
 	github.com/dracory/cdn v1.11.0
 	github.com/dracory/database v0.8.0
 	github.com/dracory/dataobject v1.7.0
-	github.com/dracory/entitystore v1.12.0
+	github.com/dracory/entitystore v1.13.0
 	github.com/dracory/form v0.23.0
 	github.com/dracory/hb v1.88.0
 	github.com/dracory/neat v0.31.0
