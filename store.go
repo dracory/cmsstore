@@ -43,6 +43,10 @@ type storeImplementation struct {
 	customEntitiesEnabled bool
 	customEntityStore     *CustomEntityStore
 
+	// Media
+	mediaEnabled   bool
+	mediaTableName string
+
 	// Shortcodes
 	shortcodes  []ShortcodeInterface
 	middlewares []MiddlewareInterface
@@ -256,6 +260,35 @@ func (store *storeImplementation) MigrateUp(ctx context.Context, tx ...*sql.Tx) 
 		}
 	}
 
+	if store.mediaEnabled {
+		if !store.neatDB.Schema().HasTable(store.mediaTableName) {
+			err := store.neatDB.Schema().Create(store.mediaTableName, func(table contractsschema.Blueprint) {
+				table.String(COLUMN_ID, 40)
+				table.Primary(COLUMN_ID)
+				table.String(COLUMN_ENTITY_ID, 40)
+				table.String(COLUMN_ENTITY_TYPE, 40)
+				table.String(COLUMN_SITE_ID, 40)
+				table.String(COLUMN_TITLE, 255)
+				table.Text(COLUMN_DESCRIPTION)
+				table.String(COLUMN_MEMO, 255)
+				table.LongText(COLUMN_MEDIA_URL)
+				table.String(COLUMN_MEDIA_TYPE, 100)
+				table.String(COLUMN_FILE_SIZE, 50)
+				table.String(COLUMN_FILE_EXTENSION, 20)
+				table.Integer(COLUMN_SEQUENCE)
+				table.String(COLUMN_STATUS, 40)
+				table.String(COLUMN_HANDLE, 40)
+				table.Text(COLUMN_METAS)
+				table.DateTime(COLUMN_CREATED_AT)
+				table.DateTime(COLUMN_UPDATED_AT)
+				table.DateTime(COLUMN_SOFT_DELETED_AT)
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -318,6 +351,15 @@ func (store *storeImplementation) MigrateDown(ctx context.Context, tx ...*sql.Tx
 		}
 	}
 
+	if store.mediaEnabled {
+		if store.neatDB.Schema().HasTable(store.mediaTableName) {
+			err := store.neatDB.Schema().Drop(store.mediaTableName)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -344,6 +386,10 @@ func (store *storeImplementation) VersioningEnabled() bool {
 // CustomEntitiesEnabled checks if custom entities are enabled.
 func (store *storeImplementation) CustomEntitiesEnabled() bool {
 	return store.customEntitiesEnabled
+}
+
+func (store *storeImplementation) MediaEnabled() bool {
+	return store.mediaEnabled
 }
 
 // CustomEntityStore returns the custom entity store.

@@ -107,12 +107,17 @@ const (
 	COLUMN_CANONICAL_URL      = "canonical_url"
 	COLUMN_CONTENT            = "content"
 	COLUMN_CREATED_AT         = "created_at"
+	COLUMN_DESCRIPTION        = "description"
 	COLUMN_DOMAIN_NAMES       = "domain_names"
 	COLUMN_EDITOR             = "editor"
+	COLUMN_FILE_EXTENSION     = "file_extension"
+	COLUMN_FILE_SIZE          = "file_size"
 	COLUMN_ENTITY_ID          = "entity_id"
 	COLUMN_ENTITY_TYPE        = "entity_type"
 	COLUMN_ID                 = "id"
 	COLUMN_HANDLE             = "handle"
+	COLUMN_MEDIA_TYPE         = "media_type"
+	COLUMN_MEDIA_URL          = "media_url"
 	COLUMN_MEMO               = "memo"
 	COLUMN_MENU_ID            = "menu_id"
 	COLUMN_META_DESCRIPTION   = "meta_description"
@@ -146,6 +151,13 @@ const MAX_DATETIME = "9999-12-31 23:59:59"
 const (
 	SORT_ORDER_ASC  = "ASC"
 	SORT_ORDER_DESC = "DESC"
+)
+
+// Media Statuses
+const (
+	MEDIA_STATUS_DRAFT    = "draft"
+	MEDIA_STATUS_ACTIVE   = "active"
+	MEDIA_STATUS_INACTIVE = "inactive"
 )
 
 // Menu Statuses
@@ -215,6 +227,7 @@ const (
 	VERSIONING_TYPE_TEMPLATE    = "template"
 	VERSIONING_TYPE_TRANSLATION = "translation"
 	VERSIONING_TYPE_SITE        = "site"
+	VERSIONING_TYPE_MEDIA       = "media"
 )
 
 // Query Parameter Keys
@@ -244,4 +257,7 @@ const (
 	propertyKeyAlias              = "alias"
 	propertyKeyAliasLike          = "alias_like"
 	propertyKeyHandleOrID         = "handle_or_id"
+	propertyKeyEntityID           = "entity_id"
+	propertyKeyEntityType         = "entity_type"
+	propertyKeyExtension          = "extension"
 )

@@ -345,6 +345,84 @@ type SiteInterface interface {
 	IsSoftDeleted() bool
 }
 
+type MediaInterface interface {
+	Data() map[string]string
+	DataChanged() map[string]string
+	MarkAsNotDirty(...string)
+
+	MarshalToVersioning() (string, error)
+
+	ID() string
+	SetID(id string) MediaInterface
+
+	EntityID() string
+	SetEntityID(entityID string) MediaInterface
+
+	EntityType() string
+	SetEntityType(entityType string) MediaInterface
+
+	Title() string
+	SetTitle(title string) MediaInterface
+
+	Description() string
+	SetDescription(description string) MediaInterface
+
+	Memo() string
+	SetMemo(memo string) MediaInterface
+
+	URL() string
+	SetURL(url string) MediaInterface
+
+	Type() string
+	SetType(mediaType string) MediaInterface
+
+	Size() string
+	SetSize(size string) MediaInterface
+
+	Extension() string
+	SetExtension(extension string) MediaInterface
+
+	Sequence() string
+	SequenceInt() int
+	SetSequence(sequence string) MediaInterface
+	SetSequenceInt(sequence int) MediaInterface
+
+	Status() string
+	SetStatus(status string) MediaInterface
+
+	Handle() string
+	SetHandle(handle string) MediaInterface
+
+	SiteID() string
+	SetSiteID(siteID string) MediaInterface
+
+	Meta(key string) string
+	SetMeta(key, value string) error
+	Metas() (map[string]string, error)
+	SetMetas(metas map[string]string) error
+	UpsertMetas(metas map[string]string) error
+
+	CreatedAt() string
+	SetCreatedAt(createdAt string) MediaInterface
+	CreatedAtCarbon() *carbon.Carbon
+
+	UpdatedAt() string
+	SetUpdatedAt(updatedAt string) MediaInterface
+	UpdatedAtCarbon() *carbon.Carbon
+
+	SoftDeletedAt() string
+	SetSoftDeletedAt(softDeletedAt string) MediaInterface
+	SoftDeletedAtCarbon() *carbon.Carbon
+
+	IsActive() bool
+	IsInactive() bool
+	IsDraft() bool
+	IsSoftDeleted() bool
+
+	IsImage() bool
+	IsVideo() bool
+}
+
 type StoreInterface interface {
 	// AutoMigrate runs the auto-migration process for the cms store
 	// Deprecated: Use MigrateUp and MigrateDown instead
@@ -467,6 +545,20 @@ type StoreInterface interface {
 	// Custom Entities
 	CustomEntitiesEnabled() bool
 	CustomEntityStore() *CustomEntityStore
+
+	// Media
+	MediaEnabled() bool
+	MediaCreate(ctx context.Context, media MediaInterface) error
+	MediaCount(ctx context.Context, options MediaQueryInterface) (int64, error)
+	MediaDelete(ctx context.Context, media MediaInterface) error
+	MediaDeleteByID(ctx context.Context, id string) error
+	MediaFindByID(ctx context.Context, id string) (MediaInterface, error)
+	MediaFindByHandle(ctx context.Context, handle string) (MediaInterface, error)
+	MediaList(ctx context.Context, query MediaQueryInterface) ([]MediaInterface, error)
+	MediaListByEntityID(ctx context.Context, entityID string, entityType string) ([]MediaInterface, error)
+	MediaSoftDelete(ctx context.Context, media MediaInterface) error
+	MediaSoftDeleteByID(ctx context.Context, id string) error
+	MediaUpdate(ctx context.Context, media MediaInterface) error
 }
 
 type TemplateInterface interface {

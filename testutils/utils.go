@@ -57,6 +57,8 @@ func InitStore(filepath string) (cmsstore.StoreInterface, error) {
 		TranslationLanguageDefault: "en",
 		VersioningEnabled:          true,
 		VersioningTableName:        "versioning_table",
+		MediaEnabled:               true,
+		MediaTableName:             "media_table",
 		AutomigrateEnabled:         true,
 	})
 
@@ -86,6 +88,8 @@ func InitStoreWithVersioning(filepath string) (cmsstore.StoreInterface, error) {
 		TranslationLanguageDefault: "en",
 		VersioningEnabled:          true,
 		VersioningTableName:        "versioning_table",
+		MediaEnabled:               true,
+		MediaTableName:             "media_table",
 		AutomigrateEnabled:         true,
 	})
 
@@ -124,6 +128,8 @@ func InitStoreWithVersioningAndDB(filepath string) (cmsstore.StoreInterface, *sq
 		TranslationLanguageDefault: "en",
 		VersioningEnabled:          true,
 		VersioningTableName:        "versioning_table",
+		MediaEnabled:               true,
+		MediaTableName:             "media_table",
 		AutomigrateEnabled:         true,
 	})
 

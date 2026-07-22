@@ -83,6 +83,12 @@ type NewStoreOptions struct {
 
 	// CustomEntityDefinitions is a list of custom entity type definitions to register
 	CustomEntityDefinitions []CustomEntityDefinition
+
+	// MediaEnabled enables media support
+	MediaEnabled bool
+
+	// MediaTableName is the name of the media database table to be created/used
+	MediaTableName string
 }
 
 // NewStore creates a new CMS store based on the provided options.
@@ -111,6 +117,9 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 	}
 	if opts.VersioningEnabled && opts.VersioningTableName == "" {
 		return nil, errors.New("cms store: VersioningTableName is required")
+	}
+	if opts.MediaEnabled && opts.MediaTableName == "" {
+		return nil, errors.New("cms store: MediaTableName is required")
 	}
 
 	// Validate database connection
@@ -178,6 +187,9 @@ func NewStore(opts NewStoreOptions) (StoreInterface, error) {
 
 		customEntitiesEnabled: opts.CustomEntitiesEnabled,
 		customEntityStore:     customEntityStore,
+
+		mediaEnabled:   opts.MediaEnabled,
+		mediaTableName: opts.MediaTableName,
 
 		shortcodes:  opts.Shortcodes,
 		middlewares: opts.Middlewares,
