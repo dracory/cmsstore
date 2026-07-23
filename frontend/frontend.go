@@ -165,6 +165,14 @@ func (frontend *frontend) fetchBlockContent(ctx context.Context, blockID string)
 
 	key := "block_content_" + blockID
 
+	// Include query string in cache key so blocks that depend on query
+	// parameters (e.g. blog_post_list with ?page=N) are cached separately.
+	if r := cmsstore.RequestFromContext(ctx); r != nil {
+		if r.URL.RawQuery != "" {
+			key += "_q_" + r.URL.RawQuery
+		}
+	}
+
 	if frontend.CacheHas(key) {
 		blockContent := frontend.CacheGet(key)
 
