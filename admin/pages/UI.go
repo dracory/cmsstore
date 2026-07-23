@@ -67,10 +67,8 @@ func (ui ui) Store() cmsstore.StoreInterface {
 }
 
 func (ui ui) PageCreate(w http.ResponseWriter, r *http.Request) {
-	controller := NewPageCreateController(ui)
-	html := controller.Handler(w, r)
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = w.Write([]byte(html))
+	// Page creation is now handled by the page_manager ajax endpoint
+	ui.PageManager(w, r)
 }
 
 func (ui ui) PageManager(w http.ResponseWriter, r *http.Request) {
@@ -81,10 +79,8 @@ func (ui ui) PageManager(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ui ui) PageDelete(w http.ResponseWriter, r *http.Request) {
-	controller := NewPageDeleteController(ui)
-	html := controller.Handler(w, r)
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = w.Write([]byte(html))
+	// Page deletion is now handled by the page_manager ajax endpoint
+	ui.PageManager(w, r)
 }
 
 func (ui ui) PageUpdate(w http.ResponseWriter, r *http.Request) {

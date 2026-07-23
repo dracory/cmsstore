@@ -1,3 +1,8 @@
+//go:build ignore
+// +build ignore
+
+// This test file is excluded from build along with page_delete_controller.go.
+
 package admin
 
 import (
