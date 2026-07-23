@@ -1,3 +1,9 @@
+//go:build ignore
+// +build ignore
+
+// This file is commented out (excluded from build) to allow testing the new
+// page_manager controller. To restore, remove the build tags above.
+
 package admin
 
 import (

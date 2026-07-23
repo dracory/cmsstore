@@ -1,3 +1,9 @@
+//go:build ignore
+// +build ignore
+
+// This test file is excluded from build along with the old page_manager_controller.go.
+// To restore, remove the build tags above.
+
 package admin
 
 import (

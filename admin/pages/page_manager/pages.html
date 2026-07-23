@@ -1,0 +1,265 @@
+<div id="cms-pages-app">
+  <!-- Loading State -->
+  <template v-if="loading">
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </template>
+
+  <!-- Main Content -->
+  <template v-else>
+    <!-- Action Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">Pages</h5>
+      <button @click="openCreateModal()" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> New Page
+      </button>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card bg-light mb-3">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <button @click="openFilterModal()" class="btn btn-primary me-3">
+            <i class="bi bi-funnel me-1"></i> Filters
+          </button>
+          <span class="text-muted">{{ filterStatus }}</span>
+        </div>
+        <template v-if="filters.search || filters.status || filters.siteId">
+          <button
+            @click="clearFilters()"
+            class="btn btn-sm btn-outline-secondary"
+            title="Clear all filters"
+          >
+            <i class="bi bi-x-circle"></i>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <!-- Pages Table -->
+    <template v-if="pages.length === 0">
+      <div class="text-center py-4 text-muted border rounded">
+        No pages found matching your criteria.
+      </div>
+    </template>
+
+    <template v-else>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered align-middle">
+          <thead>
+            <tr>
+              <th @click="sortBy('name')" style="cursor: pointer; white-space: nowrap;">
+                Name, Alias, Reference
+                <template v-if="sortByColumn === 'name'">
+                  <span>{{ sortOrder === 'asc' ? '&#8595;' : '&#8593;' }}</span>
+                </template>
+              </th>
+              <th @click="sortBy('status')" style="width: 1px; cursor: pointer; white-space: nowrap;">
+                Status
+                <template v-if="sortByColumn === 'status'">
+                  <span>{{ sortOrder === 'asc' ? '&#8595;' : '&#8593;' }}</span>
+                </template>
+              </th>
+              <th>Site</th>
+              <th @click="sortBy('created_at')" style="width: 1px; cursor: pointer; white-space: nowrap;">
+                Created
+                <template v-if="sortByColumn === 'created_at'">
+                  <span>{{ sortOrder === 'asc' ? '&#8595;' : '&#8593;' }}</span>
+                </template>
+              </th>
+              <th @click="sortBy('updated_at')" style="width: 1px; cursor: pointer; white-space: nowrap;">
+                Modified
+                <template v-if="sortByColumn === 'updated_at'">
+                  <span>{{ sortOrder === 'asc' ? '&#8595;' : '&#8593;' }}</span>
+                </template>
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="page in pages" :key="page.id">
+              <td>
+                <div>
+                  <a :href="getPageUpdateUrl(page.id)" target="_blank">{{ page.name }}</a>
+                </div>
+                <div class="text-muted small">Alias: {{ page.alias || '-' }}</div>
+                <div class="text-muted small">Ref: {{ page.id }}</div>
+              </td>
+              <td>
+                <span
+                  class="fw-semibold text-capitalize"
+                  :class="{
+                    'text-success': page.status === 'active',
+                    'text-secondary': page.status === 'softDeleted',
+                    'text-danger': page.status === 'inactive',
+                    'text-primary': page.status === 'draft'
+                  }"
+                >
+                  {{ page.status }}
+                </span>
+              </td>
+              <td>
+                <span class="text-muted">{{ page.site_name || 'none' }}</span>
+              </td>
+              <td>
+                <div class="small text-muted text-nowrap">{{ formatDate(page.created_at) }}</div>
+              </td>
+              <td>
+                <div class="small text-muted text-nowrap">{{ formatDate(page.updated_at) }}</div>
+              </td>
+              <td>
+                <a
+                  :href="getPageUpdateUrl(page.id)"
+                  target="_blank"
+                  class="btn btn-primary btn-sm me-2"
+                  title="Edit"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                </a>
+                <button
+                  @click="deletePage(page)"
+                  class="btn btn-danger btn-sm"
+                  title="Delete"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
+
+    <!-- Pagination -->
+    <template v-if="totalPages > 0">
+      <div class="d-flex justify-content-left mt-5 pagination-primary-soft rounded mb-0">
+        <nav>
+          <ul class="pagination">
+            <li class="page-item" :class="{ disabled: currentPage === 0 }">
+              <a class="page-link" href="#" @click.prevent="goToPage(currentPage - 1)">Previous</a>
+            </li>
+            <li
+              v-for="page in visiblePages"
+              :key="page"
+              class="page-item"
+              :class="{ active: page === currentPage }"
+            >
+              <a class="page-link" href="#" @click.prevent="goToPage(page)">{{ page + 1 }}</a>
+            </li>
+            <li class="page-item" :class="{ disabled: currentPage === totalPages - 1 }">
+              <a class="page-link" href="#" @click.prevent="goToPage(currentPage + 1)">Next</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </template>
+
+    <!-- Create Page Modal -->
+    <template v-if="showCreateModal">
+      <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+      <div class="modal fade show" style="display: block; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">New Page</h5>
+              <button type="button" class="btn-close" @click="closeCreateModal()"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Name *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="createForm.name"
+                  placeholder="Page name"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Site *</label>
+                <select v-model="createForm.siteId" class="form-select" required>
+                  <option value="" disabled>Select site</option>
+                  <option v-for="site in sites" :key="site.id" :value="site.id">{{ site.name }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closeCreateModal()">Cancel</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                @click="createPage()"
+                :disabled="!createForm.name || !createForm.siteId || creating"
+              >
+                <template v-if="creating">
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                </template>
+                Create & Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Filter Modal -->
+    <template v-if="showFilterModal">
+      <div class="modal-backdrop fade show" style="display: block; z-index: 1040;"></div>
+      <div class="modal fade show" style="display: block; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Filter Pages</h5>
+              <button type="button" class="btn-close" @click="closeFilterModal()"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Search</label>
+                <input
+                  type="search"
+                  class="form-control"
+                  v-model="filters.search"
+                  placeholder="name, alias ..."
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select v-model="filters.status" class="form-select">
+                  <option value="">All Statuses</option>
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Date Range</label>
+                <div class="input-group">
+                  <input
+                    type="date"
+                    v-model="filters.dateFrom"
+                    class="form-control"
+                    placeholder="From"
+                  />
+                  <span class="input-group-text">to</span>
+                  <input
+                    type="date"
+                    v-model="filters.dateTo"
+                    class="form-control"
+                    placeholder="To"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" @click="clearFilters()">Clear Filters</button>
+              <button type="button" class="btn btn-primary" @click="applyFilters()">Apply Filters</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </template>
+</div>
