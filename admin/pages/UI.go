@@ -7,6 +7,7 @@ import (
 	"github.com/dracory/blockeditor"
 	"github.com/dracory/cmsstore"
 	pageManager "github.com/dracory/cmsstore/admin/pages/page_manager"
+	pageUpdate "github.com/dracory/cmsstore/admin/pages/page_update"
 	"github.com/dracory/cmsstore/admin/shared"
 )
 
@@ -84,7 +85,7 @@ func (ui ui) PageDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ui ui) PageUpdate(w http.ResponseWriter, r *http.Request) {
-	controller := NewPageUpdateController(ui)
+	controller := pageUpdate.NewPageUpdateController(ui)
 	html := controller.Handler(w, r)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = w.Write([]byte(html))

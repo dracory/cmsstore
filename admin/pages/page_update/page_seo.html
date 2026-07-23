@@ -1,0 +1,99 @@
+<template id="page-seo-template">
+  <template v-if="loading">
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </template>
+
+  <template v-else>
+    <form @submit.prevent="saveSEO">
+      <div class="mb-3">
+        <label for="page_alias" class="form-label">Alias / Path / User Friendly URL</label>
+        <input
+          type="text"
+          id="page_alias"
+          name="page_alias"
+          class="form-control"
+          v-model="form.alias"
+        />
+        <div class="form-text">The relative path on the website where this page will be visible to visitors. Once set do not change it as search engines will look for this path.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_meta_description" class="form-label">Meta Description</label>
+        <textarea
+          id="page_meta_description"
+          name="page_meta_description"
+          class="form-control"
+          v-model="form.metaDescription"
+          rows="3"
+        ></textarea>
+        <div class="form-text">The description of this webpage as will be seen in search engines.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_meta_keywords" class="form-label">Meta Keywords</label>
+        <textarea
+          id="page_meta_keywords"
+          name="page_meta_keywords"
+          class="form-control"
+          v-model="form.metaKeywords"
+          rows="2"
+        ></textarea>
+        <div class="form-text">Specifies the keywords that will be used by the search engines to find this webpage. Separate keywords with commas.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_meta_robots" class="form-label">Meta Robots</label>
+        <select
+          id="page_meta_robots"
+          name="page_meta_robots"
+          class="form-select"
+          v-model="form.metaRobots"
+        >
+          <option value="">- not selected -</option>
+          <option value="INDEX, FOLLOW">INDEX, FOLLOW</option>
+          <option value="NOINDEX, FOLLOW">NOINDEX, FOLLOW</option>
+          <option value="INDEX, NOFOLLOW">INDEX, NOFOLLOW</option>
+          <option value="NOINDEX, NOFOLLOW">NOINDEX, NOFOLLOW</option>
+        </select>
+        <div class="form-text">Specifies if this webpage should be indexed by the search engines.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_canonical_url" class="form-label">Canonical URL</label>
+        <input
+          type="text"
+          id="page_canonical_url"
+          name="page_canonical_url"
+          class="form-control"
+          v-model="form.canonicalUrl"
+        />
+        <div class="form-text">The canonical URL for this webpage. This is used by the search engines to display the preferred version of the web page in search results.</div>
+      </div>
+
+      <input type="hidden" name="page_id" :value="pageId" />
+
+      <div class="mt-3 text-end">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          :disabled="saving"
+        >
+          <i class="bi bi-save me-1"></i>
+          <span>Save</span>
+          <span
+            v-if="saving"
+            class="spinner-border spinner-border-sm align-middle ms-2"
+            role="status"
+          >
+            <span class="visually-hidden">Loading</span>
+          </span>
+        </button>
+      </div>
+    </form>
+  </template>
+</template>
+<div id="page-seo-app"></div>

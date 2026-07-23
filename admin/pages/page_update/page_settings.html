@@ -1,0 +1,86 @@
+<template id="page-settings-template">
+  <template v-if="loading">
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </template>
+
+  <template v-else>
+    <form @submit.prevent="saveSettings">
+      <div class="mb-3">
+        <label for="page_status" class="form-label">Status</label>
+        <select id="page_status" name="page_status" class="form-select" v-model="form.status">
+          <option value="">- not selected -</option>
+          <option value="draft">Draft</option>
+          <option value="active">Published</option>
+          <option value="inactive">Unpublished</option>
+        </select>
+        <div class="form-text">The status of this webpage. Published pages will be displayed on the website.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_template_id" class="form-label">Template</label>
+        <select id="page_template_id" name="page_template_id" class="form-select" v-model="form.templateId">
+          <option value="">- no template selected, page content will be displayed as it is -</option>
+          <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">{{ tpl.name }}</option>
+        </select>
+        <div class="form-text">The template that this page content will be displayed in.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_editor" class="form-label">Editor</label>
+        <select id="page_editor" name="page_editor" class="form-select" v-model="form.editor">
+          <option value="">- not selected -</option>
+          <option value="codemirror">CodeMirror (HTML Source Editor)</option>
+          <option value="blockeditor">BlockEditor (Visual Editor using Blocks)</option>
+          <option value="markdown">Markdown (Simple Textarea)</option>
+          <option value="htmlarea">HTML Area (WYSIWYG)</option>
+          <option value="textarea">Text Area</option>
+        </select>
+        <div class="form-text">The content editor that will be used while editing this webpage content. Once set, this should not be changed, or the content may be lost.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_name" class="form-label">Page Name</label>
+        <input type="text" id="page_name" name="page_name" class="form-control" v-model="form.name" />
+        <div class="form-text">The name of the page as displayed in the admin panel.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_site_id" class="form-label">Belongs to Site</label>
+        <select id="page_site_id" name="page_site_id" class="form-select" v-model="form.siteId">
+          <option value="">- no site selected -</option>
+          <option v-for="site in sites" :key="site.id" :value="site.id">{{ site.name }} ({{ site.status }})</option>
+        </select>
+        <div class="form-text">The site that this page belongs to.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_memo" class="form-label">Admin Notes (Internal)</label>
+        <textarea id="page_memo" name="page_memo" class="form-control" v-model="form.memo" rows="3"></textarea>
+        <div class="form-text">Admin notes for this page. These notes will not be visible to the public.</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Page Reference / ID</label>
+        <input type="text" class="form-control" :value="pageId" readonly />
+        <div class="form-text">The reference number (ID) of the page.</div>
+      </div>
+
+      <input type="hidden" name="page_id" :value="pageId" />
+
+      <div class="mt-3 text-end">
+        <button type="submit" class="btn btn-primary" :disabled="saving">
+          <i class="bi bi-save me-1"></i>
+          <span>Save</span>
+          <span v-if="saving" class="spinner-border spinner-border-sm align-middle ms-2" role="status">
+            <span class="visually-hidden">Loading</span>
+          </span>
+        </button>
+      </div>
+    </form>
+  </template>
+</template>
+<div id="page-settings-app"></div>
