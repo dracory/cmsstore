@@ -119,6 +119,15 @@
                 >
                   <i class="bi bi-pencil-square"></i>
                 </a>
+                <a
+                  v-if="page.live_url"
+                  :href="page.live_url"
+                  target="_blank"
+                  class="btn btn-outline-info btn-sm me-2"
+                  title="View"
+                >
+                  <i class="bi bi-box-arrow-up-right"></i>
+                </a>
                 <button
                   @click="deletePage(page)"
                   class="btn btn-danger btn-sm"

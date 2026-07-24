@@ -2,6 +2,7 @@ package page_update
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/dracory/bs"
 	"github.com/dracory/cmsstore"
@@ -47,6 +48,42 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 		HTML("Back").
 		Href(shared.URLR(r, shared.PathPagesPageManager, nil))
 
+	// Build the live page URL from the site's first domain name + page alias
+	liveURL := ""
+	if page.SiteID() != "" {
+		site, err := store.SiteFindByID(r.Context(), page.SiteID())
+		if err == nil && site != nil {
+			domainNames, err := site.DomainNames()
+			if err == nil && len(domainNames) > 0 {
+				domain := domainNames[0]
+				alias := page.Alias()
+				if alias != "" {
+					if !strings.HasPrefix(alias, "/") {
+						alias = "/" + alias
+					}
+					if !strings.HasPrefix(domain, "http://") && !strings.HasPrefix(domain, "https://") {
+						if strings.HasPrefix(domain, "localhost") || strings.HasSuffix(domain, ".local") {
+							domain = "http://" + domain
+						} else {
+							domain = "https://" + domain
+						}
+					}
+					liveURL = strings.TrimSuffix(domain, "/") + alias
+				}
+			}
+		}
+	}
+
+	buttonView := hb.Hyperlink()
+	if liveURL != "" {
+		buttonView = buttonView.
+			Class("btn btn-outline-info ms-2 float-end").
+			Child(hb.I().Class("bi bi-box-arrow-up-right").Style("margin-top:-4px;margin-right:8px;font-size:16px;")).
+			HTML("View").
+			Href(liveURL).
+			Target("_blank")
+	}
+
 	badgeStatus := hb.Div().
 		Class("badge fs-6 ms-3").
 		ClassIf(page.Status() == cmsstore.PAGE_STATUS_ACTIVE, "bg-success").
@@ -59,6 +96,7 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 		Text(page.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).
+		Child(buttonView).
 		Child(buttonCancel)
 
 	tabs := bs.NavTabs().

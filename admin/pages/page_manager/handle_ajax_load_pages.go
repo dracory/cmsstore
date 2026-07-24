@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/dracory/api"
 	"github.com/dracory/cmsstore"
@@ -101,6 +102,15 @@ func handleAjaxLoadPages(store cmsstore.StoreInterface, w http.ResponseWriter, r
 		return site.ID(), site.Name()
 	})
 
+	// Build a map of site ID -> first domain name for live URL construction
+	siteDomainMap := map[string]string{}
+	for _, site := range sites {
+		domainNames, err := site.DomainNames()
+		if err == nil && len(domainNames) > 0 {
+			siteDomainMap[site.ID()] = domainNames[0]
+		}
+	}
+
 	pageList := []map[string]any{}
 	for _, p := range pages {
 		siteName := lo.IfF(siteMap != nil, func() string {
@@ -110,6 +120,24 @@ func handleAjaxLoadPages(store cmsstore.StoreInterface, w http.ResponseWriter, r
 			return ""
 		}).Else("")
 
+		liveURL := ""
+		if domain, ok := siteDomainMap[p.SiteID()]; ok {
+			alias := p.Alias()
+			if alias != "" {
+				if !strings.HasPrefix(alias, "/") {
+					alias = "/" + alias
+				}
+				if !strings.HasPrefix(domain, "http://") && !strings.HasPrefix(domain, "https://") {
+					if strings.HasPrefix(domain, "localhost") || strings.HasSuffix(domain, ".local") {
+						domain = "http://" + domain
+					} else {
+						domain = "https://" + domain
+					}
+				}
+				liveURL = strings.TrimSuffix(domain, "/") + alias
+			}
+		}
+
 		pageList = append(pageList, map[string]any{
 			"id":         p.ID(),
 			"name":       p.Name(),
@@ -117,6 +145,7 @@ func handleAjaxLoadPages(store cmsstore.StoreInterface, w http.ResponseWriter, r
 			"status":     p.Status(),
 			"site_id":    p.SiteID(),
 			"site_name":  siteName,
+			"live_url":   liveURL,
 			"created_at": p.CreatedAt(),
 			"updated_at": p.UpdatedAt(),
 		})
