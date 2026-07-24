@@ -94,7 +94,15 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 					"page_id": page.ID(),
 					"view":    viewSettings,
 				})).
-				HTML("Settings")))
+				HTML("Settings"))).
+		Child(bs.NavItem().
+			Child(bs.NavLink().
+				ClassIf(view == viewMedia, "active").
+				Href(shared.URLR(r, shared.PathPagesPageUpdate, map[string]string{
+					"page_id": page.ID(),
+					"view":    viewMedia,
+				})).
+				HTML("Media")))
 
 	var body hb.TagInterface
 
@@ -107,6 +115,8 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 		body = renderSettingsTab(r, page)
 	case viewMiddlewares:
 		body = renderMiddlewaresTab(r, page)
+	case viewMedia:
+		body = renderMediaTab(r, page)
 	default:
 		body = renderContentTab(r, page)
 	}
@@ -122,6 +132,7 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 					HTMLIf(view == viewSEO, "Page SEO").
 					HTMLIf(view == viewMiddlewares, "Page Middlewares").
 					HTMLIf(view == viewSettings, "Page Settings").
+					HTMLIf(view == viewMedia, "Page Media").
 					Style("margin-bottom:0;display:inline-block;"))).
 		Child(
 			hb.Div().

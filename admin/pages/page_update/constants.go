@@ -5,6 +5,7 @@ const (
 	viewSEO         = "seo"
 	viewSettings    = "settings"
 	viewMiddlewares = "middlewares"
+	viewMedia       = "media"
 )
 
 const (
@@ -17,4 +18,9 @@ const (
 	actionLoadMiddlewares = "load-middlewares"
 	actionSaveMiddlewares = "save-middlewares"
 	actionBlockeditor     = "blockeditor-handle"
+	actionLoadMedia       = "load-media"
+	actionUploadMedia     = "upload-media"
+	actionSaveMedia       = "save-media"
+	actionDeleteMedia     = "delete-media"
+	actionAddMedia        = "add-media"
 )

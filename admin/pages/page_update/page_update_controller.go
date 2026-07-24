@@ -46,6 +46,7 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 	// AJAX actions that require POST
 	postActions := []string{
 		actionSaveContent, actionSaveSEO, actionSaveSettings, actionSaveMiddlewares,
+		actionUploadMedia, actionDeleteMedia, actionAddMedia,
 	}
 
 	// AJAX actions (any method)
@@ -55,6 +56,7 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 		actionLoadSettings, actionSaveSettings,
 		actionLoadMiddlewares, actionSaveMiddlewares,
 		actionBlockeditor,
+		actionLoadMedia, actionUploadMedia, actionSaveMedia, actionDeleteMedia, actionAddMedia,
 	}
 
 	if slices.Contains(postActions, action) && r.Method != http.MethodPost {
@@ -81,6 +83,16 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 			return handleAjaxSaveMiddlewares(store, w, r)
 		case actionBlockeditor:
 			return blockeditor.Handle(w, r, controller.ui.BlockEditorDefinitions())
+		case actionLoadMedia:
+			return handleAjaxLoadMedia(store, w, r)
+		case actionUploadMedia:
+			return handleAjaxUploadMedia(store, w, r)
+		case actionSaveMedia:
+			return handleAjaxSaveMedia(store, w, r)
+		case actionDeleteMedia:
+			return handleAjaxDeleteMedia(store, w, r)
+		case actionAddMedia:
+			return handleAjaxAddMedia(store, w, r)
 		}
 	}
 
