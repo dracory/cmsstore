@@ -1,6 +1,7 @@
 package page_update
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"strings"
@@ -85,7 +86,13 @@ func Test_AjaxSaveContent_Success(t *testing.T) {
 		t.Fatalf("Expected success status, got: %s", body)
 	}
 
-	page, _ := store.PageFindByID(nil, seededPage.ID())
+	page, err := store.PageFindByID(context.TODO(), seededPage.ID())
+	if err != nil {
+		t.Fatalf("Failed to find page after save: %v", err)
+	}
+	if page == nil {
+		t.Fatalf("Page not found after save")
+	}
 	if page.Title() != "Updated Title" {
 		t.Fatalf("Expected title to be 'Updated Title', got: %s", page.Title())
 	}

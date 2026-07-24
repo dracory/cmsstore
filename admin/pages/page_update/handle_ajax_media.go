@@ -64,7 +64,10 @@ func handleAjaxUploadMedia(store cmsstore.StoreInterface, w http.ResponseWriter,
 		return api.Error("No files uploaded").ToString()
 	}
 
-	existingFiles, _ := store.MediaListByEntityID(r.Context(), pageID, "page")
+	existingFiles, err := store.MediaListByEntityID(r.Context(), pageID, "page")
+	if err != nil {
+		return api.Error("Failed to list existing media: " + err.Error()).ToString()
+	}
 	startSequence := len(existingFiles)
 
 	uploaded := []map[string]any{}
@@ -192,7 +195,10 @@ func handleAjaxAddMedia(store cmsstore.StoreInterface, w http.ResponseWriter, r 
 	mediaFileName := req.GetStringTrimmed(r, "media_file_name")
 	mediaType := req.GetStringTrimmed(r, "media_type")
 
-	existingFiles, _ := store.MediaListByEntityID(r.Context(), pageID, "page")
+	existingFiles, err := store.MediaListByEntityID(r.Context(), pageID, "page")
+	if err != nil {
+		return api.Error("Failed to list existing media: " + err.Error()).ToString()
+	}
 	startSequence := len(existingFiles)
 
 	media := cmsstore.NewMedia().

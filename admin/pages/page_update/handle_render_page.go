@@ -185,12 +185,29 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 		Child(tabs).
 		Child(card)
 
+	// Wire the top Save button to trigger the active tab's save action
+	saveScript := `
+		document.addEventListener('click', function(e) {
+			if (e.target && e.target.closest('#btn-page-save')) {
+				var cardBody = document.querySelector('.card-body');
+				if (cardBody) {
+					var saveBtn = cardBody.querySelector('button[type="submit"], button.btn-primary[type="button"]');
+					if (saveBtn) {
+						saveBtn.click();
+					}
+				}
+			}
+		});
+	`
+
 	options := struct {
 		Styles     []string
 		StyleURLs  []string
 		Scripts    []string
 		ScriptURLs []string
-	}{}
+	}{
+		Scripts: []string{saveScript},
+	}
 
 	return ui.Layout(w, r, "Edit Page | CMS", content.ToHTML(), options)
 }
