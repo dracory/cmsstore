@@ -118,6 +118,10 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 		return ""
 	}
 
+	if isMediaURL(path) {
+		return frontend.MediaHandler(w, r)
+	}
+
 	languageAny := r.Context().Value(LanguageKey{})
 	language := cast.ToString(languageAny)
 

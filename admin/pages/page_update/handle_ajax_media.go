@@ -33,6 +33,7 @@ func handleAjaxLoadMedia(store cmsstore.StoreInterface, w http.ResponseWriter, r
 			"id":        f.ID(),
 			"name":      f.Title(),
 			"url":       f.URL(),
+			"serve_url": f.ServeURL(),
 			"type":      f.Type(),
 			"size":      f.Size(),
 			"extension": f.Extension(),
@@ -107,6 +108,7 @@ func handleAjaxUploadMedia(store cmsstore.StoreInterface, w http.ResponseWriter,
 			"id":        media.ID(),
 			"name":      media.Title(),
 			"url":       media.URL(),
+			"serve_url": media.ServeURL(),
 			"type":      media.Type(),
 			"size":      media.Size(),
 			"extension": media.Extension(),
@@ -208,11 +210,12 @@ func handleAjaxAddMedia(store cmsstore.StoreInterface, w http.ResponseWriter, r 
 
 	return api.SuccessWithData("Media added successfully", map[string]any{
 		"file": map[string]any{
-			"id":       media.ID(),
-			"name":     media.Title(),
-			"url":      media.URL(),
-			"type":     media.Type(),
-			"sequence": media.SequenceInt(),
+			"id":        media.ID(),
+			"name":      media.Title(),
+			"url":       media.URL(),
+			"serve_url": media.ServeURL(),
+			"type":      media.Type(),
+			"sequence":  media.SequenceInt(),
 		},
 	}).ToString()
 }

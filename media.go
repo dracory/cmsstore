@@ -68,6 +68,14 @@ func (o *mediaImplementation) IsVideo() bool {
 	return strings.HasPrefix(o.Type(), "video/")
 }
 
+func (o *mediaImplementation) ServeURL() string {
+	ext := strings.TrimPrefix(o.Extension(), ".")
+	if ext != "" {
+		ext = "." + ext
+	}
+	return "/cms/media/" + o.ID() + ext
+}
+
 func (o *mediaImplementation) MarshalToVersioning() (string, error) {
 	versionedData := map[string]string{}
 

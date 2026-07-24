@@ -19,7 +19,8 @@ const PageMediaApp = {
       editForm: {
         id: '',
         name: '',
-        url: ''
+        url: '',
+        serve_url: ''
       }
     };
   },
@@ -249,7 +250,7 @@ const PageMediaApp = {
 
     isImage(file) {
       if (file.type && file.type.startsWith('image/')) return true;
-      return this.isImageUrl(file.url || '');
+      return this.isImageUrl(file.serve_url || '');
     },
 
     isImageUrl(url) {
@@ -306,7 +307,8 @@ const PageMediaApp = {
       this.editForm = {
         id: this.files[index].id,
         name: this.files[index].name,
-        url: this.files[index].url
+        url: this.files[index].url,
+        serve_url: this.files[index].serve_url
       };
       this.showEditModal = true;
     },
@@ -314,7 +316,7 @@ const PageMediaApp = {
     closeEditModal() {
       this.showEditModal = false;
       this.editIndex = null;
-      this.editForm = { id: '', name: '', url: '' };
+      this.editForm = { id: '', name: '', url: '', serve_url: '' };
     },
 
     async saveEdit() {
@@ -368,6 +370,15 @@ const PageMediaApp = {
         i++;
       }
       return s.toFixed(i === 0 ? 0 : 1) + ' ' + units[i];
+    },
+
+    async copyUrl(url) {
+      try {
+        await navigator.clipboard.writeText(url);
+        Swal.fire({ icon: 'success', title: 'Copied!', text: 'URL copied to clipboard', timer: 1500, showConfirmButton: false });
+      } catch (e) {
+        Swal.fire({ icon: 'error', title: 'Copy failed', text: 'Please select the URL manually and copy with Ctrl+C' });
+      }
     }
   }
 };

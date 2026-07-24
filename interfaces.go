@@ -421,6 +421,8 @@ type MediaInterface interface {
 
 	IsImage() bool
 	IsVideo() bool
+
+	ServeURL() string
 }
 
 type StoreInterface interface {

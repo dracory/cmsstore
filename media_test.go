@@ -388,3 +388,39 @@ func TestMediaFromExistingData(t *testing.T) {
 		t.Error("expected IsImage to be true for image/png")
 	}
 }
+
+func TestMediaServeURL(t *testing.T) {
+	media := NewMedia()
+	media.SetID("abc123")
+	media.SetExtension(".png")
+
+	got := media.ServeURL()
+	expected := "/cms/media/abc123.png"
+	if got != expected {
+		t.Errorf("expected ServeURL %q, got %q", expected, got)
+	}
+}
+
+func TestMediaServeURL_NoExtension(t *testing.T) {
+	media := NewMedia()
+	media.SetID("abc123")
+	media.SetExtension("")
+
+	got := media.ServeURL()
+	expected := "/cms/media/abc123"
+	if got != expected {
+		t.Errorf("expected ServeURL %q, got %q", expected, got)
+	}
+}
+
+func TestMediaServeURL_ExtensionWithoutDot(t *testing.T) {
+	media := NewMedia()
+	media.SetID("abc123")
+	media.SetExtension("jpg")
+
+	got := media.ServeURL()
+	expected := "/cms/media/abc123.jpg"
+	if got != expected {
+		t.Errorf("expected ServeURL %q, got %q", expected, got)
+	}
+}
