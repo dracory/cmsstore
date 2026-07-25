@@ -179,6 +179,23 @@ const PageContentApp = {
       });
     },
 
+    destroyEditors() {
+      if (this.codeMirrorInstance) {
+        const wrapper = this.codeMirrorInstance.getWrapperElement();
+        if (wrapper && wrapper.parentNode) {
+          wrapper.parentNode.removeChild(wrapper);
+        }
+        this.codeMirrorInstance = null;
+      }
+      if (this.trumbowygInstance) {
+        const ta = document.querySelector('textarea[name="page_content"]');
+        if (ta && jQuery.fn && jQuery.fn.trumbowyg) {
+          jQuery(ta).trumbowyg('destroy');
+        }
+        this.trumbowygInstance = null;
+      }
+    },
+
     async saveContent() {
       if (this.saving) return;
       this.saving = true;
@@ -204,13 +221,16 @@ const PageContentApp = {
         const data = await response.json();
         if (data.status === 'success') {
           Swal.fire({ icon: 'success', title: 'Success', text: 'Page saved successfully', position: 'top-end', timer: 3000, timerProgressBar: true, showConfirmButton: false });
+          this.saving = false;
+          this.destroyEditors();
+          await this.loadContent();
         } else {
           Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to save content' });
+          this.saving = false;
         }
       } catch (error) {
         console.error('Error saving content:', error);
         Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save content' });
-      } finally {
         this.saving = false;
       }
     }
