@@ -18,7 +18,13 @@ const PageContentApp = {
     if (typeof pageID !== 'undefined') {
       this.pageId = pageID;
     }
+    this._saveHandler = () => this.saveContent();
+    document.addEventListener('page-save', this._saveHandler);
     this.loadContent();
+  },
+
+  beforeUnmount() {
+    document.removeEventListener('page-save', this._saveHandler);
   },
 
   methods: {

@@ -21,7 +21,13 @@ const PageSettingsApp = {
     if (typeof pageID !== 'undefined') {
       this.pageId = pageID;
     }
+    this._saveHandler = () => this.saveSettings();
+    document.addEventListener('page-save', this._saveHandler);
     this.loadSettings();
+  },
+
+  beforeUnmount() {
+    document.removeEventListener('page-save', this._saveHandler);
   },
 
   methods: {
@@ -78,13 +84,15 @@ const PageSettingsApp = {
         const data = await response.json();
         if (data.status === 'success') {
           Swal.fire({ icon: 'success', title: 'Success', text: 'Page saved successfully', position: 'top-end', timer: 3000, timerProgressBar: true, showConfirmButton: false });
+          this.saving = false;
+          await this.loadSettings();
         } else {
           Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to save settings' });
+          this.saving = false;
         }
       } catch (error) {
         console.error('Error saving settings:', error);
         Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save settings' });
-      } finally {
         this.saving = false;
       }
     }

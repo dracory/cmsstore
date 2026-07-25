@@ -18,7 +18,13 @@ const PageSEOApp = {
     if (typeof pageID !== 'undefined') {
       this.pageId = pageID;
     }
+    this._saveHandler = () => this.saveSEO();
+    document.addEventListener('page-save', this._saveHandler);
     this.loadSEO();
+  },
+
+  beforeUnmount() {
+    document.removeEventListener('page-save', this._saveHandler);
   },
 
   methods: {
@@ -67,13 +73,15 @@ const PageSEOApp = {
         const data = await response.json();
         if (data.status === 'success') {
           Swal.fire({ icon: 'success', title: 'Success', text: 'Page saved successfully', position: 'top-end', timer: 3000, timerProgressBar: true, showConfirmButton: false });
+          this.saving = false;
+          await this.loadSEO();
         } else {
           Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to save SEO data' });
+          this.saving = false;
         }
       } catch (error) {
         console.error('Error saving SEO:', error);
         Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save SEO data' });
-      } finally {
         this.saving = false;
       }
     }

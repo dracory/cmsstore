@@ -189,13 +189,7 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 	saveScript := `
 		document.addEventListener('click', function(e) {
 			if (e.target && e.target.closest('#btn-page-save')) {
-				var cardBody = document.querySelector('.card-body');
-				if (cardBody) {
-					var saveBtn = cardBody.querySelector('button[type="submit"], button.btn-primary[type="button"]');
-					if (saveBtn) {
-						saveBtn.click();
-					}
-				}
+				document.dispatchEvent(new CustomEvent('page-save'));
 			}
 		});
 	`
