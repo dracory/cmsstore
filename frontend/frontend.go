@@ -141,10 +141,12 @@ func (frontend *frontend) StringHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if site == nil {
+		slog.Info("DEBUG StringHandler site is nil", "domain", domain, "path", path)
 		return `Domain not supported: ` + domain
 	}
 
 	calculatedPath := strings.TrimPrefix(domain+path, siteEnpoint)
+	slog.Info("DEBUG StringHandler", "domain", domain, "path", path, "siteEnpoint", siteEnpoint, "calculatedPath", calculatedPath, "siteID", site.ID())
 
 	return frontend.PageRenderHtmlBySiteAndAlias(w, r, site.ID(), calculatedPath, language)
 }
