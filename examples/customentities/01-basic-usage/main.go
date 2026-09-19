@@ -133,9 +133,8 @@ func main() {
 
 	// Example 5: List all products
 	fmt.Println("=== Listing All Products ===")
-	allProducts, err := customStore.List(ctx, entitystore.EntityQueryOptions{
-		EntityType: "product",
-	})
+	allProducts, err := customStore.List(ctx, entitystore.EntityQuery().
+		WithEntityType("product"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -152,9 +151,8 @@ func main() {
 
 	// Example 6: Count products
 	fmt.Println("=== Counting Products ===")
-	count, err := customStore.Count(ctx, entitystore.EntityQueryOptions{
-		EntityType: "product",
-	})
+	count, err := customStore.Count(ctx, entitystore.EntityQuery().
+		WithEntityType("product"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -177,8 +175,7 @@ func main() {
 	}
 
 	// Count after deletion
-	count, _ = customStore.Count(ctx, entitystore.EntityQueryOptions{
-		EntityType: "product",
-	})
+	count, _ = customStore.Count(ctx, entitystore.EntityQuery().
+		WithEntityType("product"))
 	fmt.Printf("Remaining products: %d\n", count)
 }

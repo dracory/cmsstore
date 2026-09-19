@@ -51,20 +51,18 @@ func (c *EntityListController) Handler(w http.ResponseWriter, r *http.Request) s
 	offset := (page - 1) * perPage
 
 	// Fetch entities
-	entities, err := customStore.List(ctx, entitystore.EntityQueryOptions{
-		EntityType: c.definition.Type,
-		Limit:      uint64(perPage),
-		Offset:     uint64(offset),
-		SortOrder:  "desc",
-	})
+	entities, err := customStore.List(ctx, entitystore.EntityQuery().
+		WithEntityType(c.definition.Type).
+		WithLimit(uint64(perPage)).
+		WithOffset(uint64(offset)).
+		WithSortOrder("desc"))
 	if err != nil {
 		return c.errorPage("Error loading entities: " + err.Error())
 	}
 
 	// Count total
-	totalCount, _ := customStore.Count(ctx, entitystore.EntityQueryOptions{
-		EntityType: c.definition.Type,
-	})
+	totalCount, _ := customStore.Count(ctx, entitystore.EntityQuery().
+		WithEntityType(c.definition.Type))
 
 	// Build page content
 	content := c.buildContent(ctx, customStore, entities, int(totalCount), perPage, page)

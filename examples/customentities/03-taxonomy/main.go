@@ -216,10 +216,9 @@ func main() {
 
 	// Example 7: Find all products in Electronics category
 	fmt.Println("=== Finding All Products in Electronics Category ===")
-	electronicsProducts, err := innerStore.EntityTaxonomyList(ctx, entitystore.EntityTaxonomyQueryOptions{
-		TaxonomyID: categoryTaxonomy.ID(),
-		TermID:     electronicsCategory.ID(),
-	})
+	electronicsProducts, err := innerStore.EntityTaxonomyList(ctx, entitystore.EntityTaxonomyQuery().
+		WithTaxonomyID(categoryTaxonomy.ID()).
+		WithTermID(electronicsCategory.ID()))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -235,10 +234,9 @@ func main() {
 
 	// Example 8: Find all products tagged as "New"
 	fmt.Println("=== Finding All Products Tagged as 'New' ===")
-	newProducts, err := innerStore.EntityTaxonomyList(ctx, entitystore.EntityTaxonomyQueryOptions{
-		TaxonomyID: tagsTaxonomy.ID(),
-		TermID:     newTag.ID(),
-	})
+	newProducts, err := innerStore.EntityTaxonomyList(ctx, entitystore.EntityTaxonomyQuery().
+		WithTaxonomyID(tagsTaxonomy.ID()).
+		WithTermID(newTag.ID()))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -254,9 +252,8 @@ func main() {
 
 	// Example 9: List all terms in a taxonomy
 	fmt.Println("=== Listing All Category Terms ===")
-	allCategories, err := innerStore.TaxonomyTermList(ctx, entitystore.TaxonomyTermQueryOptions{
-		TaxonomyID: categoryTaxonomy.ID(),
-	})
+	allCategories, err := innerStore.TaxonomyTermList(ctx, entitystore.TaxonomyTermQuery().
+		WithTaxonomyID(categoryTaxonomy.ID()))
 	if err != nil {
 		log.Fatal(err)
 	}

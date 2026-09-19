@@ -213,9 +213,8 @@ func main() {
 
 	blockTypes := []string{"hero_block", "feature_block", "testimonial_block", "faq_block"}
 	for _, blockType := range blockTypes {
-		blocks, err := customStore.List(ctx, entitystore.EntityQueryOptions{
-			EntityType: blockType,
-		})
+		blocks, err := customStore.List(ctx, entitystore.EntityQuery().
+			WithEntityType(blockType))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -226,9 +225,8 @@ func main() {
 	fmt.Println("\n=== Total Custom Blocks ===")
 	totalCount := int64(0)
 	for _, blockType := range blockTypes {
-		count, err := customStore.Count(ctx, entitystore.EntityQueryOptions{
-			EntityType: blockType,
-		})
+		count, err := customStore.Count(ctx, entitystore.EntityQuery().
+			WithEntityType(blockType))
 		if err != nil {
 			log.Fatal(err)
 		}

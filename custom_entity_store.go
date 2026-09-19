@@ -207,7 +207,7 @@ func (s *CustomEntityStore) FindByID(ctx context.Context, entityID string) (enti
 }
 
 // List retrieves custom entities with optional filtering.
-func (s *CustomEntityStore) List(ctx context.Context, options entitystore.EntityQueryOptions) ([]entitystore.EntityInterface, error) {
+func (s *CustomEntityStore) List(ctx context.Context, options entitystore.EntityQueryInterface) ([]entitystore.EntityInterface, error) {
 	return s.inner.EntityList(ctx, options)
 }
 
@@ -241,22 +241,20 @@ func (s *CustomEntityStore) Delete(ctx context.Context, entityID string) error {
 }
 
 // Count counts custom entities matching the query options.
-func (s *CustomEntityStore) Count(ctx context.Context, options entitystore.EntityQueryOptions) (int64, error) {
+func (s *CustomEntityStore) Count(ctx context.Context, options entitystore.EntityQueryInterface) (int64, error) {
 	return s.inner.EntityCount(ctx, options)
 }
 
 // GetRelationships retrieves relationships for an entity.
 func (s *CustomEntityStore) GetRelationships(ctx context.Context, entityID string) ([]entitystore.RelationshipInterface, error) {
-	return s.inner.RelationshipList(ctx, entitystore.RelationshipQueryOptions{
-		EntityID: entityID,
-	})
+	return s.inner.RelationshipList(ctx, entitystore.RelationshipQuery().
+		WithEntityID(entityID))
 }
 
 // GetTaxonomyAssignments retrieves taxonomy assignments for an entity.
 func (s *CustomEntityStore) GetTaxonomyAssignments(ctx context.Context, entityID string) ([]entitystore.EntityTaxonomyInterface, error) {
-	return s.inner.EntityTaxonomyList(ctx, entitystore.EntityTaxonomyQueryOptions{
-		EntityID: entityID,
-	})
+	return s.inner.EntityTaxonomyList(ctx, entitystore.EntityTaxonomyQuery().
+		WithEntityID(entityID))
 }
 
 // Inner returns the underlying entitystore for advanced operations.

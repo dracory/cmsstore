@@ -145,10 +145,9 @@ func main() {
 	fmt.Println("=== Finding All Posts by Author ===")
 
 	// Query relationships where the author is the related entity
-	authorRelationships, err := customStore.Inner().RelationshipList(ctx, entitystore.RelationshipQueryOptions{
-		RelatedEntityID:  authorID,
-		RelationshipType: "belongs_to",
-	})
+	authorRelationships, err := customStore.Inner().RelationshipList(ctx, entitystore.RelationshipQuery().
+		WithRelatedEntityID(authorID).
+		WithRelationshipType("belongs_to"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -221,10 +220,9 @@ func main() {
 	// Example 6: Query all comments for a post
 	fmt.Println("=== Finding All Comments for Post ===")
 
-	postComments, err := customStore.Inner().RelationshipList(ctx, entitystore.RelationshipQueryOptions{
-		RelatedEntityID:  post1ID,
-		RelationshipType: "belongs_to",
-	})
+	postComments, err := customStore.Inner().RelationshipList(ctx, entitystore.RelationshipQuery().
+		WithRelatedEntityID(post1ID).
+		WithRelationshipType("belongs_to"))
 	if err != nil {
 		log.Fatal(err)
 	}

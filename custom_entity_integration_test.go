@@ -254,9 +254,8 @@ func TestCustomEntityIntegration(t *testing.T) {
 		}
 
 		// Count entities
-		count, err := customStore.Count(ctx, entitystore.EntityQueryOptions{
-			EntityType: "product",
-		})
+		count, err := customStore.Count(ctx, entitystore.EntityQuery().
+			WithEntityType("product"))
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
