@@ -12,13 +12,13 @@ require (
 	github.com/dracory/entitystore v1.20.0
 	github.com/dracory/form v0.23.0
 	github.com/dracory/hb v1.88.0
-	github.com/dracory/neat v0.48.0
+	github.com/dracory/neat v0.52.0
 	github.com/dracory/req v0.1.0
 	github.com/dracory/shortcode v0.5.0
 	github.com/dracory/str v0.18.0
 	github.com/dracory/test v0.10.0
 	github.com/dracory/ui v0.17.0
-	github.com/dracory/uid v1.9.0
+	github.com/dracory/uid v1.11.0
 	github.com/dromara/carbon/v2 v2.6.17
 	github.com/jellydator/ttlcache/v3 v3.4.1
 	github.com/samber/lo v1.53.0
@@ -42,7 +42,7 @@ require (
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
-	modernc.org/libc v1.77.0 // indirect
+	modernc.org/libc v1.77.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 )
