@@ -5,7 +5,6 @@ import (
 
 	"github.com/dracory/neat/database/orm"
 	"github.com/dracory/neat/database/soft_delete"
-	neatuid "github.com/dracory/neat/support/uid"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -14,7 +13,7 @@ import (
 // newVersioning creates a new versioning with a generated ID and current timestamp
 func newVersioning() *versioning {
 	o := &versioning{}
-	o.SetID(neatuid.GenerateShortID())
+	o.SetID(GenerateShortID())
 	o.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString(carbon.UTC))
 	o.SetSoftDeletedAt(VERSIONING_MAX_DATETIME)
 	return o
@@ -25,7 +24,7 @@ func newVersioning() *versioning {
 var _ VersioningInterface = (*versioning)(nil)
 
 type versioning struct {
-	orm.ShortID
+	orm.StringID
 
 	EntityTypeField string `db:"entity_type"`
 	EntityIDField   string `db:"entity_id"`
@@ -46,12 +45,12 @@ func (o *versioning) IsSoftDeleted() bool {
 
 // ID returns the id of the versioning.
 func (o *versioning) ID() string {
-	return o.ShortID.ID
+	return o.StringID.ID
 }
 
 // SetID sets the id of the versioning.
 func (o *versioning) SetID(id string) VersioningInterface {
-	o.ShortID.ID = id
+	o.StringID.ID = id
 	return o
 }
 

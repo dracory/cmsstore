@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"sort"
+	"uuid"
 
 	"github.com/dracory/cmsstore"
-	"github.com/dracory/uid"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -150,7 +150,7 @@ func (tree *Tree) Duplicate(blockID string) {
 	mapIDs := make(map[string]string)
 
 	for _, block := range blocks {
-		mapIDs[block.ID] = uid.HumanUid()
+		mapIDs[block.ID] = uuid.NewV7().String()
 	}
 
 	clonedBlocks := make([]Node, 0)

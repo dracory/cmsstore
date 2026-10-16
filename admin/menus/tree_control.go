@@ -2,13 +2,13 @@ package admin
 
 import (
 	"net/http"
+	"uuid"
 
 	"github.com/dracory/bs"
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/form"
 	"github.com/dracory/hb"
 	"github.com/dracory/req"
-	"github.com/dracory/uid"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
@@ -35,7 +35,7 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 		if treeID != "" {
 			t.id = treeID
 		} else {
-			t.id = "treectl_" + uid.HumanUid()
+			t.id = "treectl_" + uuid.NewV7().String()
 		}
 	}
 
@@ -43,7 +43,7 @@ func (t *treeControl) Render(r *http.Request) hb.TagInterface {
 
 	if action == "node_add" {
 		parentID := req.GetStringTrimmed(r, "treectl_parent_id")
-		newNode := Node{ID: uid.HumanUid(), Name: "New"}
+		newNode := Node{ID: uuid.NewV7().String(), Name: "New"}
 		tree.Add(parentID, newNode)
 	}
 

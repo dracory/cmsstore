@@ -2,40 +2,16 @@ package cmsstore
 
 import (
 	"strings"
-	"sync"
-	"time"
+	"uuid"
 
 	"github.com/dracory/uid"
 )
 
-var (
-	idMutex    sync.Mutex
-	lastIDTime int64
-	idSequence int
-)
-
-// GenerateShortID generates a new shortened ID using TimestampMicro + Crockford Base32 (lowercase)
-// Returns a 9-character lowercase ID (e.g., "86ccrtsgx")
-// Thread-safe: Uses mutex to prevent duplicate IDs when called concurrently
+// GenerateShortID generates a new unique ID using the standard library
+// UUID v7 (time-ordered). Returns a 36-character lowercase ID
+// (e.g., "01952f3a-8c5e-7f3a-9b2d-4e6f8a1c3d5e")
 func GenerateShortID() string {
-	idMutex.Lock()
-	defer idMutex.Unlock()
-
-	// Get current microsecond timestamp
-	now := time.Now().UnixMicro()
-
-	// If same microsecond as last ID, add sequence number to ensure uniqueness
-	if now == lastIDTime {
-		idSequence++
-		now += int64(idSequence)
-	} else {
-		lastIDTime = now
-		idSequence = 0
-	}
-
-	timestampID := uid.TimestampMicro()
-	shortened, _ := uid.ShortenCrockford(timestampID)
-	return strings.ToLower(shortened)
+	return uuid.NewV7().String()
 }
 
 // NormalizeID normalizes an ID to lowercase for consistent lookups

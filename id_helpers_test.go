@@ -16,13 +16,8 @@ func TestGenerateShortIDReturnsLowercaseAndNonEmpty(t *testing.T) {
 	if strings.ToLower(generated) != generated {
 		t.Errorf("expected lowercase, got %q", generated)
 	}
-
-	unshortened, err := uid.UnshortenCrockford(generated)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if unshortened == "" {
-		t.Errorf("expected non-empty unshortened ID")
+	if len(generated) != 36 {
+		t.Errorf("expected 36-char UUID, got %d chars (%q)", len(generated), generated)
 	}
 }
 
