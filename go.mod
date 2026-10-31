@@ -23,7 +23,7 @@ require (
 	github.com/jellydator/ttlcache/v3 v3.4.1
 	github.com/samber/lo v1.53.0
 	github.com/spf13/cast v1.10.0
-	modernc.org/sqlite v1.61.0
+	modernc.org/sqlite v1.61.1
 )
 
 require (
