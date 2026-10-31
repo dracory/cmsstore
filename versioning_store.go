@@ -44,7 +44,7 @@ func (store *versioningStore) MigrateUp(ctx context.Context, tx ...*sql.Tx) erro
 	}
 
 	return store.db.Schema().Create(store.tableName, func(table contractsschema.Blueprint) {
-		table.String(COLUMN_ID, 21)
+		table.String(COLUMN_ID, 40)
 		table.Primary(COLUMN_ID)
 		table.String(COLUMN_ENTITY_TYPE, 40)
 		table.String(COLUMN_ENTITY_ID, 40)
