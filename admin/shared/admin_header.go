@@ -90,7 +90,7 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Req
 		translationsCount = -1
 	}
 
-	ulNav := hb.NewUL().Class("nav  nav-pills justify-content-center")
+	ulNav := hb.NewUL().Class("nav nav-tabs mb-3")
 	ulNav.AddChild(hb.NewLI().Class("nav-item").Child(linkHome))
 
 	ulNav.Child(hb.LI().
@@ -169,7 +169,5 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Req
 	// 	ulNav.AddChild(hb.NewLI().Class("nav-item").Child(linkEntity))
 	// }
 
-	divCard := hb.NewDiv().Class("card card-default mt-3 mb-3")
-	divCardBody := hb.NewDiv().Class("card-body")
-	return divCard.AddChild(divCardBody.AddChild(ulNav))
+	return ulNav
 }

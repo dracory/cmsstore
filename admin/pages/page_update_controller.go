@@ -210,7 +210,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		HxTarget("body").
 		HxSwap("beforeend")
 
-	pageTitle := hb.Heading1().
+	pageTitle := hb.H2().Class("mb-3").
 		Text("Edit Page:").
 		Text(" ").
 		Text(data.page.Name()).
@@ -274,11 +274,9 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 				HTML("Settings")))
 
 	return hb.Div().
-		Class("container").
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
 		Child(adminHeader).
-		Child(hb.HR()).
 		Child(pageTitle).
 		Child(tabs).
 		Child(card).

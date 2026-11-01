@@ -48,9 +48,9 @@ func Test_AjaxSaveMiddlewares_Success(t *testing.T) {
 			"action":  {actionSaveMiddlewares},
 		},
 		JSONData: map[string]any{
-			"page_id":             seededPage.ID(),
-			"middlewares_before":  []string{"auth", "cors"},
-			"middlewares_after":   []string{"cache"},
+			"page_id":            seededPage.ID(),
+			"middlewares_before": []string{"auth", "cors"},
+			"middlewares_after":  []string{"cache"},
 		},
 	})
 	if err != nil {

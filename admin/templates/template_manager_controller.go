@@ -213,16 +213,14 @@ func (controller *templateManagerController) page(data templateManagerController
 		HxTarget("body").
 		HxSwap("beforeend")
 
-	title := hb.Heading1().
+	title := hb.H2().Class("mb-3").
 		HTML("Template Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().
-		Class("container").
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
 		Child(adminHeader).
-		Child(hb.HR()).
 		Child(title).
 		Child(controller.tableRecords(data))
 }

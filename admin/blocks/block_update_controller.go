@@ -143,7 +143,7 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 			ElseIf(data.block.Status() == cmsstore.BLOCK_STATUS_DRAFT, "Draft").
 			Else(data.block.Status()))
 
-	pageTitle := hb.Heading1().
+	pageTitle := hb.H2().Class("mb-3").
 		Text("CMS. Edit Block:").
 		Text(" ").
 		Text(data.block.Name()).
@@ -189,11 +189,9 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 				HTML("Settings")))
 
 	return hb.Div().
-		Class("container").
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
 		Child(adminHeader).
-		Child(hb.HR()).
 		Child(pageTitle).
 		Child(tabs).
 		Child(card).

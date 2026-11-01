@@ -91,7 +91,7 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 		ClassIf(page.Status() == cmsstore.PAGE_STATUS_DRAFT, "bg-warning").
 		Text(page.Status())
 
-	pageTitle := hb.Heading1().
+	pageTitle := hb.H2().Class("mb-3").
 		HTML("Edit Page: ").
 		Text(page.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
@@ -178,7 +178,7 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 				Child(body))
 
 	content := hb.Div().
-		Class("container").
+		Class("container py-4").
 		Child(breadcrumbs).
 		Child(hb.HR()).
 		Child(pageTitle).

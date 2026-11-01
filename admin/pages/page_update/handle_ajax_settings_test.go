@@ -51,13 +51,13 @@ func Test_AjaxSaveSettings_Success(t *testing.T) {
 			"action":  {actionSaveSettings},
 		},
 		JSONData: map[string]any{
-			"page_id":         seededPage.ID(),
-			"page_status":     "active",
-			"page_name":       "Updated Name",
-			"page_editor":     "codemirror",
+			"page_id":          seededPage.ID(),
+			"page_status":      "active",
+			"page_name":        "Updated Name",
+			"page_editor":      "codemirror",
 			"page_template_id": "",
-			"page_site_id":    "",
-			"page_memo":       "Test memo",
+			"page_site_id":     "",
+			"page_memo":        "Test memo",
 		},
 	})
 	if err != nil {

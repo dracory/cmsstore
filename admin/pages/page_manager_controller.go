@@ -234,12 +234,12 @@ package admin
 // 		HxTarget("body").
 // 		HxSwap("beforeend")
 
-// 	pageTitle := hb.Heading1().
+// 	pageTitle := hb.H2().Class("mb-3").
 // 		HTML("Page Manager").
 // 		Child(buttonPageNew)
 
 // 	return hb.Div().
-// 		Class("container").
+// 		Class("container py-4").
 // 		Child(breadcrumbs).
 // 		Child(hb.HR()).
 // 		Child(adminHeader).

@@ -115,7 +115,7 @@ func (controller translationUpdateController) page(data translationUpdateControl
 		HxTarget("body").
 		HxSwap("beforeend")
 
-	pageTitle := hb.Heading1().
+	pageTitle := hb.H2().Class("mb-3").
 		Text("Edit Translation:").
 		Text(" ").
 		Text(data.translation.Name()).
@@ -161,11 +161,9 @@ func (controller translationUpdateController) page(data translationUpdateControl
 				HTML("Settings")))
 
 	return hb.Div().
-		Class("container").
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
 		Child(adminHeader).
-		Child(hb.HR()).
 		Child(pageTitle).
 		Child(tabs).
 		Child(card).

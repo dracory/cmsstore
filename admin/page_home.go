@@ -139,7 +139,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 
 	container := hb.NewDiv().
 		ID("page-manager").
-		Class("container").
+		Class("container py-4").
 		Child(adminBreadcrumbs).
 		Child(hb.HR()).
 		Child(adminHeader).

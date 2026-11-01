@@ -137,7 +137,7 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		ClassIf(data.template.Status() == cmsstore.TEMPLATE_STATUS_DRAFT, "bg-warning").
 		Text(data.template.Status())
 
-	pageTitle := hb.Heading1().
+	pageTitle := hb.H2().Class("mb-3").
 		Text("CMS. Edit Template:").
 		Text(" ").
 		Text(data.template.Name()).
@@ -197,11 +197,9 @@ func (controller templateUpdateController) page(data templateUpdateControllerDat
 		Child(hb.NewHyperlink().HTML("Yandex Translate").Href("https://www.reverso.net/text-translation").Target("_blank"))
 
 	return hb.Div().
-		Class("container").
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
 		Child(adminHeader).
-		Child(hb.HR()).
 		Child(pageTitle).
 		Child(toolsInfo).
 		Child(tabs).

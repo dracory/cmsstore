@@ -157,7 +157,7 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 		ClassIf(data.menu.Status() == cmsstore.MENU_STATUS_DRAFT, "bg-warning").
 		Text(data.menu.Status())
 
-	pageTitle := hb.Heading1().
+	pageTitle := hb.H2().Class("mb-3").
 		Text("CMS. Edit Menu:").
 		Text(" ").
 		Text(data.menu.Name()).
@@ -203,11 +203,9 @@ func (controller menuUpdateController) page(data menuUpdateControllerData) hb.Ta
 				HTML("Settings")))
 
 	return hb.Div().
-		Class("container").
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
 		Child(adminHeader).
-		Child(hb.HR()).
 		Child(pageTitle).
 		Child(tabs).
 		Child(card)

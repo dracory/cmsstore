@@ -259,16 +259,14 @@ func (controller *blockManagerController) page(data blockManagerControllerData) 
 		HxTarget("body").
 		HxSwap("beforeend")
 
-	pageTitle := hb.Heading1().
+	pageTitle := hb.H2().Class("mb-3").
 		HTML("CMS. Block Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().
-		Class("container").
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
 		Child(adminHeader).
-		Child(hb.HR()).
 		Child(pageTitle).
 		Child(controller.tableRecords(data))
 }

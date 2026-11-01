@@ -131,7 +131,7 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 		ClassIf(data.site.Status() == cmsstore.SITE_STATUS_DRAFT, "bg-warning").
 		Text(data.site.Status())
 
-	pageTitle := hb.Heading1().
+	pageTitle := hb.H2().Class("mb-3").
 		Text("CMS. Edit Site:").
 		Text(" ").
 		Text(data.site.Name()).
@@ -177,11 +177,9 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 				HTML("SEO")))
 
 	return hb.Div().
-		Class("container").
+		Class("container py-4").
 		Child(breadcrumbs).
-		Child(hb.HR()).
 		Child(adminHeader).
-		Child(hb.HR()).
 		Child(pageTitle).
 		Child(tabs).
 		Child(card)

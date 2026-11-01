@@ -76,7 +76,7 @@ func (c *EntityListController) buildContent(ctx context.Context, customStore *cm
 
 	// Header
 	header := hb.Div().Class("d-flex justify-content-between align-items-center mb-4")
-	header.Child(hb.Heading1().HTML(c.definition.TypeLabel + " Manager"))
+	header.Child(hb.H2().Class("mb-3").HTML(c.definition.TypeLabel + " Manager"))
 	header.Child(c.createButton())
 	container.Child(header)
 
