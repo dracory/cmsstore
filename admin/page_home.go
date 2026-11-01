@@ -134,7 +134,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 		return hb.Div().Class("col-xs-12 col-sm-6 col-md-3").Child(card)
 	})
 
-	pageTitle := hb.NewHeading1().
+	pageTitle := hb.H2().Class("mb-3").
 		HTML("Content Management Dashboard")
 
 	container := hb.NewDiv().
