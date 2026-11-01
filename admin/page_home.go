@@ -141,10 +141,8 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 		ID("page-manager").
 		Class("container py-4").
 		Child(adminBreadcrumbs).
-		Child(hb.HR()).
-		Child(adminHeader).
-		Child(hb.HR()).
 		Child(pageTitle).
+		Child(adminHeader).
 		Child(hb.Div().Class("row g-3").Children(cards))
 
 	a.render(w, r, "Home", container.ToHTML(), struct {

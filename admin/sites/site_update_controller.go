@@ -179,8 +179,8 @@ func (controller siteUpdateController) page(data siteUpdateControllerData) hb.Ta
 	return hb.Div().
 		Class("container py-4").
 		Child(breadcrumbs).
-		Child(adminHeader).
 		Child(pageTitle).
+		Child(adminHeader).
 		Child(tabs).
 		Child(card)
 }

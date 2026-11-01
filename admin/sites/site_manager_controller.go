@@ -220,8 +220,8 @@ func (controller *siteManagerController) page(data siteManagerControllerData) hb
 	return hb.Div().
 		Class("container py-4").
 		Child(breadcrumbs).
-		Child(adminHeader).
 		Child(title).
+		Child(adminHeader).
 		Child(controller.tableRecords(data))
 }
 

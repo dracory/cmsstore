@@ -6,34 +6,46 @@ import (
 
 	"github.com/dracory/cmsstore"
 	"github.com/dracory/hb"
+	"github.com/dracory/req"
 	"github.com/spf13/cast"
 )
 
 func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Request) hb.TagInterface {
+	active := req.GetStringTrimmed(r, "path")
+	if active == "" || active == "/" {
+		active = PathHome
+	}
+
 	linkHome := hb.NewHyperlink().
 		HTML("Dashboard").
 		Href(URLR(r, PathHome, nil)).
-		Class("nav-link")
+		Class("nav-link").
+		ClassIf(active == PathHome, "active")
 	linkBlocks := hb.Hyperlink().
 		HTML("Blocks ").
 		Href(URLR(r, PathBlocksBlockManager, nil)).
-		Class("nav-link")
+		Class("nav-link").
+		ClassIf(active == PathBlocksBlockManager, "active")
 	linkMenus := hb.NewHyperlink().
 		HTML("Menus ").
 		Href(URLR(r, PathMenusMenuManager, nil)).
-		Class("nav-link")
+		Class("nav-link").
+		ClassIf(active == PathMenusMenuManager, "active")
 	linkPages := hb.Hyperlink().
 		HTML("Pages ").
 		Href(URLR(r, PathPagesPageManager, nil)).
-		Class("nav-link")
+		Class("nav-link").
+		ClassIf(active == PathPagesPageManager, "active")
 	linkTemplates := hb.Hyperlink().
 		HTML("Templates ").
 		Href(URLR(r, PathTemplatesTemplateManager, nil)).
-		Class("nav-link")
+		Class("nav-link").
+		ClassIf(active == PathTemplatesTemplateManager, "active")
 	linkSites := hb.Hyperlink().
 		HTML("Sites ").
 		Href(URLR(r, PathSitesSiteManager, nil)).
-		Class("nav-link")
+		Class("nav-link").
+		ClassIf(active == PathSitesSiteManager, "active")
 	// linkWidgets := hb.NewHyperlink().
 	// 	HTML("Widgets ").
 	// 	Href(endpoint + "?path=" + PathWidgetsWidgetManager).
@@ -45,7 +57,8 @@ func AdminHeader(store cmsstore.StoreInterface, logger *slog.Logger, r *http.Req
 	linkTranslations := hb.Hyperlink().
 		HTML("Translations").
 		Href(URLR(r, PathTranslationsTranslationManager, nil)).
-		Class("nav-link")
+		Class("nav-link").
+		ClassIf(active == PathTranslationsTranslationManager, "active")
 	mediaManagerURL := MediaManagerURL(r)
 
 	templatesCount, err := store.TemplateCount(r.Context(), cmsstore.TemplateQuery())

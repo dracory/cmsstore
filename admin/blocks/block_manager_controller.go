@@ -266,8 +266,8 @@ func (controller *blockManagerController) page(data blockManagerControllerData) 
 	return hb.Div().
 		Class("container py-4").
 		Child(breadcrumbs).
-		Child(adminHeader).
 		Child(pageTitle).
+		Child(adminHeader).
 		Child(controller.tableRecords(data))
 }
 

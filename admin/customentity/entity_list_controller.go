@@ -72,16 +72,16 @@ func (c *EntityListController) Handler(w http.ResponseWriter, r *http.Request) s
 }
 
 func (c *EntityListController) buildContent(ctx context.Context, customStore *cmsstore.CustomEntityStore, entities []entitystore.EntityInterface, total, perPage, page int) hb.TagInterface {
-	container := hb.Div().Class("container-fluid mt-4")
-
-	// Header
-	header := hb.Div().Class("d-flex justify-content-between align-items-center mb-4")
-	header.Child(hb.H2().Class("mb-3").HTML(c.definition.TypeLabel + " Manager"))
-	header.Child(c.createButton())
-	container.Child(header)
+	container := hb.Div().Class("container-fluid py-4")
 
 	// Breadcrumbs
 	container.Child(c.breadcrumbs())
+
+	// Header
+	header := hb.Div().Class("d-flex justify-content-between align-items-center mb-3")
+	header.Child(hb.H2().Class("mb-0").HTML(c.definition.TypeLabel + " Manager"))
+	header.Child(c.createButton())
+	container.Child(header)
 
 	// Table or empty state
 	if len(entities) == 0 {
@@ -97,7 +97,7 @@ func (c *EntityListController) buildContent(ctx context.Context, customStore *cm
 
 func (c *EntityListController) breadcrumbs() hb.TagInterface {
 	nav := hb.Nav().Attr("aria-label", "breadcrumb")
-	ol := hb.OL().Class("breadcrumb")
+	ol := hb.OL().Class("breadcrumb").Style("border:none;")
 	ol.Child(hb.LI().Class("breadcrumb-item").
 		Child(hb.Hyperlink().HTML("Home").Href("/admin")))
 	ol.Child(hb.LI().Class("breadcrumb-item").

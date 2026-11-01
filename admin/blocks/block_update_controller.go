@@ -191,8 +191,8 @@ func (controller blockUpdateController) page(data blockUpdateControllerData) hb.
 	return hb.Div().
 		Class("container py-4").
 		Child(breadcrumbs).
-		Child(adminHeader).
 		Child(pageTitle).
+		Child(adminHeader).
 		Child(tabs).
 		Child(card).
 		Child(hb.HR().Class("mt-4")).
