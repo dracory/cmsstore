@@ -135,7 +135,7 @@ func (a *admin) pageHome(w http.ResponseWriter, r *http.Request) {
 	})
 
 	pageTitle := hb.H2().Class("mb-3").
-		HTML("Content Management Dashboard")
+		HTML("CMS. Content Management Dashboard")
 
 	container := hb.NewDiv().
 		ID("page-manager").

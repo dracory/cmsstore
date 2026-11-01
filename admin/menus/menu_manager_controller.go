@@ -215,7 +215,7 @@ func (controller *menuManagerController) page(data menuManagerControllerData) hb
 		HxSwap("beforeend")
 
 	title := hb.H2().Class("mb-3").
-		HTML("Menu Manager").
+		HTML("CMS. Menu Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().

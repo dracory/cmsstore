@@ -235,7 +235,7 @@ package admin
 // 		HxSwap("beforeend")
 
 // 	pageTitle := hb.H2().Class("mb-3").
-// 		HTML("Page Manager").
+// 		HTML("CMS. Page Manager").
 // 		Child(buttonPageNew)
 
 // 	return hb.Div().

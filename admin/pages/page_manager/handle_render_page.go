@@ -45,7 +45,7 @@ func handleRenderPage(ui shared.UiInterface, store cmsstore.StoreInterface, w ht
 
 	actionButtons = actionButtons.Child(buttonPageNew)
 
-	heading := hb.H2().Class("mb-3").HTML("Page Manager").Child(actionButtons)
+	heading := hb.H2().Class("mb-3").HTML("CMS. Page Manager").Child(actionButtons)
 
 	htmlContent, err := pageFiles.ReadFile("pages.html")
 	if err != nil {

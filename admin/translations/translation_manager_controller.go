@@ -215,7 +215,7 @@ func (controller *translationManagerController) page(data translationManagerCont
 		HxSwap("beforeend")
 
 	title := hb.H2().Class("mb-3").
-		HTML("Translation Manager").
+		HTML("CMS. Translation Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().

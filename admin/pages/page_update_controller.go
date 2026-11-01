@@ -211,7 +211,7 @@ func (controller pageUpdateController) page(data pageUpdateControllerData) hb.Ta
 		HxSwap("beforeend")
 
 	pageTitle := hb.H2().Class("mb-3").
-		Text("Edit Page:").
+		Text("CMS. Edit Page:").
 		Text(" ").
 		Text(data.page.Name()).
 		Child(hb.Sup().Child(badgeStatus)).

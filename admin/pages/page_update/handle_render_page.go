@@ -92,7 +92,7 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 		Text(page.Status())
 
 	pageTitle := hb.H2().Class("mb-3").
-		HTML("Edit Page: ").
+		HTML("CMS. Edit Page: ").
 		Text(page.Name()).
 		Child(hb.Sup().Child(badgeStatus)).
 		Child(buttonSave).

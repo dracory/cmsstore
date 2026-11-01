@@ -214,7 +214,7 @@ func (controller *templateManagerController) page(data templateManagerController
 		HxSwap("beforeend")
 
 	title := hb.H2().Class("mb-3").
-		HTML("Template Manager").
+		HTML("CMS. Template Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().

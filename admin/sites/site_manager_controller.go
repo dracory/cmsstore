@@ -214,7 +214,7 @@ func (controller *siteManagerController) page(data siteManagerControllerData) hb
 		HxSwap("beforeend")
 
 	title := hb.H2().Class("mb-3").
-		HTML("Site Manager").
+		HTML("CMS. Site Manager").
 		Child(buttonPageNew)
 
 	return hb.Div().
