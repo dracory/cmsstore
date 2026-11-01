@@ -34,18 +34,15 @@ func handleRenderPage(ui shared.UiInterface, store cmsstore.StoreInterface, w ht
 		SiteList: siteList,
 	})
 
-	actionButtons := hb.Div().
-		Class("d-flex gap-2 float-end")
-
 	buttonPageNew := hb.Button().
-		Class("btn btn-primary d-inline-flex align-items-center").
+		Class("btn btn-primary btn-sm d-inline-flex align-items-center").
 		Child(hb.I().Class("bi bi-plus-circle me-2")).
 		HTML("New Page").
 		ID("btn-page-new")
 
-	actionButtons = actionButtons.Child(buttonPageNew)
+	heading := shared.PageHeader("CMS. Page Manager", buttonPageNew)
 
-	heading := hb.H2().Class("mb-3").HTML("CMS. Page Manager").Child(actionButtons)
+	adminHeader := shared.AdminHeader(store, ui.Logger(), r)
 
 	htmlContent, err := pageFiles.ReadFile("pages.html")
 	if err != nil {
@@ -80,9 +77,9 @@ func handleRenderPage(ui shared.UiInterface, store cmsstore.StoreInterface, w ht
 
 	content := hb.Div().
 		Class("container py-4").
-		Child(heading).
 		Child(breadcrumbs).
-		Child(hb.HR()).
+		Child(heading).
+		Child(adminHeader).
 		Child(vueContainer)
 
 	options := struct {

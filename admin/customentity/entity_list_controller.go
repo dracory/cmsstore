@@ -2,10 +2,12 @@ package customentity
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/dracory/cmsstore"
+	"github.com/dracory/cmsstore/admin/shared"
 	"github.com/dracory/entitystore"
 	"github.com/dracory/hb"
 )
@@ -65,13 +67,13 @@ func (c *EntityListController) Handler(w http.ResponseWriter, r *http.Request) s
 		WithEntityType(c.definition.Type))
 
 	// Build page content
-	content := c.buildContent(ctx, customStore, entities, int(totalCount), perPage, page)
+	content := c.buildContent(r, ctx, customStore, entities, int(totalCount), perPage, page)
 
 	// Return with layout
 	return c.wrapInLayout(content)
 }
 
-func (c *EntityListController) buildContent(ctx context.Context, customStore *cmsstore.CustomEntityStore, entities []entitystore.EntityInterface, total, perPage, page int) hb.TagInterface {
+func (c *EntityListController) buildContent(r *http.Request, ctx context.Context, customStore *cmsstore.CustomEntityStore, entities []entitystore.EntityInterface, total, perPage, page int) hb.TagInterface {
 	container := hb.Div().Class("container-fluid py-4")
 
 	// Breadcrumbs
@@ -82,6 +84,10 @@ func (c *EntityListController) buildContent(ctx context.Context, customStore *cm
 	header.Child(hb.H2().Class("mb-0").HTML(c.definition.TypeLabel + " Manager"))
 	header.Child(c.createButton())
 	container.Child(header)
+
+	// Section navigation
+	logger, _ := c.ui.Logger().(*slog.Logger)
+	container.Child(shared.AdminHeader(c.ui.Store(), logger, r))
 
 	// Table or empty state
 	if len(entities) == 0 {
