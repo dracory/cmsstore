@@ -133,7 +133,7 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 					"view":    viewSettings,
 				})).
 				HTML("Settings"))).
-		Child(bs.NavItem().
+		ChildIf(store.MediaEnabled(), bs.NavItem().
 			Child(bs.NavLink().
 				ClassIf(view == viewMedia, "active").
 				Href(shared.URLR(r, shared.PathPagesPageUpdate, map[string]string{
@@ -154,7 +154,11 @@ func handleRenderPage(ui uiInterface, store cmsstore.StoreInterface, page cmssto
 	case viewMiddlewares:
 		body = renderMiddlewaresTab(r, page)
 	case viewMedia:
-		body = renderMediaTab(r, page)
+		if store.MediaEnabled() {
+			body = renderMediaTab(r, page)
+		} else {
+			body = renderContentTab(r, page)
+		}
 	default:
 		body = renderContentTab(r, page)
 	}

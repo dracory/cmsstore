@@ -59,8 +59,16 @@ func (controller *pageUpdateController) Handler(w http.ResponseWriter, r *http.R
 		actionLoadMedia, actionUploadMedia, actionSaveMedia, actionDeleteMedia, actionAddMedia,
 	}
 
+	mediaActions := []string{
+		actionLoadMedia, actionUploadMedia, actionSaveMedia, actionDeleteMedia, actionAddMedia,
+	}
+
 	if slices.Contains(postActions, action) && r.Method != http.MethodPost {
 		return api.Error("Method not allowed").ToString()
+	}
+
+	if slices.Contains(mediaActions, action) && !store.MediaEnabled() {
+		return api.Error("Media is not enabled").ToString()
 	}
 
 	if slices.Contains(ajaxActions, action) {

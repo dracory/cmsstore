@@ -31,3 +31,4 @@ go.work.sum
 # dev folder
 development/tmp/*
 admin/development/tmp/build-errors.log
+nul

@@ -56,6 +56,14 @@ func initStore(t *testing.T) cmsstore.StoreInterface {
 	return store
 }
 
+func initStoreWithoutMedia(t *testing.T) cmsstore.StoreInterface {
+	store, err := testutils.InitStoreWithoutMedia(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to init store: %v", err)
+	}
+	return store
+}
+
 func initHandler(store cmsstore.StoreInterface) func(w http.ResponseWriter, r *http.Request) string {
 	return NewPageUpdateController(newTestUi(store)).Handler
 }

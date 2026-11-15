@@ -69,6 +69,34 @@ func InitStore(filepath string) (cmsstore.StoreInterface, error) {
 	return store, nil
 }
 
+// InitStoreWithoutMedia creates a store with media support disabled.
+func InitStoreWithoutMedia(filepath string) (cmsstore.StoreInterface, error) {
+	db := initDB(filepath)
+
+	store, err := cmsstore.NewStore(cmsstore.NewStoreOptions{
+		DB:                         db,
+		BlockTableName:             "block_table",
+		PageTableName:              "page_table",
+		SiteTableName:              "site_table",
+		TemplateTableName:          "template_table",
+		MenusEnabled:               true,
+		MenuTableName:              "menu_table",
+		MenuItemTableName:          "menu_item_table",
+		TranslationsEnabled:        true,
+		TranslationTableName:       "translation_table",
+		TranslationLanguageDefault: "en",
+		VersioningEnabled:          true,
+		VersioningTableName:        "versioning_table",
+		AutomigrateEnabled:         true,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return store, nil
+}
+
 // InitStoreWithVersioning creates a store with versioning enabled.
 // Use a file-based database path instead of ":memory:" to avoid deadlocks.
 func InitStoreWithVersioning(filepath string) (cmsstore.StoreInterface, error) {

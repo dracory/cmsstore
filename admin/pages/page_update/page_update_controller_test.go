@@ -146,6 +146,120 @@ func Test_PageUpdate_RenderSettings(t *testing.T) {
 	}
 }
 
+func Test_PageUpdate_RenderMedia(t *testing.T) {
+	store := initStore(t)
+	handler := initHandler(store)
+
+	seededPage, err := seedTestPage(store)
+	if err != nil {
+		t.Fatalf("Failed to seed page: %v", err)
+	}
+
+	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
+		GetValues: url.Values{
+			"page_id": {seededPage.ID()},
+			"view":    {viewMedia},
+		},
+	})
+	if err != nil {
+		t.Errorf("Expected no error, got: %s", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got: %d", http.StatusOK, response.StatusCode)
+	}
+
+	if !strings.Contains(body, "page-media-app") {
+		t.Fatalf("Expected to find page-media-app in body, got: %s", body)
+	}
+}
+
+func Test_PageUpdate_MediaDisabled_TabHidden(t *testing.T) {
+	store := initStoreWithoutMedia(t)
+	handler := initHandler(store)
+
+	seededPage, err := seedTestPage(store)
+	if err != nil {
+		t.Fatalf("Failed to seed page: %v", err)
+	}
+
+	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
+		GetValues: url.Values{
+			"page_id": {seededPage.ID()},
+		},
+	})
+	if err != nil {
+		t.Errorf("Expected no error, got: %s", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got: %d", http.StatusOK, response.StatusCode)
+	}
+
+	if strings.Contains(body, ">Media<") {
+		t.Fatalf("Expected media tab to be hidden when media is disabled, got: %s", body)
+	}
+}
+
+func Test_PageUpdate_MediaDisabled_ViewFallsBackToContent(t *testing.T) {
+	store := initStoreWithoutMedia(t)
+	handler := initHandler(store)
+
+	seededPage, err := seedTestPage(store)
+	if err != nil {
+		t.Fatalf("Failed to seed page: %v", err)
+	}
+
+	body, response, err := test.CallStringEndpoint(http.MethodGet, handler, test.NewRequestOptions{
+		GetValues: url.Values{
+			"page_id": {seededPage.ID()},
+			"view":    {viewMedia},
+		},
+	})
+	if err != nil {
+		t.Errorf("Expected no error, got: %s", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d, got: %d", http.StatusOK, response.StatusCode)
+	}
+
+	if !strings.Contains(body, "page-content-app") {
+		t.Fatalf("Expected view=media to fall back to content when media is disabled, got: %s", body)
+	}
+}
+
+func Test_PageUpdate_MediaDisabled_AjaxBlocked(t *testing.T) {
+	store := initStoreWithoutMedia(t)
+	handler := initHandler(store)
+
+	seededPage, err := seedTestPage(store)
+	if err != nil {
+		t.Fatalf("Failed to seed page: %v", err)
+	}
+
+	mediaActions := []string{
+		actionLoadMedia, actionUploadMedia, actionSaveMedia, actionDeleteMedia, actionAddMedia,
+	}
+
+	for _, action := range mediaActions {
+		body, _, err := test.CallStringEndpoint(http.MethodPost, handler, test.NewRequestOptions{
+			GetValues: url.Values{
+				"action":  {action},
+				"page_id": {seededPage.ID()},
+			},
+		})
+		if err != nil {
+			t.Errorf("Expected no error, got: %s", err)
+		}
+
+		expected := `"message":"Media is not enabled"`
+		if !strings.Contains(body, expected) {
+			t.Fatalf("Expected %s for action %s, got: %s", expected, action, body)
+		}
+	}
+}
+
 func Test_PageUpdate_RenderMiddlewares(t *testing.T) {
 	store := initStore(t)
 	handler := initHandler(store)
