@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/dracory/api v1.8.0
 	github.com/dracory/blockeditor v0.24.0
-	github.com/dracory/bs v0.16.0
+	github.com/dracory/bs v0.17.0
 	github.com/dracory/cdn v1.13.0
 	github.com/dracory/database v0.8.0
 	github.com/dracory/dataobject v1.7.0

@@ -427,19 +427,22 @@ func (controller *templateManagerController) tableFilter(data templateManagerCon
 
 func (controller *templateManagerController) tablePagination(data templateManagerControllerData, count int, page int, perPage int) hb.TagInterface {
 	url := shared.URLR(data.request, shared.PathTemplatesTemplateManager, map[string]string{
-		"status":       data.formStatus,
-		"name":         data.formName,
-		"created_from": data.formCreatedFrom,
-		"created_to":   data.formCreatedTo,
-		"by":           data.sortBy,
-		"order":        data.sortOrder,
+		"filter_status":       data.formStatus,
+		"filter_name":         data.formName,
+		"filter_site_id":      data.formSiteID,
+		"filter_created_from": data.formCreatedFrom,
+		"filter_created_to":   data.formCreatedTo,
+		"by":                  data.sortBy,
+		"sort":                data.sortOrder,
+		"per_page":            cast.ToString(data.perPage),
 	})
 
 	url = lo.Ternary(strings.Contains(url, "?"), url+"&page=", url+"?page=") // page must be last
 
 	pagination := bs.Pagination(bs.PaginationOptions{
 		NumberItems:       count,
-		CurrentPageNumber: page,
+		CurrentPageNumber: page + 1,
+		FirstPageStartsAt: 1,
 		PagesToShow:       5,
 		PerPage:           perPage,
 		URL:               url,
@@ -456,7 +459,7 @@ func (controller *templateManagerController) prepareData(r *http.Request) (data 
 	data.request = r
 	data.action = req.GetStringTrimmed(r, "action")
 	data.page = req.GetStringTrimmedOr(r, "page", "0")
-	data.pageInt = cast.ToInt(data.page)
+	data.pageInt = max(cast.ToInt(data.page)-1, 0) // page param is 1-based
 	data.perPage = cast.ToInt(req.GetStringTrimmedOr(r, "per_page", cast.ToString(initialPerPage)))
 	data.sortOrder = req.GetStringTrimmedOr(r, "sort", cmsstore.SORT_ORDER_DESC)
 	data.sortBy = req.GetStringTrimmedOr(r, "by", cmsstore.COLUMN_CREATED_AT)

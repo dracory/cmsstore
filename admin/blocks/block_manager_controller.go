@@ -525,20 +525,24 @@ func (controller *blockManagerController) tableFilter(data blockManagerControlle
 
 func (controller *blockManagerController) tablePagination(data blockManagerControllerData, count int, page int, perPage int) hb.TagInterface {
 	url := shared.URLR(data.request, shared.PathBlocksBlockManager, map[string]string{
-		"status":       data.formStatus,
-		"name":         data.formName,
-		"type":         data.formType,
-		"created_from": data.formCreatedFrom,
-		"created_to":   data.formCreatedTo,
-		"by":           data.sortBy,
-		"order":        data.sortOrder,
+		"status":         data.formStatus,
+		"name":           data.formName,
+		"type":           data.formType,
+		"block_id":       data.formBlockID,
+		"filter_site_id": data.formSiteID,
+		"created_from":   data.formCreatedFrom,
+		"created_to":     data.formCreatedTo,
+		"by":             data.sortBy,
+		"sort":           data.sortOrder,
+		"per_page":       cast.ToString(data.perPage),
 	})
 
 	url = lo.Ternary(strings.Contains(url, "?"), url+"&page=", url+"?page=") // page must be last
 
 	pagination := bs.Pagination(bs.PaginationOptions{
 		NumberItems:       count,
-		CurrentPageNumber: page,
+		CurrentPageNumber: page + 1,
+		FirstPageStartsAt: 1,
 		PagesToShow:       5,
 		PerPage:           perPage,
 		URL:               url,
@@ -555,7 +559,7 @@ func (controller *blockManagerController) prepareData(r *http.Request) (data blo
 	data.request = r
 	data.action = req.GetStringTrimmed(r, "action")
 	data.page = req.GetStringTrimmed(r, "page")
-	data.pageInt = cast.ToInt(data.page)
+	data.pageInt = max(cast.ToInt(data.page)-1, 0) // page param is 1-based
 	data.perPage = cast.ToInt(req.GetStringTrimmedOr(r, "per_page", cast.ToString(initialPerPage)))
 	data.sortOrder = req.GetStringTrimmed(r, "sort")
 	data.sortBy = req.GetStringTrimmed(r, "by")
