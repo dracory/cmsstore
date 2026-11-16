@@ -321,7 +321,7 @@ func (controller blockUpdateController) fieldsContent(data blockUpdateController
 		fields := globalBlockType.GetAdminFields(data.block, data.request)
 		if formFields, ok := fields.([]form.FieldInterface); ok {
 			fieldsContent = formFields
-		} else {
+		} else if fields != nil {
 			controller.ui.Logger().Error("GetAdminFields returned unexpected type",
 				"blockType", blockType,
 				"actualType", fmt.Sprintf("%T", fields))
@@ -338,7 +338,7 @@ func (controller blockUpdateController) fieldsContent(data blockUpdateController
 			fields := provider.GetContentFields(data.block, data.request)
 			if formFields, ok := fields.([]form.FieldInterface); ok {
 				fieldsContent = formFields
-			} else {
+			} else if fields != nil {
 				controller.ui.Logger().Error("GetContentFields returned unexpected type",
 					"blockType", blockType,
 					"actualType", fmt.Sprintf("%T", fields))
@@ -761,8 +761,7 @@ func (controller blockUpdateController) codeSnippet(title, code string) hb.TagIn
 		Child(hb.Div().
 			Class("card-body p-0").
 			Child(hb.PRE().
-				Class("mb-0").
-				Style("background-color: #f8f9fa; padding: 1rem; border-radius: 0;").
+				Class("mb-0 p-3 bg-body-tertiary rounded-0").
 				Child(hb.Code().
 					ID(snippetID).
 					Text(code))))
